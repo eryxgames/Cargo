@@ -258,13 +258,9 @@ class Game:
         print("+" + "-" * (max_player_width + max_planet_width + 7) + "+")
 
         # Events Panel
-        print("+" + "-" * (max_player_width + max_planet_width + 7) + "+")
-        print(f"| {'Turn':<4} | {'Event':<{max_player_width + max_planet_width - 5}} |")
-        print("+" + "-" * (max_player_width + max_planet_width + 7) + "+")
         if self.event_log:
             event = self.event_log[-1]
-            print(f"| {event['turn']:<4} | {event['event']:<{max_player_width + max_planet_width - 5}} |")
-        print("+" + "-" * (max_player_width + max_planet_width + 7) + "+")
+            print(f"Turn {event['turn']}: {event['event']}")
 
     def display_planet_info(self):
         print("+" + "-"*self.game_width + "+")
@@ -374,6 +370,12 @@ class Game:
         elif self.ship.speed < enemy_speed:
             print("Enemy has the speed advantage!")
             player_damage += 5
+
+        # Introduce randomness based on stats
+        if random.random() < 0.5:
+            player_damage = max(0, player_damage - random.randint(0, self.ship.defense))
+        if random.random() < 0.5:
+            enemy_damage = max(0, enemy_damage - random.randint(0, enemy_defense))
 
         print(f"You deal {enemy_damage} damage to the enemy.")
         print(f"The enemy deals {player_damage} damage to you.")
@@ -556,7 +558,6 @@ class Game:
 
     def play_turn(self):
         self.display_turn_info()
-        self.display_event_log()
         action = self.validate_input("Choose action (buy/b, sell/s, upgrade/u, travel/t, repair/r, info/i, build/bl, cantina/c, quests/q, shop/sh, end/e): ",
                                      ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'quests', 'q', 'shop', 'sh', 'end', 'e'])
         if action in ['buy', 'b']:
