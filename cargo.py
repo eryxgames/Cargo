@@ -289,7 +289,7 @@ class Game:
         time.sleep(3)
 
     def choose_difficulty(self):
-        print("Choose difficulty level:")
+        print("\n Choose difficulty level:")
         print("1. Easy")
         print("2. Normal")
         print("3. Expert")
