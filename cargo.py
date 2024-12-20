@@ -332,6 +332,9 @@ class Game:
             self.display_simple_message(prompt, 0)
             try:
                 user_input = input(">>> ").strip().lower()
+                if not user_input:
+                    self.display_simple_message("Command cancelled.")
+                    return None
                 if user_input == 'max':
                     return 'max'
                 quantity = int(user_input)
@@ -341,6 +344,7 @@ class Game:
             except ValueError:
                 self.display_simple_message("Invalid input. Please enter a number or 'max'", 1)
 
+
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
@@ -348,7 +352,7 @@ class Game:
             [f"Turn: {self.turn}", f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
             [f"Money: {self.format_money(self.ship.money)}", f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
             [f"Tech Cargo: {self.format_money(self.ship.cargo['tech'])}", f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
-            [f"Agri Cargo: {self.format_money(self.ship.cargo['agri'])}", f"Damage: {self.ship.damage}%", f"Economy: {self.current_planet.economy}"],
+            [f"Agri Cargo: {self.format_money(self.ship.cargo['agri'])}", f"Damage: {self.ship.damage}%", f"Eco: {self.current_planet.economy}"],
             [f"Rank: {self.rank}", f"Items: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
         ]
 
@@ -464,17 +468,18 @@ class Game:
         self.display_turn_info()
 
         action = self.validate_input(
-            "Choose action (buy/b, sell/s, upgrade/u, travel/t, repair/r, info/i, build/bl, cantina/c, shop/sh, end/e): ",
+            "Choose action: ",
             ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'shop', 'sh', 'end', 'e']
         )
 
         # Handle cancelled command
         if action is None:
             return
-
-        if action in ['buy', 'b']:
+        elif action in ['buy', 'b']:
             item = self.validate_input("Choose item (tech/agri): ", ['tech', 'agri'])
             quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+            if quantity is None:
+                return
             if quantity == 'max':
                 quantity = self.ship.money // self.current_planet.market[item]
             if self.ship.buy(item, quantity, self.current_planet.market[item]):
@@ -482,6 +487,8 @@ class Game:
         elif action in ['sell', 's']:
             item = self.validate_input("Choose item (tech/agri): ", ['tech', 'agri'])
             quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+            if quantity is None:
+                return
             if quantity == 'max':
                 quantity = self.ship.cargo[item]
             if self.ship.sell(item, quantity, self.current_planet.market[item]):
@@ -525,7 +532,7 @@ class Game:
                 for planet in self.planets:
                     if planet.name.lower() == planet_name.lower():
                         self.current_planet = planet
-                        self.display_simple_message(f"Traveled to {planet_name}.")
+                        self.display_simple_message(f"Traveled to {planet.name}.")
                         self.turn += 1
                         self.random_event()
                         # Check for quest completion
@@ -634,9 +641,12 @@ class Game:
                 self.display_simple_message("Event! Pirate attack repelled by laser turrets!", 3, color='32')
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
-                stolen_money = random.randint(1, int(self.ship.money // 2))
-                self.ship.money -= stolen_money
-                self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
+                if self.ship.money > 0:
+                    stolen_money = random.randint(1, int(self.ship.money // 2))
+                    self.ship.money -= stolen_money
+                    self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
+                else:
+                    self.display_simple_message(f"Event! Pirates caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Market crash!":
             self.current_planet.update_market(self.difficulty)
             self.display_simple_message("Event! Market prices have changed.", 3, color='31')
@@ -817,6 +827,7 @@ class Game:
             ("navcomp", 500),
             ("scanner", 700),
             ("probe", 900),
+            ("turrets", 1200),
             ("patcher", 300)
         ], k=2)  # Randomly select 2 items
         for item, price in available_items:
