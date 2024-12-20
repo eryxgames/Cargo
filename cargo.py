@@ -175,9 +175,9 @@ class Game:
             return f"{amount/1_000:.1f}K"
         return str(floor(amount))
 
-    def create_box(self, content, style='single', width=None):
-        if not width:
-            width = self.term_width - 4
+    def create_box(self, content, style='single'):
+        term_width = shutil.get_terminal_size().columns
+        width = term_width - 4  # Adjust for padding
 
         chars = {
             'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│'},
@@ -188,24 +188,23 @@ class Game:
         lines = []
         lines.append(f"{chars['tl']}{chars['h'] * width}{chars['tr']}")
 
-        if isinstance(content, str):
-            content = [content]
+        # Determine the number of columns
+        num_columns = len(content[0])
+        col_widths = [max(len(str(cell)) for cell in col) for col in zip(*content)]
 
-        for line in content:
-            if isinstance(line, (list, tuple)):
-                # Handle multi-column layout
-                col_width = (width - len(line) + 1) // len(line)
-                formatted_line = chars['v']
-                for col in line:
-                    formatted_line += f" {str(col):<{col_width-1}}{chars['v']}"
-                lines.append(formatted_line)
-            else:
-                lines.append(f"{chars['v']} {str(line):<{width-2}} {chars['v']}")
+        for row in content:
+            formatted_row = []
+            for i, cell in enumerate(row):
+                formatted_row.append(f"{str(cell):<{col_widths[i]}}")
+            lines.append(f"{chars['v']} {'  '.join(formatted_row):<{width-2}} {chars['v']}")
 
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
-    def create_turn_info_box(self, content, style='single', width=None):
+
+
+    def create_turn_info_box(self, content, style='single'):
+        term_width = shutil.get_terminal_size().columns
         styles = {
             'single': ('┌', '┐', '└', '┘', '─', '│', '├', '┤', '┬', '┴'),
             'double': ('╔', '╗', '╚', '╝', '═', '║', '╠', '╣', '╦', '╩'),
@@ -217,13 +216,15 @@ class Game:
         cols = len(content[0])
         col_widths = [max(len(str(cell)) + 2 for cell in col) for col in zip(*content)]
 
-        if width:
-            # Distribute remaining width proportionally
-            total_content_width = sum(col_widths)
-            remaining_width = width - (cols + 1)  # Account for vertical borders
-            if remaining_width > total_content_width:
-                extra_per_col = (remaining_width - total_content_width) // cols
-                col_widths = [w + extra_per_col for w in col_widths]
+        # Use terminal width minus padding for margins
+        total_width = term_width - 4
+
+        # Distribute remaining width proportionally
+        total_content_width = sum(col_widths)
+        remaining_width = total_width - (cols + 1)  # Account for vertical borders
+        if remaining_width > total_content_width:
+            extra_per_col = (remaining_width - total_content_width) // cols
+            col_widths = [w + extra_per_col for w in col_widths]
 
         def create_row(cells, widths, left, mid, right):
             row = left
@@ -240,17 +241,51 @@ class Game:
 
         return '\n'.join(box)
 
+
+
     def display_message(self, message, pause=2, style='round', color=None):
-        box = self.create_box(message, style)
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
+
+        box = self.create_box(box_content, style)
         if color:
             box = f"\033[{color}m{box}\033[0m"
         print(box)
         if pause > 0:
             time.sleep(pause)
 
+
+
+
     def validate_input(self, prompt, valid_options):
+        term_width = shutil.get_terminal_size().columns
+
+        def word_wrap(text, width):
+            words = text.split()
+            lines = []
+            current_line = []
+            current_length = 0
+
+            for word in words:
+                if current_length + len(word) + len(current_line) > width:
+                    lines.append(' '.join(current_line))
+                    current_line = [word]
+                    current_length = len(word)
+                else:
+                    current_line.append(word)
+                    current_length += len(word)
+
+            if current_line:
+                lines.append(' '.join(current_line))
+
+            return lines
+
         while True:
-            self.display_message(prompt, 0)
+            wrapped_prompt = word_wrap(prompt, term_width - 4)  # Account for padding
+            self.display_message(wrapped_prompt, 0)
+
             try:
                 user_input = input(">>> ").strip().lower()
                 if not user_input:
@@ -261,11 +296,14 @@ class Game:
                 self.display_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
             except KeyboardInterrupt:
                 print(f"Do you want to exit? (yes/no):")
-#                self.display_message("Do you want to exit? (yes/no)", 0)
+    #            self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
                     self.display_message("Goodbye!", 1)
                     exit()
+
+
+
 
     def validate_quantity_input(self, prompt):
         while True:
@@ -292,9 +330,7 @@ class Game:
             [f"Rank: {self.rank}", f"Items: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
         ]
 
-        # Use terminal width minus padding for margins
-        total_width = self.term_width - 4
-        status_box = self.create_turn_info_box(status_content, 'double', width=total_width)
+        status_box = self.create_box(status_content, 'double')
         print(status_box)
 
         # Market prices
@@ -307,11 +343,12 @@ class Game:
 
         # Command menu
         commands = [
-            "Commands: buy/b, sell/s, upgrade/u, travel/t,",
-            "repair/r, info/i, build/bl, cantina/c,",
-            "shop/sh, end/e"
+            ["Commands: buy/b, sell/s, upgrade/u, travel/t,"],
+            ["repair/r, info/i, build/bl, cantina/c,"],
+            ["shop/sh, end/e"]
         ]
         print(self.create_box(commands, 'round'))
+
 
     def display_planet_info(self):
         content = [
@@ -325,6 +362,8 @@ class Game:
         ]
         print(self.create_box(content, 'double'))
         time.sleep(3)
+
+
 
     def choose_difficulty(self):
         print("\n Choose difficulty level:")
@@ -406,8 +445,8 @@ class Game:
         self.display_turn_info()
 
         action = self.validate_input(
-            "Choose action (buy/b, sell/s, upgrade/u, travel/t, repair/r, info/i, build/bl, cantina/c, end/e): ",
-            ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'end', 'e']
+            "Choose action (buy/b, sell/s, upgrade/u, travel/t, repair/r, info/i, build/bl, cantina/c, shop/sh, end/e): ",
+            ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'shop', 'sh', 'end', 'e']
         )
 
         # Handle cancelled command
@@ -497,7 +536,7 @@ class Game:
             self.display_planet_info()
         elif action in ['build', 'bl']:
             building_name = self.validate_input("Choose building to build (stockmarket/sm, permaculture/pc, organic/oc, agrobot/ab, nanotech/nt, neuroengineering/ne): ",
-                                               ['stockmarket', 'sm', 'permaculture', 'pc', 'organic', 'oc', 'agrobot', 'ab', 'nanotech', 'nt', 'neuroengineering', 'ne'])
+                                            ['stockmarket', 'sm', 'permaculture', 'pc', 'organic', 'oc', 'agrobot', 'ab', 'nanotech', 'nt', 'neuroengineering', 'ne'])
             if building_name in ['stockmarket', 'sm']:
                 if not self.current_planet.stockmarket_base:
                     if self.ship.money >= self.current_planet.stockmarket_cost:
@@ -553,6 +592,8 @@ class Game:
             return
         else:
             self.display_message("Invalid action.")
+
+
 
     def random_event(self):
         events = [
