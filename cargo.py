@@ -271,7 +271,9 @@ class Game:
         lines.append(f"{chars['tl']}{chars['h'] * width}{chars['tr']}")
 
         for row in content:
-            lines.append(f"{chars['v']} {row:<{width-2}} {chars['v']}")
+            wrapped_row = self.word_wrap(row, width - 2)
+            for line in wrapped_row:
+                lines.append(f"{chars['v']} {line:<{width-2}} {chars['v']}")
 
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
@@ -292,28 +294,8 @@ class Game:
     def validate_input(self, prompt, valid_options):
         term_width = shutil.get_terminal_size().columns
 
-        def word_wrap(text, width):
-            words = text.split()
-            lines = []
-            current_line = []
-            current_length = 0
-
-            for word in words:
-                if current_length + len(word) + len(current_line) > width:
-                    lines.append(' '.join(current_line))
-                    current_line = [word]
-                    current_length = len(word)
-                else:
-                    current_line.append(word)
-                    current_length += len(word)
-
-            if current_line:
-                lines.append(' '.join(current_line))
-
-            return lines
-
         while True:
-            wrapped_prompt = word_wrap(prompt, term_width - 4)  # Account for padding
+            wrapped_prompt = self.word_wrap(prompt, term_width - 4)  # Account for padding
             self.display_simple_message(wrapped_prompt, 0)
 
             try:
@@ -431,7 +413,6 @@ class Game:
         print(self.create_box(content, 'double'))
         time.sleep(3)
 
-
     def format_buildings(self):
         building_counts = {}
         for building in self.current_planet.buildings:
@@ -492,19 +473,22 @@ class Game:
         special_event = random.choice(special_events)
         special_event_text = f"Special Event: {special_event}"
 
-        self.display_simple_message(self.word_wrap(intro_text))
-        self.display_simple_message(self.word_wrap(special_event_text))
+        self.display_story_message(self.word_wrap(intro_text))
+        self.display_story_message(self.word_wrap(special_event_text))
         time.sleep(3)  # Pause to let the player read the information
 
-    def word_wrap(self, text):
-        term_width = shutil.get_terminal_size().columns
+    def word_wrap(self, text, width=None):
+        if width is None:
+            term_width = shutil.get_terminal_size().columns
+            width = term_width - 4  # Account for padding
+
         words = text.split()
         lines = []
         current_line = []
         current_length = 0
 
         for word in words:
-            if current_length + len(word) + len(current_line) > term_width - 4:  # Account for padding
+            if current_length + len(word) + len(current_line) > width:
                 lines.append(' '.join(current_line))
                 current_line = [word]
                 current_length = len(word)
@@ -516,6 +500,28 @@ class Game:
             lines.append(' '.join(current_line))
 
         return lines
+
+    def display_story_message(self, message, pause=2, style='round', color=None):
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
+
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
+
+    def display_character_message(self, character_name, message, pause=2, style='round', color=None):
+        box_content = [f"{character_name}: {message}"]
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
 
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
@@ -715,11 +721,11 @@ class Game:
             self.current_planet.tech_level += 1
             self.display_simple_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
         elif event == "Exotic radiation!":
-            destroyed_tech = random.randint(1, max(1, self.ship.cargo['tech']))
+            destroyed_tech = random.randint(1, max(1, int(self.ship.cargo['tech'])))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_tech)
             self.display_simple_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
         elif event == "Contamination!":
-            destroyed_agri = random.randint(1, max(1, self.ship.cargo['agri']))
+            destroyed_agri = random.randint(1, max(1, int(self.ship.cargo['agri'])))
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_agri)
             self.display_simple_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
         elif event == "Cargo bay hit by asteroid!":
@@ -753,7 +759,6 @@ class Game:
 
         if "shield" in self.ship.items:
             self.ship.damage = max(0, self.ship.damage - 5)
-
 
     def gravitational_anomaly_event(self):
         print("You have encountered a gravitational anomaly!")
@@ -830,7 +835,6 @@ class Game:
                 self.ship.damage += penalty[1]
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
-
     def visit_cantina(self):
         self.display_simple_message("Welcome to the Cantina!", 1)
 
@@ -897,6 +901,11 @@ class Game:
                     print(f"- {quest[0]}")
             else:
                 self.display_simple_message("No active quests.")
+
+        # Randomly introduce a demo character after reaching a new rank
+        if random.random() < 0.1:  # 10% chance
+            self.display_character_message("Mysterious Stranger", "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend.")
+
         time.sleep(3)  # Pause to let the player read the information
 
     def shop(self):
