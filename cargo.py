@@ -406,10 +406,21 @@ class Game:
             [f"Name: {self.current_planet.name}", f"Attack: {self.ship.attack}"],
             [f"Tech Level: {self.current_planet.tech_level}", f"Defense: {self.ship.defense}"],
             [f"Agri Level: {self.current_planet.agri_level}", f"Speed: {self.ship.speed}"],
-            [f"Research Points: {self.current_planet.research_points}", f"Items: {', '.join(self.ship.items) or 'None'}"],
-            [f"Economy: {self.current_planet.economy}", f"Upgrades: {', '.join(self.ship.upgrades) or 'None'}"],
-            [f"Buildings: {', '.join(self.format_buildings()) or 'None'}", ""]
+            [f"Research Points: {self.current_planet.research_points}", "Items:"],
+            [f"Economy: {self.current_planet.economy}", "Upgrades:"],
+            [f"Buildings:", ""]
         ]
+
+        # Add buildings, items, and upgrades on separate lines
+        for building in self.format_buildings():
+            content.append(["", building])
+
+        for item in self.ship.items:
+            content.append(["", item])
+
+        for upgrade in self.ship.upgrades:
+            content.append(["", upgrade])
+
         print(self.create_box(content, 'double'))
         time.sleep(3)
 
@@ -462,7 +473,7 @@ class Game:
         elif self.current_planet.research_points > 15:
             planet_type = "research"
 
-        print(f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins.")
+        intro_text = f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -471,9 +482,32 @@ class Game:
             "Nothing special happening."
         ]
         special_event = random.choice(special_events)
-        self.display_simple_message(f"Special Event: {special_event}")
-#        print(f"Special Event: {special_event}")
+        special_event_text = f"Special Event: {special_event}"
+
+        self.display_simple_message(self.word_wrap(intro_text))
+        self.display_simple_message(self.word_wrap(special_event_text))
         time.sleep(3)  # Pause to let the player read the information
+
+    def word_wrap(self, text):
+        term_width = shutil.get_terminal_size().columns
+        words = text.split()
+        lines = []
+        current_line = []
+        current_length = 0
+
+        for word in words:
+            if current_length + len(word) + len(current_line) > term_width - 4:  # Account for padding
+                lines.append(' '.join(current_line))
+                current_line = [word]
+                current_length = len(word)
+            else:
+                current_line.append(word)
+                current_length += len(word)
+
+        if current_line:
+            lines.append(' '.join(current_line))
+
+        return lines
 
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
@@ -658,7 +692,7 @@ class Game:
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
                 if self.ship.money > 0:
-                    stolen_money = random.randint(1, int(self.ship.money // 2))
+                    stolen_money = random.randint(1, max(1, self.ship.money // 2))
                     self.ship.money -= stolen_money
                     self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
                 else:
