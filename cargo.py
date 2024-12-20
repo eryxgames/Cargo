@@ -201,8 +201,6 @@ class Game:
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
-
-
     def create_turn_info_box(self, content, style='single'):
         term_width = shutil.get_terminal_size().columns
         styles = {
@@ -241,7 +239,37 @@ class Game:
 
         return '\n'.join(box)
 
+    def display_simple_message(self, message, pause=2, style='round', color=None):
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
 
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
+
+    def create_simple_box(self, content, style='single'):
+        term_width = shutil.get_terminal_size().columns
+        width = term_width - 4  # Adjust for padding
+
+        chars = {
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║'},
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│'}
+        }[style]
+
+        lines = []
+        lines.append(f"{chars['tl']}{chars['h'] * width}{chars['tr']}")
+
+        for row in content:
+            lines.append(f"{chars['v']} {row:<{width-2}} {chars['v']}")
+
+        lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
+        return '\n'.join(lines)
 
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
@@ -255,9 +283,6 @@ class Game:
         print(box)
         if pause > 0:
             time.sleep(pause)
-
-
-
 
     def validate_input(self, prompt, valid_options):
         term_width = shutil.get_terminal_size().columns
@@ -284,30 +309,27 @@ class Game:
 
         while True:
             wrapped_prompt = word_wrap(prompt, term_width - 4)  # Account for padding
-            self.display_message(wrapped_prompt, 0)
+            self.display_simple_message(wrapped_prompt, 0)
 
             try:
                 user_input = input(">>> ").strip().lower()
                 if not user_input:
-                    self.display_message("Command cancelled.")
+                    self.display_simple_message("Command cancelled.")
                     return None
                 if user_input in valid_options:
                     return user_input
-                self.display_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
+                self.display_simple_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
             except KeyboardInterrupt:
                 print(f"Do you want to exit? (yes/no):")
     #            self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
-                    self.display_message("Goodbye!", 1)
+                    self.display_simple_message("Goodbye!", 1)
                     exit()
-
-
-
 
     def validate_quantity_input(self, prompt):
         while True:
-            self.display_message(prompt, 0)
+            self.display_simple_message(prompt, 0)
             try:
                 user_input = input(">>> ").strip().lower()
                 if user_input == 'max':
@@ -315,9 +337,9 @@ class Game:
                 quantity = int(user_input)
                 if quantity > 0:
                     return quantity
-                self.display_message("Please enter a positive number or 'max'", 1)
+                self.display_simple_message("Please enter a positive number or 'max'", 1)
             except ValueError:
-                self.display_message("Invalid input. Please enter a number or 'max'", 1)
+                self.display_simple_message("Invalid input. Please enter a number or 'max'", 1)
 
     def display_turn_info(self):
         self.clear_screen()
@@ -349,7 +371,6 @@ class Game:
         ]
         print(self.create_box(commands, 'round'))
 
-
     def display_planet_info(self):
         content = [
             ["Planet Information", "Ship Information"],
@@ -362,8 +383,6 @@ class Game:
         ]
         print(self.create_box(content, 'double'))
         time.sleep(3)
-
-
 
     def choose_difficulty(self):
         print("\n Choose difficulty level:")
@@ -392,7 +411,7 @@ class Game:
 
     def get_player_name(self):
         self.clear_screen()
-        self.display_message ("Welcome to Cargo!")
+        self.display_simple_message ("Welcome to Cargo!")
         name = input("  Enter your name (or press Enter for a random name): ").strip()
         if not name:
             name = random.choice(["Captain", "Commander", "Pilot", "Admiral", "Spacefarer"])
@@ -414,7 +433,7 @@ class Game:
             "Nothing special happening."
         ]
         special_event = random.choice(special_events)
-        self.display_message(f"Special Event: {special_event}")
+        self.display_simple_message(f"Special Event: {special_event}")
 #        print(f"Special Event: {special_event}")
         time.sleep(3)  # Pause to let the player read the information
 
@@ -423,22 +442,22 @@ class Game:
 
     def validate_planet_input(self, prompt):
         while True:
-            self.display_message(prompt, 0)
+            self.display_simple_message(prompt, 0)
             try:
                 user_input = input(">>> ").strip().lower()
                 if not user_input:
-                    self.display_message("Command cancelled.")
+                    self.display_simple_message("Command cancelled.")
                     return None
                 for planet in self.planets:
                     if planet.name.lower() == user_input:
                         return planet.name
-                self.display_message(f"Invalid input. Valid options: {', '.join([planet.name for planet in self.planets])}", 1)
+                self.display_simple_message(f"Invalid input. Valid options: {', '.join([planet.name for planet in self.planets])}", 1)
             except KeyboardInterrupt:
                 print(f"Do you want to exit? (yes/no):")
 #                self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
-                    self.display_message("Goodbye!", 1)
+                    self.display_simple_message("Goodbye!", 1)
                     exit()
 
     def play_turn(self):
@@ -459,29 +478,29 @@ class Game:
             if quantity == 'max':
                 quantity = self.ship.money // self.current_planet.market[item]
             if self.ship.buy(item, quantity, self.current_planet.market[item]):
-                self.display_message(f"Bought {self.format_money(quantity)} {item}.")
+                self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
         elif action in ['sell', 's']:
             item = self.validate_input("Choose item (tech/agri): ", ['tech', 'agri'])
             quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
             if quantity == 'max':
                 quantity = self.ship.cargo[item]
             if self.ship.sell(item, quantity, self.current_planet.market[item]):
-                self.display_message(f"Sold {self.format_money(quantity)} {item}.")
+                self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
         elif action in ['upgrade', 'u']:
             property_name = self.validate_input("Choose property to upgrade (attack/defense/speed): ", ['attack', 'defense', 'speed'])
             cost = 2000
             if self.ship.upgrade(property_name, cost):
-                self.display_message(f"Upgraded {property_name}.")
+                self.display_simple_message(f"Upgraded {property_name}.")
         elif action in ['travel', 't']:
             if "navcomp" in self.ship.items:
-                self.display_message("Choose a planet to travel to:")
+                self.display_simple_message("Choose a planet to travel to:")
                 for i, planet in enumerate(self.known_planets):
                     print(f"{i+1}. {planet}")
                 choice = self.validate_planet_input("Enter the number of the planet or the planet name: ")
                 for planet in self.planets:
                     if planet.name.lower() == choice.lower():
                         self.current_planet = planet
-                        self.display_message(f"Traveled to {planet.name}.")
+                        self.display_simple_message(f"Traveled to {planet.name}.")
                         self.turn += 1
                         self.random_event()
                         # Check for quest completion
@@ -490,23 +509,23 @@ class Game:
                                 self.ship.complete_quest(quest)
                                 reward_money = quest[3] * (1 + self.rank_multiplier())
                                 self.ship.money += reward_money
-                                self.display_message(f"Quest completed: {quest[0]}")
-                                self.display_message(f"Reward: {self.format_money(reward_money)} money")
+                                self.display_simple_message(f"Quest completed: {quest[0]}")
+                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
                             elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
                                 self.ship.complete_quest(quest)
                                 reward_money = quest[3] * (1 + self.rank_multiplier())
                                 self.ship.money += reward_money
-                                self.display_message(f"Quest completed: {quest[0]}")
-                                self.display_message(f"Reward: {self.format_money(reward_money)} money")
+                                self.display_simple_message(f"Quest completed: {quest[0]}")
+                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
                         return
                 else:
-                    self.display_message("Invalid choice.")
+                    self.display_simple_message("Invalid choice.")
             else:
                 planet_name = input("Enter planet name to travel: ").strip()
                 for planet in self.planets:
                     if planet.name.lower() == planet_name.lower():
                         self.current_planet = planet
-                        self.display_message(f"Traveled to {planet_name}.")
+                        self.display_simple_message(f"Traveled to {planet_name}.")
                         self.turn += 1
                         self.random_event()
                         # Check for quest completion
@@ -515,23 +534,23 @@ class Game:
                                 self.ship.complete_quest(quest)
                                 reward_money = quest[3] * (1 + self.rank_multiplier())
                                 self.ship.money += reward_money
-                                self.display_message(f"Quest completed: {quest[0]}")
-                                self.display_message(f"Reward: {self.format_money(reward_money)} money")
+                                self.display_simple_message(f"Quest completed: {quest[0]}")
+                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
                             elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
                                 self.ship.complete_quest(quest)
                                 reward_money = quest[3] * (1 + self.rank_multiplier())
                                 self.ship.money += reward_money
-                                self.display_message(f"Quest completed: {quest[0]}")
-                                self.display_message(f"Reward: {self.format_money(reward_money)} money")
+                                self.display_simple_message(f"Quest completed: {quest[0]}")
+                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
                         return
                 else:
-                    self.display_message("Planet not found.")
+                    self.display_simple_message("Planet not found.")
         elif action in ['repair', 'r']:
             cost = self.ship.damage * 10  # Proportional repair cost
             if self.ship.repair(cost):
-                self.display_message("Ship repaired.")
+                self.display_simple_message("Ship repaired.")
             else:
-                self.display_message(f"Not enough money to repair. Repair cost: {self.format_money(cost)}")
+                self.display_simple_message(f"Not enough money to repair. Repair cost: {self.format_money(cost)}")
         elif action in ['info', 'i']:
             self.display_planet_info()
         elif action in ['build', 'bl']:
@@ -542,46 +561,46 @@ class Game:
                     if self.ship.money >= self.current_planet.stockmarket_cost:
                         self.ship.money -= self.current_planet.stockmarket_cost
                         self.current_planet.build_stockmarket()
-                        self.display_message(f"Stockmarket Base built on {self.current_planet.name}.")
+                        self.display_simple_message(f"Stockmarket Base built on {self.current_planet.name}.")
                     else:
-                        self.display_message("Not enough money to build a Stockmarket Base.")
+                        self.display_simple_message("Not enough money to build a Stockmarket Base.")
                 else:
-                    self.display_message("Stockmarket Base already built on this planet.")
+                    self.display_simple_message("Stockmarket Base already built on this planet.")
             elif building_name in ['permaculture', 'pc']:
                 if self.ship.money >= 3000:
                     self.ship.money -= 3000
                     self.current_planet.build_building("Permaculture Paradise")
-                    self.display_message(f"Permaculture Paradise built on {self.current_planet.name}.")
+                    self.display_simple_message(f"Permaculture Paradise built on {self.current_planet.name}.")
                 else:
-                    self.display_message("Not enough money to build Permaculture Paradise.")
+                    self.display_simple_message("Not enough money to build Permaculture Paradise.")
             elif building_name in ['organic', 'oc']:
                 if self.ship.money >= 4000:
                     self.ship.money -= 4000
                     self.current_planet.build_building("Organic Certification Authority")
-                    self.display_message(f"Organic Certification Authority built on {self.current_planet.name}.")
+                    self.display_simple_message(f"Organic Certification Authority built on {self.current_planet.name}.")
                 else:
-                    self.display_message("Not enough money to build Organic Certification Authority.")
+                    self.display_simple_message("Not enough money to build Organic Certification Authority.")
             elif building_name in ['agrobot', 'ab']:
                 if self.ship.money >= 5000:
                     self.ship.money -= 5000
                     self.current_planet.build_building("Agrobot Assembly Line")
-                    self.display_message(f"Agrobot Assembly Line built on {self.current_planet.name}.")
+                    self.display_simple_message(f"Agrobot Assembly Line built on {self.current_planet.name}.")
                 else:
-                    self.display_message("Not enough money to build Agrobot Assembly Line.")
+                    self.display_simple_message("Not enough money to build Agrobot Assembly Line.")
             elif building_name in ['nanotech', 'nt']:
                 if self.ship.money >= 6000:
                     self.ship.money -= 6000
                     self.current_planet.build_building("The Nanotech Nexus")
-                    self.display_message(f"The Nanotech Nexus built on {self.current_planet.name}.")
+                    self.display_simple_message(f"The Nanotech Nexus built on {self.current_planet.name}.")
                 else:
-                    self.display_message("Not enough money to build The Nanotech Nexus.")
+                    self.display_simple_message("Not enough money to build The Nanotech Nexus.")
             elif building_name in ['neuroengineering', 'ne']:
                 if self.ship.money >= 7000:
                     self.ship.money -= 7000
                     self.current_planet.build_building("Neuroengineering Guild")
-                    self.display_message(f"Neuroengineering Guild built on {self.current_planet.name}.")
+                    self.display_simple_message(f"Neuroengineering Guild built on {self.current_planet.name}.")
                 else:
-                    self.display_message("Not enough money to build Neuroengineering Guild.")
+                    self.display_simple_message("Not enough money to build Neuroengineering Guild.")
         elif action in ['cantina', 'c']:
             self.visit_cantina()
         elif action in ['shop', 'sh']:
@@ -591,9 +610,7 @@ class Game:
             self.random_event()
             return
         else:
-            self.display_message("Invalid action.")
-
-
+            self.display_simple_message("Invalid action.")
 
     def random_event(self):
         events = [
@@ -614,42 +631,42 @@ class Game:
 
         if event == "Pirate attack!":
             if "turrets" in self.ship.items and random.random() < 0.35:
-                self.display_message("Event! Pirate attack repelled by laser turrets!", 3, color='32')
+                self.display_simple_message("Event! Pirate attack repelled by laser turrets!", 3, color='32')
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
                 stolen_money = random.randint(1, int(self.ship.money // 2))
                 self.ship.money -= stolen_money
-                self.display_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
+                self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Market crash!":
             self.current_planet.update_market(self.difficulty)
-            self.display_message("Event! Market prices have changed.", 3, color='31')
+            self.display_simple_message("Event! Market prices have changed.", 3, color='31')
         elif event == "Technological breakthrough!":
             self.current_planet.tech_level += 1
-            self.display_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
+            self.display_simple_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
         elif event == "Exotic radiation!":
             destroyed_tech = random.randint(1, max(1, self.ship.cargo['tech']))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_tech)
-            self.display_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
+            self.display_simple_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
         elif event == "Contamination!":
             destroyed_agri = random.randint(1, max(1, self.ship.cargo['agri']))
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_agri)
-            self.display_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
+            self.display_simple_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
         elif event == "Cargo bay hit by asteroid!":
             self.ship.damage += min(random.randint(5, 15) * (1 + self.difficulty), 49)
             total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
             destroyed_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_cargo // 2)
-            self.display_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
+            self.display_simple_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Cargo bay raided by guerrilla!":
             total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
             stolen_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - stolen_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - stolen_cargo // 2)
-            self.display_message(f"Event! Guerrilla raid stole {self.format_money(stolen_cargo)} units of cargo.", 3, color='31')
+            self.display_simple_message(f"Event! Guerrilla raid stole {self.format_money(stolen_cargo)} units of cargo.", 3, color='31')
         elif event == "Spacetime rift!":
             self.ship.damage += min(random.randint(15, 35) * (1 + self.difficulty), 49)
-            self.display_message(f"Event! Spacetime rift caused {self.ship.damage}% damage.", 3, color='31')
+            self.display_simple_message(f"Event! Spacetime rift caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Rogue Corsair attacking!":
             self.battle_event(2, 1, 1)
         elif event == "Pirate mothership attacking!":
@@ -666,11 +683,11 @@ class Game:
         if outcome == "rare elements":
             tech_goods = random.randint(5, 15)
             self.ship.cargo['tech'] += tech_goods
-            self.display_message(f"You found {self.format_money(tech_goods)} tech goods.", 3, color='32')
+            self.display_simple_message(f"You found {self.format_money(tech_goods)} tech goods.", 3, color='32')
         elif outcome == "scientific samples":
             research_points = random.randint(5, 15)
             self.current_planet.research_points += research_points
-            self.display_message(f"You gained {self.format_money(research_points)} research points.", 3, color='32')
+            self.display_simple_message(f"You gained {self.format_money(research_points)} research points.", 3, color='32')
 
     def battle_event(self, enemy_attack, enemy_defense, enemy_speed):
         print(f"An enemy is attacking! Enemy stats: ATK {enemy_attack}, DEF {enemy_defense}, SPD {enemy_speed}")
@@ -704,16 +721,16 @@ class Game:
             ])
             if reward[0] == "money":
                 self.ship.money += reward[1]
-                self.display_message(f"Reward: {self.format_money(reward[1])} money", 3, color='32')
+                self.display_simple_message(f"Reward: {self.format_money(reward[1])} money", 3, color='32')
             elif reward[0] == "tech":
                 self.ship.cargo['tech'] += reward[1]
-                self.display_message(f"Reward: {self.format_money(reward[1])} tech goods", 3, color='32')
+                self.display_simple_message(f"Reward: {self.format_money(reward[1])} tech goods", 3, color='32')
             elif reward[0] == "agri":
                 self.ship.cargo['agri'] += reward[1]
-                self.display_message(f"Reward: {self.format_money(reward[1])} agri goods", 3, color='32')
+                self.display_simple_message(f"Reward: {self.format_money(reward[1])} agri goods", 3, color='32')
             elif reward[0] == "item":
                 self.ship.acquire_item(reward[1])
-                self.display_message(f"Reward: {reward[1]} item", 3, color='32')
+                self.display_simple_message(f"Reward: {reward[1]} item", 3, color='32')
         else:
             print("You lost the battle!")
             penalty = random.choice([
@@ -724,19 +741,19 @@ class Game:
             ])
             if penalty[0] == "money":
                 self.ship.money = max(0, self.ship.money - penalty[1])
-                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} money", 3, color='31')
+                self.display_simple_message(f"Penalty: Lost {self.format_money(penalty[1])} money", 3, color='31')
             elif penalty[0] == "tech":
                 self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - penalty[1])
-                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} tech goods", 3, color='31')
+                self.display_simple_message(f"Penalty: Lost {self.format_money(penalty[1])} tech goods", 3, color='31')
             elif penalty[0] == "agri":
                 self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - penalty[1])
-                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} agri goods", 3, color='31')
+                self.display_simple_message(f"Penalty: Lost {self.format_money(penalty[1])} agri goods", 3, color='31')
             elif penalty[0] == "damage":
                 self.ship.damage += penalty[1]
-                self.display_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
+                self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
     def visit_cantina(self):
-        self.display_message("Welcome to the Cantina!", 1)
+        self.display_simple_message("Welcome to the Cantina!", 1)
 
         action = self.validate_input(
             "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q): ",
@@ -749,25 +766,25 @@ class Game:
         if action in ['buy map', 'bm']:
             if self.ship.money >= 200:
                 self.ship.money -= 200
-                self.display_message("You bought a map! Here are some new planet names and levels:", 1)
+                self.display_simple_message("You bought a map! Here are some new planet names and levels:", 1)
                 for planet in self.planets:
                     if planet.name not in self.known_planets:
                         self.known_planets.append(planet.name)
                         print(f"{planet.name} (Tech: {planet.tech_level}, Agri: {planet.agri_level})")
             else:
-                self.display_message("Not enough money to buy a map.")
+                self.display_simple_message("Not enough money to buy a map.")
         elif action in ['update map', 'um']:
             if self.ship.money >= 350:
                 self.ship.money -= 350
-                self.display_message("You updated the map! Here are the commodities wanted:", 1)
+                self.display_simple_message("You updated the map! Here are the commodities wanted:", 1)
                 for planet in self.planets:
                     print(f"{planet.name}: Tech - {self.format_money(planet.market['tech'])}, Agri - {self.format_money(planet.market['agri'])}")
             else:
-                self.display_message("Not enough money to update the map.")
+                self.display_simple_message("Not enough money to update the map.")
         elif action in ['listen to gossip', 'lg']:
             if self.ship.money >= 150:
                 self.ship.money -= 150
-                self.display_message("You listened to gossip! Here are some tips:", 1)
+                self.display_simple_message("You listened to gossip! Here are some tips:", 1)
                 for planet in self.planets:
                     if planet.market['tech'] < 50:
                         print(f"Cheap tech goods available on {planet.name}.")
@@ -781,21 +798,21 @@ class Game:
                         ("Deliver 25 agri goods to Delta", "agri", 25, 1200)
                     ])
                     self.ship.add_quest(quest)
-                    self.display_message(f"You received a quest: {quest[0]}")
-                    self.display_message(f"Reward: {self.format_money(quest[3])} money")
+                    self.display_simple_message(f"You received a quest: {quest[0]}")
+                    self.display_simple_message(f"Reward: {self.format_money(quest[3])} money")
             else:
-                self.display_message("Not enough money to listen to gossip.")
+                self.display_simple_message("Not enough money to listen to gossip.")
         elif action in ['quests', 'q']:
             if self.ship.quests:
-                self.display_message("Active Quests:")
+                self.display_simple_message("Active Quests:")
                 for quest in self.ship.quests:
                     print(f"- {quest[0]}")
             else:
-                self.display_message("No active quests.")
+                self.display_simple_message("No active quests.")
         time.sleep(3)  # Pause to let the player read the information
 
     def shop(self):
-        self.display_message("Welcome to the Shop!", 1)
+        self.display_simple_message("Welcome to the Shop!", 1)
         available_items = random.sample([
             ("navcomp", 500),
             ("scanner", 700),
@@ -812,9 +829,9 @@ class Game:
                 if self.ship.money >= price:
                     self.ship.money -= price
                     self.ship.acquire_item(item)
-                    self.display_message(f"You bought a {item}.")
+                    self.display_simple_message(f"You bought a {item}.")
                 else:
-                    self.display_message("Not enough money to buy this item.")
+                    self.display_simple_message("Not enough money to buy this item.")
                 return
 
     def display_score(self):
@@ -872,12 +889,12 @@ class Game:
             self.update_rank()
 
             if self.ship.money <= 0 and self.ship.is_empty_cargo():
-                self.display_message("Game Over: No money and no cargo left.", 2)
+                self.display_simple_message("Game Over: No money and no cargo left.", 2)
                 self.display_score()
                 break
 
             if self.ship.damage >= 100:
-                self.display_message("Game Over: Ship destroyed!", 2)
+                self.display_simple_message("Game Over: Ship destroyed!", 2)
                 self.display_score()
                 break
 
@@ -891,17 +908,17 @@ class Game:
                     print("Your story will be remembered throughout the galaxy.")
                     break
                 else:
-                    self.display_message("You have chosen to continue your adventure into the unknown.")
+                    self.display_simple_message("You have chosen to continue your adventure into the unknown.")
                     self.stellar_portal_available = True
                     if self.ship.money >= self.ship.money - 1500:
                         self.ship.money = 1500
-                        self.display_message("You have paid for the secret quest and a Stellar Portal appears on this planet.")
+                        self.display_simple_message("You have paid for the secret quest and a Stellar Portal appears on this planet.")
                         self.planets = self.generate_new_planets()
                         self.current_planet = random.choice(self.planets)
                         self.known_planets = [self.current_planet.name]
-                        self.display_message("You have traveled to a new set of planets with more volatile price movements.")
+                        self.display_simple_message("You have traveled to a new set of planets with more volatile price movements.")
                     else:
-                        self.display_message("Not enough money to pay for the secret quest.")
+                        self.display_simple_message("Not enough money to pay for the secret quest.")
 
         play_again = self.validate_input("Do you want to play again? (yes/no): ", ['yes', 'no'])
         if play_again == 'yes':
