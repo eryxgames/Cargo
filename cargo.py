@@ -205,6 +205,41 @@ class Game:
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
+    def create_turn_info_box(self, content, style='single', width=None):
+        styles = {
+            'single': ('┌', '┐', '└', '┘', '─', '│', '├', '┤', '┬', '┴'),
+            'double': ('╔', '╗', '╚', '╝', '═', '║', '╠', '╣', '╦', '╩'),
+            'round': ('╭', '╮', '╰', '╯', '─', '│', '├', '┤', '┬', '┴')
+        }
+        tl, tr, bl, br, h, v, ml, mr, mt, mb = styles[style]
+
+        # Calculate column widths based on content
+        cols = len(content[0])
+        col_widths = [max(len(str(cell)) + 2 for cell in col) for col in zip(*content)]
+
+        if width:
+            # Distribute remaining width proportionally
+            total_content_width = sum(col_widths)
+            remaining_width = width - (cols + 1)  # Account for vertical borders
+            if remaining_width > total_content_width:
+                extra_per_col = (remaining_width - total_content_width) // cols
+                col_widths = [w + extra_per_col for w in col_widths]
+
+        def create_row(cells, widths, left, mid, right):
+            row = left
+            for i, (cell, width) in enumerate(zip(cells, widths)):
+                row += f"{str(cell):^{width}}"
+                row += right if i == len(cells) - 1 else mid
+            return row
+
+        # Create the box
+        box = [create_row([h * w for w in col_widths], col_widths, tl, mt, tr)]
+        for row in content:
+            box.append(create_row(row, col_widths, v, v, v))
+        box.append(create_row([h * w for w in col_widths], col_widths, bl, mb, br))
+
+        return '\n'.join(box)
+
     def display_message(self, message, pause=2, style='round', color=None):
         box = self.create_box(message, style)
         if color:
@@ -248,8 +283,6 @@ class Game:
 
     def display_turn_info(self):
         self.clear_screen()
-
-        # Status table
         status_content = [
             ["Game Status", "Ship Status", "Planet Status"],
             [f"Turn: {self.turn}", f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
@@ -259,7 +292,10 @@ class Game:
             [f"Rank: {self.rank}", f"Items: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
         ]
 
-        print(self.create_box(status_content, 'double'))
+        # Use terminal width minus padding for margins
+        total_width = self.term_width - 4
+        status_box = self.create_turn_info_box(status_content, 'double', width=total_width)
+        print(status_box)
 
         # Market prices
         market_content = [
