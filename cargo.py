@@ -205,8 +205,10 @@ class Game:
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
-    def display_message(self, message, pause=2, style='round'):
+    def display_message(self, message, pause=2, style='round', color=None):
         box = self.create_box(message, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
         print(box)
         if pause > 0:
             time.sleep(pause)
@@ -337,7 +339,8 @@ class Game:
             "Nothing special happening."
         ]
         special_event = random.choice(special_events)
-        print(f"Special Event: {special_event}")
+        self.display_message(f"Special Event: {special_event}")
+#        print(f"Special Event: {special_event}")
         time.sleep(3)  # Pause to let the player read the information
 
     def clear_screen(self):
@@ -531,45 +534,45 @@ class Game:
         ]
         event = random.choice(events)
         self.event_log.append({'turn': self.turn, 'event': event})
-        print(f"Random Event: {event}")
+
         if event == "Pirate attack!":
             if "turrets" in self.ship.items and random.random() < 0.35:
-                print("Event! Pirate attack repelled by laser turrets!")
+                self.display_message("Event! Pirate attack repelled by laser turrets!", 3, color='32')
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
                 stolen_money = random.randint(1, int(self.ship.money // 2))
                 self.ship.money -= stolen_money
-                print(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.")
+                self.display_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Market crash!":
             self.current_planet.update_market(self.difficulty)
-            print("Event! Market prices have changed.")
+            self.display_message("Event! Market prices have changed.", 3, color='31')
         elif event == "Technological breakthrough!":
             self.current_planet.tech_level += 1
-            print("Event! Technological breakthrough! Tech level increased.")
+            self.display_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
         elif event == "Exotic radiation!":
             destroyed_tech = random.randint(1, max(1, self.ship.cargo['tech']))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_tech)
-            print(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.")
+            self.display_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
         elif event == "Contamination!":
             destroyed_agri = random.randint(1, max(1, self.ship.cargo['agri']))
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_agri)
-            print(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.")
+            self.display_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
         elif event == "Cargo bay hit by asteroid!":
             self.ship.damage += min(random.randint(5, 15) * (1 + self.difficulty), 49)
             total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
             destroyed_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_cargo // 2)
-            print(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.")
+            self.display_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Cargo bay raided by guerrilla!":
             total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
             stolen_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - stolen_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - stolen_cargo // 2)
-            print(f"Event! Guerrilla raid stole {self.format_money(stolen_cargo)} units of cargo.")
+            self.display_message(f"Event! Guerrilla raid stole {self.format_money(stolen_cargo)} units of cargo.", 3, color='31')
         elif event == "Spacetime rift!":
             self.ship.damage += min(random.randint(15, 35) * (1 + self.difficulty), 49)
-            print(f"Event! Spacetime rift caused {self.ship.damage}% damage.")
+            self.display_message(f"Event! Spacetime rift caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Rogue Corsair attacking!":
             self.battle_event(2, 1, 1)
         elif event == "Pirate mothership attacking!":
@@ -586,11 +589,11 @@ class Game:
         if outcome == "rare elements":
             tech_goods = random.randint(5, 15)
             self.ship.cargo['tech'] += tech_goods
-            print(f"You found {self.format_money(tech_goods)} tech goods.")
+            self.display_message(f"You found {self.format_money(tech_goods)} tech goods.", 3, color='32')
         elif outcome == "scientific samples":
             research_points = random.randint(5, 15)
             self.current_planet.research_points += research_points
-            print(f"You gained {self.format_money(research_points)} research points.")
+            self.display_message(f"You gained {self.format_money(research_points)} research points.", 3, color='32')
 
     def battle_event(self, enemy_attack, enemy_defense, enemy_speed):
         print(f"An enemy is attacking! Enemy stats: ATK {enemy_attack}, DEF {enemy_defense}, SPD {enemy_speed}")
@@ -624,16 +627,16 @@ class Game:
             ])
             if reward[0] == "money":
                 self.ship.money += reward[1]
-                print(f"Reward: {self.format_money(reward[1])} money")
+                self.display_message(f"Reward: {self.format_money(reward[1])} money", 3, color='32')
             elif reward[0] == "tech":
                 self.ship.cargo['tech'] += reward[1]
-                print(f"Reward: {self.format_money(reward[1])} tech goods")
+                self.display_message(f"Reward: {self.format_money(reward[1])} tech goods", 3, color='32')
             elif reward[0] == "agri":
                 self.ship.cargo['agri'] += reward[1]
-                print(f"Reward: {self.format_money(reward[1])} agri goods")
+                self.display_message(f"Reward: {self.format_money(reward[1])} agri goods", 3, color='32')
             elif reward[0] == "item":
                 self.ship.acquire_item(reward[1])
-                print(f"Reward: {reward[1]} item")
+                self.display_message(f"Reward: {reward[1]} item", 3, color='32')
         else:
             print("You lost the battle!")
             penalty = random.choice([
@@ -644,16 +647,16 @@ class Game:
             ])
             if penalty[0] == "money":
                 self.ship.money = max(0, self.ship.money - penalty[1])
-                print(f"Penalty: Lost {self.format_money(penalty[1])} money")
+                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} money", 3, color='31')
             elif penalty[0] == "tech":
                 self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - penalty[1])
-                print(f"Penalty: Lost {self.format_money(penalty[1])} tech goods")
+                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} tech goods", 3, color='31')
             elif penalty[0] == "agri":
                 self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - penalty[1])
-                print(f"Penalty: Lost {self.format_money(penalty[1])} agri goods")
+                self.display_message(f"Penalty: Lost {self.format_money(penalty[1])} agri goods", 3, color='31')
             elif penalty[0] == "damage":
                 self.ship.damage += penalty[1]
-                print(f"Penalty: {penalty[1]}% additional damage")
+                self.display_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
     def visit_cantina(self):
         self.display_message("Welcome to the Cantina!", 1)
