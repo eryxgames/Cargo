@@ -73,7 +73,7 @@ class Ship:
         self.money = 1000
         self.damage = 0
         self.upgrades = []
-        self.items = []
+        self.items = {}
         self.attack = 1
         self.defense = 1
         self.speed = 1
@@ -120,7 +120,10 @@ class Ship:
         return False
 
     def acquire_item(self, item_name):
-        self.items.append(item_name)
+        if item_name in self.items:
+            self.items[item_name] += 1
+        else:
+            self.items[item_name] = 1
 
     def is_empty_cargo(self):
         return self.cargo['tech'] == 0 and self.cargo['agri'] == 0
@@ -320,7 +323,7 @@ class Game:
                     return None
                 if user_input in valid_options:
                     return user_input
-                self.display_simple_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
+                self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
             except KeyboardInterrupt:
                 print(f"Do you want to exit? (yes/no):")
 #                self.display_message("Do you want to exit? (yes/no)", 0)
@@ -394,35 +397,40 @@ class Game:
 
         # Command menu
         commands = [
-            ["Commands: buy/b, sell/s, upgrade/u, travel/t,"],
-            ["repair/r, info/i, build/bl, cantina/c,"],
-            ["shop/sh, end/e"]
+            ["Commands: buy/b, sell/s, upgrade/u,"],
+            ["travel/t, repair/r, info/i, build/bl,"],
+            ["cantina/c, shop/sh, end/e"]
         ]
         print(self.create_box(commands, 'round'))
 
     def display_planet_info(self):
         content = [
-            ["Planet Information", "Ship Information"],
-            [f"Name: {self.current_planet.name}", f"Attack: {self.ship.attack}"],
-            [f"Tech Level: {self.current_planet.tech_level}", f"Defense: {self.ship.defense}"],
-            [f"Agri Level: {self.current_planet.agri_level}", f"Speed: {self.ship.speed}"],
-            [f"Research Points: {self.current_planet.research_points}", "Items:"],
-            [f"Economy: {self.current_planet.economy}", "Upgrades:"],
-            [f"Buildings:", ""]
+            ["Ship Information", "Planet Information"],
+            [f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
+            [f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
+            [f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
+            [f"Items:", f"Research Points: {self.current_planet.research_points}"],
+            [f"Upgrades:", f"Economy: {self.current_planet.economy}"],
+            ["", "Buildings:"]
         ]
 
-        # Add buildings, items, and upgrades on separate lines
-        for building in self.format_buildings():
-            content.append(["", building])
-
-        for item in self.ship.items:
-            content.append(["", item])
+        # Add items, upgrades, and buildings on separate lines
+        for item, count in self.ship.items.items():
+            content.append([f"{item} {count}", ""])
 
         for upgrade in self.ship.upgrades:
             content.append(["", upgrade])
 
+        for building in self.format_buildings():
+            content.append(["", building])
+
+        # Add stockmarket building info
+        if self.current_planet.stockmarket_base:
+            content.append(["", "Stockmarket Base"])
+
         print(self.create_box(content, 'double'))
         time.sleep(3)
+
 
     def format_buildings(self):
         building_counts = {}
@@ -681,7 +689,10 @@ class Game:
             "Spacetime rift!",
             "Rogue Corsair attacking!",
             "Pirate mothership attacking!",
-            "Gravitational anomaly!"
+            "Gravitational anomaly!",
+            "Guerilla Militia Patrol attacking!",
+            "Rogue Warship attacking!",
+            "Camouflaged Asteroid Base attacking!"
         ]
         event = random.choice(events)
         self.event_log.append({'turn': self.turn, 'event': event})
@@ -713,13 +724,13 @@ class Game:
             self.display_simple_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
         elif event == "Cargo bay hit by asteroid!":
             self.ship.damage += min(random.randint(5, 15) * (1 + self.difficulty), 49)
-            total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
+            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
             destroyed_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_cargo // 2)
             self.display_simple_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Cargo bay raided by guerrilla!":
-            total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
+            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
             stolen_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - stolen_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - stolen_cargo // 2)
@@ -733,9 +744,16 @@ class Game:
             self.battle_event(5, 5, 5)
         elif event == "Gravitational anomaly!":
             self.gravitational_anomaly_event()
+        elif event == "Guerilla Militia Patrol attacking!":
+            self.battle_event(3, 2, 2)
+        elif event == "Rogue Warship attacking!":
+            self.battle_event(4, 3, 3)
+        elif event == "Camouflaged Asteroid Base attacking!":
+            self.battle_event(6, 4, 4)
 
         if "shield" in self.ship.items:
             self.ship.damage = max(0, self.ship.damage - 5)
+
 
     def gravitational_anomaly_event(self):
         print("You have encountered a gravitational anomaly!")
@@ -812,6 +830,7 @@ class Game:
                 self.ship.damage += penalty[1]
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
+
     def visit_cantina(self):
         self.display_simple_message("Welcome to the Cantina!", 1)
 
@@ -850,12 +869,21 @@ class Game:
                         print(f"Cheap tech goods available on {planet.name}.")
                     if planet.market['agri'] < 30:
                         print(f"Cheap agri goods available on {planet.name}.")
+                    if planet.market['tech'] > 100:
+                        print(f"High price on tech goods on {planet.name}.")
+                    if planet.market['agri'] > 80:
+                        print(f"High price on agri goods on {planet.name}.")
                 if random.random() < 0.3:  # 30% chance to get a quest
                     quest = random.choice([
                         ("Deliver 10 tech goods to Alpha", "tech", 10, 500),
                         ("Deliver 15 agri goods to Beta", "agri", 15, 700),
                         ("Deliver 20 tech goods to Gamma", "tech", 20, 1000),
-                        ("Deliver 25 agri goods to Delta", "agri", 25, 1200)
+                        ("Deliver 25 agri goods to Delta", "agri", 25, 1200),
+                        ("Rescue mission to Epsilon", "rescue", 0, 1500),
+                        ("Mining asteroid intel to Zeta", "mining", 0, 2000),
+                        ("Eliminate Guerilla Militia Patrol", "guerilla", 0, 1800),
+                        ("Eliminate Rogue Warship", "rogue", 0, 2200),
+                        ("Eliminate Camouflaged Asteroid Base", "asteroid", 0, 2500)
                     ])
                     self.ship.add_quest(quest)
                     self.display_simple_message(f"You received a quest: {quest[0]}")
@@ -903,7 +931,7 @@ class Game:
         print(f"| Money: {self.format_money(self.ship.money):<{self.term_width-13}} |")
         print(f"| Cargo: Tech - {self.format_money(self.ship.cargo['tech']):<2}, Agri - {self.format_money(self.ship.cargo['agri']):<{self.term_width-21}} |")
         print(f"| Upgrades: {', '.join(self.ship.upgrades) if self.ship.upgrades else 'None':<{self.term_width-10}} |")
-        print(f"| Items: {', '.join(self.ship.items) if self.ship.items else 'None':<{self.term_width-7}} |")
+        print(f"| Items: {', '.join(f'{item} {count}' for item, count in self.ship.items.items()) if self.ship.items else 'None':<{self.term_width-7}} |")
         print(f"| Rank: {rank:.2f} ".center(self.term_width) + "|")
         print("+" + "-"*self.term_width + "+")
 
