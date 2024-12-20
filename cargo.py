@@ -44,6 +44,7 @@ class Planet:
         self.stockmarket_cost = 5000
 
     def build_building(self, building_name):
+        cost_multiplier = self.buildings.count(building_name) + 1
         if building_name == "Permaculture Paradise":
             self.market['agri'] = max(1, self.market['agri'] * 0.8)
             self.buildings.append(building_name)
@@ -60,6 +61,7 @@ class Planet:
         elif building_name == "Neuroengineering Guild":
             self.market['tech'] = self.market['tech'] * 1.3
             self.buildings.append(building_name)
+        return cost_multiplier
 
     def __str__(self):
         return f"{self.name} (Tech: {self.tech_level}, Agri: {self.agri_level}, RP: {self.research_points}, Economy: {self.economy})"
@@ -71,7 +73,7 @@ class Ship:
         self.money = 1000
         self.damage = 0
         self.upgrades = []
-        self.items = []
+        self.items = {}
         self.attack = 1
         self.defense = 1
         self.speed = 1
@@ -118,7 +120,10 @@ class Ship:
         return False
 
     def acquire_item(self, item_name):
-        self.items.append(item_name)
+        if item_name in self.items:
+            self.items[item_name] += 1
+        else:
+            self.items[item_name] = 1
 
     def is_empty_cargo(self):
         return self.cargo['tech'] == 0 and self.cargo['agri'] == 0
@@ -266,7 +271,9 @@ class Game:
         lines.append(f"{chars['tl']}{chars['h'] * width}{chars['tr']}")
 
         for row in content:
-            lines.append(f"{chars['v']} {row:<{width-2}} {chars['v']}")
+            wrapped_row = self.word_wrap(row, width - 2)
+            for line in wrapped_row:
+                lines.append(f"{chars['v']} {line:<{width-2}} {chars['v']}")
 
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
@@ -287,28 +294,8 @@ class Game:
     def validate_input(self, prompt, valid_options):
         term_width = shutil.get_terminal_size().columns
 
-        def word_wrap(text, width):
-            words = text.split()
-            lines = []
-            current_line = []
-            current_length = 0
-
-            for word in words:
-                if current_length + len(word) + len(current_line) > width:
-                    lines.append(' '.join(current_line))
-                    current_line = [word]
-                    current_length = len(word)
-                else:
-                    current_line.append(word)
-                    current_length += len(word)
-
-            if current_line:
-                lines.append(' '.join(current_line))
-
-            return lines
-
         while True:
-            wrapped_prompt = word_wrap(prompt, term_width - 4)  # Account for padding
+            wrapped_prompt = self.word_wrap(prompt, term_width - 4)  # Account for padding
             self.display_simple_message(wrapped_prompt, 0)
 
             try:
@@ -318,10 +305,10 @@ class Game:
                     return None
                 if user_input in valid_options:
                     return user_input
-                self.display_simple_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
+                self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
             except KeyboardInterrupt:
                 print(f"Do you want to exit? (yes/no):")
-    #            self.display_message("Do you want to exit? (yes/no)", 0)
+#                self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
                     self.display_simple_message("Goodbye!", 1)
@@ -344,11 +331,34 @@ class Game:
             except ValueError:
                 self.display_simple_message("Invalid input. Please enter a number or 'max'", 1)
 
+    def validate_planet_input(self, prompt):
+        while True:
+            self.display_simple_message(prompt, 0)
+            try:
+                user_input = input(">>> ").strip().lower()
+                if not user_input:
+                    self.display_simple_message("Command cancelled.")
+                    return None
+                if user_input.isdigit():
+                    index = int(user_input) - 1
+                    if 0 <= index < len(self.known_planets):
+                        return self.known_planets[index]
+                for planet in self.planets:
+                    if planet.name.lower() == user_input:
+                        return planet.name
+                self.display_simple_message(f"Invalid input. Valid options: {', '.join([planet.name for planet in self.planets])}", 1)
+            except KeyboardInterrupt:
+                print(f"Do you want to exit? (yes/no):")
+#                self.display_message("Do you want to exit? (yes/no)", 0)
+                confirm = input(">>> ").strip().lower()
+                if confirm == 'yes':
+                    self.display_simple_message("Goodbye!", 1)
+                    exit()
 
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
-            ["Game Status", "Ship Status", "Planet Status"],
+            ["Game", "Ship", "Planet"],
             [f"Turn: {self.turn}", f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
             [f"Money: {self.format_money(self.ship.money)}", f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
             [f"Tech Cargo: {self.format_money(self.ship.cargo['tech'])}", f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
@@ -369,24 +379,48 @@ class Game:
 
         # Command menu
         commands = [
-            ["Commands: buy/b, sell/s, upgrade/u, travel/t,"],
-            ["repair/r, info/i, build/bl, cantina/c,"],
-            ["shop/sh, end/e"]
+            ["Commands: buy/b, sell/s, upgrade/u,"],
+            ["travel/t, repair/r, info/i, build/bl,"],
+            ["cantina/c, shop/sh, end/e"]
         ]
         print(self.create_box(commands, 'round'))
 
     def display_planet_info(self):
         content = [
-            ["Planet Information", "Ship Information"],
-            [f"Name: {self.current_planet.name}", f"Attack: {self.ship.attack}"],
-            [f"Tech Level: {self.current_planet.tech_level}", f"Defense: {self.ship.defense}"],
-            [f"Agri Level: {self.current_planet.agri_level}", f"Speed: {self.ship.speed}"],
-            [f"Research Points: {self.current_planet.research_points}", f"Items: {', '.join(self.ship.items) or 'None'}"],
-            [f"Economy: {self.current_planet.economy}", f"Upgrades: {', '.join(self.ship.upgrades) or 'None'}"],
-            [f"Buildings: {', '.join(self.current_planet.buildings) or 'None'}", ""]
+            ["Ship Information", "Planet Information"],
+            [f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
+            [f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
+            [f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
+            [f"Items:", f"Research Points: {self.current_planet.research_points}"],
+            [f"Upgrades:", f"Economy: {self.current_planet.economy}"],
+            ["", "Buildings:"]
         ]
+
+        # Add items, upgrades, and buildings on separate lines
+        for item, count in self.ship.items.items():
+            content.append([f"{item} {count}", ""])
+
+        for upgrade in self.ship.upgrades:
+            content.append(["", upgrade])
+
+        for building in self.format_buildings():
+            content.append(["", building])
+
+        # Add stockmarket building info
+        if self.current_planet.stockmarket_base:
+            content.append(["", "Stockmarket Base"])
+
         print(self.create_box(content, 'double'))
         time.sleep(3)
+
+    def format_buildings(self):
+        building_counts = {}
+        for building in self.current_planet.buildings:
+            if building in building_counts:
+                building_counts[building] += 1
+            else:
+                building_counts[building] = 1
+        return [f"{building} {count}" for building, count in building_counts.items()]
 
     def choose_difficulty(self):
         print("\n Choose difficulty level:")
@@ -428,7 +462,7 @@ class Game:
         elif self.current_planet.research_points > 15:
             planet_type = "research"
 
-        print(f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins.")
+        intro_text = f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -437,32 +471,60 @@ class Game:
             "Nothing special happening."
         ]
         special_event = random.choice(special_events)
-        self.display_simple_message(f"Special Event: {special_event}")
-#        print(f"Special Event: {special_event}")
+        special_event_text = f"Special Event: {special_event}"
+
+        self.display_story_message(self.word_wrap(intro_text))
+        self.display_story_message(self.word_wrap(special_event_text))
         time.sleep(3)  # Pause to let the player read the information
+
+    def word_wrap(self, text, width=None):
+        if width is None:
+            term_width = shutil.get_terminal_size().columns
+            width = term_width - 4  # Account for padding
+
+        words = text.split()
+        lines = []
+        current_line = []
+        current_length = 0
+
+        for word in words:
+            if current_length + len(word) + len(current_line) > width:
+                lines.append(' '.join(current_line))
+                current_line = [word]
+                current_length = len(word)
+            else:
+                current_line.append(word)
+                current_length += len(word)
+
+        if current_line:
+            lines.append(' '.join(current_line))
+
+        return lines
+
+    def display_story_message(self, message, pause=2, style='round', color=None):
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
+
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
+
+    def display_character_message(self, character_name, message, pause=2, style='round', color=None):
+        box_content = [f"{character_name}: {message}"]
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
 
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
-
-    def validate_planet_input(self, prompt):
-        while True:
-            self.display_simple_message(prompt, 0)
-            try:
-                user_input = input(">>> ").strip().lower()
-                if not user_input:
-                    self.display_simple_message("Command cancelled.")
-                    return None
-                for planet in self.planets:
-                    if planet.name.lower() == user_input:
-                        return planet.name
-                self.display_simple_message(f"Invalid input. Valid options: {', '.join([planet.name for planet in self.planets])}", 1)
-            except KeyboardInterrupt:
-                print(f"Do you want to exit? (yes/no):")
-#                self.display_message("Do you want to exit? (yes/no)", 0)
-                confirm = input(">>> ").strip().lower()
-                if confirm == 'yes':
-                    self.display_simple_message("Goodbye!", 1)
-                    exit()
 
     def play_turn(self):
         self.display_turn_info()
@@ -504,29 +566,30 @@ class Game:
                 for i, planet in enumerate(self.known_planets):
                     print(f"{i+1}. {planet}")
                 choice = self.validate_planet_input("Enter the number of the planet or the planet name: ")
-                for planet in self.planets:
-                    if planet.name.lower() == choice.lower():
-                        self.current_planet = planet
-                        self.display_simple_message(f"Traveled to {planet.name}.")
-                        self.turn += 1
-                        self.random_event()
-                        # Check for quest completion
-                        for quest in self.ship.quests:
-                            if quest[1] == 'tech' and self.ship.cargo['tech'] >= quest[2]:
-                                self.ship.complete_quest(quest)
-                                reward_money = quest[3] * (1 + self.rank_multiplier())
-                                self.ship.money += reward_money
-                                self.display_simple_message(f"Quest completed: {quest[0]}")
-                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                            elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
-                                self.ship.complete_quest(quest)
-                                reward_money = quest[3] * (1 + self.rank_multiplier())
-                                self.ship.money += reward_money
-                                self.display_simple_message(f"Quest completed: {quest[0]}")
-                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                        return
-                else:
-                    self.display_simple_message("Invalid choice.")
+                if choice:
+                    for planet in self.planets:
+                        if planet.name.lower() == choice.lower():
+                            self.current_planet = planet
+                            self.display_simple_message(f"Traveled to {planet.name}.")
+                            self.turn += 1
+                            self.random_event()
+                            # Check for quest completion
+                            for quest in self.ship.quests:
+                                if quest[1] == 'tech' and self.ship.cargo['tech'] >= quest[2]:
+                                    self.ship.complete_quest(quest)
+                                    reward_money = quest[3] * (1 + self.rank_multiplier())
+                                    self.ship.money += reward_money
+                                    self.display_simple_message(f"Quest completed: {quest[0]}")
+                                    self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
+                                elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
+                                    self.ship.complete_quest(quest)
+                                    reward_money = quest[3] * (1 + self.rank_multiplier())
+                                    self.ship.money += reward_money
+                                    self.display_simple_message(f"Quest completed: {quest[0]}")
+                                    self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
+                            return
+                    else:
+                        self.display_simple_message("Invalid choice.")
             else:
                 planet_name = input("Enter planet name to travel: ").strip()
                 for planet in self.planets:
@@ -565,8 +628,9 @@ class Game:
                                             ['stockmarket', 'sm', 'permaculture', 'pc', 'organic', 'oc', 'agrobot', 'ab', 'nanotech', 'nt', 'neuroengineering', 'ne'])
             if building_name in ['stockmarket', 'sm']:
                 if not self.current_planet.stockmarket_base:
-                    if self.ship.money >= self.current_planet.stockmarket_cost:
-                        self.ship.money -= self.current_planet.stockmarket_cost
+                    cost_multiplier = self.current_planet.build_building("Stockmarket Base")
+                    if self.ship.money >= self.current_planet.stockmarket_cost * cost_multiplier:
+                        self.ship.money -= self.current_planet.stockmarket_cost * cost_multiplier
                         self.current_planet.build_stockmarket()
                         self.display_simple_message(f"Stockmarket Base built on {self.current_planet.name}.")
                     else:
@@ -574,37 +638,37 @@ class Game:
                 else:
                     self.display_simple_message("Stockmarket Base already built on this planet.")
             elif building_name in ['permaculture', 'pc']:
-                if self.ship.money >= 3000:
-                    self.ship.money -= 3000
-                    self.current_planet.build_building("Permaculture Paradise")
+                cost_multiplier = self.current_planet.build_building("Permaculture Paradise")
+                if self.ship.money >= 3000 * cost_multiplier:
+                    self.ship.money -= 3000 * cost_multiplier
                     self.display_simple_message(f"Permaculture Paradise built on {self.current_planet.name}.")
                 else:
                     self.display_simple_message("Not enough money to build Permaculture Paradise.")
             elif building_name in ['organic', 'oc']:
-                if self.ship.money >= 4000:
-                    self.ship.money -= 4000
-                    self.current_planet.build_building("Organic Certification Authority")
+                cost_multiplier = self.current_planet.build_building("Organic Certification Authority")
+                if self.ship.money >= 4000 * cost_multiplier:
+                    self.ship.money -= 4000 * cost_multiplier
                     self.display_simple_message(f"Organic Certification Authority built on {self.current_planet.name}.")
                 else:
                     self.display_simple_message("Not enough money to build Organic Certification Authority.")
             elif building_name in ['agrobot', 'ab']:
-                if self.ship.money >= 5000:
-                    self.ship.money -= 5000
-                    self.current_planet.build_building("Agrobot Assembly Line")
+                cost_multiplier = self.current_planet.build_building("Agrobot Assembly Line")
+                if self.ship.money >= 5000 * cost_multiplier:
+                    self.ship.money -= 5000 * cost_multiplier
                     self.display_simple_message(f"Agrobot Assembly Line built on {self.current_planet.name}.")
                 else:
                     self.display_simple_message("Not enough money to build Agrobot Assembly Line.")
             elif building_name in ['nanotech', 'nt']:
-                if self.ship.money >= 6000:
-                    self.ship.money -= 6000
-                    self.current_planet.build_building("The Nanotech Nexus")
+                cost_multiplier = self.current_planet.build_building("The Nanotech Nexus")
+                if self.ship.money >= 6000 * cost_multiplier:
+                    self.ship.money -= 6000 * cost_multiplier
                     self.display_simple_message(f"The Nanotech Nexus built on {self.current_planet.name}.")
                 else:
                     self.display_simple_message("Not enough money to build The Nanotech Nexus.")
             elif building_name in ['neuroengineering', 'ne']:
-                if self.ship.money >= 7000:
-                    self.ship.money -= 7000
-                    self.current_planet.build_building("Neuroengineering Guild")
+                cost_multiplier = self.current_planet.build_building("Neuroengineering Guild")
+                if self.ship.money >= 7000 * cost_multiplier:
+                    self.ship.money -= 7000 * cost_multiplier
                     self.display_simple_message(f"Neuroengineering Guild built on {self.current_planet.name}.")
                 else:
                     self.display_simple_message("Not enough money to build Neuroengineering Guild.")
@@ -631,7 +695,10 @@ class Game:
             "Spacetime rift!",
             "Rogue Corsair attacking!",
             "Pirate mothership attacking!",
-            "Gravitational anomaly!"
+            "Gravitational anomaly!",
+            "Guerilla Militia Patrol attacking!",
+            "Rogue Warship attacking!",
+            "Camouflaged Asteroid Base attacking!"
         ]
         event = random.choice(events)
         self.event_log.append({'turn': self.turn, 'event': event})
@@ -642,7 +709,7 @@ class Game:
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
                 if self.ship.money > 0:
-                    stolen_money = random.randint(1, int(self.ship.money // 2))
+                    stolen_money = random.randint(1, max(1, self.ship.money // 2))
                     self.ship.money -= stolen_money
                     self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
                 else:
@@ -654,22 +721,22 @@ class Game:
             self.current_planet.tech_level += 1
             self.display_simple_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
         elif event == "Exotic radiation!":
-            destroyed_tech = random.randint(1, max(1, self.ship.cargo['tech']))
+            destroyed_tech = random.randint(1, max(1, int(self.ship.cargo['tech'])))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_tech)
             self.display_simple_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
         elif event == "Contamination!":
-            destroyed_agri = random.randint(1, max(1, self.ship.cargo['agri']))
+            destroyed_agri = random.randint(1, max(1, int(self.ship.cargo['agri'])))
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_agri)
             self.display_simple_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
         elif event == "Cargo bay hit by asteroid!":
             self.ship.damage += min(random.randint(5, 15) * (1 + self.difficulty), 49)
-            total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
+            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
             destroyed_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_cargo // 2)
             self.display_simple_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
         elif event == "Cargo bay raided by guerrilla!":
-            total_cargo = self.ship.cargo['tech'] + self.ship.cargo['agri']
+            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
             stolen_cargo = random.randint(1, max(1, total_cargo // 2))
             self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - stolen_cargo // 2)
             self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - stolen_cargo // 2)
@@ -683,6 +750,12 @@ class Game:
             self.battle_event(5, 5, 5)
         elif event == "Gravitational anomaly!":
             self.gravitational_anomaly_event()
+        elif event == "Guerilla Militia Patrol attacking!":
+            self.battle_event(3, 2, 2)
+        elif event == "Rogue Warship attacking!":
+            self.battle_event(4, 3, 3)
+        elif event == "Camouflaged Asteroid Base attacking!":
+            self.battle_event(6, 4, 4)
 
         if "shield" in self.ship.items:
             self.ship.damage = max(0, self.ship.damage - 5)
@@ -800,12 +873,21 @@ class Game:
                         print(f"Cheap tech goods available on {planet.name}.")
                     if planet.market['agri'] < 30:
                         print(f"Cheap agri goods available on {planet.name}.")
+                    if planet.market['tech'] > 100:
+                        print(f"High price on tech goods on {planet.name}.")
+                    if planet.market['agri'] > 80:
+                        print(f"High price on agri goods on {planet.name}.")
                 if random.random() < 0.3:  # 30% chance to get a quest
                     quest = random.choice([
                         ("Deliver 10 tech goods to Alpha", "tech", 10, 500),
                         ("Deliver 15 agri goods to Beta", "agri", 15, 700),
                         ("Deliver 20 tech goods to Gamma", "tech", 20, 1000),
-                        ("Deliver 25 agri goods to Delta", "agri", 25, 1200)
+                        ("Deliver 25 agri goods to Delta", "agri", 25, 1200),
+                        ("Rescue mission to Epsilon", "rescue", 0, 1500),
+                        ("Mining asteroid intel to Zeta", "mining", 0, 2000),
+                        ("Eliminate Guerilla Militia Patrol", "guerilla", 0, 1800),
+                        ("Eliminate Rogue Warship", "rogue", 0, 2200),
+                        ("Eliminate Camouflaged Asteroid Base", "asteroid", 0, 2500)
                     ])
                     self.ship.add_quest(quest)
                     self.display_simple_message(f"You received a quest: {quest[0]}")
@@ -819,6 +901,11 @@ class Game:
                     print(f"- {quest[0]}")
             else:
                 self.display_simple_message("No active quests.")
+
+        # Randomly introduce a demo character after reaching a new rank
+        if random.random() < 0.1:  # 10% chance
+            self.display_character_message("Mysterious Stranger", "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend.")
+
         time.sleep(3)  # Pause to let the player read the information
 
     def shop(self):
@@ -853,7 +940,7 @@ class Game:
         print(f"| Money: {self.format_money(self.ship.money):<{self.term_width-13}} |")
         print(f"| Cargo: Tech - {self.format_money(self.ship.cargo['tech']):<2}, Agri - {self.format_money(self.ship.cargo['agri']):<{self.term_width-21}} |")
         print(f"| Upgrades: {', '.join(self.ship.upgrades) if self.ship.upgrades else 'None':<{self.term_width-10}} |")
-        print(f"| Items: {', '.join(self.ship.items) if self.ship.items else 'None':<{self.term_width-7}} |")
+        print(f"| Items: {', '.join(f'{item} {count}' for item, count in self.ship.items.items()) if self.ship.items else 'None':<{self.term_width-7}} |")
         print(f"| Rank: {rank:.2f} ".center(self.term_width) + "|")
         print("+" + "-"*self.term_width + "+")
 
