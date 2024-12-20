@@ -223,7 +223,8 @@ class Game:
                     return user_input
                 self.display_message(f"Invalid input. Valid options: {', '.join(valid_options)}", 1)
             except KeyboardInterrupt:
-                self.display_message("Do you want to exit? (yes/no)", 0)
+                print(f"Do you want to exit? (yes/no):")
+#                self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
                     self.display_message("Goodbye!", 1)
@@ -314,10 +315,8 @@ class Game:
 
     def get_player_name(self):
         self.clear_screen()
-        print("+" + "-"*self.term_width + "+")
-        print("|" + " Welcome to Cargo! ".center(self.term_width) + "|")
-        print("+" + "-"*self.term_width + "+")
-        name = input("Enter your name (or press Enter for a random name): ").strip()
+        self.display_message ("Welcome to Cargo!")
+        name = input("  Enter your name (or press Enter for a random name): ").strip()
         if not name:
             name = random.choice(["Captain", "Commander", "Pilot", "Admiral", "Spacefarer"])
         return name
@@ -329,7 +328,7 @@ class Game:
         elif self.current_planet.research_points > 15:
             planet_type = "research"
 
-        print(f"Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins.")
+        print(f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins.")
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -357,7 +356,8 @@ class Game:
                         return planet.name
                 self.display_message(f"Invalid input. Valid options: {', '.join([planet.name for planet in self.planets])}", 1)
             except KeyboardInterrupt:
-                self.display_message("Do you want to exit? (yes/no)", 0)
+                print(f"Do you want to exit? (yes/no):")
+#                self.display_message("Do you want to exit? (yes/no)", 0)
                 confirm = input(">>> ").strip().lower()
                 if confirm == 'yes':
                     self.display_message("Goodbye!", 1)
