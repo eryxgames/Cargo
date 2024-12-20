@@ -348,7 +348,7 @@ class Game:
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
-            ["Game Status", "Ship Status", "Planet Status"],
+            ["Game", "Ship", "Planet"],
             [f"Turn: {self.turn}", f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
             [f"Money: {self.format_money(self.ship.money)}", f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
             [f"Tech Cargo: {self.format_money(self.ship.cargo['tech'])}", f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
