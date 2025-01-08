@@ -358,12 +358,12 @@ class Game:
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
-            ["Game", "Ship", "Planet"],
-            [f"Turn: {self.turn}", f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
-            [f"Money: {self.format_money(self.ship.money)}", f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
-            [f"Tech Cargo: {self.format_money(self.ship.cargo['tech'])}", f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
-            [f"Agri Cargo: {self.format_money(self.ship.cargo['agri'])}", f"Damage: {self.ship.damage}%", f"Eco: {self.current_planet.economy}"],
-            [f"Rank: {self.rank}", f"Items: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
+            ["CΔRG⊙", "Ship", "Planet"],
+            [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_planet.name}"],
+            [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
+            [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
+            [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
+            [f"★: {self.rank}", f"ITM: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
         ]
 
         status_box = self.create_box(status_content, 'double')
@@ -441,16 +441,16 @@ class Game:
     def generate_planets(self):
         return [
             Planet("Alpha", 5, 3, 10, "Stable"),
-            Planet("Beta", 3, 7, 15, "Booming"),
+            Planet("Beta", 2, 7, 15, "Booming"),
             Planet("Gamma", 8, 2, 20, "Declining"),
-            Planet("Delta", 4, 6, 25, "Transformative"),
+            Planet("Delta", 4, 6, 25, "Formative"),
             Planet("Epsilon", 7, 4, 30, "Stable")
         ]
 
     def get_player_name(self):
         self.clear_screen()
         self.display_simple_message ("Welcome to Cargo!")
-        name = input("  Enter your name (or press Enter for a random name): ").strip()
+        name = input("  Enter your name (or Enter for a random name): ").strip()
         if not name:
             name = random.choice(["Captain", "Commander", "Pilot", "Admiral", "Spacefarer"])
         return name
@@ -949,11 +949,11 @@ class Game:
         if score >= 1000000:
             self.rank = "Galactic Legend"
         elif score >= 500000:
-            self.rank = "Interstellar Hero"
+            self.rank = "Stellar Hero"
         elif score >= 200000:
-            self.rank = "Star Commander"
+            self.rank = "Space Admiral" 
         elif score >= 100000:
-            self.rank = "Space Admiral"
+            self.rank = "Star Commander"
         elif score >= 50000:
             self.rank = "Commander"
         elif score >= 20000:
@@ -966,11 +966,11 @@ class Game:
     def rank_multiplier(self):
         if self.rank == "Galactic Legend":
             return 10
-        elif self.rank == "Interstellar Hero":
+        elif self.rank == "Stellar Hero":
             return 8
-        elif self.rank == "Star Commander":
-            return 6
         elif self.rank == "Space Admiral":
+            return 6
+        elif self.rank == "Star Commander":
             return 4
         elif self.rank == "Commander":
             return 2
@@ -1028,7 +1028,7 @@ class Game:
             Planet("Zeta", 10, 1, 5, "Stable"),
             Planet("Eta", 1, 10, 5, "Booming"),
             Planet("Theta", 8, 8, 10, "Declining"),
-            Planet("Iota", 5, 5, 15, "Transformative"),
+            Planet("Iota", 5, 5, 15, "Formative"),
             Planet("Kappa", 3, 3, 20, "Stable")
         ]
 
