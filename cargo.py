@@ -16,28 +16,192 @@ class Planet:
         self.stockmarket_base = False
         self.stockmarket_cost = 5000
         self.buildings = []
+        self.mining_efficiency = random.randint(60, 100)  # New: affects mining output
+        self.market['salt'] = 0
+        self.market['fuel'] = 0
+        self.production_cooldown = {}  # New: tracks cooldown for resource production
+        self.banned_commodities = []  # New: List of temporarily banned commodities
+        self.ban_duration = {}  # New: Duration of bans for each commodity
+        self.mineral_deposits = {}  # New: Dictionary to store discovered deposits
+        self.mining_platforms = []  # New: List of mining platforms and their type
+
+    def calculate_mining_output(self, platform_type):
+        """Calculate mining output based on efficiency and random factors"""
+        base_output = random.randint(10, 20)
+        efficiency_bonus = self.mining_efficiency / 100
+        return int(base_output * efficiency_bonus)
+
+    def produce_resources(self):
+        """Handle resource production from mining platforms"""
+        for platform in self.mining_platforms:
+            resource_type = platform['type']
+            if resource_type not in self.production_cooldown or self.production_cooldown[resource_type] <= 0:
+                output = self.calculate_mining_output(resource_type)
+                if resource_type == 'salt':
+                    self.market['salt'] = random.randint(80, 120)
+                elif resource_type == 'fuel':
+                    self.market['fuel'] = random.randint(150, 200)
+                self.production_cooldown[resource_type] = 3  # 3 turns cooldown
+            else:
+                self.production_cooldown[resource_type] -= 1
+
+    def build_mining_platform(self, deposit_type, cost):
+        """Build a new mining platform for specified deposit"""
+        if deposit_type in self.mineral_deposits:
+            if self.mineral_deposits[deposit_type] > 0:
+                self.mining_platforms.append({
+                    'type': deposit_type,
+                    'efficiency': self.mining_efficiency,
+                    'capacity': random.randint(100, 200)
+                })
+                self.mineral_deposits[deposit_type] -= 1
+                return True
+        return False
 
     def generate_market(self):
         # Generate initial market prices based on tech and agri levels
         tech_price = 100 - (self.tech_level * 10)
         agri_price = 50 + (self.agri_level * 5)
-        return {'tech': tech_price, 'agri': agri_price}
+        return {
+            'tech': tech_price,
+            'agri': agri_price,
+            'salt': 0,  # New: Mining commodities
+            'fuel': 0
+        }
 
     def update_market(self, difficulty):
-        # Simulate price changes based on difficulty and economy
-        tech_change = random.randint(-5, 5) * (1 + difficulty)
-        agri_change = random.randint(-3, 3) * (1 + difficulty)
-        if self.economy == "Booming":
-            tech_change += 5
-            agri_change += 3
-        elif self.economy == "Declining":
-            tech_change -= 5
-            agri_change -= 3
-        self.market['tech'] = max(1, self.market['tech'] + tech_change)
-        self.market['agri'] = max(1, self.market['agri'] + agri_change)
-        if self.stockmarket_base:
-            self.market['tech'] = max(1, self.market['tech'] - 10)
-            self.market['agri'] = max(1, self.market['agri'] - 5)
+            # Base price changes with randomization and difficulty scaling
+            tech_change = random.randint(-5, 5) * (1 + difficulty)
+            agri_change = random.randint(-3, 3) * (1 + difficulty)
+            
+            # Economy effects
+            if self.economy == "Booming":
+                tech_change += 5
+                agri_change += 3
+            elif self.economy == "Declining":
+                tech_change -= 5
+                agri_change -= 3
+            elif self.economy == "Formative":
+                tech_change = int(tech_change * 1.2)  # More volatile prices
+                agri_change = int(agri_change * 1.2)
+
+            # Apply stockmarket effects if present
+            if self.stockmarket_base:
+                tech_change = max(1, tech_change - 10)
+                agri_change = max(1, agri_change - 5)
+
+            # Calculate new prices
+            new_tech_price = max(0, self.market['tech'] + tech_change)
+            new_agri_price = max(0, self.market['agri'] + agri_change)
+
+            # Handle price changes from buildings
+            for building in self.buildings:
+                if building == "Permaculture Paradise":
+                    new_agri_price = max(1, new_agri_price * 0.8)
+                elif building == "Organic Certification Authority":
+                    new_agri_price = new_agri_price * 1.2
+                elif building == "Agrobot Assembly Line":
+                    new_agri_price = max(1, new_agri_price * 0.6)
+                elif building == "The Nanotech Nexus":
+                    new_tech_price = max(1, new_tech_price * 0.85)
+                    new_agri_price = max(1, new_agri_price * 0.85)
+                elif building == "Neuroengineering Guild":
+                    new_tech_price = new_tech_price * 1.3
+
+            # Handle zero prices and bans
+            if new_tech_price == 0 and 'tech' not in self.banned_commodities:
+                self.banned_commodities.append('tech')
+                self.ban_duration['tech'] = random.randint(2, 4)  # Random ban duration
+            if new_agri_price == 0 and 'agri' not in self.banned_commodities:
+                self.banned_commodities.append('agri')
+                self.ban_duration['agri'] = random.randint(2, 4)
+
+            # Update mining commodity prices if platforms exist
+            for platform in self.mining_platforms:
+                if platform['type'] == 'salt':
+                    # Salt prices fluctuate less than tech/agri
+                    salt_change = random.randint(-3, 3) * (1 + difficulty)
+                    new_salt_price = max(60, min(150, self.market['salt'] + salt_change))
+                    self.market['salt'] = new_salt_price
+                elif platform['type'] == 'fuel':
+                    # Fuel prices are more volatile
+                    fuel_change = random.randint(-8, 8) * (1 + difficulty)
+                    new_fuel_price = max(120, min(250, self.market['fuel'] + fuel_change))
+                    self.market['fuel'] = new_fuel_price
+
+            # Update final prices
+            self.market['tech'] = new_tech_price
+            self.market['agri'] = new_agri_price
+
+            # Update ban durations and remove expired bans
+            for commodity in list(self.ban_duration.keys()):
+                self.ban_duration[commodity] -= 1
+                if self.ban_duration[commodity] <= 0:
+                    self.banned_commodities.remove(commodity)
+                    del self.ban_duration[commodity]
+                    # Reset price for previously banned commodity
+                    if commodity == 'tech':
+                        self.market['tech'] = 100 - (self.tech_level * 10)
+                    elif commodity == 'agri':
+                        self.market['agri'] = 50 + (self.agri_level * 5)
+
+            # Ensure all prices stay within reasonable bounds
+            self.market['tech'] = max(1, min(200, self.market['tech']))
+            self.market['agri'] = max(1, min(150, self.market['agri']))
+            
+            # Production cooldown updates
+            for resource_type in list(self.production_cooldown.keys()):
+                if self.production_cooldown[resource_type] > 0:
+                    self.production_cooldown[resource_type] -= 1
+
+    def add_temporary_ban(self, commodity, duration):
+        if commodity not in self.banned_commodities:
+            self.banned_commodities.append(commodity)
+            self.ban_duration[commodity] = duration
+
+    def can_trade(self, commodity):
+        return commodity not in self.banned_commodities
+
+    def calculate_tax_rate(self, player_rank, profit):
+        base_tax = 0.05  # 5% base tax
+        rank_multiplier = {
+            "Explorer": 1,
+            "Pilot": 1.2,
+            "Captain": 1.4,
+            "Commander": 1.6,
+            "Star Commander": 1.8,
+            "Space Admiral": 2.0,
+            "Stellar Hero": 2.2,
+            "Galactic Legend": 2.5
+        }
+        
+        # Reduce tax based on number of buildings
+        building_discount = len(self.buildings) * 0.02  # 2% reduction per building
+        
+        final_tax_rate = (base_tax * rank_multiplier.get(player_rank, 1)) - building_discount
+        return max(0.01, min(0.25, final_tax_rate))  # Keep between 1% and 25%
+
+    def build_mining_platform(self):
+        if not self.current_planet.mineral_deposits:
+            self.display_simple_message("No mineral deposits found! Use geoscan first.")
+            return
+            
+        available_deposits = list(self.current_planet.mineral_deposits.keys())
+        deposit_type = self.validate_input(
+            f"Choose deposit type to mine ({', '.join(available_deposits)}): ",
+            available_deposits
+        )
+        
+        cost = 10000
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.current_planet.mining_platforms.append({
+                'type': deposit_type,
+                'capacity': random.randint(100, 200)
+            })
+            self.display_simple_message(f"Mining platform for {deposit_type} built!")
+        else:
+            self.display_simple_message("Not enough money to build mining platform.")
 
     def build_stockmarket(self):
         self.stockmarket_base = True
@@ -66,10 +230,197 @@ class Planet:
     def __str__(self):
         return f"{self.name} (Tech: {self.tech_level}, Agri: {self.agri_level}, RP: {self.research_points}, Economy: {self.economy})"
 
+class Research:
+    def __init__(self):
+        self.unlocked_options = set()
+        self.research_costs = {
+            'advanced_trading': 100,
+            'improved_scanning': 150,
+            'geological_survey': 200,
+            'political_influence': 250,
+            'mining_efficiency': 300,  # New research option
+            'market_manipulation': 350  # New research option
+        }
+        self.research_benefits = {
+            'advanced_trading': {'tax_reduction': 0.02},
+            'improved_scanning': {'scout_success': 0.2},
+            'geological_survey': {'mining_efficiency': 0.15},
+            'political_influence': {'revolution_success': 0.2},
+            'mining_efficiency': {'output_bonus': 0.25},
+            'market_manipulation': {'price_control': 0.1}
+        }
+    
+    def can_unlock(self, option, research_points):
+        return research_points >= self.research_costs.get(option, float('inf'))
+
+    def unlock(self, option):
+        self.unlocked_options.add(option)        
+
+class Action:
+    def __init__(self):
+        # Base costs for actions
+        self.action_costs = {
+            'research': 100,
+            'scout': 50,
+            'geoscan': 75,
+            'revolution': 100,
+            'market_manipulation': 60
+        }
+        
+        # Success chances for various actions
+        self.base_success_rates = {
+            'scout': 0.65,
+            'geoscan': 0.70,
+            'revolution': 0.50,
+            'market_manipulation': 0.60
+        }
+
+    def research(self, planet, option, research_system):
+        """
+        Attempt to research a new technology
+        Returns: (bool success, str message)
+        """
+        cost = research_system.research_costs.get(option, 0)
+        if option in research_system.unlocked_options:
+            return False, "This research has already been completed."
+            
+        if planet.research_points >= cost:
+            planet.research_points -= cost
+            research_system.unlock(option)
+            
+            # Apply immediate benefits based on research type
+            if option == 'mining_efficiency':
+                planet.mining_efficiency = min(100, 
+                    int(planet.mining_efficiency * (1 + research_system.research_benefits['mining_efficiency']['output_bonus'])))
+            
+            return True, f"Successfully researched {option}!"
+        return False, "Not enough research points!"
+
+    def scout_area(self, planet, research_system):
+        """
+        Scout the area for resources or items
+        Returns: (bool success, str type, any value, str message)
+        """
+        cost = self.action_costs['scout']
+        if planet.research_points < cost:
+            return False, None, None, "Not enough research points!"
+            
+        planet.research_points -= cost
+        
+        # Calculate success chance
+        success_chance = self.base_success_rates['scout']
+        if 'improved_scanning' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['improved_scanning']['scout_success']
+            
+        if random.random() < success_chance:
+            discovery_type = random.choice(['tech', 'agri', 'item'])
+            
+            if discovery_type == 'item':
+                item = random.choice(['scanner', 'probe', 'turrets', 'shield'])
+                return True, 'item', item, f"Found a {item}!"
+            else:
+                amount = random.randint(10, 30)
+                return True, discovery_type, amount, f"Found {amount} units of {discovery_type}!"
+        
+        return False, None, None, "Scouting attempt failed!"
+
+    def geoscan(self, planet, research_system):
+        """
+        Scan for mineral deposits
+        Returns: (bool success, str deposit_type, int amount, str message)
+        """
+        cost = self.action_costs['geoscan']
+        if planet.research_points < cost:
+            return False, None, None, "Not enough research points!"
+            
+        planet.research_points -= cost
+        
+        # Calculate success chance
+        success_chance = self.base_success_rates['geoscan']
+        if 'geological_survey' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['geological_survey']['mining_efficiency']
+            
+        if random.random() < success_chance:
+            deposit_type = random.choice(['salt', 'fuel'])
+            amount = random.randint(1000, 5000)
+            
+            if deposit_type not in planet.mineral_deposits:
+                planet.mineral_deposits[deposit_type] = amount
+                return True, deposit_type, amount, f"Found {amount} units of {deposit_type} deposits!"
+            else:
+                bonus = random.randint(500, 1000)
+                planet.mineral_deposits[deposit_type] += bonus
+                return True, deposit_type, bonus, f"Found additional {bonus} units of {deposit_type} deposits!"
+                
+        return False, None, None, "Geoscan failed to find any deposits!"
+
+    def incite_revolution(self, planet, research_system):
+        """
+        Attempt to change planet's economy
+        Returns: (bool success, str new_economy, str message)
+        """
+        cost = self.action_costs['revolution']
+        if planet.research_points < cost:
+            return False, None, "Not enough research points!"
+            
+        planet.research_points -= cost
+        
+        # Calculate success chance
+        success_chance = self.base_success_rates['revolution']
+        if 'political_influence' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['political_influence']['revolution_success']
+            
+        if random.random() < success_chance:
+            current_economy = planet.economy
+            possible_economies = ['Booming', 'Stable', 'Declining', 'Formative']
+            possible_economies.remove(current_economy)
+            new_economy = random.choice(possible_economies)
+            planet.economy = new_economy
+            return True, new_economy, f"Revolution successful! Economy changed to {new_economy}!"
+            
+        return False, None, "Revolution attempt failed!"
+
+    def manipulate_market(self, planet, commodity, research_system):
+        """
+        Attempt to manipulate market prices
+        Returns: (bool success, float price_change, str message)
+        """
+        if 'market_manipulation' not in research_system.unlocked_options:
+            return False, 0, "Market manipulation research required!"
+            
+        cost = self.action_costs['market_manipulation']
+        if planet.research_points < cost:
+            return False, 0, "Not enough research points!"
+            
+        planet.research_points -= cost
+        
+        if random.random() < self.base_success_rates['market_manipulation']:
+            manipulation_power = research_system.research_benefits['market_manipulation']['price_control']
+            current_price = planet.market[commodity]
+            
+            # Determine direction of manipulation (increase/decrease)
+            direction = random.choice([-1, 1])
+            change = direction * random.uniform(0.1, manipulation_power) * current_price
+            
+            # Apply change with bounds checking
+            new_price = max(1, current_price + change)
+            if commodity == 'salt':
+                new_price = min(new_price, 150)
+            elif commodity == 'fuel':
+                new_price = min(new_price, 250)
+            else:
+                new_price = min(new_price, 200)
+                
+            planet.market[commodity] = new_price
+            price_change = new_price - current_price
+            return True, price_change, f"Successfully manipulated {commodity} price by {abs(price_change):.1f}!"
+            
+        return False, 0, "Market manipulation attempt failed!"
+        
 # Define the Ship class
 class Ship:
     def __init__(self):
-        self.cargo = {'tech': 0, 'agri': 0}
+        self.cargo = {'tech': 0, 'agri': 0, 'salt': 0, 'fuel': 0}
         self.money = 1000
         self.damage = 0
         self.upgrades = []
@@ -78,19 +429,48 @@ class Ship:
         self.defense = 1
         self.speed = 1
         self.quests = []
+        self.upgrade_costs = {
+            'attack': 2000,
+            'defense': 2000,
+            'speed': 2000
+        }
+        self.item_purchase_count = {}  # Track number of purchases for price scaling
 
-    def buy(self, item, quantity, price):
+    def buy(self, item, quantity, price, planet, player_rank):
+        if not planet.can_trade(item):
+            print(f"Warning: {item} trading is banned on this planet.")
+            return False
+            
         cost = quantity * price
         if self.money >= cost:
-            self.money -= cost
-            self.cargo[item] += quantity
-            return True
+            # Calculate and apply tax
+            tax_rate = planet.calculate_tax_rate(player_rank, cost)
+            tax_amount = cost * tax_rate
+            total_cost = cost + tax_amount
+            
+            if self.money >= total_cost:
+                self.money -= total_cost
+                self.cargo[item] += quantity
+                return True
+            else:
+                print(f"Warning: Not enough money to cover cost plus {tax_rate*100}% tax.")
+                return False
         print("Warning: Not enough money to buy.")
         return False
 
-    def sell(self, item, quantity, price):
+    def sell(self, item, quantity, price, planet, player_rank):
+        if not planet.can_trade(item):
+            print(f"Warning: {item} trading is banned on this planet.")
+            return False
+            
         if self.cargo[item] >= quantity:
-            self.money += quantity * price
+            revenue = quantity * price
+            # Calculate and apply tax
+            tax_rate = planet.calculate_tax_rate(player_rank, revenue)
+            tax_amount = revenue * tax_rate
+            net_revenue = revenue - tax_amount
+            
+            self.money += net_revenue
             self.cargo[item] -= quantity
             return True
         print("Warning: Not enough cargo to sell.")
@@ -164,6 +544,8 @@ class Game:
         self.display_starting_info()
         self.secret_quest_available = False
         self.stellar_portal_available = False
+        self.research = Research()
+        self.action = Action()
 
     def get_terminal_width(self):
         return shutil.get_terminal_size().columns
@@ -355,6 +737,36 @@ class Game:
                     self.display_simple_message("Goodbye!", 1)
                     exit()
 
+    def calculate_quest_reward(self, base_reward):
+        """Calculate quest reward based on rank and research"""
+        multiplier = self.rank_multiplier()
+        if 'advanced_trading' in self.research.unlocked_options:
+            multiplier *= 1.2  # 20% bonus from research
+        return int(base_reward * multiplier)
+
+    def validate_price(self, commodity, price):
+        """Validate if a price is reasonable for a commodity"""
+        if commodity == 'salt':
+            return 60 <= price <= 150
+        elif commodity == 'fuel':
+            return 120 <= price <= 250
+        return True  # Default for other commodities
+
+    def update_market_prices(self):
+        """Update market prices with new logic"""
+        for planet in self.planets:
+            # Update basic commodities
+            planet.update_market(self.difficulty)
+            
+            # Update mining commodities
+            planet.produce_resources()
+            
+            # Apply market manipulation if researched
+            if 'market_manipulation' in self.research.unlocked_options:
+                for commodity in ['tech', 'agri', 'salt', 'fuel']:
+                    if random.random() < 0.2:  # 20% chance for each commodity
+                        self.action.manipulate_market(planet, commodity, self.research)
+
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
@@ -363,27 +775,36 @@ class Game:
             [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
             [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
             [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"★: {self.rank}", f"ITM: {len(self.ship.items)}", f"Buildings: {len(self.current_planet.buildings)}"]
+            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.current_planet.research_points}", f"Buildings: {len(self.current_planet.buildings)}"],
+            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"Mining EFF: {self.current_planet.mining_efficiency}%"]
         ]
 
         status_box = self.create_box(status_content, 'double')
         print(status_box)
 
-        # Market prices
-        market_content = [
-            ["Market Prices"],
-            [f"Tech: {self.format_money(self.current_planet.market['tech'])}"],
-            [f"Agri: {self.format_money(self.current_planet.market['agri'])}"]
-        ]
+        # Market prices with banned commodities indicator
+        market_content = [["Market Prices"]]
+        for commodity in ['tech', 'agri', 'salt', 'fuel']:
+            status = "BANNED" if commodity in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market[commodity]))
+            market_content.append([f"{commodity.capitalize()}: {status}"])
+
         print(self.create_box(market_content, 'single'))
 
-        # Command menu
+        # Command menu with new options
         commands = [
             ["Commands: buy/b, sell/s, upgrade/u,"],
             ["travel/t, repair/r, info/i, build/bl,"],
-            ["cantina/c, shop/sh, end/e"]
+            ["cantina/c, shop/sh, action/a, mine/m,"],
+            ["research/rs, end/e"]
         ]
         print(self.create_box(commands, 'round'))
+
+        # Display active effects
+        if self.research.unlocked_options:
+            effects = [["Active Research Effects"]]
+            for research in self.research.unlocked_options:
+                effects.append([f"- {research.replace('_', ' ').title()}"])
+            print(self.create_box(effects, 'round'))
 
     def display_planet_info(self):
         content = [
@@ -391,24 +812,29 @@ class Game:
             [f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
             [f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
             [f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
-            [f"Items:", f"Research Points: {self.current_planet.research_points}"],
-            [f"Upgrades:", f"Economy: {self.current_planet.economy}"],
-            ["", "Buildings:"]
+            [f"Research Points: {self.current_planet.research_points}", f"Economy: {self.current_planet.economy}"],
+            ["Mining Operations:", f"Mining Efficiency: {self.current_planet.mining_efficiency}%"]
         ]
 
-        # Add items, upgrades, and buildings on separate lines
-        for item, count in self.ship.items.items():
-            content.append([f"{item} {count}", ""])
+        # Add mining platforms
+        if self.current_planet.mining_platforms:
+            for platform in self.current_planet.mining_platforms:
+                content.append([f"- {platform['type'].capitalize()} Platform", f"Eff: {platform['efficiency']}%"])
+        else:
+            content.append(["No mining platforms", ""])
 
-        for upgrade in self.ship.upgrades:
-            content.append(["", upgrade])
+        # Add mineral deposits
+        if self.current_planet.mineral_deposits:
+            content.append(["Mineral Deposits:", ""])
+            for deposit, amount in self.current_planet.mineral_deposits.items():
+                content.append([f"- {deposit.capitalize()}: {amount}", ""])
 
-        for building in self.format_buildings():
-            content.append(["", building])
-
-        # Add stockmarket building info
-        if self.current_planet.stockmarket_base:
-            content.append(["", "Stockmarket Base"])
+        # Add banned commodities
+        if self.current_planet.banned_commodities:
+            content.append(["Banned Commodities:", ""])
+            for commodity in self.current_planet.banned_commodities:
+                duration = self.current_planet.ban_duration.get(commodity, "Permanent")
+                content.append([f"- {commodity.capitalize()}: {duration} turns", ""])
 
         print(self.create_box(content, 'double'))
         time.sleep(3)
@@ -531,7 +957,7 @@ class Game:
 
         action = self.validate_input(
             "Choose action: ",
-            ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'shop', 'sh', 'end', 'e']
+            ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'shop', 'sh', 'action', 'a', 'end', 'e']
         )
 
         # Handle cancelled command
@@ -676,12 +1102,65 @@ class Game:
             self.visit_cantina()
         elif action in ['shop', 'sh']:
             self.shop()
+        elif action in ['action', 'a']:
+            self.handle_actions()            
         elif action in ['end', 'e']:
             self.turn += 1
             self.random_event()
             return
         else:
             self.display_simple_message("Invalid action.")
+
+    def handle_actions(self):
+        available_actions = ['research', 'scout', 'geoscan', 'revolution']
+        action = self.validate_input(
+            "Choose action type: ",
+            available_actions
+        )
+        
+        if action == 'research':
+            options = [opt for opt, cost in self.research.research_costs.items() 
+                      if opt not in self.research.unlocked_options]
+            if not options:
+                self.display_simple_message("All research options are unlocked!")
+                return
+                
+            option = self.validate_input(
+                f"Choose research option ({', '.join(options)}): ",
+                options
+            )
+            if self.action.research(self.current_planet, option, self.research):
+                self.display_simple_message(f"Successfully researched {option}!")
+            else:
+                self.display_simple_message("Not enough research points!")
+                
+        elif action == 'scout':
+            result = self.action.scout_area(self.current_planet)
+            if result:
+                type_, value = result
+                if type_ == 'item':
+                    self.ship.acquire_item(value)
+                    self.display_simple_message(f"Found item: {value}")
+                else:
+                    self.current_planet.market[type_] += value
+                    self.display_simple_message(f"Found {value} units of {type_}")
+            else:
+                self.display_simple_message("Scouting failed or not enough research points!")
+                
+        elif action == 'geoscan':
+            result = self.action.geoscan(self.current_planet)
+            if result:
+                self.display_simple_message(f"Found {result} deposits!")
+            else:
+                self.display_simple_message("Geoscan failed or not enough research points!")
+                
+        elif action == 'revolution':
+            result = self.action.incite_revolution(self.current_planet)
+            if result:
+                self.display_simple_message(f"Revolution successful! New economy: {result}")
+            else:
+                self.display_simple_message("Revolution failed or not enough research points!")
+
 
     def random_event(self):
         events = [
@@ -699,6 +1178,9 @@ class Game:
             "Guerilla Militia Patrol attacking!",
             "Rogue Warship attacking!",
             "Camouflaged Asteroid Base attacking!"
+            "Trade embargo!",
+            "Resource shortage!",
+            "Market manipulation!"
         ]
         event = random.choice(events)
         self.event_log.append({'turn': self.turn, 'event': event})
@@ -756,6 +1238,25 @@ class Game:
             self.battle_event(4, 3, 3)
         elif event == "Camouflaged Asteroid Base attacking!":
             self.battle_event(6, 4, 4)
+        # Handle new events
+        elif event == "Trade embargo!":
+            commodity = random.choice(['tech', 'agri'])
+            duration = random.randint(2, 4)
+            self.current_planet.add_temporary_ban(commodity, duration)
+            self.display_simple_message(f"Event! {commodity} trading banned for {duration} turns!", 3, color='31')
+            
+        elif event == "Resource shortage!":
+            commodity = random.choice(['tech', 'agri'])
+            self.current_planet.market[commodity] = 0
+            self.current_planet.banned_commodities.append(commodity)
+            self.display_simple_message(f"Event! {commodity} shortage! Trading banned until prices recover.", 3, color='31')
+            
+        elif event == "Market manipulation!":
+            commodity = random.choice(['tech', 'agri'])
+            price_multiplier = random.uniform(1.5, 3.0)
+            self.current_planet.market[commodity] *= price_multiplier
+            self.display_simple_message(f"Event! {commodity} prices manipulated!", 3, color='31')
+
 
         if "shield" in self.ship.items:
             self.ship.damage = max(0, self.ship.damage - 5)
@@ -931,6 +1432,46 @@ class Game:
                 else:
                     self.display_simple_message("Not enough money to buy this item.")
                 return
+
+    def handle_mining(self):
+        """Handle mining-related actions"""
+        options = ['build', 'status', 'research']
+        choice = self.validate_input(
+            "Mining options (build/status/research): ",
+            options
+        )
+        
+        if choice == 'build':
+            self.build_mining_platform()
+        elif choice == 'status':
+            self.display_mining_status()
+        elif choice == 'research':
+            if self.action.research(self.current_planet, 'mining_efficiency', self.research):
+                self.display_simple_message("Mining efficiency research completed!")
+            else:
+                self.display_simple_message("Not enough research points!")
+
+    def display_mining_status(self):
+        """Display mining operations status"""
+        content = [
+            ["Mining Status"],
+            [f"Planet Efficiency: {self.current_planet.mining_efficiency}%"],
+            ["Active Platforms:"]
+        ]
+        
+        for platform in self.current_planet.mining_platforms:
+            content.append([
+                f"{platform['type'].capitalize()}: "
+                f"Efficiency {platform['efficiency']}% "
+                f"Capacity {platform['capacity']}"
+            ])
+            
+        if self.current_planet.mineral_deposits:
+            content.append(["Available Deposits:"])
+            for deposit, amount in self.current_planet.mineral_deposits.items():
+                content.append([f"{deposit.capitalize()}: {amount} units"])
+                
+        print(self.create_box(content, 'double'))
 
     def display_score(self):
         score = self.ship.money + (self.ship.cargo['tech'] * 10) + (self.ship.cargo['agri'] * 5)
