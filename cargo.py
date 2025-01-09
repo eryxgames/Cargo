@@ -438,10 +438,18 @@ class Ship:
         self.item_purchase_count = {}  # Track number of purchases for price scaling
 
     def buy(self, item, quantity, price, planet, player_rank):
+        # Check if item can be traded
         if not planet.can_trade(item):
             print(f"Warning: {item} trading is banned on this planet.")
             return False
-            
+
+        # Check if mining platform exists for salt and fuel
+        if item in ['salt', 'fuel']:
+            has_platform = any(p['type'] == item for p in planet.mining_platforms)
+            if not has_platform:
+                print(f"Warning: No mining platform for {item} on this planet.")
+                return False
+
         cost = quantity * price
         if self.money >= cost:
             # Calculate and apply tax
@@ -463,7 +471,14 @@ class Ship:
         if not planet.can_trade(item):
             print(f"Warning: {item} trading is banned on this planet.")
             return False
-            
+
+        # Check if mining platform exists for salt and fuel
+        if item in ['salt', 'fuel']:
+            has_platform = any(p['type'] == item for p in planet.mining_platforms)
+            if not has_platform:
+                print(f"Warning: No mining platform for {item} on this planet.")
+                return False
+                
         if self.cargo[item] >= quantity:
             revenue = quantity * price
             # Calculate and apply tax
@@ -776,8 +791,8 @@ class Game:
             [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
             [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
             [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"NET: {len(self.current_planet.buildings)}"],
-            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"EFF: {self.current_planet.mining_efficiency}%"]
+            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_planet.mining_efficiency}%"],
+            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
         ]
 
         status_box = self.create_box(status_content, 'double')
@@ -852,6 +867,33 @@ class Game:
 
         print(self.create_box(content, 'double'))
         time.sleep(3)
+
+    def build_mining_platform(self):
+        """Build a new mining platform on the current planet"""
+        if not self.current_planet.mineral_deposits:
+            self.display_simple_message("No mineral deposits found! Use geoscan first.")
+            return
+            
+        available_deposits = list(self.current_planet.mineral_deposits.keys())
+        deposit_type = self.validate_input(
+            f"Choose deposit type to mine ({', '.join(available_deposits)}): ",
+            available_deposits
+        )
+        
+        if deposit_type is None:
+            return
+            
+        cost = 10000
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.current_planet.mining_platforms.append({
+                'type': deposit_type,
+                'efficiency': self.current_planet.mining_efficiency,
+                'capacity': random.randint(100, 200)
+            })
+            self.display_simple_message(f"Mining platform for {deposit_type} built!")
+        else:
+            self.display_simple_message("Not enough money to build mining platform.")
 
     def format_buildings(self):
         building_counts = {}
@@ -986,25 +1028,36 @@ class Game:
                 if item is None:
                     return
 
+                # Check if item can be traded
                 if not self.current_planet.can_trade(item):
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
+
+                # Check for mining platform requirement for salt and fuel
+                if item in ['salt', 'fuel']:
+                    has_platform = any(p['type'] == item for p in self.current_planet.mining_platforms)
+                    if not has_platform:
+                        self.display_simple_message(f"No mining platform for {item} on this planet.")
+                        return
 
                 quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
                 if quantity is None:
                     return
 
                 if quantity == 'max':
+                    # Only calculate max if the item's price is non-zero
+                    price = self.current_planet.market[item]
+                    if price <= 0:
+                        self.display_simple_message(f"Cannot calculate maximum: {item} has no valid price.")
+                        return
+                        
                     # Calculate tax rate for this transaction
-                    base_price = self.current_planet.market[item]
-                    tax_rate = self.current_planet.calculate_tax_rate(self.rank, base_price)
-                    price_with_tax = base_price * (1 + tax_rate)
-                    
-                    # Calculate maximum affordable quantity considering taxes
+                    tax_rate = self.current_planet.calculate_tax_rate(self.rank, price)
+                    price_with_tax = price * (1 + tax_rate)
                     quantity = int(self.ship.money / price_with_tax)
 
                 if self.ship.buy(item, quantity, self.current_planet.market[item], 
-                            self.current_planet, self.rank):
+                                self.current_planet, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
                 
             elif action in ['sell', 's']:
@@ -1117,6 +1170,19 @@ class Game:
             elif action in ['mine', 'm']:
                 self.handle_mining()
 
+            # Handle quit and resign commands
+            elif action in ['quit', 'q']:
+                if self.validate_input("Are you sure you want to quit? (yes/no): ", ['yes', 'no']) == 'yes':
+                    self.display_simple_message("Thanks for playing!")
+                    exit()
+                return
+
+            elif action in ['resign', 'rs']:
+                if self.validate_input("Are you sure you want to resign? (yes/no): ", ['yes', 'no']) == 'yes':
+                    self.display_score()
+                    exit()
+                return    
+
             elif action in ['end', 'e']:
                 self.turn += 1
                 self.random_event()
@@ -1185,7 +1251,7 @@ class Game:
 
     def handle_actions(self):
         # Display current research points
-        self.display_simple_message(f"Available Research Points: {self.current_planet.research_points}")
+        self.display_simple_message(f"Available Research Points: {self.ship.research_points}")
         
         # Show available actions and their costs
         available_actions = {
@@ -1220,7 +1286,7 @@ class Game:
         if action == 'research':
             # Get available research options
             options = [opt for opt, cost in self.research.research_costs.items() 
-                      if opt not in self.research.unlocked_options]
+                    if opt not in self.research.unlocked_options]
             
             if not options:
                 self.display_simple_message("All research options are unlocked!")
@@ -1250,71 +1316,80 @@ class Game:
             )
             
             if option:
-                success, message = self.action.research(self.current_planet, option, self.research)
-                self.display_simple_message(message)
+                if self.ship.research_points >= self.research.research_costs[option]:
+                    self.ship.research_points -= self.research.research_costs[option]
+                    success, message = self.action.research(self.current_planet, option, self.research)
+                    self.display_simple_message(message)
+                else:
+                    self.display_simple_message(f"Not enough research points! Need: {self.research.research_costs[option]}")
                 
         elif action == 'scout':
-            if self.current_planet.research_points < self.action.action_costs['scout']:
-                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['scout']}")
-                return
+            if self.ship.research_points >= self.action.action_costs['scout']:
+                self.ship.research_points -= self.action.action_costs['scout']
+                success, type_, value, message = self.action.scout_area(self.current_planet, self.research)
+                self.display_simple_message(message)
                 
-            success, type_, value, message = self.action.scout_area(self.current_planet, self.research)
-            self.display_simple_message(message)
-            
-            if success:
-                if type_ == 'item':
-                    self.ship.acquire_item(value)
-                    self.display_simple_message(f"Item added to inventory!")
-                else:
-                    self.current_planet.market[type_] += value
-                    self.display_simple_message(f"Resources added to market!")
+                if success:
+                    if type_ == 'item':
+                        self.ship.acquire_item(value)
+                        self.display_simple_message(f"Item added to inventory!")
+                    else:
+                        self.current_planet.market[type_] += value
+                        self.display_simple_message(f"Resources added to market!")
+            else:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['scout']}")
                 
         elif action == 'geoscan':
-            if self.current_planet.research_points < self.action.action_costs['geoscan']:
-                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['geoscan']}")
-                return
+            if self.ship.research_points >= self.action.action_costs['geoscan']:
+                self.ship.research_points -= self.action.action_costs['geoscan']
+                success, deposit_type, amount, message = self.action.geoscan(self.current_planet, self.research)
+                self.display_simple_message(message)
                 
-            success, deposit_type, amount, message = self.action.geoscan(self.current_planet, self.research)
-            self.display_simple_message(message)
-            
-            if success:
-                self.display_simple_message(f"Use 'build mining' command to exploit the deposit.")
+                if success:
+                    self.display_simple_message(f"Use 'build mining' command to exploit the deposit.")
+            else:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['geoscan']}")
                 
         elif action == 'revolution':
-            if self.current_planet.research_points < self.action.action_costs['revolution']:
+            if self.ship.research_points >= self.action.action_costs['revolution']:
+                self.ship.research_points -= self.action.action_costs['revolution']
+                success, new_economy, message = self.action.incite_revolution(self.current_planet, self.research)
+                self.display_simple_message(message)
+            else:
                 self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['revolution']}")
-                return
                 
-            success, new_economy, message = self.action.incite_revolution(self.current_planet, self.research)
-            self.display_simple_message(message)
-            
         elif action == 'manipulate':
             if 'market_manipulation' not in self.research.unlocked_options:
                 self.display_simple_message("Market manipulation research required!")
                 return
                 
-            if self.current_planet.research_points < self.action.action_costs['market_manipulation']:
-                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['market_manipulation']}")
-                return
-                
-            # Show current market prices
-            market_content = [["Commodity", "Current Price"]]
-            for commodity in ['tech', 'agri', 'salt', 'fuel']:
-                if commodity not in self.current_planet.banned_commodities:
-                    market_content.append([commodity.capitalize(), 
+            if self.ship.research_points >= self.action.action_costs['market_manipulation']:
+                # Show current market prices
+                market_content = [["Commodity", "Current Price"]]
+                for commodity in ['tech', 'agri', 'salt', 'fuel']:
+                    if commodity not in self.current_planet.banned_commodities:
+                        market_content.append([commodity.capitalize(), 
                                         str(self.format_money(self.current_planet.market[commodity]))])
-            print(self.create_box(market_content, 'single'))
-            
-            commodity = self.validate_input(
-                "Choose commodity to manipulate (tech/agri/salt/fuel): ",
-                ['tech', 'agri', 'salt', 'fuel']
-            )
-            
-            if commodity:
-                success, price_change, message = self.action.manipulate_market(
-                    self.current_planet, commodity, self.research
+                print(self.create_box(market_content, 'single'))
+                
+                commodity = self.validate_input(
+                    "Choose commodity to manipulate (tech/agri/salt/fuel): ",
+                    ['tech', 'agri', 'salt', 'fuel']
                 )
-                self.display_simple_message(message)
+                
+                if commodity:
+                    self.ship.research_points -= self.action.action_costs['market_manipulation']
+                    success, price_change, message = self.action.manipulate_market(
+                        self.current_planet, commodity, self.research
+                    )
+                    self.display_simple_message(message)
+            else:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['market_manipulation']}")
+                    
+        # Update production cooldowns after any action
+        for resource_type in list(self.current_planet.production_cooldown.keys()):
+            if self.current_planet.production_cooldown[resource_type] > 0:
+                self.current_planet.production_cooldown[resource_type] -= 1
 
     def display_research_status(self):
         """Display current research status and benefits"""
@@ -1372,7 +1447,8 @@ class Game:
             else:
                 self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
                 if self.ship.money > 0:
-                    stolen_money = random.randint(1, max(1, self.ship.money // 2))
+                    # Fix: Convert money to integer before using randint
+                    stolen_money = random.randint(1, max(1, int(self.ship.money // 2)))
                     self.ship.money -= stolen_money
                     self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
                 else:
@@ -1451,7 +1527,7 @@ class Game:
             self.display_simple_message(f"You found {self.format_money(tech_goods)} tech goods.", 3, color='32')
         elif outcome == "scientific samples":
             research_points = random.randint(5, 15)
-            self.current_planet.research_points += research_points
+            self.ship.research_points+= research_points
             self.display_simple_message(f"You gained {self.format_money(research_points)} research points.", 3, color='32')
 
     def battle_event(self, enemy_attack, enemy_defense, enemy_speed):
