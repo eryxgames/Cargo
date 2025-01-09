@@ -755,11 +755,11 @@ class Game:
         status_content = [
             ["CΔRGΩ", "Ship", "Planet"],
             [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_planet.name}"],
-            [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
-            [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
-            [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_planet.mining_efficiency}%"],
-            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
+            [f"¤: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
+            [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
+            [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
+            [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_planet.mining_efficiency}%"],
+            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
         ]
 
         status_box = self.create_box(status_content, 'double')
@@ -874,71 +874,32 @@ class Game:
     def choose_difficulty(self):
         self.clear_screen()
         
-        # Initial prompt
-        self.display_simple_message([
-            "╭── DIFFICULTY CALIBRATION ──╮",
-            "│> Select challenge level... │    ",
-            "╰────────────────────────────╯"
-        ], 1, style='round')
-        
-        # Display difficulty options with descriptions
         difficulty_info = [
-            ["╭── EASY MODE ───────────────────────╮",
-            "│ • Reduced docking and tarrif rates │",
-            "│ • More favorable market prices     │",
-            "│ • Lower pirate encounter rates     │",
-            "│ • Recommended for new traders      │",
-            "╰────────────────────────────────────╯"],
+            ["DIFFICULTY SELECTION"],
+            ["  1. EASY"],
+            ["     Lower risks, higher profits"],
+            ["  2. NORMAL"],
+            ["     Standard trading conditions"],
+            ["  3. EXPERT"],
+            ["     High risk, high reward"]
             
-            ["╭── NORMAL MODE ─────────────────────╮",
-            "│ • Standard trading conditions      │",
-            "│ • Balanced market fluctuations     │",
-            "│ • Regular pirate encounters        │",
-            "│ • The classic experience           │",
-            "╰────────────────────────────────────╯"],
-            
-            ["╭── EXPERT MODE ─────────────────────╮",
-            "│ • Increased tax rates              │",
-            "│ • Volatile market conditions       │",
-            "│ • Frequent pirate encounters       │",
-            "│ • For seasoned space traders       │",
-            "╰────────────────────────────────────╯"]
         ]
         
-        for diff_text in difficulty_info:
-            for line in diff_text:
-                print(line)
-            print()  # Add spacing between difficulties
-            time.sleep(0.2)
+        for line in difficulty_info:
+            print(line[0])
+            time.sleep(0.1)
         
         while True:
-            self.display_simple_message("Enter difficulty (1-Easy, 2-Normal, 3-Expert):", 0, style='round')
+            self.display_simple_message("Select difficulty (1-3):", 0)
             choice = input(">>> ").strip()
             
             if choice in ['1', '2', '3']:
                 difficulty_names = ['EASY', 'NORMAL', 'EXPERT']
-                selected_diff = difficulty_names[int(choice) - 1]
-                
-                # Display confirmation animation
-                self.display_simple_message(f"Calibrating systems for {selected_diff} difficulty...", 1, style='round')
-                
-                # Show final confirmation
-                self.display_simple_message([
-                    f"╭── DIFFICULTY: {selected_diff} ──╮",
-                    " Configuration complete      ",
-                    " Systems calibrated          ",
-                    " Ready for departure         "
-                    
-                ], 2, style='round')
-                
-                if choice == '1':
-                    return 0  # Easy
-                elif choice == '2':
-                    return 1  # Normal
-                else:
-                    return 2  # Expert
+                selected = difficulty_names[int(choice) - 1]
+                self.display_simple_message(f"Setting difficulty: {selected}")
+                return int(choice) - 1
             else:
-                self.display_simple_message("Invalid selection. Please choose 1, 2, or 3.", 1, style='round')
+                self.display_simple_message("Please select 1, 2, or 3.", 1)
 
     def generate_planets(self):
         return [
@@ -952,68 +913,30 @@ class Game:
     def get_player_name(self):
         self.clear_screen()
         
-        # Title screen
         title = [
-            "╔══════════════════════════════════════╗",
-            "║             C Δ R G Ω                ║",
-            "║        Space Trading Saga            ║",
-            "╚══════════════════════════════════════╝"
+            "╔════════ C Δ R G Ω ════════╗",
+            "║    Space Trading Saga     ║",
+            "╚═══════════════════════════╝"
         ]
         
         for line in title:
             print(line)
-            time.sleep(0.2)
-        
-        time.sleep(0.5)
-        
-        # Display computer bootup sequence
-        boot_messages = [
-            "Initializing quantum navigation systems...",
-            "Calibrating hyperspace engines...",
-            "Loading star charts...",
-            "Establishing neural interface...",
-            "Connected to Galactic Trade Network...",
-            "Initiating pilot registration sequence..."
-        ]
-        
-        for msg in boot_messages:
-            self.display_simple_message(msg, 0.3, style='round')
-        
-        time.sleep(0.5)
-        
-        # Name input sequence
+            time.sleep(0.1)
+
         self.display_simple_message([
-            "╭─ PILOT REGISTRATION TERMINAL ─╮",
-            "Enter your pilot name:  [Leave blank for random]"
-           
-        ], 0, style='round')
+            "Enter your pilot name",
+            "Press Enter for random"
+        ], 0)
         
         name = input(">>> ").strip()
         
         if not name:
-            titles = ["Captain", "Commander", "Pilot", "Admiral", "Spacefarer"]
-            surnames = ["Nova", "Starling", "Drake", "Phoenix", "Json", "Sterling", "Vega", "Wolf"]
+            titles = ["Captain", "Commander", "Pilot", "Admiral"]
+            surnames = ["Nova", "Drake", "Phoenix", "Wolf"]
             name = f"{random.choice(titles)} {random.choice(surnames)}"
-            
-            self.display_simple_message([
-                "Generating pilot designation...",
-                f"You have been registered as: {name}"
-            ], 1.5, style='round')
-        else:
-            self.display_simple_message([
-                "Registering pilot designation...",
-                f"Welcome aboard, {name}!"
-            ], 1.5, style='round')
+            self.display_simple_message(f"Generated name: {name}")
         
-        # Final confirmation
-        self.display_simple_message([
-            "╭─ REGISTRATION COMPLETE ─╮",
-            "│   Pilot Status: Active   │",
-            "│   Security: Confirmed    │",
-            "│   Trade License: Valid   │",
-            "╰────────────────────────╯"
-        ], 2, style='round')
-        
+        self.display_simple_message(f"Welcome aboard, {name}!")    
         return name
 
     def display_starting_info(self):
