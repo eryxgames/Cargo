@@ -1082,12 +1082,14 @@ class Game:
     def play_turn(self):
             self.display_turn_info()
 
-            action = self.validate_input(
-                "Choose action: ",
-                ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
+            valid_actions = [
+                'buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
                 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 
-                'shop', 'sh', 'action', 'a', 'mine', 'm', 'end', 'e']
-            )
+                'shop', 'sh', 'action', 'a', 'mine', 'm', 'end', 'e',
+                'quit', 'q', 'resign', 'rs'
+            ]
+
+            action = self.validate_input("Choose action: ", valid_actions)
 
             # Handle cancelled command
             if action is None:
