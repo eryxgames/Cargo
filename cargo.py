@@ -204,27 +204,40 @@ class Planet:
             self.display_simple_message("Not enough money to build mining platform.")
 
     def build_stockmarket(self):
+        """
+        Build a stock market on the planet. Now handled directly without separate method.
+        This method is kept for backward compatibility but should be phased out.
+        """
         self.stockmarket_base = True
-        self.stockmarket_cost = 5000
+        self.market['tech'] = max(1, self.market['tech'] - 10)
+        self.market['agri'] = max(1, self.market['agri'] - 5)
+        # Note: Actual construction is now handled in handle_building_construction
 
     def build_building(self, building_name):
+        """
+        Build a building and apply its effects
+        Returns: cost_multiplier for the building
+        """
         cost_multiplier = self.buildings.count(building_name) + 1
-        if building_name == "Permaculture Paradise":
+        
+        # Apply building effects
+        if building_name == "Mining Facility":
+            self.mining_efficiency = min(100, self.mining_efficiency + 10)
+        elif building_name == "Permaculture Paradise":
             self.market['agri'] = max(1, self.market['agri'] * 0.8)
-            self.buildings.append(building_name)
         elif building_name == "Organic Certification Authority":
             self.market['agri'] = self.market['agri'] * 1.2
-            self.buildings.append(building_name)
         elif building_name == "Agrobot Assembly Line":
             self.market['agri'] = max(1, self.market['agri'] * 0.6)
-            self.buildings.append(building_name)
         elif building_name == "The Nanotech Nexus":
             self.market['tech'] = max(1, self.market['tech'] * 0.85)
             self.market['agri'] = max(1, self.market['agri'] * 0.85)
-            self.buildings.append(building_name)
         elif building_name == "Neuroengineering Guild":
             self.market['tech'] = self.market['tech'] * 1.3
-            self.buildings.append(building_name)
+        
+        # Add building to planet's buildings list
+        self.buildings.append(building_name)
+        
         return cost_multiplier
 
     def __str__(self):
@@ -803,34 +816,90 @@ class Game:
             print(self.create_box(effects, 'round'))
 
     def display_planet_info(self):
-        content = [
-            ["Ship Information", "Planet Information"],
-            [f"Attack: {self.ship.attack}", f"Name: {self.current_planet.name}"],
-            [f"Defense: {self.ship.defense}", f"Tech Level: {self.current_planet.tech_level}"],
-            [f"Speed: {self.ship.speed}", f"Agri Level: {self.current_planet.agri_level}"],
-            [f"Research Points: {self.current_planet.research_points}", f"Economy: {self.current_planet.economy}"],
-            ["Mining Operations:", f"Mining Efficiency: {self.current_planet.mining_efficiency}%"]
+        # Ship section
+        ship_info = [
+            ["Ship Information"],
+            [f"Attack: {self.ship.attack}"],
+            [f"Defense: {self.ship.defense}"],
+            [f"Speed: {self.ship.speed}"],
+            [f"Hull Damage: {self.ship.damage}%"],
+            [f"Money: {self.format_money(self.ship.money)}"],
+            [f"Research Points: {self.ship.research_points}"],
+            ["Cargo:"],
+            [f"  Tech: {self.format_money(self.ship.cargo['tech'])}"],
+            [f"  Agri: {self.format_money(self.ship.cargo['agri'])}"],
+            [f"  Salt: {self.format_money(self.ship.cargo['salt'])}"],
+            [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
+            ["Items:"]
+        ]
+        
+        # Add items if any exist
+        if self.ship.items:
+            for item, count in self.ship.items.items():
+                ship_info.append([f"  {item.capitalize()}: {count}"])
+        else:
+            ship_info.append(["  No items"])
+        
+        # Planet section
+        planet_info = [
+            ["Planet Information"],
+            [f"Name: {self.current_planet.name}"],
+            [f"Tech Level: {self.current_planet.tech_level}"],
+            [f"Agri Level: {self.current_planet.agri_level}"],
+            [f"Research Points: {self.current_planet.research_points}"],
+            [f"Economy: {self.current_planet.economy}"],
+            [f"Mining Efficiency: {self.current_planet.mining_efficiency}%"],
+            ["Current Market:"],
+            [f"  Tech: {self.format_money(self.current_planet.market['tech'])}"],
+            [f"  Agri: {self.format_money(self.current_planet.market['agri'])}"],
+            [f"  Salt: {self.format_money(self.current_planet.market['salt'])}"],
+            [f"  Fuel: {self.format_money(self.current_planet.market['fuel'])}"]
         ]
 
-        # Add mining platforms
-        if self.current_planet.mining_platforms:
-            for platform in self.current_planet.mining_platforms:
-                content.append([f"- {platform['type'].capitalize()} Platform", f"Eff: {platform['efficiency']}%"])
-        else:
-            content.append(["No mining platforms", ""])
-
-        # Add mineral deposits
-        if self.current_planet.mineral_deposits:
-            content.append(["Mineral Deposits:", ""])
-            for deposit, amount in self.current_planet.mineral_deposits.items():
-                content.append([f"- {deposit.capitalize()}: {amount}", ""])
-
-        # Add banned commodities
+        # Add banned commodities if any
         if self.current_planet.banned_commodities:
-            content.append(["Banned Commodities:", ""])
+            planet_info.append(["Banned Commodities:"])
             for commodity in self.current_planet.banned_commodities:
                 duration = self.current_planet.ban_duration.get(commodity, "Permanent")
-                content.append([f"- {commodity.capitalize()}: {duration} turns", ""])
+                planet_info.append([f"  {commodity.capitalize()}: {duration} turns"])
+
+        # Add buildings
+        planet_info.append(["Buildings:"])
+        if self.current_planet.buildings:
+            building_counts = {}
+            for building in self.current_planet.buildings:
+                building_counts[building] = building_counts.get(building, 0) + 1
+            for building, count in building_counts.items():
+                planet_info.append([f"  {building} x{count}"])
+        else:
+            planet_info.append(["  No buildings"])
+
+        # Add mining information
+        planet_info.append(["Mining Operations:"])
+        if self.current_planet.mining_platforms:
+            for platform in self.current_planet.mining_platforms:
+                planet_info.append([
+                    f"  {platform['type'].capitalize()} Platform",
+                    f"  (Efficiency: {platform['efficiency']}%",
+                    f"  Capacity: {platform['capacity']})"
+                ])
+        else:
+            planet_info.append(["  No mining platforms"])
+
+        # Add mineral deposits if any
+        if self.current_planet.mineral_deposits:
+            planet_info.append(["Mineral Deposits:"])
+            for deposit_type, amount in self.current_planet.mineral_deposits.items():
+                planet_info.append([f"  {deposit_type.capitalize()}: {amount} units"])
+        
+        # Create content by combining ship and planet info
+        content = []
+        max_length = max(len(ship_info), len(planet_info))
+        
+        for i in range(max_length):
+            ship_line = ship_info[i][0] if i < len(ship_info) else ""
+            planet_line = planet_info[i][0] if i < len(planet_info) else ""
+            content.append([ship_line, planet_line])
 
         print(self.create_box(content, 'double'))
         time.sleep(3)
@@ -1192,6 +1261,66 @@ class Game:
 
             else:
                 self.display_simple_message("Invalid action.")
+
+    def handle_building_construction(self, building_name, building_options, building_costs):
+            # Updated building costs dictionary
+            building_costs = {
+                'stockmarket': 5000,
+                'permaculture': 3000,
+                'organic': 4000,
+                'agrobot': 5000,
+                'nanotech': 6000,
+                'neuroengineering': 7000,
+                'mining': 10000  # Mining Facility cost
+            }
+            
+            # Map short commands to full building names
+            building_mapping = {
+                'stockmarket': 'stockmarket',
+                'sm': 'stockmarket',
+                'permaculture': 'Permaculture Paradise',
+                'pc': 'Permaculture Paradise',
+                'organic': 'Organic Certification Authority',
+                'oc': 'Organic Certification Authority',
+                'agrobot': 'Agrobot Assembly Line',
+                'ab': 'Agrobot Assembly Line',
+                'nanotech': 'The Nanotech Nexus',
+                'nt': 'The Nanotech Nexus',
+                'neuroengineering': 'Neuroengineering Guild',
+                'ne': 'Neuroengineering Guild',
+                'mining': 'Mining Facility',
+                'm': 'Mining Facility'
+            }
+
+            # Get the full building name
+            full_building_name = building_mapping.get(building_name)
+            
+            if not full_building_name:
+                self.display_simple_message("Invalid building type.")
+                return
+                
+            # Handle special cases
+            if full_building_name == 'stockmarket':
+                if self.ship.money >= building_costs['stockmarket']:
+                    self.ship.money -= building_costs['stockmarket']
+                    self.current_planet.stockmarket_base = True
+                    self.current_planet.market['tech'] = max(1, self.current_planet.market['tech'] - 10)
+                    self.current_planet.market['agri'] = max(1, self.current_planet.market['agri'] - 5)
+                    self.display_simple_message(f"Built stock market base for {self.format_money(building_costs['stockmarket'])} money.")
+                else:
+                    self.display_simple_message(f"Not enough money to build stock market. Cost: {self.format_money(building_costs['stockmarket'])}")
+                return
+
+            # Get base cost and multiplier
+            base_cost = building_costs.get(building_name.split()[0].lower(), 3000)
+            cost_multiplier = self.current_planet.buildings.count(full_building_name) + 1
+            final_cost = base_cost * cost_multiplier
+
+            # Build if player can afford it
+            if self.ship.money >= final_cost:
+                self.ship.money -= final_cost
+                self.current_planet.build_building(full_building_name)
+                self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} money.")
 
     def travel_to_planet(self, planet_name):
         """Handle travel to a new planet with research points accumulation"""
@@ -1850,9 +1979,21 @@ class Game:
 
     def play(self):
         while True:
-            self.play_turn()
+            # Play a turn
+            turn_result = self.play_turn()
+            
+            # Check if player quit or resigned
+            if turn_result == "quit":
+                self.display_simple_message("Thanks for playing!")
+                break
+            elif turn_result == "resign":
+                self.display_simple_message("Resigning from current game...")
+                self.display_score()
+                break
+                
             self.update_rank()
 
+            # Check game over conditions
             if self.ship.money <= 0 and self.ship.is_empty_cargo():
                 self.display_simple_message("Game Over: No money and no cargo left.", 2)
                 self.display_score()
@@ -1863,6 +2004,7 @@ class Game:
                 self.display_score()
                 break
 
+            # Check for special quest availability
             if all(planet.stockmarket_base for planet in self.planets):
                 self.secret_quest_available = True
                 resign = self.validate_input("Do you want to resign? (yes/no): ", ['yes', 'no'])
@@ -1875,8 +2017,8 @@ class Game:
                 else:
                     self.display_simple_message("You have chosen to continue your adventure into the unknown.")
                     self.stellar_portal_available = True
-                    if self.ship.money >= self.ship.money - 1500:
-                        self.ship.money = 1500
+                    if self.ship.money >= 1500:
+                        self.ship.money -= 1500
                         self.display_simple_message("You have paid for the secret quest and a Stellar Portal appears on this planet.")
                         self.planets = self.generate_new_planets()
                         self.current_planet = random.choice(self.planets)
@@ -1885,6 +2027,7 @@ class Game:
                     else:
                         self.display_simple_message("Not enough money to pay for the secret quest.")
 
+        # Ask to play again
         play_again = self.validate_input("Do you want to play again? (yes/no): ", ['yes', 'no'])
         if play_again == 'yes':
             self.__init__()
