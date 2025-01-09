@@ -775,27 +775,40 @@ class Game:
             [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
             [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
             [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.current_planet.research_points}", f"Buildings: {len(self.current_planet.buildings)}"],
-            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"Mining EFF: {self.current_planet.mining_efficiency}%"]
+            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.current_planet.research_points}", f"Networks: {len(self.current_planet.buildings)}"],
+            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"Efficiency: {self.current_planet.mining_efficiency}%"]
         ]
 
         status_box = self.create_box(status_content, 'double')
         print(status_box)
 
         # Market prices with banned commodities indicator
-        market_content = [["Market Prices"]]
-        for commodity in ['tech', 'agri', 'salt', 'fuel']:
-            status = "BANNED" if commodity in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market[commodity]))
-            market_content.append([f"{commodity.capitalize()}: {status}"])
+        tech_status = "BANNED" if 'tech' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['tech']))
+        agri_status = "BANNED" if 'agri' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['agri']))
+        salt_status = "BANNED" if 'salt' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['salt']))
+        fuel_status = "BANNED" if 'fuel' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['fuel']))
+        # Market content with two columns
+        market_content = [
+            ["Base Commodities", "Special Resources"],  # Header row with two columns
+            ["-" * 20, "-" * 20],  # Separator line
+            [f"Tech: {tech_status}", f"Salt: {salt_status if any(p['type'] == 'salt' for p in self.current_planet.mining_platforms) else 'No Platform'}"],
+            [f"Agri: {agri_status}", f"Fuel: {fuel_status if any(p['type'] == 'fuel' for p in self.current_planet.mining_platforms) else 'No Platform'}"]
+        ]
 
+        # Add ban duration if any commodities are banned
+        if self.current_planet.banned_commodities:
+            market_content.append(["", ""])  # Empty line for spacing
+            market_content.append(["Trade Bans:", "Duration:"])
+            for commodity in self.current_planet.banned_commodities:
+                duration = self.current_planet.ban_duration.get(commodity, "Permanent")
+                market_content.append([f"{commodity.capitalize()}", f"{duration} turns"])
         print(self.create_box(market_content, 'single'))
 
         # Command menu with new options
         commands = [
             ["Commands: buy/b, sell/s, upgrade/u,"],
             ["travel/t, repair/r, info/i, build/bl,"],
-            ["cantina/c, shop/sh, action/a, mine/m,"],
-            ["research/rs, end/e"]
+            ["cantina/c, shop/sh, action/a, end/e"],
         ]
         print(self.create_box(commands, 'round'))
 
@@ -1111,55 +1124,165 @@ class Game:
         else:
             self.display_simple_message("Invalid action.")
 
+    
     def handle_actions(self):
-        available_actions = ['research', 'scout', 'geoscan', 'revolution']
+        # Display current research points
+        self.display_simple_message(f"Available Research Points: {self.current_planet.research_points}")
+        
+        # Show available actions and their costs
+        available_actions = {
+            'research': "Research new technologies",
+            'scout': f"Scout area (Cost: {self.action.action_costs['scout']} RP)",
+            'geoscan': f"Geological scan (Cost: {self.action.action_costs['geoscan']} RP)",
+            'revolution': f"Incite revolution (Cost: {self.action.action_costs['revolution']} RP)",
+            'manipulate': f"Manipulate market (Cost: {self.action.action_costs['market_manipulation']} RP)",
+            'status': "View research status",
+            'back': "Return to main menu"
+        }
+
+        # Display available actions
+        action_content = [["Available Actions:", "Cost/Description"]]
+        for action, description in available_actions.items():
+            action_content.append([action, description])
+        print(self.create_box(action_content, 'single'))
+
+        # Get user choice
         action = self.validate_input(
             "Choose action type: ",
-            available_actions
+            list(available_actions.keys())
         )
         
+        if action == 'back':
+            return
+
+        if action == 'status':
+            self.display_research_status()
+            return
+        
         if action == 'research':
+            # Get available research options
             options = [opt for opt, cost in self.research.research_costs.items() 
                       if opt not in self.research.unlocked_options]
+            
             if not options:
                 self.display_simple_message("All research options are unlocked!")
                 return
+                
+            # Display research options and their costs
+            research_content = [["Research Option", "Cost", "Description"]]
+            research_descriptions = {
+                'advanced_trading': "Reduces trade taxes",
+                'improved_scanning': "Increases scout success rate",
+                'geological_survey': "Improves mining efficiency",
+                'political_influence': "Increases revolution success rate",
+                'mining_efficiency': "Increases mining output",
+                'market_manipulation': "Allows market price manipulation"
+            }
+            
+            for opt in options:
+                cost = self.research.research_costs[opt]
+                desc = research_descriptions.get(opt, "No description available")
+                research_content.append([opt, str(cost), desc])
+            
+            print(self.create_box(research_content, 'single'))
                 
             option = self.validate_input(
                 f"Choose research option ({', '.join(options)}): ",
                 options
             )
-            if self.action.research(self.current_planet, option, self.research):
-                self.display_simple_message(f"Successfully researched {option}!")
-            else:
-                self.display_simple_message("Not enough research points!")
+            
+            if option:
+                success, message = self.action.research(self.current_planet, option, self.research)
+                self.display_simple_message(message)
                 
         elif action == 'scout':
-            result = self.action.scout_area(self.current_planet)
-            if result:
-                type_, value = result
+            if self.current_planet.research_points < self.action.action_costs['scout']:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['scout']}")
+                return
+                
+            success, type_, value, message = self.action.scout_area(self.current_planet, self.research)
+            self.display_simple_message(message)
+            
+            if success:
                 if type_ == 'item':
                     self.ship.acquire_item(value)
-                    self.display_simple_message(f"Found item: {value}")
+                    self.display_simple_message(f"Item added to inventory!")
                 else:
                     self.current_planet.market[type_] += value
-                    self.display_simple_message(f"Found {value} units of {type_}")
-            else:
-                self.display_simple_message("Scouting failed or not enough research points!")
+                    self.display_simple_message(f"Resources added to market!")
                 
         elif action == 'geoscan':
-            result = self.action.geoscan(self.current_planet)
-            if result:
-                self.display_simple_message(f"Found {result} deposits!")
-            else:
-                self.display_simple_message("Geoscan failed or not enough research points!")
+            if self.current_planet.research_points < self.action.action_costs['geoscan']:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['geoscan']}")
+                return
+                
+            success, deposit_type, amount, message = self.action.geoscan(self.current_planet, self.research)
+            self.display_simple_message(message)
+            
+            if success:
+                self.display_simple_message(f"Use 'build mining' command to exploit the deposit.")
                 
         elif action == 'revolution':
-            result = self.action.incite_revolution(self.current_planet)
-            if result:
-                self.display_simple_message(f"Revolution successful! New economy: {result}")
-            else:
-                self.display_simple_message("Revolution failed or not enough research points!")
+            if self.current_planet.research_points < self.action.action_costs['revolution']:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['revolution']}")
+                return
+                
+            success, new_economy, message = self.action.incite_revolution(self.current_planet, self.research)
+            self.display_simple_message(message)
+            
+        elif action == 'manipulate':
+            if 'market_manipulation' not in self.research.unlocked_options:
+                self.display_simple_message("Market manipulation research required!")
+                return
+                
+            if self.current_planet.research_points < self.action.action_costs['market_manipulation']:
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['market_manipulation']}")
+                return
+                
+            # Show current market prices
+            market_content = [["Commodity", "Current Price"]]
+            for commodity in ['tech', 'agri', 'salt', 'fuel']:
+                if commodity not in self.current_planet.banned_commodities:
+                    market_content.append([commodity.capitalize(), 
+                                        str(self.format_money(self.current_planet.market[commodity]))])
+            print(self.create_box(market_content, 'single'))
+            
+            commodity = self.validate_input(
+                "Choose commodity to manipulate (tech/agri/salt/fuel): ",
+                ['tech', 'agri', 'salt', 'fuel']
+            )
+            
+            if commodity:
+                success, price_change, message = self.action.manipulate_market(
+                    self.current_planet, commodity, self.research
+                )
+                self.display_simple_message(message)
+
+    def display_research_status(self):
+        """Display current research status and benefits"""
+        status_content = [["Research Status", "Benefit"]]
+        
+        # Add unlocked research
+        if self.research.unlocked_options:
+            for research in self.research.unlocked_options:
+                benefit = self.get_research_benefit_description(research)
+                status_content.append([research, benefit])
+        else:
+            status_content.append(["No research completed", ""])
+            
+        print(self.create_box(status_content, 'double'))
+        
+    def get_research_benefit_description(self, research):
+        """Get description of research benefit"""
+        benefits = {
+            'advanced_trading': "Trading tax reduced by 2%",
+            'improved_scanning': "Scout success +20%",
+            'geological_survey': "Mining efficiency +15%",
+            'political_influence': "Revolution success +20%",
+            'mining_efficiency': "Mining output +25%",
+            'market_manipulation': "Price control ±10%"
+        }
+        return benefits.get(research, "Unknown benefit")
 
 
     def random_event(self):
@@ -1473,17 +1596,84 @@ class Game:
                 
         print(self.create_box(content, 'double'))
 
+    # ... The end score ...
+
     def display_score(self):
-        score = self.ship.money + (self.ship.cargo['tech'] * 10) + (self.ship.cargo['agri'] * 5)
-        rank = (score / self.turn) if self.turn > 0 else score
-        print("+" + "-"*self.term_width + "+")
-        print(f"| Game Over! Your score is: {self.format_money(score):<{self.term_width-18}} |")
-        print(f"| Money: {self.format_money(self.ship.money):<{self.term_width-13}} |")
-        print(f"| Cargo: Tech - {self.format_money(self.ship.cargo['tech']):<2}, Agri - {self.format_money(self.ship.cargo['agri']):<{self.term_width-21}} |")
-        print(f"| Upgrades: {', '.join(self.ship.upgrades) if self.ship.upgrades else 'None':<{self.term_width-10}} |")
-        print(f"| Items: {', '.join(f'{item} {count}' for item, count in self.ship.items.items()) if self.ship.items else 'None':<{self.term_width-7}} |")
-        print(f"| Rank: {rank:.2f} ".center(self.term_width) + "|")
-        print("+" + "-"*self.term_width + "+")
+        """Display final game score and statistics in a formatted box"""
+        # Calculate final statistics
+        total_cargo_value = (self.ship.cargo['tech'] * 10) + (self.ship.cargo['agri'] * 5) + \
+                           (self.ship.cargo['salt'] * 15) + (self.ship.cargo['fuel'] * 20)
+        final_score = self.ship.money + total_cargo_value
+        efficiency_score = (final_score / self.turn) if self.turn > 0 else final_score
+        
+        # Create score content
+        score_content = [
+            ["FINAL SCORE REPORT", ""],  # Title row
+            ["─" * 25, "─" * 25],  # Separator
+            ["Assets", "Value"],
+            ["Money", f"{self.format_money(self.ship.money)}"],
+            ["Tech Cargo", f"{self.format_money(self.ship.cargo['tech'])} units"],
+            ["Agri Cargo", f"{self.format_money(self.ship.cargo['agri'])} units"],
+            ["Salt Cargo", f"{self.format_money(self.ship.cargo['salt'])} units"],
+            ["Fuel Cargo", f"{self.format_money(self.ship.cargo['fuel'])} units"],
+            ["", ""],  # Empty row for spacing
+            ["Performance Metrics", ""],
+            ["Total Score", f"{self.format_money(final_score)}"],
+            ["Efficiency Score", f"{self.format_money(efficiency_score)}/turn"],
+            ["Turns Played", str(self.turn)],
+            ["Final Rank", self.rank],
+            ["", ""],  # Empty row for spacing
+            ["Ship Statistics", ""],
+            ["Attack Level", str(self.ship.attack)],
+            ["Defense Level", str(self.ship.defense)],
+            ["Speed Level", str(self.ship.speed)],
+            ["Hull Damage", f"{self.ship.damage}%"]
+        ]
+
+        # Add equipment section if player has any
+        if self.ship.items:
+            score_content.extend([
+                ["", ""],  # Empty row for spacing
+                ["Equipment", "Count"]
+            ])
+            for item, count in self.ship.items.items():
+                score_content.append([item.capitalize(), str(count)])
+
+        # Add research section if player has any
+        if hasattr(self, 'research') and self.research.unlocked_options:
+            score_content.extend([
+                ["", ""],  # Empty row for spacing
+                ["Completed Research", ""]
+            ])
+            for research in self.research.unlocked_options:
+                score_content.append([research.replace('_', ' ').title(), ""])
+
+        # Create the box with double borders for emphasis
+        fancy_box = self.create_box(score_content, 'double')
+        print(fancy_box)
+
+        # Display achievement message
+        achievement_msg = self.get_achievement_message(final_score)
+        self.display_simple_message(achievement_msg, style='round', color='32')  # Green color for achievement
+
+    def get_achievement_message(self, score):
+        """Generate an achievement message based on the final score"""
+        if score >= 1000000:
+            return f"Legendary Achievement! {self.player_name}, you have become a true Galactic Legend!"
+        elif score >= 500000:
+            return f"Outstanding Success! {self.player_name}, your name will be remembered among the Stellar Heroes!"
+        elif score >= 200000:
+            return f"Remarkable Victory! {self.player_name}, you have proven yourself as a Space Admiral!"
+        elif score >= 100000:
+            return f"Impressive Results! {self.player_name}, you have earned the title of Star Commander!"
+        elif score >= 50000:
+            return f"Well Done! {self.player_name}, you have become a respected Commander!"
+        elif score >= 20000:
+            return f"Good Job! {self.player_name}, you have proven yourself as a capable Captain!"
+        elif score >= 10000:
+            return f"Nice Work! {self.player_name}, you have graduated from Pilot to veteran trader!"
+        else:
+            return f"Game Complete! {self.player_name}, you have completed your journey as an Explorer!"
 
     def update_rank(self):
         score = self.ship.money + (self.ship.cargo['tech'] * 10) + (self.ship.cargo['agri'] * 5)
