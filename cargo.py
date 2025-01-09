@@ -280,33 +280,21 @@ class Action:
         Attempt to research a new technology
         Returns: (bool success, str message)
         """
-        cost = research_system.research_costs.get(option, 0)
         if option in research_system.unlocked_options:
             return False, "This research has already been completed."
             
-        if planet.research_points >= cost:
-            planet.research_points -= cost
-            research_system.unlock(option)
-            
-            # Apply immediate benefits based on research type
-            if option == 'mining_efficiency':
-                planet.mining_efficiency = min(100, 
-                    int(planet.mining_efficiency * (1 + research_system.research_benefits['mining_efficiency']['output_bonus'])))
-            
-            return True, f"Successfully researched {option}!"
-        return False, "Not enough research points!"
+        # Apply immediate benefits based on research type
+        if option == 'mining_efficiency':
+            planet.mining_efficiency = min(100, 
+                int(planet.mining_efficiency * (1 + research_system.research_benefits['mining_efficiency']['output_bonus'])))
+        
+        return True, f"Successfully researched {option}!"
 
     def scout_area(self, planet, research_system):
         """
         Scout the area for resources or items
         Returns: (bool success, str type, any value, str message)
         """
-        cost = self.action_costs['scout']
-        if planet.research_points < cost:
-            return False, None, None, "Not enough research points!"
-            
-        planet.research_points -= cost
-        
         # Calculate success chance
         success_chance = self.base_success_rates['scout']
         if 'improved_scanning' in research_system.unlocked_options:
@@ -329,12 +317,6 @@ class Action:
         Scan for mineral deposits
         Returns: (bool success, str deposit_type, int amount, str message)
         """
-        cost = self.action_costs['geoscan']
-        if planet.research_points < cost:
-            return False, None, None, "Not enough research points!"
-            
-        planet.research_points -= cost
-        
         # Calculate success chance
         success_chance = self.base_success_rates['geoscan']
         if 'geological_survey' in research_system.unlocked_options:
@@ -359,12 +341,6 @@ class Action:
         Attempt to change planet's economy
         Returns: (bool success, str new_economy, str message)
         """
-        cost = self.action_costs['revolution']
-        if planet.research_points < cost:
-            return False, None, "Not enough research points!"
-            
-        planet.research_points -= cost
-        
         # Calculate success chance
         success_chance = self.base_success_rates['revolution']
         if 'political_influence' in research_system.unlocked_options:
@@ -385,15 +361,6 @@ class Action:
         Attempt to manipulate market prices
         Returns: (bool success, float price_change, str message)
         """
-        if 'market_manipulation' not in research_system.unlocked_options:
-            return False, 0, "Market manipulation research required!"
-            
-        cost = self.action_costs['market_manipulation']
-        if planet.research_points < cost:
-            return False, 0, "Not enough research points!"
-            
-        planet.research_points -= cost
-        
         if random.random() < self.base_success_rates['market_manipulation']:
             manipulation_power = research_system.research_benefits['market_manipulation']['price_control']
             current_price = planet.market[commodity]
