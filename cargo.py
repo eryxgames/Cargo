@@ -429,6 +429,7 @@ class Ship:
         self.defense = 1
         self.speed = 1
         self.quests = []
+        self.research_points = 0  # Add research points to ship
         self.upgrade_costs = {
             'attack': 2000,
             'defense': 2000,
@@ -775,8 +776,8 @@ class Game:
             [f"Money: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
             [f"Tech CRG: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
             [f"Agri CRG: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.current_planet.research_points}", f"Networks: {len(self.current_planet.buildings)}"],
-            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"Efficiency: {self.current_planet.mining_efficiency}%"]
+            [f"Salt CRG: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"NET: {len(self.current_planet.buildings)}"],
+            [f"Fuel CRG: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"EFF: {self.current_planet.mining_efficiency}%"]
         ]
 
         status_box = self.create_box(status_content, 'double')
@@ -789,8 +790,8 @@ class Game:
         fuel_status = "BANNED" if 'fuel' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['fuel']))
         # Market content with two columns
         market_content = [
-            ["Base Commodities", "Special Resources"],  # Header row with two columns
-            ["-" * 20, "-" * 20],  # Separator line
+ #           ["Base Commodities", "Special Resources"],  # Header row with two columns
+ #           ["-" * 20, "-" * 20],  # Separator line
             [f"Tech: {tech_status}", f"Salt: {salt_status if any(p['type'] == 'salt' for p in self.current_planet.mining_platforms) else 'No Platform'}"],
             [f"Agri: {agri_status}", f"Fuel: {fuel_status if any(p['type'] == 'fuel' for p in self.current_planet.mining_platforms) else 'No Platform'}"]
         ]
@@ -966,165 +967,222 @@ class Game:
         os.system('clear' if os.name == 'posix' else 'cls')
 
     def play_turn(self):
-        self.display_turn_info()
+            self.display_turn_info()
 
-        action = self.validate_input(
-            "Choose action: ",
-            ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 'shop', 'sh', 'action', 'a', 'end', 'e']
-        )
+            action = self.validate_input(
+                "Choose action: ",
+                ['buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
+                'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 
+                'shop', 'sh', 'action', 'a', 'mine', 'm', 'end', 'e']
+            )
 
-        # Handle cancelled command
-        if action is None:
-            return
-        elif action in ['buy', 'b']:
-            item = self.validate_input("Choose item (tech/agri): ", ['tech', 'agri'])
-            quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
-            if quantity is None:
+            # Handle cancelled command
+            if action is None:
                 return
-            if quantity == 'max':
-                quantity = self.ship.money // self.current_planet.market[item]
-            if self.ship.buy(item, quantity, self.current_planet.market[item]):
-                self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
-        elif action in ['sell', 's']:
-            item = self.validate_input("Choose item (tech/agri): ", ['tech', 'agri'])
-            quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
-            if quantity is None:
-                return
-            if quantity == 'max':
-                quantity = self.ship.cargo[item]
-            if self.ship.sell(item, quantity, self.current_planet.market[item]):
-                self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
-        elif action in ['upgrade', 'u']:
-            property_name = self.validate_input("Choose property to upgrade (attack/defense/speed): ", ['attack', 'defense', 'speed'])
-            cost = 2000
-            if self.ship.upgrade(property_name, cost):
-                self.display_simple_message(f"Upgraded {property_name}.")
-        elif action in ['travel', 't']:
-            if "navcomp" in self.ship.items:
-                self.display_simple_message("Choose a planet to travel to:")
-                for i, planet in enumerate(self.known_planets):
-                    print(f"{i+1}. {planet}")
-                choice = self.validate_planet_input("Enter the number of the planet or the planet name: ")
-                if choice:
-                    for planet in self.planets:
-                        if planet.name.lower() == choice.lower():
-                            self.current_planet = planet
-                            self.display_simple_message(f"Traveled to {planet.name}.")
-                            self.turn += 1
-                            self.random_event()
-                            # Check for quest completion
-                            for quest in self.ship.quests:
-                                if quest[1] == 'tech' and self.ship.cargo['tech'] >= quest[2]:
-                                    self.ship.complete_quest(quest)
-                                    reward_money = quest[3] * (1 + self.rank_multiplier())
-                                    self.ship.money += reward_money
-                                    self.display_simple_message(f"Quest completed: {quest[0]}")
-                                    self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                                elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
-                                    self.ship.complete_quest(quest)
-                                    reward_money = quest[3] * (1 + self.rank_multiplier())
-                                    self.ship.money += reward_money
-                                    self.display_simple_message(f"Quest completed: {quest[0]}")
-                                    self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                            return
-                    else:
-                        self.display_simple_message("Invalid choice.")
-            else:
-                planet_name = input("Enter planet name to travel: ").strip()
-                for planet in self.planets:
-                    if planet.name.lower() == planet_name.lower():
-                        self.current_planet = planet
-                        self.display_simple_message(f"Traveled to {planet.name}.")
-                        self.turn += 1
-                        self.random_event()
-                        # Check for quest completion
-                        for quest in self.ship.quests:
-                            if quest[1] == 'tech' and self.ship.cargo['tech'] >= quest[2]:
-                                self.ship.complete_quest(quest)
-                                reward_money = quest[3] * (1 + self.rank_multiplier())
-                                self.ship.money += reward_money
-                                self.display_simple_message(f"Quest completed: {quest[0]}")
-                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                            elif quest[1] == 'agri' and self.ship.cargo['agri'] >= quest[2]:
-                                self.ship.complete_quest(quest)
-                                reward_money = quest[3] * (1 + self.rank_multiplier())
-                                self.ship.money += reward_money
-                                self.display_simple_message(f"Quest completed: {quest[0]}")
-                                self.display_simple_message(f"Reward: {self.format_money(reward_money)} money")
-                        return
-                else:
-                    self.display_simple_message("Planet not found.")
-        elif action in ['repair', 'r']:
-            cost = self.ship.damage * 10  # Proportional repair cost
-            if self.ship.repair(cost):
-                self.display_simple_message("Ship repaired.")
-            else:
-                self.display_simple_message(f"Not enough money to repair. Repair cost: {self.format_money(cost)}")
-        elif action in ['info', 'i']:
-            self.display_planet_info()
-        elif action in ['build', 'bl']:
-            building_name = self.validate_input("Choose building to build (stockmarket/sm, permaculture/pc, organic/oc, agrobot/ab, nanotech/nt, neuroengineering/ne): ",
-                                            ['stockmarket', 'sm', 'permaculture', 'pc', 'organic', 'oc', 'agrobot', 'ab', 'nanotech', 'nt', 'neuroengineering', 'ne'])
-            if building_name in ['stockmarket', 'sm']:
-                if not self.current_planet.stockmarket_base:
-                    cost_multiplier = self.current_planet.build_building("Stockmarket Base")
-                    if self.ship.money >= self.current_planet.stockmarket_cost * cost_multiplier:
-                        self.ship.money -= self.current_planet.stockmarket_cost * cost_multiplier
-                        self.current_planet.build_stockmarket()
-                        self.display_simple_message(f"Stockmarket Base built on {self.current_planet.name}.")
-                    else:
-                        self.display_simple_message("Not enough money to build a Stockmarket Base.")
-                else:
-                    self.display_simple_message("Stockmarket Base already built on this planet.")
-            elif building_name in ['permaculture', 'pc']:
-                cost_multiplier = self.current_planet.build_building("Permaculture Paradise")
-                if self.ship.money >= 3000 * cost_multiplier:
-                    self.ship.money -= 3000 * cost_multiplier
-                    self.display_simple_message(f"Permaculture Paradise built on {self.current_planet.name}.")
-                else:
-                    self.display_simple_message("Not enough money to build Permaculture Paradise.")
-            elif building_name in ['organic', 'oc']:
-                cost_multiplier = self.current_planet.build_building("Organic Certification Authority")
-                if self.ship.money >= 4000 * cost_multiplier:
-                    self.ship.money -= 4000 * cost_multiplier
-                    self.display_simple_message(f"Organic Certification Authority built on {self.current_planet.name}.")
-                else:
-                    self.display_simple_message("Not enough money to build Organic Certification Authority.")
-            elif building_name in ['agrobot', 'ab']:
-                cost_multiplier = self.current_planet.build_building("Agrobot Assembly Line")
-                if self.ship.money >= 5000 * cost_multiplier:
-                    self.ship.money -= 5000 * cost_multiplier
-                    self.display_simple_message(f"Agrobot Assembly Line built on {self.current_planet.name}.")
-                else:
-                    self.display_simple_message("Not enough money to build Agrobot Assembly Line.")
-            elif building_name in ['nanotech', 'nt']:
-                cost_multiplier = self.current_planet.build_building("The Nanotech Nexus")
-                if self.ship.money >= 6000 * cost_multiplier:
-                    self.ship.money -= 6000 * cost_multiplier
-                    self.display_simple_message(f"The Nanotech Nexus built on {self.current_planet.name}.")
-                else:
-                    self.display_simple_message("Not enough money to build The Nanotech Nexus.")
-            elif building_name in ['neuroengineering', 'ne']:
-                cost_multiplier = self.current_planet.build_building("Neuroengineering Guild")
-                if self.ship.money >= 7000 * cost_multiplier:
-                    self.ship.money -= 7000 * cost_multiplier
-                    self.display_simple_message(f"Neuroengineering Guild built on {self.current_planet.name}.")
-                else:
-                    self.display_simple_message("Not enough money to build Neuroengineering Guild.")
-        elif action in ['cantina', 'c']:
-            self.visit_cantina()
-        elif action in ['shop', 'sh']:
-            self.shop()
-        elif action in ['action', 'a']:
-            self.handle_actions()            
-        elif action in ['end', 'e']:
-            self.turn += 1
-            self.random_event()
-            return
-        else:
-            self.display_simple_message("Invalid action.")
 
-    
+            elif action in ['buy', 'b']:
+                item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
+                                        ['tech', 'agri', 'salt', 'fuel'])
+                if item is None:
+                    return
+
+                if not self.current_planet.can_trade(item):
+                    self.display_simple_message(f"Trading of {item} is banned on this planet!")
+                    return
+
+                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                if quantity is None:
+                    return
+
+                if quantity == 'max':
+                    # Calculate tax rate for this transaction
+                    base_price = self.current_planet.market[item]
+                    tax_rate = self.current_planet.calculate_tax_rate(self.rank, base_price)
+                    price_with_tax = base_price * (1 + tax_rate)
+                    
+                    # Calculate maximum affordable quantity considering taxes
+                    quantity = int(self.ship.money / price_with_tax)
+
+                if self.ship.buy(item, quantity, self.current_planet.market[item], 
+                            self.current_planet, self.rank):
+                    self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
+                
+            elif action in ['sell', 's']:
+                item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
+                                        ['tech', 'agri', 'salt', 'fuel'])
+                if item is None:
+                    return
+
+                if not self.current_planet.can_trade(item):
+                    self.display_simple_message(f"Trading of {item} is banned on this planet!")
+                    return
+
+                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                if quantity is None:
+                    return
+
+                if quantity == 'max':
+                    quantity = self.ship.cargo[item]
+
+                if self.ship.sell(item, quantity, self.current_planet.market[item], 
+                                self.current_planet, self.rank):
+                    self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
+
+            elif action in ['upgrade', 'u']:
+                property_name = self.validate_input(
+                    "Choose property to upgrade (attack/defense/speed): ", 
+                    ['attack', 'defense', 'speed']
+                )
+                if property_name is None:
+                    return
+
+                cost = self.ship.upgrade_costs[property_name]
+                if self.ship.upgrade(property_name, cost):
+                    self.display_simple_message(f"Upgraded {property_name}.")
+                    # Increase cost for next upgrade
+                    self.ship.upgrade_costs[property_name] = int(cost * 1.5)
+
+            elif action in ['travel', 't']:
+                if "navcomp" in self.ship.items:
+                    self.display_simple_message("Choose a planet to travel to:")
+                    for i, planet in enumerate(self.known_planets):
+                        print(f"{i+1}. {planet}")
+                    choice = self.validate_planet_input(
+                        "Enter the number of the planet or the planet name: "
+                    )
+                    if choice:
+                        self.travel_to_planet(choice)
+                else:
+                    planet_name = input("Enter planet name to travel: ").strip()
+                    if planet_name:
+                        self.travel_to_planet(planet_name)
+
+            elif action in ['repair', 'r']:
+                cost = self.ship.damage * 10
+                if self.ship.repair(cost):
+                    self.display_simple_message("Ship repaired.")
+                else:
+                    self.display_simple_message(
+                        f"Not enough money to repair. Cost: {self.format_money(cost)}"
+                    )
+
+            elif action in ['info', 'i']:
+                self.display_planet_info()
+
+            elif action in ['build', 'bl']:
+                building_options = {
+                    'stockmarket': ['stockmarket', 'sm'],
+                    'permaculture': ['permaculture', 'pc'],
+                    'organic': ['organic', 'oc'],
+                    'agrobot': ['agrobot', 'ab'],
+                    'nanotech': ['nanotech', 'nt'],
+                    'neuroengineering': ['neuroengineering', 'ne'],
+                    'mining': ['mining', 'm']
+                }
+                
+                building_costs = {
+                    'stockmarket': 5000,
+                    'permaculture': 3000,
+                    'organic': 4000,
+                    'agrobot': 5000,
+                    'nanotech': 6000,
+                    'neuroengineering': 7000,
+                    'mining': 10000
+                }
+
+                # Create the validation options list
+                valid_options = []
+                for options in building_options.values():
+                    valid_options.extend(options)
+
+                building_name = self.validate_input(
+                    "Choose building type: ",
+                    valid_options
+                )
+                if building_name is None:
+                    return
+
+                # Handle building construction
+                self.handle_building_construction(building_name, building_options, building_costs)
+
+            elif action in ['cantina', 'c']:
+                self.visit_cantina()
+
+            elif action in ['shop', 'sh']:
+                self.shop()
+
+            elif action in ['action', 'a']:
+                self.handle_actions()
+
+            elif action in ['mine', 'm']:
+                self.handle_mining()
+
+            elif action in ['end', 'e']:
+                self.turn += 1
+                self.random_event()
+                return
+
+            else:
+                self.display_simple_message("Invalid action.")
+
+    def travel_to_planet(self, planet_name):
+        """Handle travel to a new planet with research points accumulation"""
+        for planet in self.planets:
+            if planet.name.lower() == planet_name.lower():
+                old_planet = self.current_planet  # Store reference to previous planet
+                self.current_planet = planet
+                self.display_simple_message(f"Traveled to {planet.name}.")
+                
+                # Calculate research exchange based on planet differences
+                research_difference = planet.research_points - old_planet.research_points
+                
+                # Base gain is the planet's research points if first visit
+                if planet.name not in self.known_planets:
+                    base_research = planet.research_points
+                    self.known_planets.append(planet.name)
+                else:
+                    # For revisits, only get bonus from research difference if positive
+                    base_research = max(0, research_difference)
+
+                # Apply bonus based on research difference
+                if research_difference > 0:
+                    # Traveling to more advanced planet - get bonus
+                    research_bonus = int(research_difference * 0.2)  # 20% of the difference
+                else:
+                    # Traveling to less advanced planet - smaller bonus
+                    research_bonus = int(abs(research_difference) * 0.1)  # 10% of the difference
+                
+                # Apply rank multiplier to the bonus
+                rank_multiplier = {
+                    "Explorer": 1,
+                    "Pilot": 1.2,
+                    "Captain": 1.5,
+                    "Commander": 1.8,
+                    "Star Commander": 2.2,
+                    "Space Admiral": 2.5,
+                    "Stellar Hero": 3.0,
+                    "Galactic Legend": 3.5
+                }
+                
+                # Calculate final research gain
+                total_gain = base_research + max(1, int(research_bonus * rank_multiplier.get(self.rank, 1) * (1 + self.difficulty)))
+                
+                # Add research points to the ship
+                self.ship.research_points += total_gain
+                
+                # Display informative message about research gain
+                if planet.name not in self.known_planets:
+                    self.display_simple_message(f"Gained {total_gain} research points from discovering new planet!")
+                elif research_difference > 0:
+                    self.display_simple_message(f"Gained {total_gain} research points from studying advanced technology!")
+                else:
+                    self.display_simple_message(f"Gained {total_gain} research points from comparative analysis!")
+                
+                self.turn += 1
+                self.random_event()
+                return True
+        return False
+
     def handle_actions(self):
         # Display current research points
         self.display_simple_message(f"Available Research Points: {self.current_planet.research_points}")
