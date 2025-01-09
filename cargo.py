@@ -772,7 +772,7 @@ class Game:
             [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
             [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
             [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_planet.mining_efficiency}%"],
-            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★: {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
+            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
         ]
 
         status_box = self.create_box(status_content, 'double')
@@ -1398,7 +1398,7 @@ class Game:
         }
 
         # Display available actions
-        action_content = [["Available Actions:", "Cost/Description"]]
+        action_content = [["Actions:", "Cost/Description"]]
         for action, description in available_actions.items():
             action_content.append([action, description])
         print(self.create_box(action_content, 'single'))
