@@ -529,14 +529,19 @@ class Game:
         self.term_width = self.get_terminal_width()
         self.term_height = self.get_terminal_height()
         self.difficulty = self.choose_difficulty()
-        self.planets = self.generate_planets()
+        self.locations = self.generate_initial_locations()  # New method
         self.ship = Ship()
-        self.current_planet = random.choice(self.planets)
+        self.current_location = random.choice([loc for loc in self.locations if isinstance(loc, Planet)])  # Start at a planet
         self.turn = 0
-        self.known_planets = [self.current_planet.name]
+        self.known_locations = [self.current_location.name]  # Changed from known_planets
         self.event_log = []
         self.player_name = self.get_player_name()
         self.rank = "Explorer"
+        self.reputation = 0  # Added for location system
+        self.story_manager = StoryManager(self)  # Added for story progression
+        self.quest_system = QuestSystem(self)  # Updated quest system
+        self.unlocked_location_types = {"Planet"}  # Track unlocked location types
+        self.location_manager = LocationManager(self)  # Added for location management
         self.display_starting_info()
         self.secret_quest_available = False
         self.stellar_portal_available = False
@@ -557,6 +562,58 @@ class Game:
         elif amount >= 1_000:
             return f"{amount/1_000:.1f}K"
         return str(floor(amount))
+
+    def generate_initial_locations(self):
+        """Generate initial game locations and store hidden locations for later unlock"""
+        # Starting planets - always available
+        initial_locations = [
+            Planet("Alpha", 5, 3, 10, "Stable"),
+            Planet("Beta", 2, 7, 15, "Booming"),
+            Planet("Gamma", 8, 2, 20, "Declining"),
+            Planet("Delta", 4, 6, 25, "Formative"),
+            Planet("Epsilon", 7, 4, 30, "Stable")
+        ]
+        
+        # Hidden locations - unlocked through story progression
+        self.hidden_locations = {
+            "AsteroidBase": [
+                AsteroidBase("Omega XIV", 6, 2, 15, "Stable"),
+                AsteroidBase("Sigma VII", 7, 1, 20, "Declining"),
+                AsteroidBase("Theta III", 5, 3, 25, "Booming")
+            ],
+            "DeepSpaceOutpost": [
+                DeepSpaceOutpost("DSO-Alpha", 8, 3, 25, "Formative"),
+                DeepSpaceOutpost("DSO-Beta", 9, 2, 30, "Booming"),
+                DeepSpaceOutpost("DSO-Gamma", 7, 4, 35, "Stable")
+            ],
+            "ResearchColony": [
+                ResearchColony("Nova Labs", 10, 4, 40, "Stable"),
+                ResearchColony("Quantum Center", 9, 5, 35, "Booming"),
+                ResearchColony("Stellar Institute", 8, 6, 45, "Formative")
+            ]
+        }
+        
+        # Add chapter-specific locations
+        self.chapter_locations = {
+            3: {  # Available in Chapter 3
+                "AncientRuins": [
+                    Location("Ancient Ruins Alpha", "Ancient Ruins", 12, 1, 50, "Mysterious"),
+                    Location("Ancient Ruins Beta", "Ancient Ruins", 15, 1, 60, "Mysterious")
+                ]
+            },
+            4: {  # Available in Chapter 4
+                "AlienOutpost": [
+                    Location("Alien Outpost X", "Alien Outpost", 20, 5, 100, "Unknown"),
+                    Location("Alien Outpost Y", "Alien Outpost", 25, 5, 120, "Unknown")
+                ]
+            }
+        }
+        
+        # Initialize unlocked locations tracking
+        self.unlocked_location_types = {"Planet"}  # Start with only regular planets
+        self.discovered_locations = set()  # Track which specific locations player has found
+        
+        return initial_locations
 
     def create_box(self, content, style='single'):
         term_width = shutil.get_terminal_size().columns
@@ -763,17 +820,27 @@ class Game:
                     if random.random() < 0.2:  # 20% chance for each commodity
                         self.action.manipulate_market(planet, commodity, self.research)
 
+    # Update Game class methods
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
-            ["CΔRGΩ", "Ship", "Planet"],
-            [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_planet.name}"],
-            [f"¤: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_planet.tech_level}"],
-            [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_planet.agri_level}"],
-            [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_planet.economy}"],
-            [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_planet.mining_efficiency}%"],
-            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_planet.buildings)}"]
+            ["CΔRGΩ", "Ship", f"{self.current_location.location_type}"],  # Updated to show location type
+            [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_location.name}"],
+            [f"¤: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_location.tech_level}"],
+            [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_location.agri_level}"],
+            [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_location.economy}"],
+            [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.mining_efficiency}%"],
+            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"]
         ]
+        
+        # Add story progress if available
+        if hasattr(self, 'story_manager'):
+            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            status_content.append([
+                f"Chapter {self.story_manager.current_chapter}",
+                f"Plot Points: {self.story_manager.plot_points}",
+                chapter["title"]
+            ])
 
         status_box = self.create_box(status_content, 'double')
         print(status_box)
@@ -970,14 +1037,7 @@ class Game:
             else:
                 self.display_simple_message("Please select 1, 2, or 3.", 1)
 
-    def generate_planets(self):
-        return [
-            Planet("Alpha", 5, 3, 10, "Stable"),
-            Planet("Beta", 2, 7, 15, "Booming"),
-            Planet("Gamma", 8, 2, 20, "Declining"),
-            Planet("Delta", 4, 6, 25, "Formative"),
-            Planet("Epsilon", 7, 4, 30, "Stable")
-        ]
+
 
     def get_player_name(self):
         self.clear_screen()
@@ -1081,6 +1141,7 @@ class Game:
 
     def play_turn(self):
             self.display_turn_info()
+            self.check_location_unlocks()  # Check for new unlocks each turn
 
             valid_actions = [
                 'buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
@@ -1550,106 +1611,425 @@ class Game:
         }
         return benefits.get(research, "Unknown benefit")
 
+    def integrate_event_outcome(self, event_type, outcome, details):
+        """Central hub for processing event outcomes and their effects on other systems"""
+        # Update story progression
+        story_triggers = {
+            "combat_victory": ["pirate_defeat", "defend_station"],
+            "exploration_discovery": ["new_artifact", "alien_ruins"],
+            "disaster_survived": ["emergency_repair", "crisis_management"]
+        }
+        event_key = f"{event_type}_{outcome}"
+        if event_key in story_triggers:
+            for trigger in story_triggers[event_key]:
+                self.story_manager.process_event(trigger, details)
+        
+        # Update quest progress using specific details
+        if 'cargo_lost' in details:
+            self.quest_system.update_cargo_quests(details['cargo_lost'])
+        if 'money_lost' in details:
+            self.quest_system.update_money_quests(details['money_lost'])
+        if 'damage_taken' in details:
+            self.quest_system.update_combat_quests(details['damage_taken'])
+        
+        # Update location based on specific outcomes
+        self.update_location_status(event_type, outcome, details)
+        
+        # Update reputation with specific values
+        if 'reputation_change' in details:
+            self.update_reputation(details['reputation_change'])
+
+    def update_location_status(self, event_type, outcome, details):
+        """Update location based on event outcomes with specific details"""
+        location = self.current_location
+        
+        if event_type == "combat" and outcome == "victory":
+            # Use combat details to adjust security
+            damage_taken = details.get('damage_taken', 0)
+            security_increase = 1 if damage_taken < 20 else 0
+            location.security_level = min(10, location.security_level + security_increase)
+            
+            # Check equipment unlocks based on combat performance
+            if isinstance(location, DeepSpaceOutpost) and damage_taken < 10:
+                self.unlock_advanced_equipment()
+                
+        elif event_type == "disaster":
+            # Use disaster details to affect economy
+            damage_amount = details.get('damage_taken', 0)
+            cargo_lost = details.get('cargo_lost', {})
+            
+            if damage_amount > 30 or sum(cargo_lost.values()) > 100:
+                location.economy = "Declining"
+                self.display_simple_message(f"Major disaster has affected {location.name}'s economy!")
+
+    def update_reputation(self, event_type, outcome):
+        """Update player reputation based on event outcomes"""
+        reputation_changes = {
+            "combat": {"victory": 2, "defeat": -1},
+            "trade": {"success": 1, "embargo": -1},
+            "exploration": {"discovery": 3, "failure": 0},
+            "disaster": {"survived": 1, "major_damage": -1}
+        }
+        
+        change = reputation_changes.get(event_type, {}).get(outcome, 0)
+        self.reputation = max(0, min(100, self.reputation + change))
+        
+        # Check for rank changes
+        self.update_rank()
+
 
     def random_event(self):
-        events = [
-            "Pirate attack!",
-            "Market crash!",
-            "Technological breakthrough!",
-            "Exotic radiation!",
-            "Contamination!",
-            "Cargo bay hit by asteroid!",
-            "Cargo bay raided by guerrilla!",
-            "Spacetime rift!",
-            "Rogue Corsair attacking!",
-            "Pirate mothership attacking!",
-            "Gravitational anomaly!",
-            "Guerilla Militia Patrol attacking!",
-            "Rogue Warship attacking!",
-            "Camouflaged Asteroid Base attacking!"
-            "Trade embargo!",
-            "Resource shortage!",
-            "Market manipulation!"
-        ]
-        event = random.choice(events)
-        self.event_log.append({'turn': self.turn, 'event': event})
+        """Enhanced random event handler with complete implementation"""
+        # Define all possible events with their categories
+        event_result = self.generate_random_event()  # Previous implementation
+        
+        # Process event outcome
+        outcome_details = self.process_event_outcome(event_result)
+        
+        # Integrate with other systems
+        self.integrate_event_outcome(
+            event_result["type"],
+            outcome_details["outcome"],
+            outcome_details
+        )
+        
+        # Check for special location events
+        self.check_location_events(event_result["type"])
+        
+        # Update quest status
+        self.quest_system.check_event_requirements(event_result)
 
-        if event == "Pirate attack!":
-            if "turrets" in self.ship.items and random.random() < 0.35:
-                self.display_simple_message("Event! Pirate attack repelled by laser turrets!", 3, color='32')
-            else:
-                self.ship.damage += min(random.randint(10, 25) * (1 + self.difficulty), 49)
-                if self.ship.money > 0:
-                    # Fix: Convert money to integer before using randint
-                    stolen_money = random.randint(1, max(1, int(self.ship.money // 2)))
-                    self.ship.money -= stolen_money
-                    self.display_simple_message(f"Event! Pirates stole {self.format_money(stolen_money)} money and caused {self.ship.damage}% damage.", 3, color='31')
-                else:
-                    self.display_simple_message(f"Event! Pirates caused {self.ship.damage}% damage.", 3, color='31')
-        elif event == "Market crash!":
-            self.current_planet.update_market(self.difficulty)
-            self.display_simple_message("Event! Market prices have changed.", 3, color='31')
-        elif event == "Technological breakthrough!":
-            self.current_planet.tech_level += 1
-            self.display_simple_message("Event! Technological breakthrough! Tech level increased.", 3, color='32')
-        elif event == "Exotic radiation!":
-            destroyed_tech = random.randint(1, max(1, int(self.ship.cargo['tech'])))
-            self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_tech)
-            self.display_simple_message(f"Event! Exotic radiation destroyed {self.format_money(destroyed_tech)} tech goods.", 3, color='31')
-        elif event == "Contamination!":
-            destroyed_agri = random.randint(1, max(1, int(self.ship.cargo['agri'])))
-            self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_agri)
-            self.display_simple_message(f"Event! Contamination destroyed {self.format_money(destroyed_agri)} agri goods.", 3, color='31')
-        elif event == "Cargo bay hit by asteroid!":
-            self.ship.damage += min(random.randint(5, 15) * (1 + self.difficulty), 49)
-            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
-            destroyed_cargo = random.randint(1, max(1, total_cargo // 2))
-            self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - destroyed_cargo // 2)
-            self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - destroyed_cargo // 2)
-            self.display_simple_message(f"Event! Asteroid hit destroyed {self.format_money(destroyed_cargo)} units of cargo and caused {self.ship.damage}% damage.", 3, color='31')
-        elif event == "Cargo bay raided by guerrilla!":
-            total_cargo = int(self.ship.cargo['tech']) + int(self.ship.cargo['agri'])
-            stolen_cargo = random.randint(1, max(1, total_cargo // 2))
-            self.ship.cargo['tech'] = max(0, self.ship.cargo['tech'] - stolen_cargo // 2)
-            self.ship.cargo['agri'] = max(0, self.ship.cargo['agri'] - stolen_cargo // 2)
-            self.display_simple_message(f"Event! Guerrilla raid stole {self.format_money(stolen_cargo)} units of cargo.", 3, color='31')
-        elif event == "Spacetime rift!":
-            self.ship.damage += min(random.randint(15, 35) * (1 + self.difficulty), 49)
-            self.display_simple_message(f"Event! Spacetime rift caused {self.ship.damage}% damage.", 3, color='31')
-        elif event == "Rogue Corsair attacking!":
-            self.battle_event(2, 1, 1)
-        elif event == "Pirate mothership attacking!":
-            self.battle_event(5, 5, 5)
-        elif event == "Gravitational anomaly!":
-            self.gravitational_anomaly_event()
-        elif event == "Guerilla Militia Patrol attacking!":
-            self.battle_event(3, 2, 2)
-        elif event == "Rogue Warship attacking!":
-            self.battle_event(4, 3, 3)
-        elif event == "Camouflaged Asteroid Base attacking!":
-            self.battle_event(6, 4, 4)
-        # Handle new events
-        elif event == "Trade embargo!":
-            commodity = random.choice(['tech', 'agri'])
-            duration = random.randint(2, 4)
-            self.current_planet.add_temporary_ban(commodity, duration)
-            self.display_simple_message(f"Event! {commodity} trading banned for {duration} turns!", 3, color='31')
+        events = {
+            "combat": [
+                "Pirate attack!",
+                "Rogue Corsair!",
+                "Militia Patrol!",
+                "Pirate mothership!",
+                "Rogue Warship!",
+                "Guerrilla Militia!"
+            ],
+            "trade": [
+                "Market crash!",
+                "Trade embargo!",
+                "Resource shortage!",
+                "Price manipulation!",
+                "Trade route disruption!",
+                "Black market emergence!"
+            ],
+            "exploration": [
+                "Spacetime rift!",
+                "Gravitational anomaly!",
+                "Mysterious signal!",
+                "Quantum fluctuation!",
+                "Ancient ruins!",
+                "Alien artifact!"
+            ],
+            "disaster": [
+                "Asteroid impact!",
+                "Solar flare!",
+                "Equipment malfunction!",
+                "Hull breach!",
+                "Reactor leak!",
+                "Navigation failure!"
+            ]
+        }
+        
+        # Calculate probabilities based on location type
+        location_modifiers = {
+            "Planet": {"combat": 1.0, "trade": 1.0, "exploration": 1.0, "disaster": 1.0},
+            "Asteroid Base": {"combat": 1.2, "trade": 0.8, "exploration": 1.1, "disaster": 1.3},
+            "Deep Space Outpost": {"combat": 1.3, "trade": 0.7, "exploration": 1.2, "disaster": 1.1},
+            "Research Colony": {"combat": 0.7, "trade": 0.9, "exploration": 1.4, "disaster": 0.9}
+        }
+        
+        # Get location-specific modifiers
+        location_type = self.current_location.location_type
+        modifiers = location_modifiers.get(location_type, location_modifiers["Planet"])
+        
+        # Select event category based on ship's condition and location
+        weights = []
+        categories = list(events.keys())
+        
+        for category in categories:
+            base_weight = modifiers[category]
             
-        elif event == "Resource shortage!":
-            commodity = random.choice(['tech', 'agri'])
-            self.current_planet.market[commodity] = 0
-            self.current_planet.banned_commodities.append(commodity)
-            self.display_simple_message(f"Event! {commodity} shortage! Trading banned until prices recover.", 3, color='31')
+            # Adjust weights based on ship condition
+            if category == "combat":
+                if self.ship.damage > 70:
+                    base_weight *= 0.2  # Reduce combat chance when damaged
+                elif "turrets" in self.ship.items:
+                    base_weight *= 0.7  # Reduce combat chance with turrets
             
-        elif event == "Market manipulation!":
-            commodity = random.choice(['tech', 'agri'])
-            price_multiplier = random.uniform(1.5, 3.0)
-            self.current_planet.market[commodity] *= price_multiplier
-            self.display_simple_message(f"Event! {commodity} prices manipulated!", 3, color='31')
+            # Adjust for cargo status
+            elif category == "trade":
+                if all(self.ship.cargo[item] == 0 for item in ['tech', 'agri', 'salt', 'fuel']):
+                    base_weight *= 0.3  # Reduce trade events without cargo
+            
+            # Adjust for equipment
+            elif category == "exploration":
+                if "scanner" in self.ship.items:
+                    base_weight *= 1.3  # Increase exploration chance with scanner
+            
+            weights.append(base_weight)
+        
+        # Normalize weights
+        total_weight = sum(weights)
+        weights = [w/total_weight for w in weights]
+        
+        # Select category and event
+        category = random.choices(categories, weights=weights)[0]
+        event = random.choice(events[category])
+        
+        # Log the event
+        self.event_log.append({
+            'turn': self.turn,
+            'event': event,
+            'category': category,
+            'location': self.current_location.name
+        })
+        
+        # Handle event based on category
+        if category == "combat":
+            self.handle_combat_event(event)
+        elif category == "trade":
+            self.handle_trade_event(event)
+        elif category == "exploration":
+            self.handle_exploration_event(event)
+        elif category == "disaster":
+            self.handle_disaster_event(event)
+        
+        # Update story progression if applicable
+        self.story_manager.check_event_trigger(event, self)
 
+    def check_location_events(self, event_type):
+        """Handle location-specific event consequences"""
+        location = self.current_location
+        
+        if isinstance(location, AsteroidBase):
+            if event_type == "disaster":
+                # Asteroid bases might discover new mining opportunities after disasters
+                if random.random() < 0.2:
+                    mineral_type = random.choice(["salt", "fuel"])
+                    amount = random.randint(1000, 3000)
+                    location.mineral_deposits[mineral_type] = location.mineral_deposits.get(mineral_type, 0) + amount
+                    self.display_simple_message(f"The disaster revealed new {mineral_type} deposits!")
+                    
+        elif isinstance(location, ResearchColony):
+            if event_type == "exploration":
+                # Research colonies might gain research points from exploration events
+                bonus_points = random.randint(10, 30)
+                self.ship.research_points += bonus_points
+                self.display_simple_message(f"Colony researchers analyzed the phenomenon: +{bonus_points} RP")
 
+        def process_event_outcome(self, event_result):
+            """Process and categorize event outcomes with detailed information"""
+            details = {
+                "location": self.current_location.name,
+                "initial_damage": self.ship.damage,
+                "cargo_before": dict(self.ship.cargo),
+                "money_before": self.ship.money,
+                "timestamp": self.turn
+            }
+            
+            # Calculate specific event impacts
+            if event_result["type"] == "combat":
+                damage_taken = self.ship.damage - details["initial_damage"]
+                details["damage_taken"] = damage_taken
+                details["outcome"] = "victory" if damage_taken < 30 else "defeat"
+                details["reputation_change"] = 2 if damage_taken < 30 else -1
+                
+            elif event_result["type"] == "disaster":
+                damage_taken = self.ship.damage - details["initial_damage"]
+                details["damage_taken"] = damage_taken
+                details["outcome"] = "major_damage" if damage_taken > 40 else "survived"
+                details["reputation_change"] = 1 if damage_taken < 20 else -1
+            
+            # Calculate specific losses
+            details["cargo_lost"] = {
+                item: details["cargo_before"][item] - self.ship.cargo[item]
+                for item in self.ship.cargo
+                if details["cargo_before"][item] - self.ship.cargo[item] > 0
+            }
+            
+            details["money_lost"] = max(0, details["money_before"] - self.ship.money)
+                
+            return details
+
+    def handle_combat_event(self, event):
+        """Complete combat event handler"""
+        # Define combat scenarios with their difficulties
+        combat_scenarios = {
+            "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0},
+            "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2},
+            "Militia Patrol!": {"atk": 4, "def": 3, "reward_mult": 1.5},
+            "Pirate mothership!": {"atk": 5, "def": 4, "reward_mult": 2.0},
+            "Rogue Warship!": {"atk": 6, "def": 5, "reward_mult": 2.5},
+            "Guerrilla Militia!": {"atk": 7, "def": 6, "reward_mult": 3.0}
+        }
+        
+        scenario = combat_scenarios.get(event, combat_scenarios["Pirate attack!"])
+        
+        # Check for automatic defense
+        if "turrets" in self.ship.items and random.random() < 0.4:
+            self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
+            # Gain some experience even when automatically defending
+            self.ship.research_points += int(5 * scenario["reward_mult"])
+            return
+        
+        # Calculate base damage
+        damage = random.randint(10, 25) * scenario["atk"] / self.ship.defense
+        damage *= (1 + self.difficulty)
+        
+        # Apply defensive equipment effects
         if "shield" in self.ship.items:
-            self.ship.damage = max(0, self.ship.damage - 5)
+            damage *= 0.7  # 30% damage reduction
+        if "armor" in self.ship.items:
+            damage *= 0.8  # 20% damage reduction
+        
+        # Ensure damage doesn't exceed 99%
+        final_damage = min(99, int(self.ship.damage + damage))
+        damage_dealt = final_damage - self.ship.damage
+        self.ship.damage = final_damage
+        
+        # Handle cargo/money loss
+        losses = []
+        
+        if self.ship.money > 0:
+            stolen = random.randint(1, max(1, int(self.ship.money // 2)))
+            self.ship.money -= stolen
+            losses.append(f"{self.format_money(stolen)} credits")
+        
+        # Only steal cargo that exists
+        for cargo_type in ['tech', 'agri', 'salt', 'fuel']:
+            if self.ship.cargo[cargo_type] > 0:
+                stolen_cargo = random.randint(1, max(1, int(self.ship.cargo[cargo_type] // 3)))
+                self.ship.cargo[cargo_type] -= stolen_cargo
+                if stolen_cargo > 0:
+                    losses.append(f"{stolen_cargo} {cargo_type}")
+        
+        # Display combat results
+        if losses:
+            loss_text = ", ".join(losses)
+            self.display_simple_message(
+                f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!",
+                3, color='31'
+            )
+        else:
+            self.display_simple_message(
+                f"Event! {event} caused {damage_dealt}% damage!",
+                3, color='31'
+            )
+        
+        # Check for counter-attack opportunity
+        if self.ship.attack > scenario["def"]:
+            reward_mult = scenario["reward_mult"]
+            rewards = {
+                "money": int(random.randint(100, 500) * reward_mult),
+                "research": int(random.randint(10, 25) * reward_mult)
+            }
+            
+            self.ship.money += rewards["money"]
+            self.ship.research_points += rewards["research"]
+            
+            self.display_simple_message(
+                f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                2, color='32'
+            )
+
+    def handle_disaster_event(self, event):
+        """Complete disaster event handler"""
+        # Define disaster scenarios and their impacts
+        disaster_scenarios = {
+            "Asteroid impact!": {
+                "base_damage": (20, 40),
+                "shield_protection": 0.6,
+                "cargo_loss": True,
+                "equipment_failure": False
+            },
+            "Solar flare!": {
+                "base_damage": (15, 30),
+                "shield_protection": 0.8,
+                "cargo_loss": False,
+                "equipment_failure": True
+            },
+            "Equipment malfunction!": {
+                "base_damage": (10, 20),
+                "shield_protection": 0.0,
+                "cargo_loss": False,
+                "equipment_failure": True
+            },
+            "Hull breach!": {
+                "base_damage": (25, 45),
+                "shield_protection": 0.4,
+                "cargo_loss": True,
+                "equipment_failure": False
+            },
+            "Reactor leak!": {
+                "base_damage": (30, 50),
+                "shield_protection": 0.3,
+                "cargo_loss": False,
+                "equipment_failure": True
+            },
+            "Navigation failure!": {
+                "base_damage": (5, 15),
+                "shield_protection": 0.0,
+                "cargo_loss": False,
+                "equipment_failure": True
+            }
+        }
+        
+        scenario = disaster_scenarios.get(event, disaster_scenarios["Equipment malfunction!"])
+        
+        # Calculate base damage
+        min_damage, max_damage = scenario["base_damage"]
+        damage = random.randint(min_damage, max_damage)
+        
+        # Apply shield protection if available
+        if "shield" in self.ship.items and scenario["shield_protection"] > 0:
+            if random.random() < scenario["shield_protection"]:
+                damage = int(damage * 0.4)  # 60% reduction when shields work
+                self.display_simple_message("Shields partially mitigated the disaster!", 2, color='32')
+        
+        # Apply final damage
+        self.ship.damage = min(99, self.ship.damage + damage)
+        
+        # Handle cargo loss if applicable
+        if scenario["cargo_loss"]:
+            cargo_lost = False
+            for cargo_type in ['tech', 'agri', 'salt', 'fuel']:
+                if self.ship.cargo[cargo_type] > 0:
+                    lost = random.randint(1, max(1, int(self.ship.cargo[cargo_type] // 2)))
+                    self.ship.cargo[cargo_type] = max(0, self.ship.cargo[cargo_type] - lost)
+                    if lost > 0:
+                        cargo_lost = True
+                        self.display_simple_message(
+                            f"Lost {self.format_money(lost)} units of {cargo_type}!",
+                            2, color='31'
+                        )
+        
+        # Handle equipment failure
+        if scenario["equipment_failure"]:
+            if self.ship.items and random.random() < 0.3:
+                item = random.choice(list(self.ship.items.keys()))
+                self.ship.items[item] -= 1
+                if self.ship.items[item] <= 0:
+                    del self.ship.items[item]
+                self.display_simple_message(f"Equipment failure! Lost {item}!", 2, color='31')
+        
+        # Display final disaster results
+        self.display_simple_message(
+            f"Event! {event} caused {damage}% damage to the ship!",
+            3, color='31'
+        )
+        
+        # Check for repair opportunity
+        if "repair_bot" in self.ship.items and random.random() < 0.4:
+            repair = random.randint(5, 15)
+            self.ship.damage = max(0, self.ship.damage - repair)
+            self.display_simple_message(
+                f"Repair bot automatically fixed {repair}% damage!",
+                2, color='32'
+            )
 
     def gravitational_anomaly_event(self):
         print("You have encountered a gravitational anomaly!")
@@ -1729,6 +2109,12 @@ class Game:
     def visit_cantina(self):
         self.display_simple_message("Welcome to the Cantina!", 1)
 
+                # Add story-specific dialogue based on current chapter
+        if self.story_manager.current_chapter > 0:
+            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            self.display_character_message("Cantina Owner",
+                f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
+
         action = self.validate_input(
             "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q): ",
             ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q']
@@ -1801,6 +2187,16 @@ class Game:
 
     def shop(self):
         self.display_simple_message("Welcome to the Shop!", 1)
+            # Modify shop inventory based on location type
+        if isinstance(self.current_location, AsteroidBase):
+            available_items = ["mining_laser", "cargo_scanner", "shield_booster"]
+        elif isinstance(self.current_location, DeepSpaceOutpost):
+            available_items = ["advanced_radar", "combat_drone", "repair_bot"]
+        elif isinstance(self.current_location, ResearchColony):
+            available_items = ["research_module", "data_analyzer", "quantum_scanner"]
+        else:
+            available_items = ["navcomp", "scanner", "probe", "turrets", "shield"]
+
         available_items = random.sample([
             ("navcomp", 500),
             ("scanner", 700),
@@ -2044,8 +2440,1168 @@ class Game:
             Planet("Kappa", 3, 3, 20, "Stable")
         ]
 
+#New additions to the game system
+
+    def handle_location_discovery(self, location):
+        """Handle discovery of a new location"""
+        if location.name not in self.discovered_locations:
+            self.discovered_locations.add(location.name)
+            
+            # Award discovery rewards
+            discovery_reward = 1000 * (self.story_manager.current_chapter + 1)
+            research_reward = 20 * (self.story_manager.current_chapter + 1)
+            
+            self.ship.money += discovery_reward
+            self.ship.research_points += research_reward
+            
+            # Check for story progression
+            self.story_manager.check_discovery_milestone(location)
+            
+            # Check for quest updates
+            self.quest_system.update_discovery_quests(location)
+            
+            self.display_story_message([
+                f"Discovered new location: {location.name}!",
+                f"Earned {self.format_money(discovery_reward)} credits",
+                f"Gained {research_reward} research points"
+            ])
+
+    def check_location_unlocks(self):
+        """Check for new location type unlocks"""
+        for location_type in self.location_manager.location_quests:
+            if (location_type not in self.unlocked_location_types and 
+                self.location_manager.check_location_unlock_progress(location_type)):
+                self.location_manager.trigger_location_unlock_quest(location_type)
+
+
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
+
+# Define the Location base class
+class Location:
+    def __init__(self, name, location_type, tech_level, agri_level, research_points, economy):
+        self.name = name
+        self.location_type = location_type
+        self.tech_level = tech_level
+        self.agri_level = agri_level
+        self.research_points = research_points
+        self.economy = economy
+        self.market = self.generate_market()
+        self.stockmarket_base = False
+        self.stockmarket_cost = 5000
+        self.buildings = []
+        self.mining_efficiency = random.randint(60, 100)
+        self.market['salt'] = 0
+        self.market['fuel'] = 0
+        self.production_cooldown = {}
+        self.banned_commodities = []
+        self.ban_duration = {}
+        self.mineral_deposits = {}
+        self.mining_platforms = []
+        self.quest_requirements = []  # New: Requirements to unlock this location
+        self.story_progression = 0    # New: Track story progress at this location
+
+    def generate_market(self):
+        # Base market generation logic remains the same as Planet class
+        tech_price = 100 - (self.tech_level * 10)
+        agri_price = 50 + (self.agri_level * 5)
+        return {
+            'tech': tech_price,
+            'agri': agri_price,
+            'salt': 0,
+            'fuel': 0
+        }
+
+    def update_market(self, difficulty):
+        # Same as Planet class update_market method
+        pass
+
+class Planet(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "Planet", tech_level, agri_level, research_points, economy)
+
+class AsteroidBase(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "Asteroid Base", tech_level, agri_level, research_points, economy)
+        self.mining_efficiency += 20  # Asteroid bases have better mining
+        self.quest_requirements = ["complete_basic_mining"]
+
+    def generate_market(self):
+        market = super().generate_market()
+        # Asteroid bases have better prices for minerals
+        market['salt'] = random.randint(100, 150)
+        market['fuel'] = random.randint(180, 250)
+        return market
+
+class DeepSpaceOutpost(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "Deep Space Outpost", tech_level, agri_level, research_points, economy)
+        self.quest_requirements = ["complete_combat_missions"]
+        
+    def generate_market(self):
+        market = super().generate_market()
+        # Outposts have better tech prices
+        market['tech'] = max(50, market['tech'] - 20)
+        return market
+
+class ResearchColony(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "Research Colony", tech_level, agri_level, research_points, economy)
+        self.research_points *= 2  # Double research points
+        self.quest_requirements = ["complete_research_missions"]
+
+    def generate_market(self):
+        market = super().generate_market()
+        # Research colonies have advanced tech
+        market['tech'] = min(150, market['tech'] + 30)
+        return market
+
+class Quest:
+    def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
+                 requirements=None, on_complete=None):
+        self.name = name
+        self.description = description
+        self.reward_money = reward_money
+        self.reward_rp = reward_rp  # Research Points reward
+        self.quest_type = quest_type
+        self.requirements = requirements or {}
+        self.on_complete = on_complete
+        self.progress = 0
+        self.completed = False
+        self.target_progress = self.requirements.get('target_progress', 1)
+        self.location_requirement = self.requirements.get('location_type', None)
+
+    def check_completion(self, game):
+        """Check if quest requirements are met"""
+        if self.completed:
+            return False
+
+        if self.quest_type == "mining":
+            return self.check_mining_completion(game)
+        elif self.quest_type == "combat":
+            return self.check_combat_completion(game)
+        elif self.quest_type == "trade":
+            return self.check_trade_completion(game)
+        elif self.quest_type == "exploration":
+            return self.check_exploration_completion(game)
+        elif self.quest_type == "research":
+            return self.check_research_completion(game)
+        
+        # Generic quest completion check
+        return self.progress >= self.target_progress
+
+    def check_mining_completion(self, game):
+        """Check mining quest requirements"""
+        if 'resource_type' in self.requirements:
+            resource = self.requirements['resource_type']
+            target_amount = self.requirements.get('amount', 0)
+            return game.ship.cargo[resource] >= target_amount
+        return False
+
+    def check_combat_completion(self, game):
+        """Check combat quest requirements"""
+        if 'enemy_type' in self.requirements:
+            return game.ship.combat_victories.get(
+                self.requirements['enemy_type'], 0) >= self.requirements.get('amount', 1)
+        return game.ship.combat_victories >= self.requirements.get('amount', 1)
+
+    def check_trade_completion(self, game):
+        """Check trading quest requirements"""
+        if 'commodity' in self.requirements:
+            target_profit = self.requirements.get('profit', 0)
+            return game.ship.trade_profits.get(
+                self.requirements['commodity'], 0) >= target_profit
+        return False
+
+    def check_exploration_completion(self, game):
+        """Check exploration quest requirements"""
+        if 'location_type' in self.requirements:
+            discovered = len([loc for loc in game.discovered_locations 
+                            if loc.location_type == self.requirements['location_type']])
+            return discovered >= self.requirements.get('amount', 1)
+        return False
+
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if 'research_type' in self.requirements:
+            return self.requirements['research_type'] in game.research.unlocked_options
+        return game.ship.research_points >= self.requirements.get('target_points', 0)
+
+    def complete(self, game):
+        """Complete the quest and award rewards"""
+        if not self.completed:
+            self.completed = True
+            game.ship.money += self.reward_money
+            game.ship.research_points += self.reward_rp
+            
+            # Call completion callback if exists
+            if self.on_complete:
+                self.on_complete()
+            
+            # Display completion message
+            game.display_story_message([
+                f"Quest Completed: {self.name}",
+                f"Rewards:",
+                f"• {game.format_money(self.reward_money)} credits",
+                f"• {self.reward_rp} research points"
+            ])
+
+    def update_progress(self, amount=1):
+        """Update quest progress"""
+        if not self.completed:
+            self.progress += amount
+            return self.progress >= self.target_progress
+        return False
+
+class QuestSystem:
+    def __init__(self, game):
+        self.game = game
+        self.active_quests = []  # For Quest objects
+        self.available_quests = []  # For tuple-based quests (legacy support)
+        self.completed_quests = []
+        self.story_progress = 0
+        
+        # Quest line progression tracking
+        self.quest_lines = {
+            "mining": ["basic_mining", "advanced_mining", "expert_mining"],
+            "combat": ["patrol_duty", "pirate_hunting", "fleet_command"],
+            "research": ["data_collection", "experiment_assistance", "breakthrough"]
+        }
+        self.quest_line_progress = {
+            "mining": 0,
+            "combat": 0,
+            "research": 0
+        }
+
+    def generate_quest(self, quest_type, difficulty):
+        """Generate a quest based on type and difficulty"""
+        base_reward = 1000 * (difficulty + 1)
+        research_reward = 50 * (difficulty + 1)
+        
+        quest_templates = {
+            "mining": [
+                {
+                    "name": f"Mine {50 * (difficulty + 1)} units of salt",
+                    "description": "Extract valuable minerals from the asteroid field",
+                    "type": "mining",
+                    "requirements": {
+                        "resource_type": "salt",
+                        "amount": 50 * (difficulty + 1)
+                    },
+                    "reward_money": base_reward,
+                    "reward_rp": research_reward
+                },
+                {
+                    "name": f"Extract {40 * (difficulty + 1)} units of fuel",
+                    "description": "Extract fuel from deep space deposits",
+                    "type": "mining",
+                    "requirements": {
+                        "resource_type": "fuel",
+                        "amount": 40 * (difficulty + 1)
+                    },
+                    "reward_money": int(base_reward * 1.2),
+                    "reward_rp": int(research_reward * 1.2)
+                }
+            ],
+            "combat": [
+                {
+                    "name": f"Eliminate {2 * (difficulty + 1)} pirate ships",
+                    "description": "Clear the sector of pirate activity",
+                    "type": "combat",
+                    "requirements": {
+                        "enemy_type": "pirate",
+                        "amount": 2 * (difficulty + 1)
+                    },
+                    "reward_money": int(base_reward * 1.5),
+                    "reward_rp": int(research_reward * 1.5)
+                },
+                {
+                    "name": f"Defend trade route for {3 * (difficulty + 1)} turns",
+                    "description": "Maintain security in a trade route",
+                    "type": "patrol",
+                    "requirements": {
+                        "turns": 3 * (difficulty + 1)
+                    },
+                    "reward_money": int(base_reward * 1.3),
+                    "reward_rp": int(research_reward * 1.3)
+                }
+            ],
+            "research": [
+                {
+                    "name": f"Collect {30 * (difficulty + 1)} research data",
+                    "description": "Gather scientific data from space phenomena",
+                    "type": "research",
+                    "requirements": {
+                        "research_type": "data",
+                        "target_points": 30 * (difficulty + 1)
+                    },
+                    "reward_money": int(base_reward * 1.2),
+                    "reward_rp": int(research_reward * 2)
+                }
+            ],
+            "story": [
+                {
+                    "name": "Investigate mysterious signals",
+                    "description": "Track down the source of unusual transmissions",
+                    "type": "story",
+                    "requirements": {
+                        "story_progression": 1
+                    },
+                    "reward_money": int(base_reward * 2),
+                    "reward_rp": int(research_reward * 3)
+                }
+            ]
+        }
+        
+        # Select a random quest template
+        if quest_type in quest_templates:
+            template = random.choice(quest_templates[quest_type])
+            quest = Quest(
+                name=template["name"],
+                description=template["description"],
+                reward_money=template["reward_money"],
+                reward_rp=template["reward_rp"],
+                quest_type=template["type"],
+                requirements=template["requirements"]
+            )
+            return quest
+        return None
+
+    def update_from_event(self, event_type, outcome, details):
+        """Update quest progress based on events"""
+        # Update Quest objects
+        for quest in self.active_quests:
+            progress_made = False
+            
+            if quest.quest_type == "combat" and event_type == "combat":
+                if outcome == "victory":
+                    damage_taken = details.get('damage_taken', 0)
+                    if damage_taken < quest.requirements.get('damage_threshold', float('inf')):
+                        quest.progress += 1
+                        progress_made = True
+                    
+            elif quest.quest_type == "trade" and event_type == "trade":
+                money_lost = details.get('money_lost', 0)
+                if money_lost < quest.requirements.get('loss_threshold', float('inf')):
+                    quest.progress += 1
+                    progress_made = True
+                    
+            elif quest.quest_type == "exploration" and event_type == "exploration":
+                if outcome == "discovery" and details.get('location') == quest.requirements.get('target_location'):
+                    quest.progress += 1
+                    progress_made = True
+            
+            if progress_made:
+                self.display_quest_progress(quest)
+                if quest.check_completion(self.game):
+                    self.complete_quest(quest)
+
+        # Update legacy tuple-based quests
+        self.check_quest_completion(self.game.ship, self.game.current_location)
+
+    def complete_quest(self, quest):
+        """Handle quest completion and progression"""
+        if isinstance(quest, Quest):
+            # Handle Quest object completion
+            quest.complete(self.game)
+            self.active_quests.remove(quest)
+            self.completed_quests.append(quest)
+            
+            # Update quest line progression if applicable
+            for line_type, progression in self.quest_lines.items():
+                if quest.name in progression:
+                    self.quest_line_progress[line_type] += 1
+                    self.check_quest_line_completion(line_type)
+        else:
+            # Handle legacy tuple-based quest completion
+            self.available_quests.remove(quest)
+            self.completed_quests.append(quest)
+            self.story_progress += 1
+
+    def check_quest_line_completion(self, line_type):
+        """Check if a quest line has been completed"""
+        if self.quest_line_progress[line_type] >= len(self.quest_lines[line_type]):
+            reward_multiplier = 2.0
+            bonus_reward = int(5000 * reward_multiplier)
+            bonus_rp = int(100 * reward_multiplier)
+            
+            self.game.ship.money += bonus_reward
+            self.game.ship.research_points += bonus_rp
+            
+            self.game.display_story_message([
+                f"Quest Line Completed: {line_type.title()}!",
+                f"Bonus Reward: {self.game.format_money(bonus_reward)}",
+                f"Bonus Research Points: {bonus_rp}"
+            ])
+            
+            # Trigger relevant story progression
+            self.game.story_manager.handle_quest_line_completion(line_type)
+
+    def display_quest_progress(self, quest):
+        """Display quest progress update"""
+        if isinstance(quest, Quest):
+            progress_text = f"Quest Progress: {quest.name}"
+            if quest.target_progress > 1:
+                progress_text += f" ({quest.progress}/{quest.target_progress})"
+            self.game.display_simple_message(progress_text)
+
+    def get_available_quest_types(self):
+        """Get available quest types based on game progress"""
+        available_types = ["mining", "combat", "trade"]  # Basic types
+        
+        # Add research quests if conditions met
+        if self.game.ship.research_points >= 50:
+            available_types.append("research")
+            
+        # Add story quests if conditions met
+        if self.story_progress >= 5:
+            available_types.append("story")
+            
+        return available_types
+
+class StoryManager:
+    def __init__(self):
+        self.current_chapter = 0
+        self.plot_points = 0
+        self.completed_story_beats = set()
+        self.chapters = {
+            0: {
+                "title": "A New Beginning",
+                "requirements": {"quests_completed": 0, "plot_points": 0},
+                "story_beats": [
+                    "first_trade",
+                    "first_quest",
+                    "first_combat"
+                ]
+            },
+            1: {
+                "title": "Strange Signals",
+                "requirements": {"quests_completed": 5, "plot_points": 10},
+                "story_beats": [
+                    "discover_asteroid_base",
+                    "investigate_signal",
+                    "meet_researcher"
+                ]
+            },
+            2: {
+                "title": "Deep Space Mysteries",
+                "requirements": {"quests_completed": 10, "plot_points": 25},
+                "story_beats": [
+                    "discover_outpost",
+                    "alien_artifact",
+                    "mysterious_transmission"
+                ]
+            },
+            3: {
+                "title": "Research and Discovery",
+                "requirements": {"quests_completed": 15, "plot_points": 50},
+                "story_beats": [
+                    "discover_research_colony",
+                    "ancient_technology",
+                    "breakthrough_discovery"
+                ]
+            }
+        }
+        self.story_events = {
+            "first_trade": {
+                "title": "First Steps",
+                "description": "Complete your first trade",
+                "plot_points": 2
+            },
+            "discover_asteroid_base": {
+                "title": "Hidden in the Rocks",
+                "description": "Discover an asteroid base",
+                "plot_points": 5,
+                "unlock": "AsteroidBase"
+            },
+            # Add more story events...
+        }
+
+    def process_event(self, trigger, details):
+        """Process story triggers with full event details and consequences"""
+        if trigger in self.completed_story_beats:
+            return  # Don't process the same story beat twice
+            
+        event_location = details.get('location', '')
+        timestamp = details.get('timestamp', 0)
+        
+        # Define rewards and consequences for different story beats
+        story_impacts = {
+            # Combat-related story beats
+            "pirate_defeat": {
+                "plot_points": 3,
+                "reputation": 2,
+                "unlock": "combat_specialist",
+                "message": "Your victory against pirates has been noticed!"
+            },
+            "defend_station": {
+                "plot_points": 4,
+                "reputation": 3,
+                "unlock": "station_defender",
+                "message": "The station is safe thanks to your efforts!"
+            },
+            
+            # Exploration story beats
+            "new_artifact": {
+                "plot_points": 5,
+                "reputation": 2,
+                "unlock": "archaeologist",
+                "message": "Your discovery will be studied by researchers!"
+            },
+            "alien_ruins": {
+                "plot_points": 6,
+                "reputation": 3,
+                "unlock": "xenoarchaeologist",
+                "message": "The ruins hold secrets of ancient civilizations!"
+            },
+            
+            # Trading story beats
+            "trade_monopoly": {
+                "plot_points": 4,
+                "reputation": 2,
+                "unlock": "master_trader",
+                "message": "Your trading empire grows!"
+            },
+            "market_dominance": {
+                "plot_points": 5,
+                "reputation": 3,
+                "unlock": "market_manipulator",
+                "message": "You've become a significant market force!"
+            },
+            
+            # Research story beats
+            "breakthrough": {
+                "plot_points": 5,
+                "reputation": 2,
+                "unlock": "scientist",
+                "message": "Your research has yielded results!"
+            },
+            "innovation": {
+                "plot_points": 6,
+                "reputation": 3,
+                "unlock": "innovator",
+                "message": "Your innovation changes everything!"
+            },
+            
+            # Crisis story beats
+            "emergency_repair": {
+                "plot_points": 3,
+                "reputation": 1,
+                "unlock": "crisis_expert",
+                "message": "Quick thinking saved the day!"
+            },
+            "crisis_management": {
+                "plot_points": 4,
+                "reputation": 2,
+                "unlock": "emergency_specialist",
+                "message": "Your leadership during crisis is noted!"
+            }
+        }
+        
+        # Get impact details for this trigger
+        impact = story_impacts.get(trigger, {
+            "plot_points": 1,
+            "reputation": 0,
+            "message": "Story continues..."
+        })
+        
+        # Apply performance-based bonuses
+        if "damage_taken" in details:
+            damage = details["damage_taken"]
+            if damage < 10:
+                impact["plot_points"] += 2  # Excellent performance
+                impact["reputation"] += 1
+            elif damage < 20:
+                impact["plot_points"] += 1  # Good performance
+            
+        # Apply location-specific bonuses
+        if isinstance(details.get('location_type'), "ResearchColony"):
+            if 'research' in trigger:
+                impact["plot_points"] *= 1.5  # Bonus for research at appropriate location
+                
+        elif isinstance(details.get('location_type'), "DeepSpaceOutpost"):
+            if 'combat' in trigger:
+                impact["plot_points"] *= 1.5  # Bonus for combat at appropriate location
+                
+        # Record story progress with all details
+        self.story_progress[trigger] = {
+            "completed_at": timestamp,
+            "location": event_location,
+            "chapter": self.current_chapter,
+            "performance_details": {
+                "damage_taken": details.get("damage_taken", 0),
+                "cargo_lost": details.get("cargo_lost", {}),
+                "money_lost": details.get("money_lost", 0)
+            }
+        }
+        
+        # Update plot points
+        earned_points = int(impact["plot_points"])
+        self.plot_points += earned_points
+        
+        # Add to completed story beats
+        self.completed_story_beats.add(trigger)
+        
+        # Handle special unlocks
+        if "unlock" in impact:
+            self.unlock_achievement(impact["unlock"])
+        
+        # Check for chapter-specific consequences
+        self.handle_chapter_consequences(trigger, details)
+        
+        # Generate appropriate message
+        message_lines = [
+            impact["message"],
+            f"Earned {earned_points} plot points!",
+        ]
+        
+        if "unlock" in impact:
+            message_lines.append(f"Unlocked: {impact['unlock'].replace('_', ' ').title()}!")
+            
+        # Display results
+        self.game.display_story_message(message_lines)
+        
+        # Check for chapter progression
+        if self.check_chapter_requirements():
+            self.advance_chapter()
+
+    def handle_chapter_consequences(self, trigger, details):
+        """Handle chapter-specific story consequences"""
+        chapter_consequences = {
+            0: {  # Tutorial chapter
+                "pirate_defeat": self.unlock_basic_combat,
+                "trade_monopoly": self.unlock_basic_trading,
+                "new_artifact": self.unlock_basic_exploration
+            },
+            1: {  # Early game
+                "defend_station": self.unlock_station_missions,
+                "breakthrough": self.unlock_research_missions,
+                "crisis_management": self.unlock_emergency_missions
+            },
+            2: {  # Mid game
+                "alien_ruins": self.unlock_alien_technology,
+                "market_dominance": self.unlock_market_manipulation,
+                "innovation": self.unlock_advanced_research
+            },
+            3: {  # Late game
+                "master_trader": self.unlock_trade_empire,
+                "xenoarchaeologist": self.unlock_ancient_secrets,
+                "crisis_expert": self.unlock_crisis_mastery
+            }
+        }
+        
+        # Get consequences for current chapter
+        chapter_triggers = chapter_consequences.get(self.current_chapter, {})
+        if trigger in chapter_triggers:
+            consequence_function = chapter_triggers[trigger]
+            consequence_function()
+
+    def check_chapter_requirements(self):
+        """Check if requirements are met for chapter advancement"""
+        chapter_requirements = {
+            0: {"plot_points": 10, "story_beats": 3},
+            1: {"plot_points": 25, "story_beats": 5},
+            2: {"plot_points": 50, "story_beats": 8},
+            3: {"plot_points": 100, "story_beats": 12}
+        }
+        
+        if self.current_chapter not in chapter_requirements:
+            return False
+            
+        req = chapter_requirements[self.current_chapter]
+        completed_beats = len([b for b in self.completed_story_beats 
+                             if self.story_progress[b]["chapter"] == self.current_chapter])
+                             
+        return (self.plot_points >= req["plot_points"] and 
+                completed_beats >= req["story_beats"])
+
+    def check_chapter_progress(self, game):
+        """Check if player can progress to next chapter"""
+        next_chapter = self.current_chapter + 1
+        if next_chapter in self.chapters:
+            requirements = self.chapters[next_chapter]["requirements"]
+            if (len(game.quest_system.completed_quests) >= requirements["quests_completed"] and
+                self.plot_points >= requirements["plot_points"]):
+                self.advance_chapter(game)
+
+    def advance_chapter(self):
+        """Advance to the next story chapter with full progression handling"""
+        old_chapter = self.current_chapter
+        self.current_chapter += 1
+        
+        # Chapter definitions with names, descriptions, and rewards
+        chapters = {
+            1: {
+                "name": "The Beginning of Adventure",
+                "description": "Your first steps into the vast galaxy...",
+                "rewards": {
+                    "money": 5000,
+                    "research_points": 50,
+                    "reputation": 10
+                },
+                "unlocks": {
+                    "locations": ["AsteroidBase"],
+                    "quests": ["pirate_hunting", "mineral_survey"],
+                    "equipment": ["advanced_scanner", "mining_laser"]
+                }
+            },
+            2: {
+                "name": "Rising Challenges",
+                "description": "Your reputation grows as new threats emerge...",
+                "rewards": {
+                    "money": 15000,
+                    "research_points": 100,
+                    "reputation": 20
+                },
+                "unlocks": {
+                    "locations": ["DeepSpaceOutpost"],
+                    "quests": ["station_defense", "trade_monopoly"],
+                    "equipment": ["combat_drone", "shield_booster"]
+                }
+            },
+            3: {
+                "name": "Galactic Impact",
+                "description": "Your actions shape the future of the galaxy...",
+                "rewards": {
+                    "money": 50000,
+                    "research_points": 200,
+                    "reputation": 30
+                },
+                "unlocks": {
+                    "locations": ["ResearchColony"],
+                    "quests": ["alien_artifacts", "breakthrough_research"],
+                    "equipment": ["quantum_scanner", "ai_assistant"]
+                }
+            },
+            4: {
+                "name": "Legend of the Stars",
+                "description": "Your name becomes legend throughout the galaxy...",
+                "rewards": {
+                    "money": 150000,
+                    "research_points": 500,
+                    "reputation": 50
+                },
+                "unlocks": {
+                    "locations": ["AncientRuins", "AlienOutpost"],
+                    "quests": ["galactic_peace", "technological_ascension"],
+                    "equipment": ["alien_tech", "stellar_manipulator"]
+                }
+            }
+        }
+        
+        # Get current chapter info
+        chapter = chapters.get(self.current_chapter)
+        if not chapter:
+            # Handle game completion if no more chapters
+            self.handle_game_completion()
+            return
+            
+        # Display chapter transition
+        self.game.display_story_message([
+            f"Chapter {self.current_chapter}: {chapter['name']}",
+            "",
+            chapter['description']
+        ], style='double', color='32')  # Green color for achievement
+        
+        # Award chapter completion rewards
+        rewards = chapter['rewards']
+        self.game.ship.money += rewards['money']
+        self.game.ship.research_points += rewards['research_points']
+        self.game.reputation += rewards['reputation']
+        
+        # Display rewards
+        self.game.display_story_message([
+            "Chapter Rewards Earned:",
+            f"• Credits: {self.game.format_money(rewards['money'])}",
+            f"• Research Points: {rewards['research_points']}",
+            f"• Reputation: +{rewards['reputation']}"
+        ])
+        
+        # Unlock new content
+        unlocks = chapter['unlocks']
+        
+        # Unlock new locations
+        for location_type in unlocks['locations']:
+            self.game.unlock_location_type(location_type)
+            self.game.display_simple_message(f"New location type unlocked: {location_type}!")
+            
+        # Add new quests
+        for quest_type in unlocks['quests']:
+            self.game.quest_system.add_quest_type(quest_type)
+            self.game.display_simple_message(f"New quest type available: {quest_type.replace('_', ' ').title()}!")
+            
+        # Unlock new equipment
+        for equipment in unlocks['equipment']:
+            self.game.shop.add_equipment(equipment)
+            self.game.display_simple_message(f"New equipment available: {equipment.replace('_', ' ').title()}!")
+        
+        # Update game difficulty and challenges
+        self.update_chapter_difficulty()
+        
+        # Trigger chapter-specific events
+        self.trigger_chapter_events()
+        
+        # Save chapter progress
+        self.save_chapter_progress(old_chapter)
+
+    def update_chapter_difficulty(self):
+        """Update game difficulty based on current chapter"""
+        # Increase enemy strength
+        self.game.combat_difficulty = 1.0 + (self.current_chapter * 0.2)
+        
+        # Adjust market volatility
+        self.game.market_volatility = 1.0 + (self.current_chapter * 0.15)
+        
+        # Scale event frequency
+        self.game.event_frequency = min(0.4 + (self.current_chapter * 0.1), 0.8)
+        
+        # Add chapter-specific challenges
+        if self.current_chapter >= 2:
+            self.game.enable_pirate_fleets = True
+        if self.current_chapter >= 3:
+            self.game.enable_alien_encounters = True
+        if self.current_chapter >= 4:
+            self.game.enable_space_anomalies = True
+
+    def trigger_chapter_events(self):
+        """Trigger events specific to the new chapter"""
+        chapter_events = {
+            1: self.trigger_tutorial_completion,
+            2: self.trigger_rising_threats,
+            3: self.trigger_galactic_crisis,
+            4: self.trigger_final_challenges
+        }
+        
+        if self.current_chapter in chapter_events:
+            chapter_events[self.current_chapter]()
+
+    def save_chapter_progress(self, old_chapter):
+        """Save progress and statistics for the completed chapter"""
+        self.chapter_statistics[old_chapter] = {
+            "completion_turn": self.game.turn,
+            "money_earned": self.game.ship.money - self.chapter_start_money,
+            "quests_completed": len(self.game.quest_system.completed_quests) - self.chapter_start_quests,
+            "locations_discovered": len(self.game.known_locations) - self.chapter_start_locations,
+            "combat_victories": self.game.ship.combat_victories - self.chapter_start_combat_victories
+        }
+        
+        # Update starting points for next chapter
+        self.chapter_start_money = self.game.ship.money
+        self.chapter_start_quests = len(self.game.quest_system.completed_quests)
+        self.chapter_start_locations = len(self.game.known_locations)
+        self.chapter_start_combat_victories = self.game.ship.combat_victories
+
+    def handle_game_completion(self):
+        """Handle the completion of all chapters"""
+        self.game.display_story_message([
+            "Congratulations! You have completed all chapters!",
+            "Your legend will live forever in the galaxy!",
+            "",
+            "You may continue playing to discover all secrets..."
+        ], style='double', color='32')
+        
+        # Award final rewards
+        final_rewards = {
+            "money": 500000,
+            "research_points": 1000,
+            "reputation": 100,
+            "special_item": "Legendary Captain's Badge"
+        }
+        
+        self.game.ship.money += final_rewards['money']
+        self.game.ship.research_points += final_rewards['research_points']
+        self.game.reputation += final_rewards['reputation']
+        self.game.ship.acquire_item(final_rewards['special_item'])
+        
+        # Enable endgame content
+        self.game.enable_endgame_content()
+
+    def trigger_story_event(self, event_id, game):
+        """Trigger a story event and award plot points"""
+        if event_id not in self.completed_story_beats:
+            event = self.story_events[event_id]
+            self.plot_points += event["plot_points"]
+            self.completed_story_beats.add(event_id)
+            
+            game.display_story_message([
+                f"Story Event: {event['title']}",
+                event['description'],
+                f"Gained {event['plot_points']} plot points!"
+            ])
+            
+            # Handle location unlocks
+            if "unlock" in event:
+                game.unlock_location_type(event["unlock"])
+            
+            self.check_chapter_progress(game)
+
+
+
+    def unlock_location_type(self, location_type):
+        """Unlock a new type of location and add its instances to available locations"""
+        if location_type not in self.unlocked_location_types:
+            self.unlocked_location_types.add(location_type)
+            
+            # Add locations from hidden pool
+            if location_type in self.hidden_locations:
+                self.locations.extend(self.hidden_locations[location_type])
+                
+                # Display unlock message
+                self.display_story_message([
+                    f"New {location_type}s Discovered!",
+                    "Check your map for new locations to explore.",
+                    "",
+                    "New trading opportunities await!"
+                ])
+                
+                # Add specific location effects
+                if location_type == "AsteroidBase":
+                    self.display_simple_message("Asteroid Bases offer improved mining efficiency!")
+                elif location_type == "DeepSpaceOutpost":
+                    self.display_simple_message("Deep Space Outposts have unique equipment available!")
+                elif location_type == "ResearchColony":
+                    self.display_simple_message("Research Colonies provide bonus research points!")
+
+    def unlock_chapter_locations(self, chapter):
+        """Unlock chapter-specific locations"""
+        if chapter in self.chapter_locations:
+            for location_type, locations in self.chapter_locations[chapter].items():
+                self.unlocked_location_types.add(location_type)
+                self.locations.extend(locations)
+                
+                self.display_story_message([
+                    f"Chapter {chapter} Locations Unlocked!",
+                    f"New {location_type}s have been discovered.",
+                    "These mysterious places hold great opportunities..."
+                ])
+
+    def get_location_by_name(self, name):
+        """Get a location by its name, including hidden ones"""
+        # Check current locations
+        for location in self.locations:
+            if location.name.lower() == name.lower():
+                return location
+        
+        # Check hidden locations
+        for locations in self.hidden_locations.values():
+            for location in locations:
+                if location.name.lower() == name.lower():
+                    return location
+        
+        # Check chapter-specific locations
+        for chapter_locs in self.chapter_locations.values():
+            for locations in chapter_locs.values():
+                for location in locations:
+                    if location.name.lower() == name.lower():
+                        return location
+        
+        return None
+
+    def get_available_locations(self):
+        """Get all currently available locations for travel"""
+        return [loc for loc in self.locations 
+                if loc.location_type in self.unlocked_location_types]
+
+    def count_locations_by_type(self):
+        """Count number of discovered locations by type"""
+        counts = {}
+        for location in self.locations:
+            if location.location_type in self.unlocked_location_types:
+                counts[location.location_type] = counts.get(location.location_type, 0) + 1
+        return counts
+
+    def handle_quest_completion(self, quest):
+        """Handle quest completion and story progression"""
+        rewards = self.quest_system.complete_quest(quest)
+        self.ship.money += rewards["money"]
+        self.ship.research_points += rewards["research_points"]
+        
+        # Check for story progression
+        if quest[1] == "story":
+            self.story_manager.trigger_story_event(quest[0], self)
+        elif len(self.quest_system.completed_quests) in [5, 10, 15]:
+            # Major quest milestones trigger story progression
+            self.story_manager.check_chapter_progress(self) 
+
+class LocationManager:
+    """Manages location interactions with story and quest systems"""
+    def __init__(self, game):
+        self.game = game
+        self.location_quests = {
+            "AsteroidBase": {
+                "unlock_requirements": {
+                    "mining_quests_completed": 3,
+                    "research_points": 50
+                },
+                "unlock_quest": {
+                    "name": "Mysterious Mining Signals",
+                    "description": "Investigate unusual mining activity signals",
+                    "reward_money": 10000,
+                    "reward_rp": 100
+                }
+            },
+            "DeepSpaceOutpost": {
+                "unlock_requirements": {
+                    "combat_victories": 5,
+                    "research_points": 75
+                },
+                "unlock_quest": {
+                    "name": "Frontier Defense",
+                    "description": "Help establish a secure trading route",
+                    "reward_money": 15000,
+                    "reward_rp": 150
+                }
+            },
+            "ResearchColony": {
+                "unlock_requirements": {
+                    "research_points": 100,
+                    "discoveries": 3
+                },
+                "unlock_quest": {
+                    "name": "Scientific Breakthrough",
+                    "description": "Assist in a major research project",
+                    "reward_money": 20000,
+                    "reward_rp": 200
+                }
+            }
+        }
+        
+        # Location-specific story events
+        self.location_story_events = {
+            "AsteroidBase": [
+                "mineral_discovery",
+                "pirate_hideout",
+                "ancient_technology"
+            ],
+            "DeepSpaceOutpost": [
+                "smuggler_network",
+                "alien_contact",
+                "trade_revolution"
+            ],
+            "ResearchColony": [
+                "breakthrough_discovery",
+                "experiment_crisis",
+                "alien_artifacts"
+            ]
+        }
+
+    def check_location_unlock_progress(self, location_type):
+        """Check if a location type can be unlocked based on player progress"""
+        if location_type not in self.location_quests:
+            return False
+            
+        requirements = self.location_quests[location_type]["unlock_requirements"]
+        
+        # Check mining quest requirement
+        if "mining_quests_completed" in requirements:
+            completed = len([q for q in self.game.quest_system.completed_quests 
+                           if q.type == "mining"])
+            if completed < requirements["mining_quests_completed"]:
+                return False
+                
+        # Check combat victories
+        if "combat_victories" in requirements:
+            if self.game.ship.combat_victories < requirements["combat_victories"]:
+                return False
+                
+        # Check research points
+        if "research_points" in requirements:
+            if self.game.ship.research_points < requirements["research_points"]:
+                return False
+                
+        # Check discoveries
+        if "discoveries" in requirements:
+            if len(self.game.story_manager.completed_story_beats) < requirements["discoveries"]:
+                return False
+                
+        return True
+
+    def trigger_location_unlock_quest(self, location_type):
+        """Create and trigger the unlock quest for a location type"""
+        if location_type in self.location_quests:
+            quest_data = self.location_quests[location_type]["unlock_quest"]
+            
+            # Create the unlock quest
+            quest = Quest(
+                name=quest_data["name"],
+                description=quest_data["description"],
+                reward_money=quest_data["reward_money"],
+                reward_rp=quest_data["reward_rp"],
+                on_complete=lambda: self.complete_location_unlock(location_type)
+            )
+            
+            self.game.quest_system.add_quest(quest)
+            self.game.display_story_message([
+                f"New Quest Available: {quest_data['name']}",
+                quest_data["description"]
+            ])
+
+    def complete_location_unlock(self, location_type):
+        """Handle the completion of a location unlock quest"""
+        self.game.unlock_location_type(location_type)
+        
+        # Generate location-specific quests
+        self.generate_location_quests(location_type)
+        
+        # Enable location-specific story events
+        self.enable_location_story_events(location_type)
+
+    def generate_location_quests(self, location_type):
+        """Generate location-specific quests"""
+        quest_templates = {
+            "AsteroidBase": [
+                {
+                    "type": "mining",
+                    "name": "Rich Mineral Deposits",
+                    "description": "Extract valuable minerals",
+                    "reward_multiplier": 1.5
+                },
+                {
+                    "type": "exploration",
+                    "name": "Asteroid Mapping",
+                    "description": "Map unexplored asteroid fields",
+                    "reward_multiplier": 1.3
+                }
+            ],
+            "DeepSpaceOutpost": [
+                {
+                    "type": "combat",
+                    "name": "Outpost Defense",
+                    "description": "Protect the outpost from raiders",
+                    "reward_multiplier": 1.4
+                },
+                {
+                    "type": "trade",
+                    "name": "Supply Lines",
+                    "description": "Establish trade routes",
+                    "reward_multiplier": 1.6
+                }
+            ],
+            "ResearchColony": [
+                {
+                    "type": "research",
+                    "name": "Scientific Analysis",
+                    "description": "Assist with research projects",
+                    "reward_multiplier": 2.0
+                },
+                {
+                    "type": "exploration",
+                    "name": "Anomaly Investigation",
+                    "description": "Investigate scientific anomalies",
+                    "reward_multiplier": 1.8
+                }
+            ]
+        }
+        
+        if location_type in quest_templates:
+            for template in quest_templates[location_type]:
+                self.game.quest_system.generate_quest_from_template(template)
+
+    def enable_location_story_events(self, location_type):
+        """Enable story events specific to the location type"""
+        if location_type in self.location_story_events:
+            for event in self.location_story_events[location_type]:
+                self.game.story_manager.enable_story_event(event)
 
 # Start the game
 if __name__ == "__main__":
