@@ -416,6 +416,44 @@ class Ship:
             'speed': 2000
         }
         self.item_purchase_count = {}  # Track number of purchases for price scaling
+                # Add combat statistics
+        self.combat_victories = 0
+        self.combat_defeats = 0
+        self.combat_stats = {
+            'pirates_defeated': 0,
+            'raiders_defeated': 0,
+            'militia_defeated': 0
+        }
+        self.trade_profits = {}  # Track profits by commodity
+        
+        # Add tracking for victories against specific enemy types
+        self.enemy_victories = {
+            'pirate': 0,
+            'raider': 0,
+            'militia': 0,
+            'alien': 0
+        }
+    
+    def record_combat_victory(self, enemy_type=None):
+        """Record a combat victory and update related statistics"""
+        self.combat_victories += 1
+        if enemy_type and enemy_type in self.enemy_victories:
+            self.enemy_victories[enemy_type] += 1
+            # Update combat stats if the stat exists
+            stat_key = f'{enemy_type}s_defeated'
+            if stat_key in self.combat_stats:
+                self.combat_stats[stat_key] += 1
+
+    def record_combat_defeat(self, enemy_type=None):
+        """Record a combat defeat and update related statistics"""
+        self.combat_defeats += 1
+        if enemy_type and enemy_type in self.enemy_victories:
+            # You might want to track defeats by enemy type as well
+            if 'defeats_by_type' not in self.combat_stats:
+                self.combat_stats['defeats_by_type'] = {}
+            if enemy_type not in self.combat_stats['defeats_by_type']:
+                self.combat_stats['defeats_by_type'][enemy_type] = 0
+            self.combat_stats['defeats_by_type'][enemy_type] += 1
 
     def buy(self, item, quantity, price, planet, player_rank):
         # Check if item can be traded
@@ -529,19 +567,19 @@ class Game:
         self.term_width = self.get_terminal_width()
         self.term_height = self.get_terminal_height()
         self.difficulty = self.choose_difficulty()
-        self.locations = self.generate_initial_locations()  # New method
-        self.ship = Ship()
+        self.locations = self.generate_initial_locations()  # Generate all locations
         self.current_location = random.choice([loc for loc in self.locations if isinstance(loc, Planet)])  # Start at a planet
+        self.ship = Ship()
         self.turn = 0
-        self.known_locations = [self.current_location.name]  # Changed from known_planets
+        self.known_locations = [self.current_location.name]  
         self.event_log = []
         self.player_name = self.get_player_name()
         self.rank = "Explorer"
-        self.reputation = 0  # Added for location system
-        self.story_manager = StoryManager(self)  # Added for story progression
-        self.quest_system = QuestSystem(self)  # Updated quest system
-        self.unlocked_location_types = {"Planet"}  # Track unlocked location types
-        self.location_manager = LocationManager(self)  # Added for location management
+        self.reputation = 0
+        self.story_manager = StoryManager(self)
+        self.quest_system = QuestSystem(self)
+        self.unlocked_location_types = {"Planet"}
+        self.location_manager = LocationManager(self)
         self.display_starting_info()
         self.secret_quest_available = False
         self.stellar_portal_available = False
@@ -824,7 +862,7 @@ class Game:
     def display_turn_info(self):
         self.clear_screen()
         status_content = [
-            ["CΔRGΩ", "Ship", f"{self.current_location.location_type}"],  # Updated to show location type
+            ["CΔRGΩ", "Ship", f"{self.current_location.location_type}"],
             [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_location.name}"],
             [f"¤: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_location.tech_level}"],
             [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_location.agri_level}"],
@@ -846,24 +884,23 @@ class Game:
         print(status_box)
 
         # Market prices with banned commodities indicator
-        tech_status = "BANNED" if 'tech' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['tech']))
-        agri_status = "BANNED" if 'agri' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['agri']))
-        salt_status = "BANNED" if 'salt' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['salt']))
-        fuel_status = "BANNED" if 'fuel' in self.current_planet.banned_commodities else str(self.format_money(self.current_planet.market['fuel']))
+        tech_status = "BANNED" if 'tech' in self.current_location.banned_commodities else str(self.format_money(self.current_location.market['tech']))
+        agri_status = "BANNED" if 'agri' in self.current_location.banned_commodities else str(self.format_money(self.current_location.market['agri']))
+        salt_status = "BANNED" if 'salt' in self.current_location.banned_commodities else str(self.format_money(self.current_location.market['salt']))
+        fuel_status = "BANNED" if 'fuel' in self.current_location.banned_commodities else str(self.format_money(self.current_location.market['fuel']))
+
         # Market content with two columns
         market_content = [
- #           ["Base Commodities", "Special Resources"],  # Header row with two columns
- #           ["-" * 20, "-" * 20],  # Separator line
-            [f"Tech: {tech_status}", f"Salt: {salt_status if any(p['type'] == 'salt' for p in self.current_planet.mining_platforms) else 'No Platform'}"],
-            [f"Agri: {agri_status}", f"Fuel: {fuel_status if any(p['type'] == 'fuel' for p in self.current_planet.mining_platforms) else 'No Platform'}"]
+            [f"Tech: {tech_status}", f"Salt: {salt_status if any(p['type'] == 'salt' for p in self.current_location.mining_platforms) else 'No Platform'}"],
+            [f"Agri: {agri_status}", f"Fuel: {fuel_status if any(p['type'] == 'fuel' for p in self.current_location.mining_platforms) else 'No Platform'}"]
         ]
 
         # Add ban duration if any commodities are banned
-        if self.current_planet.banned_commodities:
+        if self.current_location.banned_commodities:
             market_content.append(["", ""])  # Empty line for spacing
             market_content.append(["Trade Bans:", "Duration:"])
-            for commodity in self.current_planet.banned_commodities:
-                duration = self.current_planet.ban_duration.get(commodity, "Permanent")
+            for commodity in self.current_location.banned_commodities:
+                duration = self.current_location.ban_duration.get(commodity, "Permanent")
                 market_content.append([f"{commodity.capitalize()}", f"{duration} turns"])
         print(self.create_box(market_content, 'single'))
 
@@ -882,7 +919,7 @@ class Game:
                 effects.append([f"- {research.replace('_', ' ').title()}"])
             print(self.create_box(effects, 'round'))
 
-    def display_planet_info(self):
+    def display_location_info(self):
         # Ship section
         ship_info = [
             ["Ship Information"],
@@ -906,67 +943,80 @@ class Game:
                 ship_info.append([f"  {item.capitalize()}: {count}"])
         else:
             ship_info.append(["  No items"])
+
+        # Add combat statistics if they exist
+        if hasattr(self.ship, 'combat_victories'):
+            ship_info.extend([
+                ["Combat Record:"],
+                [f"  Victories: {self.ship.combat_victories}"],
+                [f"  Defeats: {self.ship.combat_defeats}"]
+            ])
+            if hasattr(self.ship, 'enemy_victories'):
+                for enemy_type, count in self.ship.enemy_victories.items():
+                    if count > 0:
+                        ship_info.append([f"  {enemy_type.capitalize()} defeats: {count}"])
         
-        # Planet section
-        planet_info = [
-            ["Planet Information"],
-            [f"Name: {self.current_planet.name}"],
-            [f"Tech Level: {self.current_planet.tech_level}"],
-            [f"Agri Level: {self.current_planet.agri_level}"],
-            [f"Research Points: {self.current_planet.research_points}"],
-            [f"Economy: {self.current_planet.economy}"],
-            [f"Mining Efficiency: {self.current_planet.mining_efficiency}%"],
+        # Location section
+        location_info = [
+            ["Location Information"],
+            [f"Name: {self.current_location.name}"],
+            [f"Type: {self.current_location.location_type}"],
+            [f"Tech Level: {self.current_location.tech_level}"],
+            [f"Agri Level: {self.current_location.agri_level}"],
+            [f"Research Points: {self.current_location.research_points}"],
+            [f"Economy: {self.current_location.economy}"],
+            [f"Mining Efficiency: {self.current_location.mining_efficiency}%"],
             ["Current Market:"],
-            [f"  Tech: {self.format_money(self.current_planet.market['tech'])}"],
-            [f"  Agri: {self.format_money(self.current_planet.market['agri'])}"],
-            [f"  Salt: {self.format_money(self.current_planet.market['salt'])}"],
-            [f"  Fuel: {self.format_money(self.current_planet.market['fuel'])}"]
+            [f"  Tech: {self.format_money(self.current_location.market['tech'])}"],
+            [f"  Agri: {self.format_money(self.current_location.market['agri'])}"],
+            [f"  Salt: {self.format_money(self.current_location.market['salt'])}"],
+            [f"  Fuel: {self.format_money(self.current_location.market['fuel'])}"]
         ]
 
         # Add banned commodities if any
-        if self.current_planet.banned_commodities:
-            planet_info.append(["Banned Commodities:"])
-            for commodity in self.current_planet.banned_commodities:
-                duration = self.current_planet.ban_duration.get(commodity, "Permanent")
-                planet_info.append([f"  {commodity.capitalize()}: {duration} turns"])
+        if self.current_location.banned_commodities:
+            location_info.append(["Banned Commodities:"])
+            for commodity in self.current_location.banned_commodities:
+                duration = self.current_location.ban_duration.get(commodity, "Permanent")
+                location_info.append([f"  {commodity.capitalize()}: {duration} turns"])
 
         # Add buildings
-        planet_info.append(["Buildings:"])
-        if self.current_planet.buildings:
+        location_info.append(["Buildings:"])
+        if self.current_location.buildings:
             building_counts = {}
-            for building in self.current_planet.buildings:
+            for building in self.current_location.buildings:
                 building_counts[building] = building_counts.get(building, 0) + 1
             for building, count in building_counts.items():
-                planet_info.append([f"  {building} x{count}"])
+                location_info.append([f"  {building} x{count}"])
         else:
-            planet_info.append(["  No buildings"])
+            location_info.append(["  No buildings"])
 
         # Add mining information
-        planet_info.append(["Mining Operations:"])
-        if self.current_planet.mining_platforms:
-            for platform in self.current_planet.mining_platforms:
-                planet_info.append([
+        location_info.append(["Mining Operations:"])
+        if self.current_location.mining_platforms:
+            for platform in self.current_location.mining_platforms:
+                location_info.append([
                     f"  {platform['type'].capitalize()} Platform",
                     f"  (Efficiency: {platform['efficiency']}%",
                     f"  Capacity: {platform['capacity']})"
                 ])
         else:
-            planet_info.append(["  No mining platforms"])
+            location_info.append(["  No mining platforms"])
 
         # Add mineral deposits if any
-        if self.current_planet.mineral_deposits:
-            planet_info.append(["Mineral Deposits:"])
-            for deposit_type, amount in self.current_planet.mineral_deposits.items():
-                planet_info.append([f"  {deposit_type.capitalize()}: {amount} units"])
+        if self.current_location.mineral_deposits:
+            location_info.append(["Mineral Deposits:"])
+            for deposit_type, amount in self.current_location.mineral_deposits.items():
+                location_info.append([f"  {deposit_type.capitalize()}: {amount} units"])
         
-        # Create content by combining ship and planet info
+        # Create content by combining ship and location info
         content = []
-        max_length = max(len(ship_info), len(planet_info))
+        max_length = max(len(ship_info), len(location_info))
         
         for i in range(max_length):
             ship_line = ship_info[i][0] if i < len(ship_info) else ""
-            planet_line = planet_info[i][0] if i < len(planet_info) else ""
-            content.append([ship_line, planet_line])
+            location_line = location_info[i][0] if i < len(location_info) else ""
+            content.append([ship_line, location_line])
 
         print(self.create_box(content, 'double'))
         time.sleep(3)
@@ -1069,13 +1119,15 @@ class Game:
         return name
 
     def display_starting_info(self):
-        planet_type = "industrial"
-        if self.current_planet.agri_level > self.current_planet.tech_level:
-            planet_type = "agricultural"
-        elif self.current_planet.research_points > 15:
-            planet_type = "research"
+        """Display initial game information with location context"""
+        # Get location info based on current_location
+        location_type = "industrial"
+        if self.current_location.agri_level > self.current_location.tech_level:
+            location_type = "agricultural"
+        elif self.current_location.research_points > 15:
+            location_type = "research"
 
-        intro_text = f"\n  Welcome {self.player_name} to {self.current_planet.name}, a boring {planet_type} outpost, where your adventure begins."
+        intro_text = f"\n  Welcome {self.player_name} to {self.current_location.name}, a {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -1231,18 +1283,25 @@ class Game:
 
             elif action in ['travel', 't']:
                 if "navcomp" in self.ship.items:
-                    self.display_simple_message("Choose a planet to travel to:")
-                    for i, planet in enumerate(self.known_planets):
-                        print(f"{i+1}. {planet}")
-                    choice = self.validate_planet_input(
-                        "Enter the number of the planet or the planet name: "
+                    self.display_simple_message("Choose a location to travel to:")
+                    for i, location in enumerate(self.known_locations, 1):
+                        print(f"{i}. {location}")
+                    choice = self.validate_input(
+                        "Enter the number of the planet or the location name: ",
+                        [str(i) for i in range(1, len(self.known_locations) + 1)] + self.known_locations
                     )
                     if choice:
-                        self.travel_to_planet(choice)
+                        # Handle numeric choice
+                        if choice.isdigit():
+                            index = int(choice) - 1
+                            if 0 <= index < len(self.known_locations):
+                                self.travel_to_location(self.known_locations[index])
+                        else:
+                            self.travel_to_location(choice)
                 else:
-                    planet_name = input("Enter planet name to travel: ").strip()
-                    if planet_name:
-                        self.travel_to_planet(planet_name)
+                    location_name = input("Enter location name to travel: ").strip()
+                    if location_name:
+                        self.travel_to_location(location_name)
 
             elif action in ['repair', 'r']:
                 cost = self.ship.damage * 10
@@ -1254,7 +1313,7 @@ class Game:
                     )
 
             elif action in ['info', 'i']:
-                self.display_planet_info()
+                self.display_location_info()
 
             elif action in ['build', 'bl']:
                 building_options = {
@@ -1385,31 +1444,33 @@ class Game:
                 self.current_planet.build_building(full_building_name)
                 self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} money.")
 
-    def travel_to_planet(self, planet_name):
-        """Handle travel to a new planet with research points accumulation"""
-        for planet in self.planets:
-            if planet.name.lower() == planet_name.lower():
-                old_planet = self.current_planet  # Store reference to previous planet
-                self.current_planet = planet
-                self.display_simple_message(f"Traveled to {planet.name}.")
+    def travel_to_location(self, location_name):
+        """Handle travel to a new location with research points accumulation"""
+        for location in self.locations:
+            if location.name.lower() == location_name.lower():
+                old_location = self.current_location  # Store reference to previous location
+                self.current_location = location
+                self.display_simple_message(f"Traveled to {location.name}.")
                 
-                # Calculate research exchange based on planet differences
-                research_difference = planet.research_points - old_planet.research_points
+                # Calculate research exchange based on location differences
+                research_difference = location.research_points - old_location.research_points
                 
-                # Base gain is the planet's research points if first visit
-                if planet.name not in self.known_planets:
-                    base_research = planet.research_points
-                    self.known_planets.append(planet.name)
+                # Base gain is the location's research points if first visit
+                if location.name not in self.known_locations:
+                    base_research = location.research_points
+                    self.known_locations.append(location.name)
+                    # Trigger location discovery event
+                    self.location_manager.handle_location_discovery(location)
                 else:
                     # For revisits, only get bonus from research difference if positive
                     base_research = max(0, research_difference)
 
                 # Apply bonus based on research difference
                 if research_difference > 0:
-                    # Traveling to more advanced planet - get bonus
+                    # Traveling to more advanced location - get bonus
                     research_bonus = int(research_difference * 0.2)  # 20% of the difference
                 else:
-                    # Traveling to less advanced planet - smaller bonus
+                    # Traveling to less advanced location - smaller bonus
                     research_bonus = int(abs(research_difference) * 0.1)  # 10% of the difference
                 
                 # Apply rank multiplier to the bonus
@@ -1431,8 +1492,8 @@ class Game:
                 self.ship.research_points += total_gain
                 
                 # Display informative message about research gain
-                if planet.name not in self.known_planets:
-                    self.display_simple_message(f"Gained {total_gain} research points from discovering new planet!")
+                if location.name not in self.known_locations:
+                    self.display_simple_message(f"Gained {total_gain} research points from discovering new location!")
                 elif research_difference > 0:
                     self.display_simple_message(f"Gained {total_gain} research points from studying advanced technology!")
                 else:
@@ -1856,22 +1917,25 @@ class Game:
             return details
 
     def handle_combat_event(self, event):
-        """Complete combat event handler"""
+        """Complete combat event handler with statistics tracking"""
         # Define combat scenarios with their difficulties
         combat_scenarios = {
-            "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0},
-            "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2},
-            "Militia Patrol!": {"atk": 4, "def": 3, "reward_mult": 1.5},
-            "Pirate mothership!": {"atk": 5, "def": 4, "reward_mult": 2.0},
-            "Rogue Warship!": {"atk": 6, "def": 5, "reward_mult": 2.5},
-            "Guerrilla Militia!": {"atk": 7, "def": 6, "reward_mult": 3.0}
+            "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0, "enemy_type": "pirate"},
+            "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2, "enemy_type": "pirate"},
+            "Militia Patrol!": {"atk": 4, "def": 3, "reward_mult": 1.5, "enemy_type": "militia"},
+            "Pirate mothership!": {"atk": 5, "def": 4, "reward_mult": 2.0, "enemy_type": "pirate"},
+            "Rogue Warship!": {"atk": 6, "def": 5, "reward_mult": 2.5, "enemy_type": "raider"},
+            "Guerrilla Militia!": {"atk": 7, "def": 6, "reward_mult": 3.0, "enemy_type": "militia"}
         }
         
         scenario = combat_scenarios.get(event, combat_scenarios["Pirate attack!"])
+        enemy_type = scenario["enemy_type"]
         
         # Check for automatic defense
         if "turrets" in self.ship.items and random.random() < 0.4:
             self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
+            # Count automatic defense as a victory
+            self.ship.record_combat_victory(enemy_type)
             # Gain some experience even when automatically defending
             self.ship.research_points += int(5 * scenario["reward_mult"])
             return
@@ -1907,21 +1971,11 @@ class Game:
                 if stolen_cargo > 0:
                     losses.append(f"{stolen_cargo} {cargo_type}")
         
-        # Display combat results
-        if losses:
-            loss_text = ", ".join(losses)
-            self.display_simple_message(
-                f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!",
-                3, color='31'
-            )
-        else:
-            self.display_simple_message(
-                f"Event! {event} caused {damage_dealt}% damage!",
-                3, color='31'
-            )
-        
         # Check for counter-attack opportunity
         if self.ship.attack > scenario["def"]:
+            # Counter-attack successful - record victory
+            self.ship.record_combat_victory(enemy_type)
+            
             reward_mult = scenario["reward_mult"]
             rewards = {
                 "money": int(random.randint(100, 500) * reward_mult),
@@ -1931,10 +1985,34 @@ class Game:
             self.ship.money += rewards["money"]
             self.ship.research_points += rewards["research"]
             
-            self.display_simple_message(
-                f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
-                2, color='32'
-            )
+            if losses:
+                loss_text = ", ".join(losses)
+                self.display_simple_message(
+                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!\n" +
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    3, color='32'
+                )
+            else:
+                self.display_simple_message(
+                    f"Event! {event} caused {damage_dealt}% damage!\n" +
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    3, color='32'
+                )
+        else:
+            # Combat defeat - record defeat with enemy type
+            self.ship.record_combat_defeat(enemy_type)
+            
+            if losses:
+                loss_text = ", ".join(losses)
+                self.display_simple_message(
+                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!",
+                    3, color='31'
+                )
+            else:
+                self.display_simple_message(
+                    f"Event! {event} caused {damage_dealt}% damage!",
+                    3, color='31'
+                )
 
     def handle_disaster_event(self, event):
         """Complete disaster event handler"""
@@ -2403,7 +2481,12 @@ class Game:
                 break
 
             # Check for special quest availability
-            if all(planet.stockmarket_base for planet in self.planets):
+            # Only check planets and locations that can have stockmarkets
+            valid_locations = [loc for loc in self.locations 
+                            if isinstance(loc, Planet) or 
+                            loc.location_type in ["Planet", "AsteroidBase", "DeepSpaceOutpost"]]
+            
+            if valid_locations and all(loc.stockmarket_base for loc in valid_locations):
                 self.secret_quest_available = True
                 resign = self.validate_input("Do you want to resign? (yes/no): ", ['yes', 'no'])
                 if resign == 'yes':
@@ -2417,28 +2500,47 @@ class Game:
                     self.stellar_portal_available = True
                     if self.ship.money >= 1500:
                         self.ship.money -= 1500
-                        self.display_simple_message("You have paid for the secret quest and a Stellar Portal appears on this planet.")
-                        self.planets = self.generate_new_planets()
-                        self.current_planet = random.choice(self.planets)
-                        self.known_planets = [self.current_planet.name]
-                        self.display_simple_message("You have traveled to a new set of planets with more volatile price movements.")
+                        self.display_simple_message("You have paid for the secret quest and a Stellar Portal appears on this location.")
+                        # Generate new locations
+                        new_locations = self.generate_new_locations()
+                        self.locations.extend(new_locations)
+                        self.current_location = random.choice(new_locations)
+                        self.known_locations = [self.current_location.name]
+                        self.display_simple_message("You have traveled to a new set of locations with more volatile price movements.")
                     else:
                         self.display_simple_message("Not enough money to pay for the secret quest.")
 
-        # Ask to play again
-        play_again = self.validate_input("Do you want to play again? (yes/no): ", ['yes', 'no'])
-        if play_again == 'yes':
-            self.__init__()
-            self.play()
+            # Ask to play again
+            if turn_result == "quit":
+                play_again = self.validate_input("Do you want to play again? (yes/no): ", ['yes', 'no'])
+                if play_again == 'yes':
+                    self.__init__()
+                    self.play()
+                break
 
-    def generate_new_planets(self):
-        return [
+    def generate_new_locations(self):
+        """Generate new locations for the late-game content"""
+        new_locations = [
             Planet("Zeta", 10, 1, 5, "Stable"),
             Planet("Eta", 1, 10, 5, "Booming"),
             Planet("Theta", 8, 8, 10, "Declining"),
-            Planet("Iota", 5, 5, 15, "Formative"),
-            Planet("Kappa", 3, 3, 20, "Stable")
+            AsteroidBase("Omega-1", 5, 5, 15, "Formative"),
+            DeepSpaceOutpost("DSO-Delta", 7, 3, 20, "Stable")
         ]
+        
+        # Add some special bonuses for late-game locations
+        for location in new_locations:
+            location.mining_efficiency += 20  # Better mining in new locations
+            location.research_points *= 2     # Double research points
+            location.tech_level += 2         # Higher tech levels
+            
+            # Special location-type bonuses
+            if isinstance(location, AsteroidBase):
+                location.mining_efficiency += 10  # Extra mining bonus
+            elif isinstance(location, DeepSpaceOutpost):
+                location.market['tech'] = max(1, location.market['tech'] * 0.8)  # Better tech prices
+                
+        return new_locations
 
 #New additions to the game system
 
@@ -2860,10 +2962,19 @@ class QuestSystem:
         return available_types
 
 class StoryManager:
-    def __init__(self):
+    def __init__(self, game):  # Modified to accept game parameter
+        self.game = game  # Store reference to game instance
         self.current_chapter = 0
         self.plot_points = 0
         self.completed_story_beats = set()
+        self.chapter_statistics = {}  # Added to store chapter statistics
+        self.story_progress = {}  # Added to store story progress
+        self.chapter_start_money = 0
+        self.chapter_start_quests = 0
+        self.chapter_start_locations = 0
+        self.chapter_start_combat_victories = 0
+        
+        # Initialize chapter data
         self.chapters = {
             0: {
                 "title": "A New Beginning",
@@ -2913,8 +3024,8 @@ class StoryManager:
                 "description": "Discover an asteroid base",
                 "plot_points": 5,
                 "unlock": "AsteroidBase"
-            },
-            # Add more story events...
+            }
+            # Add more story events as needed
         }
 
     def process_event(self, trigger, details):
