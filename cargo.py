@@ -1709,28 +1709,57 @@ class Game:
         # Check for rank changes
         self.update_rank()
 
+    def process_event_outcome(self, event_result):
+        """Process and categorize event outcomes with detailed information"""
+        details = {
+            "location": self.current_location.name,
+            "initial_damage": self.ship.damage,
+            "cargo_before": dict(self.ship.cargo),
+            "money_before": self.ship.money,
+            "timestamp": self.turn
+        }
+        
+        # Calculate specific event impacts
+        if event_result["type"] == "combat":
+            damage_taken = self.ship.damage - details["initial_damage"]
+            details["damage_taken"] = damage_taken
+            details["outcome"] = "victory" if damage_taken < 30 else "defeat"
+            details["reputation_change"] = 2 if damage_taken < 30 else -1
+            
+        elif event_result["type"] == "trade":
+            money_change = self.ship.money - details["money_before"]
+            details["money_change"] = money_change
+            details["outcome"] = "success" if money_change > 0 else "loss"
+            details["reputation_change"] = 1 if money_change > 0 else -1
+            
+        elif event_result["type"] == "exploration":
+            if "artifact" in event_result["name"].lower() or "ruins" in event_result["name"].lower():
+                details["outcome"] = "discovery"
+                details["reputation_change"] = 2
+            else:
+                details["outcome"] = "completed"
+                details["reputation_change"] = 1
+                
+        elif event_result["type"] == "disaster":
+            damage_taken = self.ship.damage - details["initial_damage"]
+            details["damage_taken"] = damage_taken
+            details["outcome"] = "major_damage" if damage_taken > 40 else "survived"
+            details["reputation_change"] = 1 if damage_taken < 20 else -1
+        
+        # Calculate specific losses
+        details["cargo_lost"] = {
+            item: details["cargo_before"][item] - self.ship.cargo[item]
+            for item in self.ship.cargo
+            if details["cargo_before"][item] - self.ship.cargo[item] > 0
+        }
+        
+        details["money_lost"] = max(0, details["money_before"] - self.ship.money)
+                
+        return details
 
     def random_event(self):
         """Enhanced random event handler with complete implementation"""
         # Define all possible events with their categories
-        event_result = self.generate_random_event()  # Previous implementation
-        
-        # Process event outcome
-        outcome_details = self.process_event_outcome(event_result)
-        
-        # Integrate with other systems
-        self.integrate_event_outcome(
-            event_result["type"],
-            outcome_details["outcome"],
-            outcome_details
-        )
-        
-        # Check for special location events
-        self.check_location_events(event_result["type"])
-        
-        # Update quest status
-        self.quest_system.check_event_requirements(event_result)
-
         events = {
             "combat": [
                 "Pirate attack!",
@@ -1778,47 +1807,19 @@ class Game:
         location_type = self.current_location.location_type
         modifiers = location_modifiers.get(location_type, location_modifiers["Planet"])
         
-        # Select event category based on ship's condition and location
-        weights = []
+        # Select event category based on modifiers
         categories = list(events.keys())
-        
-        for category in categories:
-            base_weight = modifiers[category]
-            
-            # Adjust weights based on ship condition
-            if category == "combat":
-                if self.ship.damage > 70:
-                    base_weight *= 0.2  # Reduce combat chance when damaged
-                elif "turrets" in self.ship.items:
-                    base_weight *= 0.7  # Reduce combat chance with turrets
-            
-            # Adjust for cargo status
-            elif category == "trade":
-                if all(self.ship.cargo[item] == 0 for item in ['tech', 'agri', 'salt', 'fuel']):
-                    base_weight *= 0.3  # Reduce trade events without cargo
-            
-            # Adjust for equipment
-            elif category == "exploration":
-                if "scanner" in self.ship.items:
-                    base_weight *= 1.3  # Increase exploration chance with scanner
-            
-            weights.append(base_weight)
-        
-        # Normalize weights
-        total_weight = sum(weights)
-        weights = [w/total_weight for w in weights]
-        
-        # Select category and event
+        weights = [modifiers[cat] for cat in categories]
         category = random.choices(categories, weights=weights)[0]
         event = random.choice(events[category])
         
-        # Log the event
-        self.event_log.append({
-            'turn': self.turn,
-            'event': event,
-            'category': category,
-            'location': self.current_location.name
-        })
+        # Record event
+        event_result = {
+            "type": category,
+            "name": event,
+            "location": self.current_location.name,
+            "turn": self.turn
+        }
         
         # Handle event based on category
         if category == "combat":
@@ -1830,8 +1831,125 @@ class Game:
         elif category == "disaster":
             self.handle_disaster_event(event)
         
+        # Process event outcome
+        outcome_details = self.process_event_outcome(event_result)
+        
+        # Integrate with other systems
+        self.integrate_event_outcome(
+            event_result["type"],
+            outcome_details["outcome"],
+            outcome_details
+        )
+        
+        # Check for special location events
+        self.check_location_events(event_result["type"])
+        
+        # Update quest status
+        self.quest_system.check_event_requirements(event_result)
+
+        # Generate new quest if appropriate
+        if random.random() < 0.2:  # 20% chance for event-based quest
+            quest = self.generate_event_quest(event_result, outcome_details)
+            if quest:
+                self.quest_system.add_quest(quest)
+
         # Update story progression if applicable
         self.story_manager.check_event_trigger(event, self)
+
+    def generate_event_quest(self, event_result, outcome_details):
+        """Generate a quest based on event outcome"""
+        event_type = event_result["type"]
+        quest = None
+        
+        if event_type == "combat":
+            if outcome_details["outcome"] == "victory":
+                quest_templates = [
+                    {
+                        "name": "Pirate Hunter",
+                        "description": "Eliminate more pirates in this sector",
+                        "reward_money": 2000,
+                        "reward_rp": 50,
+                        "quest_type": "combat",
+                        "requirements": {"enemy_type": "pirate", "victories": 3}
+                    },
+                    {
+                        "name": "System Defender",
+                        "description": "Protect local trade routes",
+                        "reward_money": 3000,
+                        "reward_rp": 75,
+                        "quest_type": "patrol",
+                        "requirements": {"patrol_turns": 5}
+                    }
+                ]
+                template = random.choice(quest_templates)
+                quest = Quest(
+                    name=template["name"],
+                    description=template["description"],
+                    reward_money=template["reward_money"],
+                    reward_rp=template["reward_rp"],
+                    quest_type=template["quest_type"],
+                    requirements=template["requirements"]
+                )
+                
+        elif event_type == "trade":
+            if "market_crash" in event_result["name"].lower():
+                quest = Quest(
+                    name="Market Stabilizer",
+                    description="Help stabilize local market prices",
+                    reward_money=4000,
+                    reward_rp=60,
+                    quest_type="trade",
+                    requirements={"trades": 5, "min_profit": 1000}
+                )
+                
+        elif event_type == "exploration":
+            if "artifact" in event_result["name"].lower() or "ruins" in event_result["name"].lower():
+                quest = Quest(
+                    name="Ancient Mysteries",
+                    description="Investigate more ancient sites",
+                    reward_money=5000,
+                    reward_rp=100,
+                    quest_type="exploration",
+                    requirements={"discoveries": 2}
+                )
+                
+        elif event_type == "disaster":
+            if outcome_details["outcome"] == "survived":
+                quest = Quest(
+                    name="Emergency Response",
+                    description="Help other ships in distress",
+                    reward_money=3500,
+                    reward_rp=80,
+                    quest_type="rescue",
+                    requirements={"rescues": 2}
+                )
+        
+        # Apply modifiers based on game progress
+        if quest:
+            # Scale rewards based on current chapter
+            chapter_multiplier = 1 + (self.story_manager.current_chapter * 0.2)
+            quest.reward_money = int(quest.reward_money * chapter_multiplier)
+            quest.reward_rp = int(quest.reward_rp * chapter_multiplier)
+            
+            # Scale difficulty based on player rank
+            rank_multipliers = {
+                "Explorer": 1.0,
+                "Pilot": 1.2,
+                "Captain": 1.5,
+                "Commander": 1.8,
+                "Star Commander": 2.0,
+                "Space Admiral": 2.5,
+                "Stellar Hero": 3.0,
+                "Galactic Legend": 3.5
+            }
+            
+            # Update requirements if they exist
+            if hasattr(quest, "requirements") and "victories" in quest.requirements:
+                quest.requirements["victories"] = int(
+                    quest.requirements["victories"] * rank_multipliers.get(self.rank, 1.0)
+                )
+                
+        return quest
 
     def check_location_events(self, event_type):
         """Handle location-specific event consequences"""
@@ -3252,7 +3370,7 @@ class StoryManager:
         """Process story triggers with full event details and consequences"""
         if trigger in self.completed_story_beats:
             return  # Don't process the same story beat twice
-            
+                
         event_location = details.get('location', '')
         timestamp = details.get('timestamp', 0)
         
@@ -3346,14 +3464,12 @@ class StoryManager:
                 impact["plot_points"] += 1  # Good performance
             
         # Apply location-specific bonuses
-        if isinstance(details.get('location_type'), "ResearchColony"):
-            if 'research' in trigger:
-                impact["plot_points"] *= 1.5  # Bonus for research at appropriate location
-                
-        elif isinstance(details.get('location_type'), "DeepSpaceOutpost"):
-            if 'combat' in trigger:
-                impact["plot_points"] *= 1.5  # Bonus for combat at appropriate location
-                
+        location_type = details.get('location_type')
+        if location_type == "ResearchColony" and 'research' in trigger:
+            impact["plot_points"] *= 1.5  # Bonus for research at research colony
+        elif location_type == "DeepSpaceOutpost" and 'combat' in trigger:
+            impact["plot_points"] *= 1.5  # Bonus for combat at outpost
+        
         # Record story progress with all details
         self.story_progress[trigger] = {
             "completed_at": timestamp,
@@ -3395,6 +3511,7 @@ class StoryManager:
         # Check for chapter progression
         if self.check_chapter_requirements():
             self.advance_chapter()
+
 
     def check_discovery_milestone(self, location):
         """Check if discovering this location triggers any milestones"""
