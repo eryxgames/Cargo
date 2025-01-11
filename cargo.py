@@ -3052,7 +3052,16 @@ class Shop:
         for location_items in self.specialized_equipment.values():
             if item_name in location_items:
                 return location_items[item_name]["price"]
-        return None       
+        return None
+
+    def add_equipment(self, equipment_name):
+        """Add new equipment to the shop's inventory"""
+        if equipment_name not in self.base_equipment:
+            self.base_equipment[equipment_name] = {
+                "price": 10000,  # Default price
+                "description": f"New equipment: {equipment_name}",
+                "effect": {"type": "generic", "value": 1.0}
+            }           
 
 # Define the Location base class, updated
 class Location:
