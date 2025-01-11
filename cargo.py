@@ -2832,6 +2832,42 @@ class Game:
 
 #New additions to the game system
 
+    def generate_station_missions(self):
+        """Generate station defense missions"""
+        quest = Quest(
+            name="Station Defense",
+            description="Defend the station from incoming threats",
+            reward_money=5000,
+            reward_rp=50,
+            quest_type="combat",
+            requirements={"victories": 3, "damage_threshold": 20}
+        )
+        self.quest_system.add_quest(quest)
+
+    def generate_research_missions(self):
+        """Generate research-related missions"""
+        quest = Quest(
+            name="Scientific Discovery",
+            description="Collect research data from various phenomena",
+            reward_money=4000,
+            reward_rp=100,
+            quest_type="research",
+            requirements={"research_points": 50}
+        )
+        self.quest_system.add_quest(quest)
+
+    def generate_emergency_missions(self):
+        """Generate emergency response missions"""
+        quest = Quest(
+            name="Emergency Response",
+            description="Help ships in distress while avoiding damage",
+            reward_money=6000,
+            reward_rp=75,
+            quest_type="combat",
+            requirements={"rescues": 2, "max_damage": 30}
+        )
+        self.quest_system.add_quest(quest)
+
     def handle_location_discovery(self, location):
         """Handle discovery of a new location"""
         if location.name not in self.discovered_locations:
