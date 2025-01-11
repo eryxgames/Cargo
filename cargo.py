@@ -1307,7 +1307,7 @@ class Game:
                 self.visit_cantina()
 
             elif action in ['shop', 'sh']:
-                self.shop()
+                self.visit_shop()  # Changed from self.shop()
 
             elif action in ['action', 'a']:
                 self.handle_actions()
@@ -2551,7 +2551,7 @@ class Game:
 
             time.sleep(3)  # Pause to let the player read the information
 
-    def shop(self):
+    def visit_shop(self):
         self.display_simple_message("Welcome to the Shop!", 1)
             # Modify shop inventory based on location type
         if isinstance(self.current_location, AsteroidBase):
