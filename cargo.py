@@ -2156,83 +2156,83 @@ class Game:
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
     def visit_cantina(self):
-        self.display_simple_message("Welcome to the Cantina!", 1)
+            self.display_simple_message("Welcome to the Cantina!", 1)
 
-                # Add story-specific dialogue based on current chapter
-        if self.story_manager.current_chapter > 0:
-            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
-            self.display_character_message("Cantina Owner",
-                f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
+            # Add story-specific dialogue based on current chapter
+            if self.story_manager.current_chapter > 0:
+                chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+                self.display_character_message("Cantina Owner",
+                    f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
 
-        action = self.validate_input(
-            "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q): ",
-            ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q']
-        )
+            action = self.validate_input(
+                "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q): ",
+                ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q']
+            )
 
-        if action is None:
-            return
+            if action is None:
+                return
 
-        if action in ['buy map', 'bm']:
-            if self.ship.money >= 200:
-                self.ship.money -= 200
-                self.display_simple_message("You bought a map! Here are some new planet names and levels:", 1)
-                for planet in self.planets:
-                    if planet.name not in self.known_planets:
-                        self.known_planets.append(planet.name)
-                        print(f"{planet.name} (Tech: {planet.tech_level}, Agri: {planet.agri_level})")
-            else:
-                self.display_simple_message("Not enough money to buy a map.")
-        elif action in ['update map', 'um']:
-            if self.ship.money >= 350:
-                self.ship.money -= 350
-                self.display_simple_message("You updated the map! Here are the commodities wanted:", 1)
-                for planet in self.planets:
-                    print(f"{planet.name}: Tech - {self.format_money(planet.market['tech'])}, Agri - {self.format_money(planet.market['agri'])}")
-            else:
-                self.display_simple_message("Not enough money to update the map.")
-        elif action in ['listen to gossip', 'lg']:
-            if self.ship.money >= 150:
-                self.ship.money -= 150
-                self.display_simple_message("You listened to gossip! Here are some tips:", 1)
-                for planet in self.planets:
-                    if planet.market['tech'] < 50:
-                        print(f"Cheap tech goods available on {planet.name}.")
-                    if planet.market['agri'] < 30:
-                        print(f"Cheap agri goods available on {planet.name}.")
-                    if planet.market['tech'] > 100:
-                        print(f"High price on tech goods on {planet.name}.")
-                    if planet.market['agri'] > 80:
-                        print(f"High price on agri goods on {planet.name}.")
-                if random.random() < 0.3:  # 30% chance to get a quest
-                    quest = random.choice([
-                        ("Deliver 10 tech goods to Alpha", "tech", 10, 500),
-                        ("Deliver 15 agri goods to Beta", "agri", 15, 700),
-                        ("Deliver 20 tech goods to Gamma", "tech", 20, 1000),
-                        ("Deliver 25 agri goods to Delta", "agri", 25, 1200),
-                        ("Rescue mission to Epsilon", "rescue", 0, 1500),
-                        ("Mining asteroid intel to Zeta", "mining", 0, 2000),
-                        ("Eliminate Guerilla Militia Patrol", "guerilla", 0, 1800),
-                        ("Eliminate Rogue Warship", "rogue", 0, 2200),
-                        ("Eliminate Camouflaged Asteroid Base", "asteroid", 0, 2500)
-                    ])
-                    self.ship.add_quest(quest)
-                    self.display_simple_message(f"You received a quest: {quest[0]}")
-                    self.display_simple_message(f"Reward: {self.format_money(quest[3])} money")
-            else:
-                self.display_simple_message("Not enough money to listen to gossip.")
-        elif action in ['quests', 'q']:
-            if self.ship.quests:
-                self.display_simple_message("Active Quests:")
-                for quest in self.ship.quests:
-                    print(f"- {quest[0]}")
-            else:
-                self.display_simple_message("No active quests.")
+            if action in ['buy map', 'bm']:
+                if self.ship.money >= 200:
+                    self.ship.money -= 200
+                    self.display_simple_message("You bought a map! Here are some new planet names and levels:", 1)
+                    for planet in self.locations:
+                        if planet.name not in self.known_locations:
+                            print(f"{planet.name} (Tech: {planet.tech_level}, Agri: {planet.agri_level})")
+                else:
+                    self.display_simple_message("Not enough money to buy a map.")
+            elif action in ['update map', 'um']:
+                if self.ship.money >= 350:
+                    self.ship.money -= 350
+                    self.display_simple_message("You updated the map! Here are the commodities wanted:", 1)
+                    for planet in self.locations:
+                        print(f"{planet.name}: Tech - {self.format_money(planet.market['tech'])}, Agri - {self.format_money(planet.market['agri'])}")
+                else:
+                    self.display_simple_message("Not enough money to update the map.")
+            elif action in ['listen to gossip', 'lg']:
+                if self.ship.money >= 150:
+                    self.ship.money -= 150
+                    self.display_simple_message("You listened to gossip! Here are some tips:", 1)
+                    for planet in self.locations:
+                        if planet.market['tech'] < 50:
+                            print(f"Cheap tech goods available on {planet.name}.")
+                        if planet.market['agri'] < 30:
+                            print(f"Cheap agri goods available on {planet.name}.")
+                        if planet.market['tech'] > 100:
+                            print(f"High price on tech goods on {planet.name}.")
+                        if planet.market['agri'] > 80:
+                            print(f"High price on agri goods on {planet.name}.")
+                    if random.random() < 0.3:  # 30% chance to get a quest
+                        quest = Quest(
+                            name=random.choice([
+                                "Deliver Tech Goods",
+                                "Transport Agri Supplies",
+                                "Rescue Mission",
+                                "Mining Intel",
+                                "Eliminate Pirates"
+                            ]),
+                            description="Complete this mission for the cantina",
+                            reward_money=random.randint(500, 2500),
+                            reward_rp=random.randint(25, 100),
+                            quest_type="cantina"
+                        )
+                        self.quest_system.add_quest(quest)
+                else:
+                    self.display_simple_message("Not enough money to listen to gossip.")
+            elif action in ['quests', 'q']:
+                active_quests = [q for q in self.quest_system.active_quests if isinstance(q, Quest)]
+                if active_quests:
+                    self.display_simple_message("Active Quests:")
+                    for quest in active_quests:
+                        print(f"- {quest.name}: {quest.description}")
+                else:
+                    self.display_simple_message("No active quests.")
+                    
+            # Randomly introduce a demo character after reaching a new rank
+            if random.random() < 0.1:  # 10% chance
+                self.display_character_message("Mysterious Stranger", "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend.")
 
-        # Randomly introduce a demo character after reaching a new rank
-        if random.random() < 0.1:  # 10% chance
-            self.display_character_message("Mysterious Stranger", "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend.")
-
-        time.sleep(3)  # Pause to let the player read the information
+            time.sleep(3)  # Pause to let the player read the information
 
     def shop(self):
         self.display_simple_message("Welcome to the Shop!", 1)
