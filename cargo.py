@@ -2905,42 +2905,154 @@ class Game:
 
 class Shop:
     def __init__(self):
-        self.available_equipment = {}
+        # Original equipment merged with transport equipment
         self.base_equipment = {
-            "navcomp": 500,
-            "scanner": 700,
-            "probe": 900,
-            "turrets": 1200,
-            "patcher": 300
-        }
-        # Initialize with base equipment
-        self.available_equipment.update(self.base_equipment)
+            # Navigation and Scanning
+            "navcomp": {
+                "price": 500,
+                "description": "Navigation computer for improved travel"
+            },
+            "scanner": {
+                "price": 700,
+                "description": "Basic scanner for resource detection"
+            },
+            "probe": {
+                "price": 900,
+                "description": "Probe for detailed exploration"
+            },
 
-    def add_equipment(self, equipment_name, price=None):
-        """Add new equipment to the shop"""
-        if price is None:
-            # Default price if none specified
-            price = 1000
-        self.available_equipment[equipment_name] = price
+            # Combat and Defense
+            "turrets": {
+                "price": 1200,
+                "description": "Defense system against pirates"
+            },
+            "shield": {
+                "price": 2000,
+                "description": "Shield generator for protection"
+            },
+            "patcher": {
+                "price": 300,
+                "description": "Basic repair system"
+            },
+
+            # Basic Transport Equipment
+            "cargo_extender": {
+                "price": 5000,
+                "description": "Increases cargo capacity by 20%",
+                "effect": {"type": "cargo", "value": 1.2}
+            },
+            "containment_field": {
+                "price": 8000,
+                "description": "Specialized storage for salt/fuel. +30% capacity for special resources",
+                "effect": {"type": "special_cargo", "value": 1.3}
+            },
+            "auto_loader": {
+                "price": 12000,
+                "description": "Reduces loading/unloading time. -1 turn per trade",
+                "effect": {"type": "trade_time", "value": -1}
+            },
+
+            # Advanced Transport Equipment
+            "quantum_compressor": {
+                "price": 20000,
+                "description": "Advanced compression. +50% capacity for all cargo",
+                "effect": {"type": "cargo", "value": 1.5}
+            },
+            "stasis_vault": {
+                "price": 25000,
+                "description": "Perfect resource preservation. +75% capacity for special resources",
+                "effect": {"type": "special_cargo", "value": 1.75}
+            },
+            "temporal_accelerator": {
+                "price": 30000,
+                "description": "Time dilation for faster delivery. -2 turns per trade",
+                "effect": {"type": "trade_time", "value": -2}
+            }
+        }
+
+        # Location-specific equipment
+        self.specialized_equipment = {
+            "AsteroidBase": {
+                "mining_laser": {
+                    "price": 8000,
+                    "description": "Advanced mining equipment for better resource extraction"
+                },
+                "cargo_scanner": {
+                    "price": 6000,
+                    "description": "Specialized scanner for detecting valuable cargo"
+                },
+                "shield_booster": {
+                    "price": 7000,
+                    "description": "Enhanced shields for asteroid field protection"
+                },
+                "mining_compressor": {
+                    "price": 15000,
+                    "description": "Specialized for asteroid mining. +40% capacity for mined resources",
+                    "effect": {"type": "special_cargo", "value": 1.4}
+                }
+            },
+            "DeepSpaceOutpost": {
+                "advanced_radar": {
+                    "price": 9000,
+                    "description": "Long-range radar system for deep space navigation"
+                },
+                "combat_drone": {
+                    "price": 12000,
+                    "description": "Automated defense drone for combat support"
+                },
+                "repair_bot": {
+                    "price": 10000,
+                    "description": "Automated repair system for hull maintenance"
+                },
+                "emergency_warp": {
+                    "price": 18000,
+                    "description": "Emergency escape system. 50% chance to avoid combat during transport",
+                    "effect": {"type": "combat_avoid", "value": 0.5}
+                }
+            },
+            "ResearchColony": {
+                "research_module": {
+                    "price": 11000,
+                    "description": "Advanced research equipment for scientific studies"
+                },
+                "data_analyzer": {
+                    "price": 13000,
+                    "description": "Sophisticated data analysis system"
+                },
+                "quantum_scanner": {
+                    "price": 15000,
+                    "description": "High-precision quantum scanning device"
+                },
+                "containment_optimizer": {
+                    "price": 22000,
+                    "description": "Smart cargo optimization. +25% capacity and -1 turn per trade",
+                    "effect": {"type": "hybrid", "cargo": 1.25, "time": -1}
+                }
+            }
+        }
 
     def get_available_items(self, location_type=None):
         """Get available items, optionally filtered by location type"""
-        if location_type == "AsteroidBase":
-            return {k: v for k, v in self.available_equipment.items() 
-                   if k in ["mining_laser", "cargo_scanner", "shield_booster"]}
-        elif location_type == "DeepSpaceOutpost":
-            return {k: v for k, v in self.available_equipment.items()
-                   if k in ["advanced_radar", "combat_drone", "repair_bot"]}
-        elif location_type == "ResearchColony":
-            return {k: v for k, v in self.available_equipment.items()
-                   if k in ["research_module", "data_analyzer", "quantum_scanner"]}
-        else:
-            return dict(random.sample(list(self.available_equipment.items()), 
-                       min(2, len(self.available_equipment))))
+        # Start with base equipment
+        available = dict(random.sample(list(self.base_equipment.items()), 
+                        min(3, len(self.base_equipment))))
+        
+        # Add location-specific items if applicable
+        if location_type and location_type in self.specialized_equipment:
+            available.update(self.specialized_equipment[location_type])
+            
+        return available
 
     def get_price(self, item_name):
         """Get the price of an item"""
-        return self.available_equipment.get(item_name)        
+        if item_name in self.base_equipment:
+            return self.base_equipment[item_name]["price"]
+        
+        # Check specialized equipment
+        for location_items in self.specialized_equipment.values():
+            if item_name in location_items:
+                return location_items[item_name]["price"]
+        return None       
 
 # Define the Location base class, updated
 class Location:
@@ -2998,15 +3110,67 @@ class Location:
         return False
 
     def generate_market(self):
-        """Generate initial market prices based on location attributes"""
-        tech_price = 100 - (self.tech_level * 10)
-        agri_price = 50 + (self.agri_level * 5)
-        return {
-            'tech': tech_price,
-            'agri': agri_price,
-            'salt': 0,
-            'fuel': 0
+        """Generate market prices including mining commodities"""
+        market = {
+            'tech': 100 - (self.tech_level * 10),
+            'agri': 50 + (self.agri_level * 5),
+            'salt': 0,  # Base price for salt
+            'fuel': 0   # Base price for fuel
         }
+        
+        # Set prices for mined commodities if platforms exist
+        for platform in self.mining_platforms:
+            if platform.current_amount > 0:  # Only set price if resources available
+                if platform.resource_type == 'salt':
+                    market['salt'] = 10  # Base price at source
+                elif platform.resource_type == 'fuel':
+                    market['fuel'] = 15  # Base price at source
+
+        # Higher prices if refinery exists but no local mining
+        has_refinery = any(b == "Refinery" for b in self.buildings)
+        if has_refinery:
+            if market['salt'] == 0:  # No local mining
+                market['salt'] = 80  # Base selling price
+            if market['fuel'] == 0:  # No local mining
+                market['fuel'] = 150  # Base selling price
+            
+            # Improve prices if there is a refinery
+            if market['salt'] > 0:
+                market['salt'] = int(market['salt'] * 1.5)  # 50% better price
+            if market['fuel'] > 0:
+                market['fuel'] = int(market['fuel'] * 1.5)  # 50% better price
+
+        return market
+    
+    def display_market_info(self):
+        """Display market information with mining details"""
+        market_content = [["Commodity", "Price", "Status"]]
+        
+        # Regular commodities
+        market_content.append(["Tech", str(self.market['tech']), ""])
+        market_content.append(["Agri", str(self.market['agri']), ""])
+        
+        # Mining commodities
+        for resource in ['salt', 'fuel']:
+            price = self.market[resource]
+            status = ""
+            
+            # Check for mining platform
+            platform = next((p for p in self.mining_platforms 
+                            if p.resource_type == resource), None)
+            if platform:
+                status = f"M: {platform.current_amount}/{platform.max_capacity}"
+            elif any(b == "Refinery" for b in self.buildings):
+                status = "R"  # Show refinery indicator
+                
+            if price > 0 or status:  # Only show if tradeable
+                market_content.append([
+                    resource.capitalize(),
+                    str(price),
+                    status
+                ])
+        
+        return self.create_box(market_content, 'single')    
 
     def update_market(self, difficulty):
         """Update market prices with location-specific logic"""
@@ -4802,6 +4966,164 @@ class LocationCapabilities:
         }
     }
 
+class MiningPlatform:
+    def __init__(self, resource_type, efficiency):
+        self.resource_type = resource_type
+        self.efficiency = efficiency  # 0-100%
+        self.max_capacity = 0  # Set when geoscan discovers deposit
+        self.current_amount = 0
+        
+    def set_deposit(self, amount):
+        """Set deposit size from geoscan"""
+        self.max_capacity = amount
+        self.current_amount = amount
+        
+    def replenish(self):
+        """Replenish resources based on efficiency"""
+        if self.current_amount < self.max_capacity:
+            # Calculate replenishment amount (efficiency% of missing amount)
+            missing = self.max_capacity - self.current_amount
+            replenish_amount = int((missing * self.efficiency) / 100)
+            self.current_amount = min(self.max_capacity, self.current_amount + replenish_amount)
+            return replenish_amount
+        return 0
+        
+    def remove_resources(self, amount):
+        """Remove resources when bought"""
+        if amount <= self.current_amount:
+            self.current_amount -= amount
+            return True
+        return False
+        
+    def get_status(self):
+        """Get current mining status"""
+        return {
+            "current": self.current_amount,
+            "maximum": self.max_capacity,
+            "efficiency": self.efficiency,
+            "replenish_rate": f"{self.efficiency}% of missing amount per turn"
+        }
+
+class ResourceTransportQuest:
+    def __init__(self, game):
+        self.game = game
+        self.active_missions = []
+        
+    def generate_transport_mission(self):
+        """Generate a resource transport mission"""
+        # Find mining planets
+        mining_planets = [loc for loc in self.game.locations 
+                         if loc.mining_platforms and 
+                         any(p.current_amount > 0 for p in loc.mining_platforms)]
+        
+        # Find planets with refineries
+        refinery_planets = [loc for loc in self.game.locations 
+                          if any(b == "Refinery" for b in loc.buildings)]
+        
+        if not mining_planets or not refinery_planets:
+            return None
+            
+        # Select source and destination
+        source = random.choice(mining_planets)
+        destination = random.choice(refinery_planets)
+        
+        # Select resource type and amount
+        platform = random.choice([p for p in source.mining_platforms if p.current_amount > 0])
+        resource_type = platform.resource_type
+        
+        # Calculate mission amount (25-50% of available resources)
+        available = platform.current_amount
+        amount = random.randint(int(available * 0.25), int(available * 0.5))
+        
+        # Calculate reward (better than normal trading profit)
+        base_cost = amount * source.market[resource_type]  # Cost at source
+        sell_value = amount * destination.market[resource_type]  # Value at destination
+        normal_profit = sell_value - base_cost
+        reward = int(normal_profit * 1.5)  # 50% bonus over normal trading
+        
+        # Create mission
+        mission = {
+            "type": "transport",
+            "resource": resource_type,
+            "amount": amount,
+            "source": source.name,
+            "destination": destination.name,
+            "reward": reward,
+            "time_limit": 10,  # 10 turns to complete
+            "bonus_conditions": {
+                "quick_delivery": {"turns": 5, "bonus": int(reward * 0.3)},
+                "no_damage": {"bonus": int(reward * 0.2)}
+            }
+        }
+        
+        self.active_missions.append(mission)
+        return mission
+        
+    def check_mission_completion(self, ship, current_location):
+        """Check if any transport missions are completed"""
+        for mission in self.active_missions[:]:  # Copy list to allow removal
+            if (current_location.name == mission["destination"] and
+                ship.cargo[mission["resource"]] >= mission["amount"]):
+                
+                # Calculate bonus rewards
+                total_reward = mission["reward"]
+                bonus_text = []
+                
+                if mission["time_limit"] > 5:  # Quick delivery bonus
+                    total_reward += mission["bonus_conditions"]["quick_delivery"]["bonus"]
+                    bonus_text.append(f"Quick Delivery: +{mission['bonus_conditions']['quick_delivery']['bonus']}")
+                    
+                if ship.damage == 0:  # No damage bonus
+                    total_reward += mission["bonus_conditions"]["no_damage"]["bonus"]
+                    bonus_text.append(f"Safe Delivery: +{mission['bonus_conditions']['no_damage']['bonus']}")
+                
+                # Remove resources and give reward
+                ship.cargo[mission["resource"]] -= mission["amount"]
+                ship.money += total_reward
+                
+                # Remove completed mission
+                self.active_missions.remove(mission)
+                
+                # Format completion message
+                completion_text = [
+                    f"Transport Mission Complete!",
+                    f"Delivered {mission['amount']} {mission['resource']}",
+                    f"Base Reward: {mission['reward']}"]
+                if bonus_text:
+                    completion_text.extend(bonus_text)
+                completion_text.append(f"Total Reward: {total_reward}")
+                
+                return True, completion_text
+                
+        return False, None
+        
+    def update_missions(self):
+        """Update mission timers and remove expired missions"""
+        for mission in self.active_missions[:]:  # Copy list to allow removal
+            mission["time_limit"] -= 1
+            if mission["time_limit"] <= 0:
+                self.active_missions.remove(mission)
+                self.game.display_simple_message(
+                    f"Transport mission expired: {mission['amount']} {mission['resource']} " +
+                    f"from {mission['source']} to {mission['destination']}"
+                )
+    
+    def display_available_missions(self):
+        """Display all available transport missions"""
+        if not self.active_missions:
+            return [["No active transport missions"]]
+            
+        mission_content = [["Resource", "Amount", "From", "To", "Reward", "Time"]]
+        for mission in self.active_missions:
+            mission_content.append([
+                mission["resource"].capitalize(),
+                str(mission["amount"]),
+                mission["source"],
+                mission["destination"],
+                str(mission["reward"]),
+                f"{mission['time_limit']} turns"
+            ])
+        return mission_content    
 
 class Planet(Location):
     def __init__(self, name, tech_level, agri_level, research_points, economy):
