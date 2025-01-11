@@ -182,11 +182,11 @@ class Planet:
         return max(0.01, min(0.25, final_tax_rate))  # Keep between 1% and 25%
 
     def build_mining_platform(self):
-        if not self.current_planet.mineral_deposits:
+        if not self.current_location.mineral_deposits:
             self.display_simple_message("No mineral deposits found! Use geoscan first.")
             return
             
-        available_deposits = list(self.current_planet.mineral_deposits.keys())
+        available_deposits = list(self.current_location.mineral_deposits.keys())
         deposit_type = self.validate_input(
             f"Choose deposit type to mine ({', '.join(available_deposits)}): ",
             available_deposits
@@ -195,7 +195,7 @@ class Planet:
         cost = 10000
         if self.ship.money >= cost:
             self.ship.money -= cost
-            self.current_planet.mining_platforms.append({
+            self.current_location.mining_platforms.append({
                 'type': deposit_type,
                 'capacity': random.randint(100, 200)
             })
@@ -408,15 +408,13 @@ class Ship:
         self.attack = 1
         self.defense = 1
         self.speed = 1
-        self.quests = []
-        self.research_points = 0  # Add research points to ship
+        self.research_points = 0
         self.upgrade_costs = {
             'attack': 2000,
             'defense': 2000,
             'speed': 2000
         }
-        self.item_purchase_count = {}  # Track number of purchases for price scaling
-                # Add combat statistics
+        self.item_purchase_count = {}
         self.combat_victories = 0
         self.combat_defeats = 0
         self.combat_stats = {
@@ -424,31 +422,25 @@ class Ship:
             'raiders_defeated': 0,
             'militia_defeated': 0
         }
-        self.trade_profits = {}  # Track profits by commodity
-        
-        # Add tracking for victories against specific enemy types
+        self.trade_profits = {}
         self.enemy_victories = {
             'pirate': 0,
             'raider': 0,
             'militia': 0,
             'alien': 0
         }
-    
+
     def record_combat_victory(self, enemy_type=None):
-        """Record a combat victory and update related statistics"""
         self.combat_victories += 1
         if enemy_type and enemy_type in self.enemy_victories:
             self.enemy_victories[enemy_type] += 1
-            # Update combat stats if the stat exists
             stat_key = f'{enemy_type}s_defeated'
             if stat_key in self.combat_stats:
                 self.combat_stats[stat_key] += 1
 
     def record_combat_defeat(self, enemy_type=None):
-        """Record a combat defeat and update related statistics"""
         self.combat_defeats += 1
         if enemy_type and enemy_type in self.enemy_victories:
-            # You might want to track defeats by enemy type as well
             if 'defeats_by_type' not in self.combat_stats:
                 self.combat_stats['defeats_by_type'] = {}
             if enemy_type not in self.combat_stats['defeats_by_type']:
@@ -456,21 +448,17 @@ class Ship:
             self.combat_stats['defeats_by_type'][enemy_type] += 1
 
     def buy(self, item, quantity, price, planet, player_rank):
-        # Check if item can be traded
+        # Quest-related information can be tracked here and passed to QuestSystem
         if not planet.can_trade(item):
-            print(f"Warning: {item} trading is banned on this planet.")
             return False
 
-        # Check if mining platform exists for salt and fuel
         if item in ['salt', 'fuel']:
             has_platform = any(p['type'] == item for p in planet.mining_platforms)
             if not has_platform:
-                print(f"Warning: No mining platform for {item} on this planet.")
                 return False
 
         cost = quantity * price
         if self.money >= cost:
-            # Calculate and apply tax
             tax_rate = planet.calculate_tax_rate(player_rank, cost)
             tax_amount = cost * tax_rate
             total_cost = cost + tax_amount
@@ -479,35 +467,33 @@ class Ship:
                 self.money -= total_cost
                 self.cargo[item] += quantity
                 return True
-            else:
-                print(f"Warning: Not enough money to cover cost plus {tax_rate*100}% tax.")
-                return False
-        print("Warning: Not enough money to buy.")
+            return False
         return False
 
     def sell(self, item, quantity, price, planet, player_rank):
         if not planet.can_trade(item):
-            print(f"Warning: {item} trading is banned on this planet.")
             return False
 
-        # Check if mining platform exists for salt and fuel
         if item in ['salt', 'fuel']:
             has_platform = any(p['type'] == item for p in planet.mining_platforms)
             if not has_platform:
-                print(f"Warning: No mining platform for {item} on this planet.")
                 return False
                 
         if self.cargo[item] >= quantity:
             revenue = quantity * price
-            # Calculate and apply tax
             tax_rate = planet.calculate_tax_rate(player_rank, revenue)
             tax_amount = revenue * tax_rate
             net_revenue = revenue - tax_amount
             
             self.money += net_revenue
             self.cargo[item] -= quantity
+            
+            # Track trade profits
+            if item not in self.trade_profits:
+                self.trade_profits[item] = 0
+            self.trade_profits[item] += net_revenue
+            
             return True
-        print("Warning: Not enough cargo to sell.")
         return False
 
     def repair(self, cost):
@@ -515,7 +501,6 @@ class Ship:
             self.money -= cost
             self.damage = 0
             return True
-        print("Warning: Not enough money to repair.")
         return False
 
     def upgrade(self, property_name, cost):
@@ -527,10 +512,7 @@ class Ship:
                 self.defense += 1
             elif property_name == 'speed':
                 self.speed += 1
-            else:
-                print(f"Warning: Invalid property name {property_name}.")
             return True
-        print("Warning: Not enough money to upgrade.")
         return False
 
     def acquire_item(self, item_name):
@@ -540,7 +522,7 @@ class Ship:
             self.items[item_name] = 1
 
     def is_empty_cargo(self):
-        return self.cargo['tech'] == 0 and self.cargo['agri'] == 0
+        return all(amount == 0 for amount in self.cargo.values())
 
     def upgrade_property(self, property_name, amount):
         if property_name == 'attack':
@@ -549,17 +531,6 @@ class Ship:
             self.defense += amount
         elif property_name == 'speed':
             self.speed += amount
-        else:
-            print(f"Warning: Invalid property name {property_name}.")
-
-    def add_quest(self, quest):
-        self.quests.append(quest)
-
-    def complete_quest(self, quest):
-        if quest in self.quests:
-            self.quests.remove(quest)
-            return True
-        return False
 
 # Define the Game class
 class Game:
@@ -1023,11 +994,11 @@ class Game:
 
     def build_mining_platform(self):
         """Build a new mining platform on the current planet"""
-        if not self.current_planet.mineral_deposits:
+        if not self.current_location.mineral_deposits:
             self.display_simple_message("No mineral deposits found! Use geoscan first.")
             return
             
-        available_deposits = list(self.current_planet.mineral_deposits.keys())
+        available_deposits = list(self.current_location.mineral_deposits.keys())
         deposit_type = self.validate_input(
             f"Choose deposit type to mine ({', '.join(available_deposits)}): ",
             available_deposits
@@ -1039,9 +1010,9 @@ class Game:
         cost = 10000
         if self.ship.money >= cost:
             self.ship.money -= cost
-            self.current_planet.mining_platforms.append({
+            self.current_location.mining_platforms.append({
                 'type': deposit_type,
-                'efficiency': self.current_planet.mining_efficiency,
+                'efficiency': self.current_location.mining_efficiency,
                 'capacity': random.randint(100, 200)
             })
             self.display_simple_message(f"Mining platform for {deposit_type} built!")
@@ -1050,7 +1021,7 @@ class Game:
 
     def format_buildings(self):
         building_counts = {}
-        for building in self.current_planet.buildings:
+        for building in self.current_location.buildings:
             if building in building_counts:
                 building_counts[building] += 1
             else:
@@ -1215,13 +1186,13 @@ class Game:
                     return
 
                 # Check if item can be traded
-                if not self.current_planet.can_trade(item):
+                if not self.current_location.can_trade(item):
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
                 # Check for mining platform requirement for salt and fuel
                 if item in ['salt', 'fuel']:
-                    has_platform = any(p['type'] == item for p in self.current_planet.mining_platforms)
+                    has_platform = any(p['type'] == item for p in self.current_location.mining_platforms)
                     if not has_platform:
                         self.display_simple_message(f"No mining platform for {item} on this planet.")
                         return
@@ -1232,18 +1203,18 @@ class Game:
 
                 if quantity == 'max':
                     # Only calculate max if the item's price is non-zero
-                    price = self.current_planet.market[item]
+                    price = self.current_location.market[item]
                     if price <= 0:
                         self.display_simple_message(f"Cannot calculate maximum: {item} has no valid price.")
                         return
                         
                     # Calculate tax rate for this transaction
-                    tax_rate = self.current_planet.calculate_tax_rate(self.rank, price)
+                    tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
                     price_with_tax = price * (1 + tax_rate)
                     quantity = int(self.ship.money / price_with_tax)
 
-                if self.ship.buy(item, quantity, self.current_planet.market[item], 
-                                self.current_planet, self.rank):
+                if self.ship.buy(item, quantity, self.current_location.market[item], 
+                                self.current_location, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
                 
             elif action in ['sell', 's']:
@@ -1252,7 +1223,7 @@ class Game:
                 if item is None:
                     return
 
-                if not self.current_planet.can_trade(item):
+                if not self.current_location.can_trade(item):
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
@@ -1263,8 +1234,8 @@ class Game:
                 if quantity == 'max':
                     quantity = self.ship.cargo[item]
 
-                if self.ship.sell(item, quantity, self.current_planet.market[item], 
-                                self.current_planet, self.rank):
+                if self.ship.sell(item, quantity, self.current_location.market[item], 
+                                self.current_location, self.rank):
                     self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
 
             elif action in ['upgrade', 'u']:
@@ -1425,9 +1396,9 @@ class Game:
             if full_building_name == 'stockmarket':
                 if self.ship.money >= building_costs['stockmarket']:
                     self.ship.money -= building_costs['stockmarket']
-                    self.current_planet.stockmarket_base = True
-                    self.current_planet.market['tech'] = max(1, self.current_planet.market['tech'] - 10)
-                    self.current_planet.market['agri'] = max(1, self.current_planet.market['agri'] - 5)
+                    self.current_location.stockmarket_base = True
+                    self.current_location.market['tech'] = max(1, self.current_location.market['tech'] - 10)
+                    self.current_location.market['agri'] = max(1, self.current_location.market['agri'] - 5)
                     self.display_simple_message(f"Built stock market base for {self.format_money(building_costs['stockmarket'])} money.")
                 else:
                     self.display_simple_message(f"Not enough money to build stock market. Cost: {self.format_money(building_costs['stockmarket'])}")
@@ -1435,13 +1406,13 @@ class Game:
 
             # Get base cost and multiplier
             base_cost = building_costs.get(building_name.split()[0].lower(), 3000)
-            cost_multiplier = self.current_planet.buildings.count(full_building_name) + 1
+            cost_multiplier = self.current_location.buildings.count(full_building_name) + 1
             final_cost = base_cost * cost_multiplier
 
             # Build if player can afford it
             if self.ship.money >= final_cost:
                 self.ship.money -= final_cost
-                self.current_planet.build_building(full_building_name)
+                self.current_location.build_building(full_building_name)
                 self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} money.")
 
     def travel_to_location(self, location_name):
@@ -1573,7 +1544,7 @@ class Game:
             if option:
                 if self.ship.research_points >= self.research.research_costs[option]:
                     self.ship.research_points -= self.research.research_costs[option]
-                    success, message = self.action.research(self.current_planet, option, self.research)
+                    success, message = self.action.research(self.current_location, option, self.research)
                     self.display_simple_message(message)
                 else:
                     self.display_simple_message(f"Not enough research points! Need: {self.research.research_costs[option]}")
@@ -1581,7 +1552,7 @@ class Game:
         elif action == 'scout':
             if self.ship.research_points >= self.action.action_costs['scout']:
                 self.ship.research_points -= self.action.action_costs['scout']
-                success, type_, value, message = self.action.scout_area(self.current_planet, self.research)
+                success, type_, value, message = self.action.scout_area(self.current_location, self.research)
                 self.display_simple_message(message)
                 
                 if success:
@@ -1589,7 +1560,7 @@ class Game:
                         self.ship.acquire_item(value)
                         self.display_simple_message(f"Item added to inventory!")
                     else:
-                        self.current_planet.market[type_] += value
+                        self.current_location.market[type_] += value
                         self.display_simple_message(f"Resources added to market!")
             else:
                 self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['scout']}")
@@ -1597,7 +1568,7 @@ class Game:
         elif action == 'geoscan':
             if self.ship.research_points >= self.action.action_costs['geoscan']:
                 self.ship.research_points -= self.action.action_costs['geoscan']
-                success, deposit_type, amount, message = self.action.geoscan(self.current_planet, self.research)
+                success, deposit_type, amount, message = self.action.geoscan(self.current_location, self.research)
                 self.display_simple_message(message)
                 
                 if success:
@@ -1608,7 +1579,7 @@ class Game:
         elif action == 'revolution':
             if self.ship.research_points >= self.action.action_costs['revolution']:
                 self.ship.research_points -= self.action.action_costs['revolution']
-                success, new_economy, message = self.action.incite_revolution(self.current_planet, self.research)
+                success, new_economy, message = self.action.incite_revolution(self.current_location, self.research)
                 self.display_simple_message(message)
             else:
                 self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['revolution']}")
@@ -1622,9 +1593,9 @@ class Game:
                 # Show current market prices
                 market_content = [["Commodity", "Current Price"]]
                 for commodity in ['tech', 'agri', 'salt', 'fuel']:
-                    if commodity not in self.current_planet.banned_commodities:
+                    if commodity not in self.current_location.banned_commodities:
                         market_content.append([commodity.capitalize(), 
-                                        str(self.format_money(self.current_planet.market[commodity]))])
+                                        str(self.format_money(self.current_location.market[commodity]))])
                 print(self.create_box(market_content, 'single'))
                 
                 commodity = self.validate_input(
@@ -1635,16 +1606,16 @@ class Game:
                 if commodity:
                     self.ship.research_points -= self.action.action_costs['market_manipulation']
                     success, price_change, message = self.action.manipulate_market(
-                        self.current_planet, commodity, self.research
+                        self.current_location, commodity, self.research
                     )
                     self.display_simple_message(message)
             else:
                 self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['market_manipulation']}")
                     
         # Update production cooldowns after any action
-        for resource_type in list(self.current_planet.production_cooldown.keys()):
-            if self.current_planet.production_cooldown[resource_type] > 0:
-                self.current_planet.production_cooldown[resource_type] -= 1
+        for resource_type in list(self.current_location.production_cooldown.keys()):
+            if self.current_location.production_cooldown[resource_type] > 0:
+                self.current_location.production_cooldown[resource_type] -= 1
 
     def display_research_status(self):
         """Display current research status and benefits"""
@@ -2310,7 +2281,7 @@ class Game:
         elif choice == 'status':
             self.display_mining_status()
         elif choice == 'research':
-            if self.action.research(self.current_planet, 'mining_efficiency', self.research):
+            if self.action.research(self.current_location, 'mining_efficiency', self.research):
                 self.display_simple_message("Mining efficiency research completed!")
             else:
                 self.display_simple_message("Not enough research points!")
@@ -2319,20 +2290,20 @@ class Game:
         """Display mining operations status"""
         content = [
             ["Mining Status"],
-            [f"Planet Efficiency: {self.current_planet.mining_efficiency}%"],
+            [f"Planet Efficiency: {self.current_location.mining_efficiency}%"],
             ["Active Platforms:"]
         ]
         
-        for platform in self.current_planet.mining_platforms:
+        for platform in self.current_location.mining_platforms:
             content.append([
                 f"{platform['type'].capitalize()}: "
                 f"Efficiency {platform['efficiency']}% "
                 f"Capacity {platform['capacity']}"
             ])
             
-        if self.current_planet.mineral_deposits:
+        if self.current_location.mineral_deposits:
             content.append(["Available Deposits:"])
-            for deposit, amount in self.current_planet.mineral_deposits.items():
+            for deposit, amount in self.current_location.mineral_deposits.items():
                 content.append([f"{deposit.capitalize()}: {amount} units"])
                 
         print(self.create_box(content, 'double'))
@@ -2350,7 +2321,7 @@ class Game:
         # Create score content
         score_content = [
             ["FINAL SCORE REPORT", ""],  # Title row
-            ["─" * 25, "─" * 25],  # Separator
+            ["─" * 18, "─" * 18],  # Separator
             ["Assets", "Value"],
             ["Money", f"{self.format_money(self.ship.money)}"],
             ["Tech Cargo", f"{self.format_money(self.ship.cargo['tech'])} units"],
@@ -2579,7 +2550,7 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
-# Define the Location base class
+# Define the Location base class, updated
 class Location:
     def __init__(self, name, location_type, tech_level, agri_level, research_points, economy):
         self.name = name
@@ -2588,23 +2559,53 @@ class Location:
         self.agri_level = agri_level
         self.research_points = research_points
         self.economy = economy
-        self.market = self.generate_market()
         self.stockmarket_base = False
         self.stockmarket_cost = 5000
         self.buildings = []
-        self.mining_efficiency = random.randint(60, 100)
-        self.market['salt'] = 0
-        self.market['fuel'] = 0
-        self.production_cooldown = {}
+        self.mining_efficiency = self.get_base_mining_efficiency()
         self.banned_commodities = []
         self.ban_duration = {}
         self.mineral_deposits = {}
         self.mining_platforms = []
-        self.quest_requirements = []  # New: Requirements to unlock this location
-        self.story_progression = 0    # New: Track story progress at this location
+        self.production_cooldown = {}
+        # Generate market after initializing attributes
+        self.market = self.generate_market()
+
+    def calculate_mining_output(self, platform_type):
+        """Calculate mining output based on efficiency and random factors"""
+        base_output = random.randint(10, 20)
+        efficiency_bonus = self.mining_efficiency / 100
+        return int(base_output * efficiency_bonus)
+
+    def produce_resources(self):
+        """Handle resource production from mining platforms"""
+        for platform in self.mining_platforms:
+            resource_type = platform['type']
+            if resource_type not in self.production_cooldown or self.production_cooldown[resource_type] <= 0:
+                output = self.calculate_mining_output(resource_type)
+                if resource_type == 'salt':
+                    self.market['salt'] = random.randint(80, 120)
+                elif resource_type == 'fuel':
+                    self.market['fuel'] = random.randint(150, 200)
+                self.production_cooldown[resource_type] = 3  # 3 turns cooldown
+            else:
+                self.production_cooldown[resource_type] -= 1
+
+    def build_mining_platform(self, deposit_type, cost):
+        """Build a new mining platform for specified deposit"""
+        if deposit_type in self.mineral_deposits:
+            if self.mineral_deposits[deposit_type] > 0:
+                self.mining_platforms.append({
+                    'type': deposit_type,
+                    'efficiency': self.mining_efficiency,
+                    'capacity': random.randint(100, 200)
+                })
+                self.mineral_deposits[deposit_type] -= 1
+                return True
+        return False
 
     def generate_market(self):
-        # Base market generation logic remains the same as Planet class
+        """Generate initial market prices based on location attributes"""
         tech_price = 100 - (self.tech_level * 10)
         agri_price = 50 + (self.agri_level * 5)
         return {
@@ -2615,8 +2616,161 @@ class Location:
         }
 
     def update_market(self, difficulty):
-        # Same as Planet class update_market method
-        pass
+        """Update market prices with location-specific logic"""
+        capabilities = self.get_capabilities()
+        tradeable = capabilities.get("can_trade", [])
+        
+        for commodity in self.market:
+            if commodity not in tradeable:
+                continue
+                
+            # Base price changes with randomization and difficulty scaling
+            base_change = random.randint(-5, 5) * (1 + difficulty)
+            
+            # Apply economic effects
+            if self.economy == "Booming":
+                base_change += 5
+            elif self.economy == "Declining":
+                base_change -= 5
+            elif self.economy == "Formative":
+                base_change = int(base_change * 1.2)  # More volatile prices
+            
+            # Apply stockmarket effects if present
+            if self.stockmarket_base:
+                base_change = max(1, base_change - 10)
+            
+            # Handle building effects
+            for building in self.buildings:
+                if building == "Permaculture Paradise" and commodity == 'agri':
+                    base_change = max(1, base_change * 0.8)
+                elif building == "The Nanotech Nexus":
+                    base_change = max(1, base_change * 0.85)
+
+            # Calculate new price
+            new_price = max(1, self.market[commodity] + base_change)
+            
+            # Apply commodity-specific limits
+            if commodity == 'salt':
+                new_price = min(new_price, 150)
+            elif commodity == 'fuel':
+                new_price = min(new_price, 250)
+            else:
+                new_price = min(new_price, 200)
+                
+            self.market[commodity] = new_price
+
+            # Handle zero prices and bans
+            if new_price == 0 and commodity not in self.banned_commodities:
+                self.add_temporary_ban(commodity, random.randint(2, 4))
+
+        # Update ban durations and remove expired bans
+        for commodity in list(self.ban_duration.keys()):
+            self.ban_duration[commodity] -= 1
+            if self.ban_duration[commodity] <= 0:
+                self.banned_commodities.remove(commodity)
+                del self.ban_duration[commodity]
+                # Reset price for previously banned commodity
+                if commodity == 'tech':
+                    self.market['tech'] = 100 - (self.tech_level * 10)
+                elif commodity == 'agri':
+                    self.market['agri'] = 50 + (self.agri_level * 5)
+
+        # Update production cooldowns
+        for resource_type in list(self.production_cooldown.keys()):
+            if self.production_cooldown[resource_type] > 0:
+                self.production_cooldown[resource_type] -= 1
+
+    def calculate_tax_rate(self, player_rank, profit):
+        """Calculate tax rate based on player rank and location type"""
+        base_tax = 0.05  # 5% base tax
+        rank_multiplier = {
+            "Explorer": 1,
+            "Pilot": 1.2,
+            "Captain": 1.4,
+            "Commander": 1.6,
+            "Star Commander": 1.8,
+            "Space Admiral": 2.0,
+            "Stellar Hero": 2.2,
+            "Galactic Legend": 2.5
+        }
+        
+        # Reduce tax based on number of buildings
+        building_discount = len(self.buildings) * 0.02  # 2% reduction per building
+        
+        # Location-specific tax adjustments
+        location_tax_modifier = {
+            "Planet": 1.0,
+            "AsteroidBase": 0.8,  # Lower taxes to encourage mining
+            "DeepSpaceOutpost": 1.2,  # Higher taxes for premium services
+            "ResearchColony": 1.5   # Highest taxes due to research benefits
+        }
+        
+        location_modifier = location_tax_modifier.get(self.location_type, 1.0)
+        final_tax_rate = (base_tax * rank_multiplier.get(player_rank, 1) * location_modifier) - building_discount
+        return max(0.01, min(0.25, final_tax_rate))  # Keep between 1% and 25%
+
+    def add_temporary_ban(self, commodity, duration):
+        """Add a temporary trade ban for a commodity"""
+        if commodity not in self.banned_commodities:
+            self.banned_commodities.append(commodity)
+            self.ban_duration[commodity] = duration
+
+    def build_building(self, building_name):
+        """Build a building and apply its effects"""
+        if not self.can_build(building_name):
+            return 0  # Return 0 to indicate building not allowed
+            
+        cost_multiplier = self.buildings.count(building_name) + 1
+        
+        # Apply building effects
+        if building_name == "Mining Facility":
+            self.mining_efficiency = min(100, self.mining_efficiency + 10)
+        elif building_name == "Permaculture Paradise":
+            self.market['agri'] = max(1, self.market['agri'] * 0.8)
+        elif building_name == "Organic Certification Authority":
+            self.market['agri'] = self.market['agri'] * 1.2
+        elif building_name == "Agrobot Assembly Line":
+            self.market['agri'] = max(1, self.market['agri'] * 0.6)
+        elif building_name == "The Nanotech Nexus":
+            self.market['tech'] = max(1, self.market['tech'] * 0.85)
+            self.market['agri'] = max(1, self.market['agri'] * 0.85)
+        elif building_name == "Neuroengineering Guild":
+            self.market['tech'] = self.market['tech'] * 1.3
+        
+        # Add building to location's buildings list
+        self.buildings.append(building_name)
+        
+        return cost_multiplier
+
+    def get_capabilities(self):
+        """Get capabilities for this location type"""
+        return LocationCapabilities.CAPABILITIES.get(self.location_type, {})
+
+    def get_term(self, term_type, use_variant=False):
+        """Get contextual terminology for this location"""
+        return LocationTerminology.get_term(self.location_type, term_type, use_variant)
+
+    def can_trade(self, commodity):
+        """Check if this location can trade a specific commodity"""
+        if commodity in self.banned_commodities:
+            return False
+        return commodity in self.get_capabilities().get("can_trade", [])
+
+    def can_build(self, building_type):
+        """Check if this location can build a specific building"""
+        return building_type in self.get_capabilities().get("can_build", [])
+
+    def can_mine(self, resource_type):
+        """Check if this location can mine a specific resource"""
+        return resource_type in self.get_capabilities().get("can_mine", [])
+
+    def get_base_mining_efficiency(self):
+        """Get base mining efficiency for this location type"""
+        return self.get_capabilities().get("base_mining_efficiency", 0)
+
+    def get_research_multiplier(self):
+        """Get research point multiplier for this location type"""
+        return self.get_capabilities().get("research_multiplier", 1.0)          
 
 class Planet(Location):
     def __init__(self, name, tech_level, agri_level, research_points, economy):
@@ -2774,6 +2928,35 @@ class QuestSystem:
             "combat": 0,
             "research": 0
         }
+
+    def update_discovery_quests(self, location):
+        """Update quests that involve location discovery"""
+        for quest in self.active_quests:
+            if quest.quest_type == "exploration":
+                if "location_type" in quest.requirements:
+                    if location.location_type == quest.requirements["location_type"]:
+                        quest.progress += 1
+                        self.display_quest_progress(quest)
+                        
+                        if quest.check_completion(self.game):
+                            self.complete_quest(quest)
+                            
+                elif "specific_location" in quest.requirements:
+                    if location.name == quest.requirements["specific_location"]:
+                        quest.progress += 1
+                        self.display_quest_progress(quest)
+                        
+                        if quest.check_completion(self.game):
+                            self.complete_quest(quest)
+
+            elif quest.quest_type == "location_unlock":
+                if "location_type" in quest.requirements:
+                    if location.location_type == quest.requirements["location_type"]:
+                        quest.progress += 1
+                        self.display_quest_progress(quest)
+                        
+                        if quest.check_completion(self.game):
+                            self.complete_quest(quest)
 
     def generate_quest(self, quest_type, difficulty):
         """Generate a quest based on type and difficulty"""
@@ -2961,18 +3144,55 @@ class QuestSystem:
             
         return available_types
 
+    def add_quest(self, quest):
+        """Add a new quest to active quests"""
+        if isinstance(quest, Quest):
+            self.active_quests.append(quest)
+            self.game.display_story_message([
+                "New Quest Available!",
+                quest.name,
+                quest.description,
+                f"Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
+            ])        
+
 class StoryManager:
-    def __init__(self, game):  # Modified to accept game parameter
-        self.game = game  # Store reference to game instance
+    def __init__(self, game):
+        self.game = game
         self.current_chapter = 0
         self.plot_points = 0
         self.completed_story_beats = set()
-        self.chapter_statistics = {}  # Added to store chapter statistics
-        self.story_progress = {}  # Added to store story progress
+        self.chapter_statistics = {}
+        self.story_progress = {}
+        self.discovered_locations_by_type = {}
         self.chapter_start_money = 0
         self.chapter_start_quests = 0
         self.chapter_start_locations = 0
         self.chapter_start_combat_victories = 0
+        
+        # Initialize discovery milestones
+        self.discovery_milestones = {
+            "AsteroidBase": {
+                "count": 1,
+                "reward_money": 10000,
+                "reward_rp": 100,
+                "plot_points": 5,
+                "story_event": "asteroid_base_discovery"
+            },
+            "DeepSpaceOutpost": {
+                "count": 1,
+                "reward_money": 15000,
+                "reward_rp": 150,
+                "plot_points": 7,
+                "story_event": "outpost_discovery"
+            },
+            "ResearchColony": {
+                "count": 1,
+                "reward_money": 20000,
+                "reward_rp": 200,
+                "plot_points": 10,
+                "story_event": "research_colony_discovery"
+            }
+        }
         
         # Initialize chapter data
         self.chapters = {
@@ -3175,6 +3395,45 @@ class StoryManager:
         # Check for chapter progression
         if self.check_chapter_requirements():
             self.advance_chapter()
+
+    def check_discovery_milestone(self, location):
+        """Check if discovering this location triggers any milestones"""
+        location_type = location.location_type
+        
+        # Initialize counter for this location type if not exists
+        if location_type not in self.discovered_locations_by_type:
+            self.discovered_locations_by_type[location_type] = 0
+        
+        # Increment counter
+        self.discovered_locations_by_type[location_type] += 1
+        
+        # Check if milestone exists and is reached
+        if location_type in self.discovery_milestones:
+            milestone = self.discovery_milestones[location_type]
+            if self.discovered_locations_by_type[location_type] == milestone["count"]:
+                # Award rewards
+                self.game.ship.money += milestone["reward_money"]
+                self.game.ship.research_points += milestone["reward_rp"]
+                self.plot_points += milestone["plot_points"]
+                
+                # Trigger story event
+                if "story_event" in milestone:
+                    self.trigger_story_event(milestone["story_event"], {
+                        "location": location.name,
+                        "type": location_type
+                    })
+                
+                # Display milestone message
+                self.game.display_story_message([
+                    f"Discovery Milestone: First {location_type} Found!",
+                    f"Bonus Rewards:",
+                    f"• {self.game.format_money(milestone['reward_money'])} credits",
+                    f"• {milestone['reward_rp']} research points",
+                    f"• {milestone['plot_points']} plot points"
+                ])
+                
+                # Check for chapter progression
+                self.check_chapter_progress(self.game)
 
     def handle_chapter_consequences(self, trigger, details):
         """Handle chapter-specific story consequences"""
@@ -3577,7 +3836,6 @@ class LocationManager:
             }
         }
         
-        # Location-specific story events
         self.location_story_events = {
             "AsteroidBase": [
                 "mineral_discovery",
@@ -3596,6 +3854,65 @@ class LocationManager:
             ]
         }
 
+    def handle_location_discovery(self, location):
+        """Handle discovery of a new location"""
+        if location.name not in self.game.discovered_locations:
+            # Calculate discovery rewards based on location type
+            base_reward = 1000
+            base_research = 20
+            
+            location_multipliers = {
+                "Planet": 1.0,
+                "AsteroidBase": 1.5,
+                "DeepSpaceOutpost": 2.0,
+                "ResearchColony": 2.5
+            }
+            
+            multiplier = location_multipliers.get(location.location_type, 1.0)
+            
+            # Apply chapter progression bonus
+            chapter_bonus = 1.0 + (self.game.story_manager.current_chapter * 0.2)
+            
+            # Calculate final rewards
+            discovery_reward = int(base_reward * multiplier * chapter_bonus)
+            research_reward = int(base_research * multiplier * chapter_bonus)
+            
+            # Award rewards
+            self.game.ship.money += discovery_reward
+            self.game.ship.research_points += research_reward
+            
+            # Update discovered locations
+            if not hasattr(self.game, 'discovered_locations'):
+                self.game.discovered_locations = set()
+            self.game.discovered_locations.add(location.name)
+            
+            # Trigger story progression
+            self.game.story_manager.check_discovery_milestone(location)
+            
+            # Check for quest updates if quest system exists
+            if hasattr(self.game, 'quest_system'):
+                self.game.quest_system.update_discovery_quests(location)
+            
+            # Display discovery message
+            self.game.display_story_message([
+                f"Discovered new location: {location.name}!",
+                f"Earned {self.game.format_money(discovery_reward)} credits",
+                f"Gained {research_reward} research points"
+            ])
+
+            # Check for location-specific events
+            if location.location_type in self.location_story_events:
+                self.trigger_location_events(location)
+
+    def trigger_location_events(self, location):
+        """Trigger events specific to a location type"""
+        if location.location_type in self.location_story_events:
+            possible_events = self.location_story_events[location.location_type]
+            if possible_events and random.random() < 0.3:  # 30% chance for event
+                event = random.choice(possible_events)
+                self.game.story_manager.trigger_story_event(event, 
+                    {"location": location.name, "type": location.location_type})
+
     def check_location_unlock_progress(self, location_type):
         """Check if a location type can be unlocked based on player progress"""
         if location_type not in self.location_quests:
@@ -3606,7 +3923,7 @@ class LocationManager:
         # Check mining quest requirement
         if "mining_quests_completed" in requirements:
             completed = len([q for q in self.game.quest_system.completed_quests 
-                           if q.type == "mining"])
+                           if q.quest_type == "mining"])
             if completed < requirements["mining_quests_completed"]:
                 return False
                 
@@ -3632,12 +3949,13 @@ class LocationManager:
         if location_type in self.location_quests:
             quest_data = self.location_quests[location_type]["unlock_quest"]
             
-            # Create the unlock quest
             quest = Quest(
                 name=quest_data["name"],
                 description=quest_data["description"],
                 reward_money=quest_data["reward_money"],
                 reward_rp=quest_data["reward_rp"],
+                quest_type="location_unlock",
+                requirements={"location_type": location_type},
                 on_complete=lambda: self.complete_location_unlock(location_type)
             )
             
@@ -3649,7 +3967,10 @@ class LocationManager:
 
     def complete_location_unlock(self, location_type):
         """Handle the completion of a location unlock quest"""
-        self.game.unlock_location_type(location_type)
+        # Add location type to unlocked types
+        if not hasattr(self.game, 'unlocked_location_types'):
+            self.game.unlocked_location_types = set()
+        self.game.unlocked_location_types.add(location_type)
         
         # Generate location-specific quests
         self.generate_location_quests(location_type)
@@ -3666,12 +3987,6 @@ class LocationManager:
                     "name": "Rich Mineral Deposits",
                     "description": "Extract valuable minerals",
                     "reward_multiplier": 1.5
-                },
-                {
-                    "type": "exploration",
-                    "name": "Asteroid Mapping",
-                    "description": "Map unexplored asteroid fields",
-                    "reward_multiplier": 1.3
                 }
             ],
             "DeepSpaceOutpost": [
@@ -3680,12 +3995,6 @@ class LocationManager:
                     "name": "Outpost Defense",
                     "description": "Protect the outpost from raiders",
                     "reward_multiplier": 1.4
-                },
-                {
-                    "type": "trade",
-                    "name": "Supply Lines",
-                    "description": "Establish trade routes",
-                    "reward_multiplier": 1.6
                 }
             ],
             "ResearchColony": [
@@ -3694,25 +4003,185 @@ class LocationManager:
                     "name": "Scientific Analysis",
                     "description": "Assist with research projects",
                     "reward_multiplier": 2.0
-                },
-                {
-                    "type": "exploration",
-                    "name": "Anomaly Investigation",
-                    "description": "Investigate scientific anomalies",
-                    "reward_multiplier": 1.8
                 }
             ]
         }
         
         if location_type in quest_templates:
             for template in quest_templates[location_type]:
-                self.game.quest_system.generate_quest_from_template(template)
+                self.game.quest_system.generate_quest(template["type"], 
+                    template["reward_multiplier"])
 
     def enable_location_story_events(self, location_type):
         """Enable story events specific to the location type"""
         if location_type in self.location_story_events:
             for event in self.location_story_events[location_type]:
                 self.game.story_manager.enable_story_event(event)
+
+    def enable_story_event(self, event_id):
+        """Enable a story event for potential triggering"""
+        if event_id not in self.story_events:
+            self.story_events[event_id] = {
+                "enabled": True,
+                "triggered": False
+            }
+
+    def trigger_story_event(self, event_id, details=None):
+        """Trigger a story event with details"""
+        if event_id in self.story_events:
+            event = self.story_events[event_id]
+            if event.get("enabled", True) and not event.get("triggered", False):
+                # Mark event as triggered
+                event["triggered"] = True
+                
+                # Award plot points
+                points = event.get("plot_points", 0)
+                self.plot_points += points
+                
+                # Display event message if available
+                if "title" in event and "description" in event:
+                    self.game.display_story_message([
+                        f"Story Event: {event['title']}",
+                        event['description'],
+                        f"Gained {points} plot points!"
+                    ])
+                
+                # Handle any special event effects
+                if "unlock" in event:
+                    self.game.unlock_location_type(event["unlock"])
+                
+                # Check for chapter progression
+                self.check_chapter_progress(self.game)
+                
+                return True
+        return False                
+
+class LocationCapabilities:
+    """Centralized management of location type capabilities"""
+    
+    # Define capabilities for each location type
+    CAPABILITIES = {
+        "Planet": {
+            "can_trade": ["tech", "agri", "salt", "fuel"],
+            "can_build": [
+                "stockmarket",
+                "permaculture",
+                "organic",
+                "agrobot",
+                "nanotech",
+                "neuroengineering",
+                "mining"
+            ],
+            "can_produce": ["tech", "agri"],
+            "can_mine": ["salt", "fuel"],
+            "has_cantina": True,
+            "has_shop": True,
+            "base_mining_efficiency": 100,
+            "research_multiplier": 1.0
+        },
+        "AsteroidBase": {
+            "can_trade": ["salt", "fuel"],
+            "can_build": ["mining", "stockmarket"],
+            "can_produce": [],
+            "can_mine": ["salt", "fuel"],
+            "has_cantina": True,
+            "has_shop": True,
+            "base_mining_efficiency": 150,  # Better at mining
+            "research_multiplier": 0.8
+        },
+        "DeepSpaceOutpost": {
+            "can_trade": ["tech", "agri"],
+            "can_build": ["stockmarket", "nanotech"],
+            "can_produce": ["tech"],
+            "can_mine": [],
+            "has_cantina": True,
+            "has_shop": True,
+            "base_mining_efficiency": 0,
+            "research_multiplier": 1.2
+        },
+        "ResearchColony": {
+            "can_trade": ["tech"],
+            "can_build": ["nanotech", "neuroengineering"],
+            "can_produce": ["tech"],
+            "can_mine": [],
+            "has_cantina": False,
+            "has_shop": True,
+            "base_mining_efficiency": 0,
+            "research_multiplier": 2.0
+        }
+    }
+
+
+class Planet(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "Planet", tech_level, agri_level, research_points, economy)
+
+class AsteroidBase(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "AsteroidBase", tech_level, agri_level, research_points, economy)
+
+class DeepSpaceOutpost(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "DeepSpaceOutpost", tech_level, agri_level, research_points, economy)
+
+class ResearchColony(Location):
+    def __init__(self, name, tech_level, agri_level, research_points, economy):
+        super().__init__(name, "ResearchColony", tech_level, agri_level, research_points, economy)
+
+class LocationTerminology:
+    """Manages context-appropriate terminology for different location types"""
+    
+    TERMS = {
+        "Planet": {
+            "name": "planet",
+            "here": "on this planet",
+            "to": "to the planet",
+            "at": "on",
+            "from": "from the planet",
+            "possessive": "planet's",
+            "local": "planetary",
+            "variants": ["world", "globe", "planetoid"]
+        },
+        "AsteroidBase": {
+            "name": "base",
+            "here": "at this base",
+            "to": "to the base",
+            "at": "at",
+            "from": "from the base",
+            "possessive": "base's",
+            "local": "base",
+            "variants": ["asteroid station", "mining post", "rock station"]
+        },
+        "DeepSpaceOutpost": {
+            "name": "outpost",
+            "here": "at this outpost",
+            "to": "to the outpost",
+            "at": "at",
+            "from": "from the outpost",
+            "possessive": "outpost's",
+            "local": "outpost",
+            "variants": ["station", "waypoint", "trading post"]
+        },
+        "ResearchColony": {
+            "name": "colony",
+            "here": "in this colony",
+            "to": "to the colony",
+            "at": "in",
+            "from": "from the colony",
+            "possessive": "colony's",
+            "local": "colonial",
+            "variants": ["research station", "science base", "research facility"]
+        }
+    }
+    
+    @staticmethod
+    def get_term(location_type, term_type, use_variant=False):
+        """Get appropriate terminology for a location type"""
+        terms = LocationTerminology.TERMS.get(location_type, LocationTerminology.TERMS["Planet"])
+        if use_variant and random.random() < 0.3:  # 30% chance to use variant
+            if term_type == "name":
+                return random.choice(terms["variants"])
+        return terms.get(term_type, terms["name"])        
 
 # Start the game
 if __name__ == "__main__":
