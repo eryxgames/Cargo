@@ -213,32 +213,6 @@ class Planet:
         self.market['agri'] = max(1, self.market['agri'] - 5)
         # Note: Actual construction is now handled in handle_building_construction
 
-    def build_building(self, building_name):
-        """
-        Build a building and apply its effects
-        Returns: cost_multiplier for the building
-        """
-        cost_multiplier = self.buildings.count(building_name) + 1
-        
-        # Apply building effects
-        if building_name == "Mining Facility":
-            self.mining_efficiency = min(100, self.mining_efficiency + 10)
-        elif building_name == "Permaculture Paradise":
-            self.market['agri'] = max(1, self.market['agri'] * 0.8)
-        elif building_name == "Organic Certification Authority":
-            self.market['agri'] = self.market['agri'] * 1.2
-        elif building_name == "Agrobot Assembly Line":
-            self.market['agri'] = max(1, self.market['agri'] * 0.6)
-        elif building_name == "The Nanotech Nexus":
-            self.market['tech'] = max(1, self.market['tech'] * 0.85)
-            self.market['agri'] = max(1, self.market['agri'] * 0.85)
-        elif building_name == "Neuroengineering Guild":
-            self.market['tech'] = self.market['tech'] * 1.3
-        
-        # Add building to planet's buildings list
-        self.buildings.append(building_name)
-        
-        return cost_multiplier
 
     def __str__(self):
         return f"{self.name} (Tech: {self.tech_level}, Agri: {self.agri_level}, RP: {self.research_points}, Economy: {self.economy})"
@@ -540,6 +514,7 @@ class Game:
         self.difficulty = self.choose_difficulty()
         self.locations = self.generate_initial_locations()  # Generate all locations
         self.current_location = random.choice([loc for loc in self.locations if isinstance(loc, Planet)])  # Start at a planet
+        self.shop = Shop()  # Initialize the shop system
         self.ship = Ship()
         self.turn = 0
         self.known_locations = [self.current_location.name]  
@@ -1257,22 +1232,31 @@ class Game:
                     self.display_simple_message("Choose a location to travel to:")
                     for i, location in enumerate(self.known_locations, 1):
                         print(f"{i}. {location}")
-                    choice = self.validate_input(
-                        "Enter the number of the planet or the location name: ",
-                        [str(i) for i in range(1, len(self.known_locations) + 1)] + self.known_locations
-                    )
-                    if choice:
-                        # Handle numeric choice
-                        if choice.isdigit():
-                            index = int(choice) - 1
-                            if 0 <= index < len(self.known_locations):
-                                self.travel_to_location(self.known_locations[index])
+                    
+                    self.display_simple_message("Enter the number or name of the location (or 'cancel'): ", 0)
+                    choice = input(">>> ").strip()
+                    
+                    if not choice or choice.lower() == 'cancel':
+                        self.display_simple_message("Travel cancelled.")
+                        return
+                        
+                    if choice.isdigit():
+                        index = int(choice) - 1
+                        if 0 <= index < len(self.known_locations):
+                            self.travel_to_location(self.known_locations[index])
                         else:
-                            self.travel_to_location(choice)
+                            self.display_simple_message("Invalid location number.")
+                    else:
+                        self.travel_to_location(choice)
                 else:
-                    location_name = input("Enter location name to travel: ").strip()
-                    if location_name:
-                        self.travel_to_location(location_name)
+                    self.display_simple_message("Enter location name (or 'cancel'): ", 0)
+                    location_name = input(">>> ").strip()
+                    
+                    if not location_name or location_name.lower() == 'cancel':
+                        self.display_simple_message("Travel cancelled.")
+                        return
+                        
+                    self.travel_to_location(location_name)
 
             elif action in ['repair', 'r']:
                 cost = self.ship.damage * 10
@@ -1287,16 +1271,6 @@ class Game:
                 self.display_location_info()
 
             elif action in ['build', 'bl']:
-                building_options = {
-                    'stockmarket': ['stockmarket', 'sm'],
-                    'permaculture': ['permaculture', 'pc'],
-                    'organic': ['organic', 'oc'],
-                    'agrobot': ['agrobot', 'ab'],
-                    'nanotech': ['nanotech', 'nt'],
-                    'neuroengineering': ['neuroengineering', 'ne'],
-                    'mining': ['mining', 'm']
-                }
-                
                 building_costs = {
                     'stockmarket': 5000,
                     'permaculture': 3000,
@@ -1308,19 +1282,26 @@ class Game:
                 }
 
                 # Create the validation options list
-                valid_options = []
-                for options in building_options.values():
-                    valid_options.extend(options)
+                valid_options = [
+                    'stockmarket', 'sm',
+                    'permaculture', 'pc',
+                    'organic', 'oc',
+                    'agrobot', 'ab',
+                    'nanotech', 'nt',
+                    'neuroengineering', 'ne',
+                    'mining', 'm'
+                ]
 
                 building_name = self.validate_input(
                     "Choose building type: ",
                     valid_options
                 )
+                
                 if building_name is None:
                     return
 
-                # Handle building construction
-                self.handle_building_construction(building_name, building_options, building_costs)
+                # Handle building construction - removed building_options parameter
+                self.handle_building_construction(building_name, building_costs)
 
             elif action in ['cantina', 'c']:
                 self.visit_cantina()
@@ -1355,125 +1336,169 @@ class Game:
             else:
                 self.display_simple_message("Invalid action.")
 
-    def handle_building_construction(self, building_name, building_options, building_costs):
-            # Updated building costs dictionary
-            building_costs = {
-                'stockmarket': 5000,
-                'permaculture': 3000,
-                'organic': 4000,
-                'agrobot': 5000,
-                'nanotech': 6000,
-                'neuroengineering': 7000,
-                'mining': 10000  # Mining Facility cost
-            }
+    def unlock_location_type(self, location_type):
+        """Unlock a new type of location and add its instances to available locations"""
+        if location_type not in self.unlocked_location_types:
+            self.unlocked_location_types.add(location_type)
             
-            # Map short commands to full building names
-            building_mapping = {
-                'stockmarket': 'stockmarket',
-                'sm': 'stockmarket',
-                'permaculture': 'Permaculture Paradise',
-                'pc': 'Permaculture Paradise',
-                'organic': 'Organic Certification Authority',
-                'oc': 'Organic Certification Authority',
-                'agrobot': 'Agrobot Assembly Line',
-                'ab': 'Agrobot Assembly Line',
-                'nanotech': 'The Nanotech Nexus',
-                'nt': 'The Nanotech Nexus',
-                'neuroengineering': 'Neuroengineering Guild',
-                'ne': 'Neuroengineering Guild',
-                'mining': 'Mining Facility',
-                'm': 'Mining Facility'
-            }
-
-            # Get the full building name
-            full_building_name = building_mapping.get(building_name)
-            
-            if not full_building_name:
-                self.display_simple_message("Invalid building type.")
-                return
+            # Add locations from hidden pool
+            if location_type in self.hidden_locations:
+                self.locations.extend(self.hidden_locations[location_type])
                 
-            # Handle special cases
-            if full_building_name == 'stockmarket':
-                if self.ship.money >= building_costs['stockmarket']:
-                    self.ship.money -= building_costs['stockmarket']
-                    self.current_location.stockmarket_base = True
-                    self.current_location.market['tech'] = max(1, self.current_location.market['tech'] - 10)
-                    self.current_location.market['agri'] = max(1, self.current_location.market['agri'] - 5)
-                    self.display_simple_message(f"Built stock market base for {self.format_money(building_costs['stockmarket'])} money.")
-                else:
-                    self.display_simple_message(f"Not enough money to build stock market. Cost: {self.format_money(building_costs['stockmarket'])}")
-                return
+                # Display unlock message
+                self.display_story_message([
+                    f"New {location_type}s Discovered!",
+                    "Check your map for new locations to explore.",
+                    "",
+                    "New trading opportunities await!"
+                ])
+                
+                # Add specific location effects
+                if location_type == "AsteroidBase":
+                    self.display_simple_message("Asteroid Bases offer improved mining efficiency!")
+                elif location_type == "DeepSpaceOutpost":
+                    self.display_simple_message("Deep Space Outposts have unique equipment available!")
+                elif location_type == "ResearchColony":
+                    self.display_simple_message("Research Colonies provide bonus research points!")
+                    
+            # Also check chapter-specific locations
+            if hasattr(self, 'chapter_locations'):
+                for chapter in self.chapter_locations.values():
+                    if location_type in chapter:
+                        self.locations.extend(chapter[location_type])                
 
-            # Get base cost and multiplier
-            base_cost = building_costs.get(building_name.split()[0].lower(), 3000)
-            cost_multiplier = self.current_location.buildings.count(full_building_name) + 1
-            final_cost = base_cost * cost_multiplier
+    def handle_building_construction(self, building_name, building_costs):
+        """Handle building construction with proper capability checking"""
+        # Map short commands to full building names and their base types
+        building_mapping = {
+            'stockmarket': ('stockmarket', 'stockmarket'),
+            'sm': ('stockmarket', 'stockmarket'),
+            'permaculture': ('Permaculture Paradise', 'permaculture'),
+            'pc': ('Permaculture Paradise', 'permaculture'),
+            'organic': ('Organic Certification Authority', 'organic'),
+            'oc': ('Organic Certification Authority', 'organic'),
+            'agrobot': ('Agrobot Assembly Line', 'agrobot'),
+            'ab': ('Agrobot Assembly Line', 'agrobot'),
+            'nanotech': ('The Nanotech Nexus', 'nanotech'),
+            'nt': ('The Nanotech Nexus', 'nanotech'),
+            'neuroengineering': ('Neuroengineering Guild', 'neuroengineering'),
+            'ne': ('Neuroengineering Guild', 'neuroengineering'),
+            'mining': ('Mining Facility', 'mining'),
+            'm': ('Mining Facility', 'mining')
+        }
 
-            # Build if player can afford it
-            if self.ship.money >= final_cost:
-                self.ship.money -= final_cost
-                self.current_location.build_building(full_building_name)
+        # Get the full building name and base type
+        if building_name not in building_mapping:
+            self.display_simple_message("Invalid building type.")
+            return
+            
+        full_building_name, base_type = building_mapping[building_name]
+
+        # Debug info
+        capabilities = self.current_location.get_capabilities()
+        can_build = capabilities.get("can_build", [])
+        
+        self.display_simple_message(f"Debug: Location type: {self.current_location.location_type}")
+        self.display_simple_message(f"Debug: Building base type: {base_type}")
+        self.display_simple_message(f"Debug: Can build list: {can_build}")
+
+        # Check if location can build this type of building
+        if base_type not in can_build:
+            self.display_simple_message(f"Cannot build {full_building_name} at this location type.")
+            return
+
+        # Get base cost and calculate final cost
+        base_cost = building_costs.get(base_type, 3000)
+        cost_multiplier = self.current_location.buildings.count(full_building_name) + 1
+        final_cost = base_cost * cost_multiplier
+
+        # Build if player can afford it
+        if self.ship.money >= final_cost:
+            self.ship.money -= final_cost
+            success = self.current_location.build_building(full_building_name)
+            if success:
                 self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} money.")
+            else:
+                self.ship.money += final_cost  # Refund if building failed
+                self.display_simple_message(f"Failed to build {full_building_name}.")
+        else:
+            self.display_simple_message(f"Not enough money. Cost: {self.format_money(final_cost)}")
 
     def travel_to_location(self, location_name):
-        """Handle travel to a new location with research points accumulation"""
+        """Handle travel to a new location"""
+        # Convert input to lowercase for case-insensitive comparison
+        target_name = location_name.lower()
+        
+        # Find location by exact name match
+        found_location = None
         for location in self.locations:
-            if location.name.lower() == location_name.lower():
-                old_location = self.current_location  # Store reference to previous location
-                self.current_location = location
-                self.display_simple_message(f"Traveled to {location.name}.")
-                
-                # Calculate research exchange based on location differences
-                research_difference = location.research_points - old_location.research_points
-                
-                # Base gain is the location's research points if first visit
-                if location.name not in self.known_locations:
-                    base_research = location.research_points
-                    self.known_locations.append(location.name)
-                    # Trigger location discovery event
-                    self.location_manager.handle_location_discovery(location)
-                else:
-                    # For revisits, only get bonus from research difference if positive
-                    base_research = max(0, research_difference)
+            if location.name.lower() == target_name:
+                found_location = location
+                break
+        
+        if found_location:
+            old_location = self.current_location
+            self.current_location = found_location
+            self.display_simple_message(f"Traveled to {found_location.name}.")
+            
+            # Calculate research exchange based on location differences
+            research_difference = found_location.research_points - old_location.research_points
+            
+            # Base gain is the location's research points if first visit
+            if found_location.name not in self.known_locations:
+                base_research = found_location.research_points
+                self.known_locations.append(found_location.name)
+                # Trigger location discovery event
+                if hasattr(self, 'location_manager'):
+                    self.location_manager.handle_location_discovery(found_location)
+            else:
+                # For revisits, only get bonus from research difference if positive
+                base_research = max(0, research_difference)
 
-                # Apply bonus based on research difference
-                if research_difference > 0:
-                    # Traveling to more advanced location - get bonus
-                    research_bonus = int(research_difference * 0.2)  # 20% of the difference
-                else:
-                    # Traveling to less advanced location - smaller bonus
-                    research_bonus = int(abs(research_difference) * 0.1)  # 10% of the difference
-                
-                # Apply rank multiplier to the bonus
-                rank_multiplier = {
-                    "Explorer": 1,
-                    "Pilot": 1.2,
-                    "Captain": 1.5,
-                    "Commander": 1.8,
-                    "Star Commander": 2.2,
-                    "Space Admiral": 2.5,
-                    "Stellar Hero": 3.0,
-                    "Galactic Legend": 3.5
-                }
-                
-                # Calculate final research gain
-                total_gain = base_research + max(1, int(research_bonus * rank_multiplier.get(self.rank, 1) * (1 + self.difficulty)))
-                
-                # Add research points to the ship
-                self.ship.research_points += total_gain
-                
-                # Display informative message about research gain
-                if location.name not in self.known_locations:
-                    self.display_simple_message(f"Gained {total_gain} research points from discovering new location!")
-                elif research_difference > 0:
-                    self.display_simple_message(f"Gained {total_gain} research points from studying advanced technology!")
-                else:
-                    self.display_simple_message(f"Gained {total_gain} research points from comparative analysis!")
-                
-                self.turn += 1
-                self.random_event()
-                return True
-        return False
+            # Apply bonus based on research difference
+            if research_difference > 0:
+                research_bonus = int(research_difference * 0.2)  # 20% of the difference
+            else:
+                research_bonus = int(abs(research_difference) * 0.1)  # 10% of the difference
+            
+            # Apply rank multiplier to the bonus
+            rank_multiplier = {
+                "Explorer": 1.0,
+                "Pilot": 1.2,
+                "Captain": 1.5,
+                "Commander": 1.8,
+                "Star Commander": 2.2,
+                "Space Admiral": 2.5,
+                "Stellar Hero": 3.0,
+                "Galactic Legend": 3.5
+            }.get(self.rank, 1.0)
+            
+            # Calculate final research gain
+            total_gain = base_research + max(1, int(research_bonus * rank_multiplier * (1 + self.difficulty)))
+            
+            # Add research points to the ship
+            self.ship.research_points += total_gain
+            
+            # Display informative message about research gain
+            if found_location.name not in self.known_locations:
+                self.display_simple_message(f"Gained {total_gain} research points from discovering new location!")
+            elif research_difference > 0:
+                self.display_simple_message(f"Gained {total_gain} research points from studying advanced technology!")
+            else:
+                self.display_simple_message(f"Gained {total_gain} research points from comparative analysis!")
+            
+            self.turn += 1
+            self.random_event()
+            return True
+        else:
+            # More informative error message
+            if "navcomp" in self.ship.items:
+                self.display_simple_message("Location not found. Known locations:")
+                for i, loc in enumerate(self.known_locations, 1):
+                    print(f"{i}. {loc}")
+            else:
+                self.display_simple_message(f"Location '{location_name}' not found or not yet discovered.")
+            return False
 
     def handle_actions(self):
         # Display current research points
@@ -1694,68 +1719,46 @@ class Game:
                 location.economy = "Declining"
                 self.display_simple_message(f"Major disaster has affected {location.name}'s economy!")
 
-    def update_reputation(self, event_type, outcome):
+    def update_reputation(self, reputation_change):
         """Update player reputation based on event outcomes"""
-        reputation_changes = {
-            "combat": {"victory": 2, "defeat": -1},
-            "trade": {"success": 1, "embargo": -1},
-            "exploration": {"discovery": 3, "failure": 0},
-            "disaster": {"survived": 1, "major_damage": -1}
-        }
+        self.reputation = max(0, min(100, self.reputation + reputation_change))
         
-        change = reputation_changes.get(event_type, {}).get(outcome, 0)
-        self.reputation = max(0, min(100, self.reputation + change))
-        
-        # Check for rank changes
+        # Update rank based on reputation and other factors
         self.update_rank()
-
-    def process_event_outcome(self, event_result):
-        """Process and categorize event outcomes with detailed information"""
-        details = {
-            "location": self.current_location.name,
-            "initial_damage": self.ship.damage,
-            "cargo_before": dict(self.ship.cargo),
-            "money_before": self.ship.money,
-            "timestamp": self.turn
-        }
         
-        # Calculate specific event impacts
-        if event_result["type"] == "combat":
-            damage_taken = self.ship.damage - details["initial_damage"]
-            details["damage_taken"] = damage_taken
-            details["outcome"] = "victory" if damage_taken < 30 else "defeat"
-            details["reputation_change"] = 2 if damage_taken < 30 else -1
-            
-        elif event_result["type"] == "trade":
-            money_change = self.ship.money - details["money_before"]
-            details["money_change"] = money_change
-            details["outcome"] = "success" if money_change > 0 else "loss"
-            details["reputation_change"] = 1 if money_change > 0 else -1
-            
-        elif event_result["type"] == "exploration":
-            if "artifact" in event_result["name"].lower() or "ruins" in event_result["name"].lower():
-                details["outcome"] = "discovery"
-                details["reputation_change"] = 2
+        # Display reputation change if significant
+        if abs(reputation_change) >= 2:
+            if reputation_change > 0:
+                self.display_simple_message(f"Reputation increased by {reputation_change}!")
             else:
-                details["outcome"] = "completed"
-                details["reputation_change"] = 1
-                
-        elif event_result["type"] == "disaster":
-            damage_taken = self.ship.damage - details["initial_damage"]
-            details["damage_taken"] = damage_taken
-            details["outcome"] = "major_damage" if damage_taken > 40 else "survived"
-            details["reputation_change"] = 1 if damage_taken < 20 else -1
+                self.display_simple_message(f"Reputation decreased by {abs(reputation_change)}!")
         
-        # Calculate specific losses
-        details["cargo_lost"] = {
-            item: details["cargo_before"][item] - self.ship.cargo[item]
-            for item in self.ship.cargo
-            if details["cargo_before"][item] - self.ship.cargo[item] > 0
-        }
-        
-        details["money_lost"] = max(0, details["money_before"] - self.ship.money)
-                
-        return details
+        # Check for rank-up
+        current_rank = self.rank
+        self.update_rank()
+        if self.rank != current_rank:
+            self.display_simple_message(f"Congratulations! You've been promoted to {self.rank}!")
+            
+            # Apply rank-up bonuses
+            rank_bonuses = {
+                "Pilot": {"money": 5000, "research_points": 50},
+                "Captain": {"money": 10000, "research_points": 100},
+                "Commander": {"money": 20000, "research_points": 200},
+                "Star Commander": {"money": 40000, "research_points": 400},
+                "Space Admiral": {"money": 80000, "research_points": 800},
+                "Stellar Hero": {"money": 160000, "research_points": 1600},
+                "Galactic Legend": {"money": 320000, "research_points": 3200}
+            }
+            
+            if self.rank in rank_bonuses:
+                bonus = rank_bonuses[self.rank]
+                self.ship.money += bonus["money"]
+                self.ship.research_points += bonus["research_points"]
+                self.display_simple_message([
+                    f"Rank-up Bonus:",
+                    f"• {self.format_money(bonus['money'])} credits",
+                    f"• {bonus['research_points']} research points"
+                ])
 
     def random_event(self):
         """Enhanced random event handler with complete implementation"""
@@ -1971,39 +1974,66 @@ class Game:
                 self.ship.research_points += bonus_points
                 self.display_simple_message(f"Colony researchers analyzed the phenomenon: +{bonus_points} RP")
 
-        def process_event_outcome(self, event_result):
-            """Process and categorize event outcomes with detailed information"""
-            details = {
-                "location": self.current_location.name,
-                "initial_damage": self.ship.damage,
-                "cargo_before": dict(self.ship.cargo),
-                "money_before": self.ship.money,
-                "timestamp": self.turn
-            }
+    def process_event_outcome(self, event_result):
+        """Process and categorize event outcomes with detailed information"""
+        details = {
+            "location": self.current_location.name,
+            "location_type": self.current_location.location_type,
+            "initial_damage": self.ship.damage,
+            "cargo_before": dict(self.ship.cargo),
+            "money_before": self.ship.money,
+            "timestamp": self.turn
+        }
+        
+        # Calculate specific event impacts
+        if event_result["type"] == "combat":
+            damage_taken = self.ship.damage - details["initial_damage"]
+            details["damage_taken"] = damage_taken
+            details["outcome"] = "victory" if damage_taken < 30 else "defeat"
+            details["reputation_change"] = 2 if damage_taken < 30 else -1
             
-            # Calculate specific event impacts
-            if event_result["type"] == "combat":
-                damage_taken = self.ship.damage - details["initial_damage"]
-                details["damage_taken"] = damage_taken
-                details["outcome"] = "victory" if damage_taken < 30 else "defeat"
-                details["reputation_change"] = 2 if damage_taken < 30 else -1
+        elif event_result["type"] == "trade":
+            money_change = self.ship.money - details["money_before"]
+            details["money_change"] = money_change
+            details["outcome"] = "success" if money_change > 0 else "loss"
+            details["reputation_change"] = 1 if money_change > 0 else -1
+            
+        elif event_result["type"] == "exploration":
+            if "artifact" in event_result["name"].lower() or "ruins" in event_result["name"].lower():
+                details["outcome"] = "discovery"
+                details["reputation_change"] = 2
+            else:
+                details["outcome"] = "completed"
+                details["reputation_change"] = 1
                 
-            elif event_result["type"] == "disaster":
-                damage_taken = self.ship.damage - details["initial_damage"]
-                details["damage_taken"] = damage_taken
-                details["outcome"] = "major_damage" if damage_taken > 40 else "survived"
-                details["reputation_change"] = 1 if damage_taken < 20 else -1
+        elif event_result["type"] == "disaster":
+            damage_taken = self.ship.damage - details["initial_damage"]
+            details["damage_taken"] = damage_taken
+            details["outcome"] = "major_damage" if damage_taken > 40 else "survived"
+            details["reputation_change"] = 1 if damage_taken < 20 else -1
+        
+        # Calculate specific losses
+        details["cargo_lost"] = {
+            item: details["cargo_before"][item] - self.ship.cargo[item]
+            for item in self.ship.cargo
+            if details["cargo_before"][item] > self.ship.cargo[item]
+        }
+        
+        # Calculate money lost and add it to combat damage details
+        money_lost = max(0, details["money_before"] - self.ship.money)
+        if event_result["type"] == "combat":
+            details["money_lost"] = money_lost
             
-            # Calculate specific losses
-            details["cargo_lost"] = {
-                item: details["cargo_before"][item] - self.ship.cargo[item]
-                for item in self.ship.cargo
-                if details["cargo_before"][item] - self.ship.cargo[item] > 0
-            }
+        # Also add money_lost to trade event details
+        elif event_result["type"] == "trade" and money_lost > 0:
+            details["money_lost"] = money_lost
+            details["outcome"] = "loss"  # Override outcome if money was lost
             
-            details["money_lost"] = max(0, details["money_before"] - self.ship.money)
-                
-            return details
+        # For other events, still track money_lost
+        else:
+            details["money_lost"] = money_lost
+        
+        return details
 
     def handle_combat_event(self, event):
         """Complete combat event handler with statistics tracking"""
@@ -2102,6 +2132,175 @@ class Game:
                     f"Event! {event} caused {damage_dealt}% damage!",
                     3, color='31'
                 )
+
+    def handle_exploration_event(self, event):
+        """Handle exploration events with full outcome processing"""
+        success_chance = 0.7  # Base 70% success chance
+        
+        # Modify success chance based on equipment
+        if "scanner" in self.ship.items:
+            success_chance += 0.1
+        if "probe" in self.ship.items:
+            success_chance += 0.1
+            
+        # Location type modifiers
+        location_modifiers = {
+            "Planet": 0,
+            "AsteroidBase": 0.05,
+            "DeepSpaceOutpost": 0.1,
+            "ResearchColony": 0.15
+        }
+        success_chance += location_modifiers.get(self.current_location.location_type, 0)
+        
+        if random.random() < success_chance:
+            # Determine discovery type and rewards
+            discovery_types = [
+                ("Valuable minerals", 
+                {"money": (1000, 3000), "research_points": (10, 30)}),
+                ("Ancient artifacts", 
+                {"money": (2000, 5000), "research_points": (20, 50)}),
+                ("Scientific data", 
+                {"money": (500, 1500), "research_points": (30, 60)}),
+                ("Advanced technology", 
+                {"money": (3000, 7000), "research_points": (25, 45)})
+            ]
+            
+            discovery, reward_ranges = random.choice(discovery_types)
+            
+            # Calculate rewards with location and rank bonuses
+            rank_multiplier = {
+                "Explorer": 1.0,
+                "Pilot": 1.2,
+                "Captain": 1.5,
+                "Commander": 1.8,
+                "Star Commander": 2.2,
+                "Space Admiral": 2.5,
+                "Stellar Hero": 3.0,
+                "Galactic Legend": 3.5
+            }.get(self.rank, 1.0)
+            
+            location_bonus = 1.0
+            if isinstance(self.current_location, ResearchColony):
+                location_bonus = 1.5
+            
+            # Apply rewards
+            money_reward = random.randint(*reward_ranges["money"])
+            money_reward = int(money_reward * rank_multiplier * location_bonus)
+            self.ship.money += money_reward
+            
+            rp_reward = random.randint(*reward_ranges["research_points"])
+            rp_reward = int(rp_reward * rank_multiplier * location_bonus)
+            self.ship.research_points += rp_reward
+            
+            # Special discovery effects
+            if discovery == "Ancient artifacts":
+                self.story_manager.plot_points += 2
+                if random.random() < 0.3:  # 30% chance
+                    self.quest_system.generate_quest("exploration", 1.5)
+                    
+            elif discovery == "Advanced technology":
+                if random.random() < 0.4:  # 40% chance
+                    tech_bonus = random.choice(["attack", "defense", "speed"])
+                    self.ship.upgrade_property(tech_bonus, 1)
+                    self.display_simple_message(f"The technology improved your ship's {tech_bonus}!")
+            
+            self.display_simple_message([
+                f"Exploration Success! Found {discovery}!",
+                f"Earned {self.format_money(money_reward)} credits",
+                f"Gained {rp_reward} research points"
+            ], color='32')
+            
+        else:
+            # Handle exploration failure
+            damage = random.randint(5, 15)
+            self.ship.damage = min(99, self.ship.damage + damage)
+            
+            self.display_simple_message([
+                "Exploration failed!",
+                f"Ship took {damage}% damage from hazardous conditions."
+            ], color='31')
+
+    def handle_trade_event(self, event):
+        """Handle trade disruption events with full market impact"""
+        event_types = {
+            "Market crash!": {
+                "price_impact": (-0.5, -0.3),  # 30-50% price reduction
+                "duration": (2, 4),  # 2-4 turns
+                "severity": "major"
+            },
+            "Trade embargo!": {
+                "price_impact": (0.3, 0.5),  # 30-50% price increase
+                "duration": (3, 5),
+                "severity": "major"
+            },
+            "Resource shortage!": {
+                "price_impact": (0.2, 0.4),
+                "duration": (2, 3),
+                "severity": "minor"
+            },
+            "Price manipulation!": {
+                "price_impact": (-0.3, 0.3),  # Can go either way
+                "duration": (1, 3),
+                "severity": "minor"
+            },
+            "Trade route disruption!": {
+                "price_impact": (0.1, 0.3),
+                "duration": (2, 4),
+                "severity": "moderate"
+            },
+            "Black market emergence!": {
+                "price_impact": (-0.4, -0.2),
+                "duration": (3, 5),
+                "severity": "moderate"
+            }
+        }
+        
+        event_data = event_types.get(event, event_types["Market crash!"])
+        
+        # Select affected commodities
+        commodities = ["tech", "agri", "salt", "fuel"]
+        num_affected = random.randint(1, len(commodities))
+        affected_commodities = random.sample(commodities, num_affected)
+        
+        # Apply market effects
+        for commodity in affected_commodities:
+            impact = random.uniform(*event_data["price_impact"])
+            current_price = self.current_location.market[commodity]
+            
+            # Calculate new price
+            new_price = current_price * (1 + impact)
+            
+            # Apply commodity-specific limits
+            if commodity == "salt":
+                new_price = max(60, min(150, new_price))
+            elif commodity == "fuel":
+                new_price = max(120, min(250, new_price))
+            else:
+                new_price = max(1, min(200, new_price))
+            
+            self.current_location.market[commodity] = new_price
+            
+            # Add temporary trade ban if price would be too low
+            if new_price < 10:
+                duration = random.randint(*event_data["duration"])
+                self.current_location.add_temporary_ban(commodity, duration)
+        
+        # Generate message based on severity
+        messages = {
+            "major": f"Major market disruption! {event}",
+            "moderate": f"Market instability detected. {event}",
+            "minor": f"Minor market fluctuation. {event}"
+        }
+        
+        self.display_simple_message([
+            messages[event_data["severity"]],
+            f"Affected commodities: {', '.join(affected_commodities)}",
+            "Check market prices for details."
+        ])
+        
+        # Possible quest generation
+        if event_data["severity"] == "major" and random.random() < 0.3:
+            self.quest_system.generate_quest("trade", 1.5)                
 
     def handle_disaster_event(self, event):
         """Complete disaster event handler"""
@@ -2668,6 +2867,45 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
+class Shop:
+    def __init__(self):
+        self.available_equipment = {}
+        self.base_equipment = {
+            "navcomp": 500,
+            "scanner": 700,
+            "probe": 900,
+            "turrets": 1200,
+            "patcher": 300
+        }
+        # Initialize with base equipment
+        self.available_equipment.update(self.base_equipment)
+
+    def add_equipment(self, equipment_name, price=None):
+        """Add new equipment to the shop"""
+        if price is None:
+            # Default price if none specified
+            price = 1000
+        self.available_equipment[equipment_name] = price
+
+    def get_available_items(self, location_type=None):
+        """Get available items, optionally filtered by location type"""
+        if location_type == "AsteroidBase":
+            return {k: v for k, v in self.available_equipment.items() 
+                   if k in ["mining_laser", "cargo_scanner", "shield_booster"]}
+        elif location_type == "DeepSpaceOutpost":
+            return {k: v for k, v in self.available_equipment.items()
+                   if k in ["advanced_radar", "combat_drone", "repair_bot"]}
+        elif location_type == "ResearchColony":
+            return {k: v for k, v in self.available_equipment.items()
+                   if k in ["research_module", "data_analyzer", "quantum_scanner"]}
+        else:
+            return dict(random.sample(list(self.available_equipment.items()), 
+                       min(2, len(self.available_equipment))))
+
+    def get_price(self, item_name):
+        """Get the price of an item"""
+        return self.available_equipment.get(item_name)        
+
 # Define the Location base class, updated
 class Location:
     def __init__(self, name, location_type, tech_level, agri_level, research_points, economy):
@@ -2688,6 +2926,7 @@ class Location:
         self.production_cooldown = {}
         # Generate market after initializing attributes
         self.market = self.generate_market()
+        self.security_level = 5  # Initialize with medium security level
 
     def calculate_mining_output(self, platform_type):
         """Calculate mining output based on efficiency and random factors"""
@@ -2834,8 +3073,9 @@ class Location:
             self.ban_duration[commodity] = duration
 
     def build_building(self, building_name):
-        """Build a building and apply its effects"""
-        if not self.can_build(building_name):
+        """Build a building and apply its effects.
+        Returns: cost_multiplier for the building"""
+        if not self.can_build(building_name.lower()):
             return 0  # Return 0 to indicate building not allowed
             
         cost_multiplier = self.buildings.count(building_name) + 1
@@ -2854,6 +3094,10 @@ class Location:
             self.market['agri'] = max(1, self.market['agri'] * 0.85)
         elif building_name == "Neuroengineering Guild":
             self.market['tech'] = self.market['tech'] * 1.3
+        elif building_name == "stockmarket":
+            self.stockmarket_base = True
+            self.market['tech'] = max(1, self.market['tech'] - 10)
+            self.market['agri'] = max(1, self.market['agri'] - 5)
         
         # Add building to location's buildings list
         self.buildings.append(building_name)
@@ -2875,8 +3119,18 @@ class Location:
         return commodity in self.get_capabilities().get("can_trade", [])
 
     def can_build(self, building_type):
-        """Check if this location can build a specific building"""
-        return building_type in self.get_capabilities().get("can_build", [])
+        """Check if this location can build a specific building with debug info"""
+        capabilities = self.get_capabilities()
+        can_build_list = capabilities.get("can_build", [])
+        
+        # Convert building type to match capability format
+        building_type = building_type.lower()
+        
+        # Remove any facility/paradise/authority suffix for comparison
+        building_base = building_type.split()[0]
+        
+        # Return whether the base building type is in capabilities
+        return building_base in can_build_list
 
     def can_mine(self, resource_type):
         """Check if this location can mine a specific resource"""
@@ -3075,6 +3329,115 @@ class QuestSystem:
                         
                         if quest.check_completion(self.game):
                             self.complete_quest(quest)
+
+    # Add these methods to the QuestSystem class
+
+    def update_cargo_quests(self, cargo_lost):
+        """Update quests that involve cargo requirements"""
+        for quest in self.active_quests:
+            if quest.quest_type == "cargo" or quest.quest_type == "trade":
+                # Check if quest requires specific cargo type that was lost
+                if "cargo_type" in quest.requirements:
+                    cargo_type = quest.requirements["cargo_type"]
+                    if cargo_type in cargo_lost:
+                        # Update progress based on remaining cargo
+                        remaining_cargo = self.game.ship.cargo[cargo_type]
+                        if "target_amount" in quest.requirements:
+                            quest.progress = remaining_cargo / quest.requirements["target_amount"]
+                        self.display_quest_progress(quest)
+
+    def update_money_quests(self, money_lost):
+        """Update quests that involve money requirements"""
+        if money_lost > 0:  # Only process if money was actually lost
+            for quest in self.active_quests:
+                # Check trade profit quests
+                if quest.quest_type == "profit" or quest.quest_type == "trade":
+                    if "target_money" in quest.requirements:
+                        current_money = self.game.ship.money
+                        target_money = quest.requirements["target_money"]
+                        quest.progress = max(0, min(1.0, current_money / target_money))
+                        self.display_quest_progress(quest)
+                        
+                # Check money protection quests
+                if quest.quest_type == "protect" and "max_money_loss" in quest.requirements:
+                    if money_lost > quest.requirements["max_money_loss"]:
+                        quest.failed = True
+                        self.game.display_simple_message(f"Quest failed: Lost too much money!")
+                        self.active_quests.remove(quest)
+                        
+                # Update trade margin quests
+                if quest.quest_type == "margin" and "min_balance" in quest.requirements:
+                    if self.game.ship.money < quest.requirements["min_balance"]:
+                        quest.progress = max(0.0, quest.progress - 0.2)  # Lose 20% progress
+                        self.display_quest_progress(quest)
+
+    def update_combat_quests(self, damage_taken):
+        """Update quests that involve combat requirements"""
+        for quest in self.active_quests:
+            if quest.quest_type == "combat":
+                # Update survival quests
+                if "max_damage" in quest.requirements:
+                    if damage_taken > quest.requirements["max_damage"]:
+                        quest.failed = True
+                        self.display_quest_progress(quest)
+                
+                # Update combat victory quests that require minimal damage
+                if "damage_threshold" in quest.requirements:
+                    if damage_taken <= quest.requirements["damage_threshold"]:
+                        quest.progress += 1
+                        self.display_quest_progress(quest)
+
+    def add_quest_type(self, quest_type):
+        """Add a new type of quest to the available pool"""
+        if not hasattr(self, 'available_quest_types'):
+            self.available_quest_types = set()
+        self.available_quest_types.add(quest_type)
+
+    def generate_station_missions(self):
+        """Generate station defense missions"""
+        quest = Quest(
+            name="Station Defense",
+            description="Defend the station from incoming threats",
+            reward_money=5000,
+            reward_rp=50,
+            quest_type="combat",
+            requirements={"victories": 3, "damage_threshold": 20}
+        )
+        self.add_quest(quest)
+
+    def generate_research_missions(self):
+        """Generate research-related missions"""
+        quest = Quest(
+            name="Scientific Discovery",
+            description="Collect research data from various phenomena",
+            reward_money=4000,
+            reward_rp=100,
+            quest_type="research",
+            requirements={"research_points": 50}
+        )
+        self.add_quest(quest)
+
+    def generate_emergency_missions(self):
+        """Generate emergency response missions"""
+        quest = Quest(
+            name="Emergency Response",
+            description="Help ships in distress while avoiding damage",
+            reward_money=6000,
+            reward_rp=75,
+            quest_type="combat",
+            requirements={"rescues": 2, "max_damage": 30}
+        )
+        self.add_quest(quest)
+
+    def check_event_requirements(self, event_result):
+        """Check if an event satisfies any quest requirements"""
+        event_type = event_result.get("type", "")
+        for quest in self.active_quests:
+            if quest.quest_type == event_type:
+                quest.progress += 1
+                self.display_quest_progress(quest)
+                if quest.check_completion(self.game):
+                    self.complete_quest(quest)
 
     def generate_quest(self, quest_type, difficulty):
         """Generate a quest based on type and difficulty"""
@@ -3365,6 +3728,23 @@ class StoryManager:
             }
             # Add more story events as needed
         }
+
+    def check_event_trigger(self, event, game):
+        """Check if an event triggers story progression"""
+        # Basic event trigger checking
+        if not hasattr(self, 'event_triggers'):
+            self.event_triggers = set()
+            
+        # Add event to triggers if not already present
+        if event not in self.event_triggers:
+            self.event_triggers.add(event)
+            
+            # Check for story progression based on event count
+            if len(self.event_triggers) >= 3:  # Example threshold
+                self.check_chapter_progress(game)
+                
+            return True
+        return False
 
     def process_event(self, trigger, details):
         """Process story triggers with full event details and consequences"""
@@ -3822,32 +4202,190 @@ class StoryManager:
             
             self.check_chapter_progress(game)
 
+# Methods to the StoryManager class - need developing
 
-
-    def unlock_location_type(self, location_type):
-        """Unlock a new type of location and add its instances to available locations"""
-        if location_type not in self.unlocked_location_types:
-            self.unlocked_location_types.add(location_type)
+    def unlock_achievement(self, achievement_name):
+        """Unlock a new achievement and provide appropriate rewards"""
+        if not hasattr(self, 'unlocked_achievements'):
+            self.unlocked_achievements = set()
             
-            # Add locations from hidden pool
-            if location_type in self.hidden_locations:
-                self.locations.extend(self.hidden_locations[location_type])
+        if achievement_name not in self.unlocked_achievements:
+            self.unlocked_achievements.add(achievement_name)
+            
+            # Define achievement rewards
+            achievement_rewards = {
+                'combat_specialist': {'money': 5000, 'rp': 50},
+                'station_defender': {'money': 7500, 'rp': 75},
+                'archaeologist': {'money': 10000, 'rp': 100},
+                'xenoarchaeologist': {'money': 15000, 'rp': 150},
+                'master_trader': {'money': 12500, 'rp': 125},
+                'market_manipulator': {'money': 20000, 'rp': 200},
+                'scientist': {'money': 10000, 'rp': 150},
+                'innovator': {'money': 15000, 'rp': 200},
+                'crisis_expert': {'money': 8000, 'rp': 80},
+                'emergency_specialist': {'money': 12000, 'rp': 120}
+            }
+            
+            # Award rewards if achievement exists
+            if achievement_name in achievement_rewards:
+                rewards = achievement_rewards[achievement_name]
+                self.game.ship.money += rewards['money']
+                self.game.ship.research_points += rewards['rp']
                 
-                # Display unlock message
-                self.display_story_message([
-                    f"New {location_type}s Discovered!",
-                    "Check your map for new locations to explore.",
-                    "",
-                    "New trading opportunities await!"
+                self.game.display_story_message([
+                    f"Achievement Unlocked: {achievement_name.replace('_', ' ').title()}!",
+                    f"Rewards:",
+                    f"• {self.game.format_money(rewards['money'])} credits",
+                    f"• {rewards['rp']} research points"
                 ])
-                
-                # Add specific location effects
-                if location_type == "AsteroidBase":
-                    self.display_simple_message("Asteroid Bases offer improved mining efficiency!")
-                elif location_type == "DeepSpaceOutpost":
-                    self.display_simple_message("Deep Space Outposts have unique equipment available!")
-                elif location_type == "ResearchColony":
-                    self.display_simple_message("Research Colonies provide bonus research points!")
+
+    def unlock_basic_combat(self):
+        """Unlock basic combat capabilities"""
+        if not hasattr(self, 'combat_unlocks'):
+            self.combat_unlocks = set()
+        
+        self.combat_unlocks.add('basic')
+        self.game.display_story_message("Basic combat training completed!")
+        self.game.ship.attack += 1
+
+    def unlock_basic_trading(self):
+        """Unlock basic trading capabilities"""
+        if not hasattr(self, 'trading_unlocks'):
+            self.trading_unlocks = set()
+        
+        self.trading_unlocks.add('basic')
+        self.game.display_story_message("Basic trading techniques mastered!")
+        # Add a small discount to all trades
+        if not hasattr(self.game, 'trade_discount'):
+            self.game.trade_discount = 0.05  # 5% discount
+
+    def unlock_basic_exploration(self):
+        """Unlock basic exploration capabilities"""
+        if not hasattr(self, 'exploration_unlocks'):
+            self.exploration_unlocks = set()
+        
+        self.exploration_unlocks.add('basic')
+        self.game.display_story_message("Basic exploration skills acquired!")
+        # Increase chance of finding valuable items
+        if not hasattr(self.game, 'exploration_bonus'):
+            self.game.exploration_bonus = 0.1  # 10% bonus
+
+    def unlock_station_missions(self):
+        """Unlock station defense missions"""
+        if not hasattr(self, 'mission_unlocks'):
+            self.mission_unlocks = set()
+        
+        self.mission_unlocks.add('station_defense')
+        self.game.display_story_message("Station defense missions now available!")
+        self.game.generate_station_missions()
+
+    def unlock_research_missions(self):
+        """Unlock research-related missions"""
+        if not hasattr(self, 'mission_unlocks'):
+            self.mission_unlocks = set()
+        
+        self.mission_unlocks.add('research')
+        self.game.display_story_message("Research missions now available!")
+        self.game.generate_research_missions()
+
+    def unlock_emergency_missions(self):
+        """Unlock emergency response missions"""
+        if not hasattr(self, 'mission_unlocks'):
+            self.mission_unlocks = set()
+        
+        self.mission_unlocks.add('emergency')
+        self.game.display_story_message("Emergency response missions now available!")
+        self.game.generate_emergency_missions()
+
+    def unlock_alien_technology(self):
+        """Unlock alien technology research"""
+        if not hasattr(self, 'tech_unlocks'):
+            self.tech_unlocks = set()
+        
+        self.tech_unlocks.add('alien')
+        self.game.display_story_message("Alien technology research now available!")
+        self.game.ship.research_points += 100
+
+    def unlock_market_manipulation(self):
+        """Unlock market manipulation capabilities"""
+        if not hasattr(self, 'market_unlocks'):
+            self.market_unlocks = set()
+        
+        self.market_unlocks.add('manipulation')
+        self.game.display_story_message("Market manipulation capabilities unlocked!")
+        self.game.enable_market_manipulation()
+
+    def unlock_advanced_research(self):
+        """Unlock advanced research capabilities"""
+        if not hasattr(self, 'research_unlocks'):
+            self.research_unlocks = set()
+        
+        self.research_unlocks.add('advanced')
+        self.game.display_story_message("Advanced research capabilities unlocked!")
+        self.game.research.unlock_advanced_options()
+
+    def unlock_trade_empire(self):
+        """Unlock trade empire capabilities"""
+        if not hasattr(self, 'empire_unlocks'):
+            self.empire_unlocks = set()
+        
+        self.empire_unlocks.add('trade')
+        self.game.display_story_message("Trade empire capabilities unlocked!")
+        self.game.enable_trade_empire_features()
+
+    def unlock_ancient_secrets(self):
+        """Unlock ancient secrets research"""
+        if not hasattr(self, 'secrets_unlocks'):
+            self.secrets_unlocks = set()
+        
+        self.secrets_unlocks.add('ancient')
+        self.game.display_story_message("Ancient secrets research unlocked!")
+        self.game.enable_ancient_research()
+
+    def unlock_crisis_mastery(self):
+        """Unlock crisis management mastery"""
+        if not hasattr(self, 'crisis_unlocks'):
+            self.crisis_unlocks = set()
+        
+        self.crisis_unlocks.add('mastery')
+        self.game.display_story_message("Crisis management mastery unlocked!")
+        self.game.enable_crisis_mastery()
+
+    def trigger_tutorial_completion(self):
+        """Handle tutorial chapter completion events"""
+        self.game.display_story_message([
+            "Tutorial Complete!",
+            "You've mastered the basics of space trading.",
+            "New challenges await in the next chapter..."
+        ])
+        self.unlock_achievement('novice_trader')
+
+    def trigger_rising_threats(self):
+        """Handle rising threats chapter events"""
+        self.game.display_story_message([
+            "Warning: Increased Pirate Activity Detected!",
+            "Reports of organized raids are coming in...",
+            "Stay alert during your travels."
+        ])
+        self.game.increase_threat_level()
+
+    def trigger_galactic_crisis(self):
+        """Handle galactic crisis chapter events"""
+        self.game.display_story_message([
+            "Emergency Alert: Galactic Crisis!",
+            "Strange phenomena are appearing across the galaxy...",
+            "Your help is needed more than ever."
+        ])
+        self.game.activate_crisis_events()
+
+    def trigger_final_challenges(self):
+        """Handle final chapter challenges"""
+        self.game.display_story_message([
+            "The Final Chapter Begins!",
+            "Ancient powers are stirring...",
+            "The fate of the galaxy hangs in the balance."
+        ])
+        self.game.activate_endgame_events()
 
     def unlock_chapter_locations(self, chapter):
         """Unlock chapter-specific locations"""
