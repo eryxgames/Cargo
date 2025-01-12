@@ -2828,7 +2828,7 @@ class Game:
             max_cols = max(len(row) for row in story_content)
             story_content = [row + [""] * (max_cols - len(row)) for row in story_content]
             print(self.create_box(story_content, 'double'))
-            time.sleep(3)
+            input("Press Enter to continue...")
 
         elif action in ['buy map', 'bm']:
             if self.ship.money >= 200:
@@ -2872,7 +2872,7 @@ class Game:
                     max_cols = max(len(row) for row in map_content)
                     map_content = [row + [""] * (max_cols - len(row)) for row in map_content]
                     print(self.create_box(map_content, 'double'))
-                    time.sleep(2)
+                    input("Press Enter to continue...")
                 else:
                     self.ship.money += 200  # Refund if no new locations
                     self.display_simple_message("No new locations to discover!")
@@ -2940,7 +2940,7 @@ class Game:
                     max_cols = max(len(row) for row in market_content)
                     market_content = [row + [""] * (max_cols - len(row)) for row in market_content]
                     print(self.create_box(market_content, 'double'))
-                    time.sleep(3)
+                    input("Press Enter to continue...")
                 else:
                     self.ship.money += 350  # Refund if no data to show
                     self.display_simple_message("No new information available!")
