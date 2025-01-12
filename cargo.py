@@ -24,6 +24,13 @@ def display_logo(logo, centered=True):
         else:
             print(line)  # Just print without centering
 
+def print_centered_text(text):
+    try:
+        terminal_width = os.get_terminal_size().columns
+    except OSError:
+        terminal_width = 80  # Default if not in a terminal
+    print(text.center(terminal_width))
+
 # Define the Planet class
 class Planet:
     def __init__(self, name, tech_level, agri_level, research_points, economy):
@@ -1436,7 +1443,7 @@ class Game:
                 'buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
                 'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 
                 'shop', 'sh', 'action', 'a', 'mine', 'm', 'end', 'e',
-                'quit', 'q', 'resign', 'rs'
+                'quit', 'q', 'resign', 'rs', 'version', 'v'
             ]
 
             action = self.validate_input("Choose action: ", valid_actions)
@@ -1605,6 +1612,12 @@ class Game:
 
             elif action in ['mine', 'm']:
                 self.handle_mining()
+
+            elif action in ['version', 'v']:
+                display_logo(logo_data, centered=True)
+                print_centered_text("Version 1.0")
+                time.sleep(3)
+                return    
 
             # Handle quit and resign commands
             elif action in ['quit', 'q']:
