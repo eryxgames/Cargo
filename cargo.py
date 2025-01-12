@@ -36,7 +36,7 @@ class Planet:
         self.stockmarket_base = False
         self.stockmarket_cost = 5000
         self.buildings = []
-        self.mining_efficiency = random.randint(60, 100)  # New: affects mining output
+        self.exogeology = random.randint(60, 100)  # New: affects mining output
         self.market['salt'] = 0
         self.market['fuel'] = 0
         self.production_cooldown = {}  # New: tracks cooldown for resource production
@@ -48,7 +48,7 @@ class Planet:
     def calculate_mining_output(self, platform_type):
         """Calculate mining output based on efficiency and random factors"""
         base_output = random.randint(10, 20)
-        efficiency_bonus = self.mining_efficiency / 100
+        efficiency_bonus = self.exogeology / 100
         return int(base_output * efficiency_bonus)
 
     def produce_resources(self):
@@ -71,7 +71,7 @@ class Planet:
             if self.mineral_deposits[deposit_type] > 0:
                 self.mining_platforms.append({
                     'type': deposit_type,
-                    'efficiency': self.mining_efficiency,
+                    'efficiency': self.exogeology,
                     'capacity': random.randint(100, 200)
                 })
                 self.mineral_deposits[deposit_type] -= 1
@@ -241,20 +241,20 @@ class Research:
     def __init__(self):
         self.unlocked_options = set()
         self.research_costs = {
-            'advanced_trading': 100,
-            'improved_scanning': 150,
-            'geological_survey': 200,
-            'political_influence': 250,
-            'mining_efficiency': 300,  # New research option
-            'market_manipulation': 350  # New research option
+            'xenoeconomy': 100,
+            'telemetry': 150,
+            'geophysics': 200,
+            'chronopolitics': 250,
+            'exogeology': 300,  # New research option
+            'psychodynamics': 350  # New research option
         }
         self.research_benefits = {
-            'advanced_trading': {'tax_reduction': 0.02},
-            'improved_scanning': {'scout_success': 0.2},
-            'geological_survey': {'mining_efficiency': 0.15},
-            'political_influence': {'revolution_success': 0.2},
-            'mining_efficiency': {'output_bonus': 0.25},
-            'market_manipulation': {'price_control': 0.1}
+            'xenoeconomy': {'tax_reduction': 0.02},
+            'telemetry': {'scout_success': 0.2},
+            'geophysics': {'exogeology': 0.15},
+            'chronopolitics': {'revolution_success': 0.2},
+            'exogeology': {'output_bonus': 0.25},
+            'psychodynamics': {'price_control': 0.1}
         }
     
     def can_unlock(self, option, research_points):
@@ -271,7 +271,7 @@ class Action:
             'scout': 50,
             'geoscan': 75,
             'revolution': 100,
-            'market_manipulation': 60
+            'psychodynamics': 60
         }
         
         # Success chances for various actions
@@ -279,7 +279,7 @@ class Action:
             'scout': 0.65,
             'geoscan': 0.70,
             'revolution': 0.50,
-            'market_manipulation': 0.60
+            'psychodynamics': 0.60
         }
 
     def research(self, planet, option, research_system):
@@ -291,9 +291,9 @@ class Action:
             return False, "This research has already been completed."
             
         # Apply immediate benefits based on research type
-        if option == 'mining_efficiency':
-            planet.mining_efficiency = min(100, 
-                int(planet.mining_efficiency * (1 + research_system.research_benefits['mining_efficiency']['output_bonus'])))
+        if option == 'exogeology':
+            planet.exogeology = min(100, 
+                int(planet.exogeology * (1 + research_system.research_benefits['exogeology']['output_bonus'])))
         
         return True, f"Successfully researched {option}!"
 
@@ -304,8 +304,8 @@ class Action:
         """
         # Calculate success chance
         success_chance = self.base_success_rates['scout']
-        if 'improved_scanning' in research_system.unlocked_options:
-            success_chance += research_system.research_benefits['improved_scanning']['scout_success']
+        if 'telemetry' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['telemetry']['scout_success']
             
         if random.random() < success_chance:
             discovery_type = random.choice(['tech', 'agri', 'item'])
@@ -326,8 +326,8 @@ class Action:
         """
         # Calculate success chance
         success_chance = self.base_success_rates['geoscan']
-        if 'geological_survey' in research_system.unlocked_options:
-            success_chance += research_system.research_benefits['geological_survey']['mining_efficiency']
+        if 'geophysics' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['geophysics']['exogeology']
             
         if random.random() < success_chance:
             deposit_type = random.choice(['salt', 'fuel'])
@@ -350,8 +350,8 @@ class Action:
         """
         # Calculate success chance
         success_chance = self.base_success_rates['revolution']
-        if 'political_influence' in research_system.unlocked_options:
-            success_chance += research_system.research_benefits['political_influence']['revolution_success']
+        if 'chronopolitics' in research_system.unlocked_options:
+            success_chance += research_system.research_benefits['chronopolitics']['revolution_success']
             
         if random.random() < success_chance:
             current_economy = planet.economy
@@ -368,8 +368,8 @@ class Action:
         Attempt to manipulate market prices
         Returns: (bool success, float price_change, str message)
         """
-        if random.random() < self.base_success_rates['market_manipulation']:
-            manipulation_power = research_system.research_benefits['market_manipulation']['price_control']
+        if random.random() < self.base_success_rates['psychodynamics']:
+            manipulation_power = research_system.research_benefits['psychodynamics']['price_control']
             current_price = planet.market[commodity]
             
             # Determine direction of manipulation (increase/decrease)
@@ -1079,7 +1079,7 @@ class Game:
     def calculate_quest_reward(self, base_reward):
         """Calculate quest reward based on rank and research"""
         multiplier = self.rank_multiplier()
-        if 'advanced_trading' in self.research.unlocked_options:
+        if 'xenoeconomy' in self.research.unlocked_options:
             multiplier *= 1.2  # 20% bonus from research
         return int(base_reward * multiplier)
 
@@ -1101,7 +1101,7 @@ class Game:
             planet.produce_resources()
             
             # Apply market manipulation if researched
-            if 'market_manipulation' in self.research.unlocked_options:
+            if 'psychodynamics' in self.research.unlocked_options:
                 for commodity in ['tech', 'agri', 'salt', 'fuel']:
                     if random.random() < 0.2:  # 20% chance for each commodity
                         self.action.manipulate_market(planet, commodity, self.research)
@@ -1115,7 +1115,7 @@ class Game:
             [f"¤: {self.format_money(self.ship.money)}", f"DEF: {self.ship.defense}", f"Tech LVL: {self.current_location.tech_level}"],
             [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_location.agri_level}"],
             [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_location.economy}"],
-            [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.mining_efficiency}%"],
+            [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.exogeology}%"],
             [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"]
         ]
         
@@ -1213,7 +1213,7 @@ class Game:
             [f"Agri Level: {self.current_location.agri_level}"],
             [f"Research Points: {self.current_location.research_points}"],
             [f"Economy: {self.current_location.economy}"],
-            [f"Mining Efficiency: {self.current_location.mining_efficiency}%"],
+            [f"Mining Efficiency: {self.current_location.exogeology}%"],
             ["Current Market:"],
             [f"  Tech: {self.format_money(self.current_location.market['tech'])}"],
             [f"  Agri: {self.format_money(self.current_location.market['agri'])}"],
@@ -1289,7 +1289,7 @@ class Game:
             self.ship.money -= cost
             self.current_location.mining_platforms.append({
                 'type': deposit_type,
-                'efficiency': self.current_location.mining_efficiency,
+                'efficiency': self.current_location.exogeology,
                 'capacity': random.randint(100, 200)
             })
             self.display_simple_message(f"Mining platform for {deposit_type} built!")
@@ -1801,7 +1801,7 @@ class Game:
             'scout': f"Scout area (Cost: {self.action.action_costs['scout']} RP)",
             'geoscan': f"Geological scan (Cost: {self.action.action_costs['geoscan']} RP)",
             'revolution': f"Incite revolution (Cost: {self.action.action_costs['revolution']} RP)",
-            'manipulate': f"Manipulate market (Cost: {self.action.action_costs['market_manipulation']} RP)",
+            'manipulate': f"Manipulate market (Cost: {self.action.action_costs['psychodynamics']} RP)",
             'status': "View research status",
             'back': "Return to main menu"
         }
@@ -1837,12 +1837,12 @@ class Game:
             # Display research options and their costs
             research_content = [["Research Option", "Cost", "Description"]]
             research_descriptions = {
-                'advanced_trading': "Reduces trade taxes",
-                'improved_scanning': "Increases scout success rate",
-                'geological_survey': "Improves mining efficiency",
-                'political_influence': "Increases revolution success rate",
-                'mining_efficiency': "Increases mining output",
-                'market_manipulation': "Allows market price manipulation"
+                'xenoeconomy': "Reduces trade taxes",
+                'telemetry': "Increases scout success rate",
+                'geophysics': "Improves mining efficiency",
+                'chronopolitics': "Increases revolution success rate",
+                'exogeology': "Increases mining output",
+                'psychodynamics': "Allows market price manipulation"
             }
             
             for opt in options:
@@ -1901,11 +1901,11 @@ class Game:
                 self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['revolution']}")
                 
         elif action == 'manipulate':
-            if 'market_manipulation' not in self.research.unlocked_options:
+            if 'psychodynamics' not in self.research.unlocked_options:
                 self.display_simple_message("Market manipulation research required!")
                 return
                 
-            if self.ship.research_points >= self.action.action_costs['market_manipulation']:
+            if self.ship.research_points >= self.action.action_costs['psychodynamics']:
                 # Show current market prices
                 market_content = [["Commodity", "Current Price"]]
                 for commodity in ['tech', 'agri', 'salt', 'fuel']:
@@ -1920,13 +1920,13 @@ class Game:
                 )
                 
                 if commodity:
-                    self.ship.research_points -= self.action.action_costs['market_manipulation']
+                    self.ship.research_points -= self.action.action_costs['psychodynamics']
                     success, price_change, message = self.action.manipulate_market(
                         self.current_location, commodity, self.research
                     )
                     self.display_simple_message(message)
             else:
-                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['market_manipulation']}")
+                self.display_simple_message(f"Not enough research points! Need: {self.action.action_costs['psychodynamics']}")
                     
         # Update production cooldowns after any action
         for resource_type in list(self.current_location.production_cooldown.keys()):
@@ -1946,16 +1946,17 @@ class Game:
             status_content.append(["No research completed", ""])
             
         print(self.create_box(status_content, 'double'))
+        time.sleep(3)
         
     def get_research_benefit_description(self, research):
         """Get description of research benefit"""
         benefits = {
-            'advanced_trading': "Trading tax reduced by 2%",
-            'improved_scanning': "Scout success +20%",
-            'geological_survey': "Mining efficiency +15%",
-            'political_influence': "Revolution success +20%",
-            'mining_efficiency': "Mining output +25%",
-            'market_manipulation': "Price control ±10%"
+            'xenoeconomy': "Trading tax reduced by 2%",
+            'telemetry': "Scout success +20%",
+            'geophysics': "Mining efficiency +15%",
+            'chronopolitics': "Revolution success +20%",
+            'exogeology': "Mining output +25%",
+            'psychodynamics': "Price control ±10%"
         }
         return benefits.get(research, "Unknown benefit")
 
@@ -3058,7 +3059,7 @@ class Game:
         elif choice == 'status':
             self.display_mining_status()
         elif choice == 'research':
-            if self.action.research(self.current_location, 'mining_efficiency', self.research):
+            if self.action.research(self.current_location, 'exogeology', self.research):
                 self.display_simple_message("Mining efficiency research completed!")
             else:
                 self.display_simple_message("Not enough research points!")
@@ -3067,7 +3068,7 @@ class Game:
         """Display mining operations status"""
         content = [
             ["Mining Status"],
-            [f"Planet Efficiency: {self.current_location.mining_efficiency}%"],
+            [f"Planet Efficiency: {self.current_location.exogeology}%"],
             ["Active Platforms:"]
         ]
         
@@ -3278,13 +3279,13 @@ class Game:
         
         # Add some special bonuses for late-game locations
         for location in new_locations:
-            location.mining_efficiency += 20  # Better mining in new locations
+            location.exogeology += 20  # Better mining in new locations
             location.research_points *= 2     # Double research points
             location.tech_level += 2         # Higher tech levels
             
             # Special location-type bonuses
             if isinstance(location, AsteroidBase):
-                location.mining_efficiency += 10  # Extra mining bonus
+                location.exogeology += 10  # Extra mining bonus
             elif isinstance(location, DeepSpaceOutpost):
                 location.market['tech'] = max(1, location.market['tech'] * 0.8)  # Better tech prices
                 
@@ -3535,7 +3536,7 @@ class Location:
         self.stockmarket_base = False
         self.stockmarket_cost = 5000
         self.buildings = []
-        self.mining_efficiency = self.get_base_mining_efficiency()
+        self.exogeology = self.get_base_exogeology()
         self.banned_commodities = []
         self.ban_duration = {}
         self.mineral_deposits = {}
@@ -3548,7 +3549,7 @@ class Location:
     def calculate_mining_output(self, platform_type):
         """Calculate mining output based on efficiency and random factors"""
         base_output = random.randint(10, 20)
-        efficiency_bonus = self.mining_efficiency / 100
+        efficiency_bonus = self.exogeology / 100
         return int(base_output * efficiency_bonus)
 
     def produce_resources(self):
@@ -3571,7 +3572,7 @@ class Location:
             if self.mineral_deposits[deposit_type] > 0:
                 self.mining_platforms.append({
                     'type': deposit_type,
-                    'efficiency': self.mining_efficiency,
+                    'efficiency': self.exogeology,
                     'capacity': random.randint(100, 200)
                 })
                 self.mineral_deposits[deposit_type] -= 1
@@ -3751,7 +3752,7 @@ class Location:
         
         # Apply building effects
         if building_name == "Mining Facility":
-            self.mining_efficiency = min(100, self.mining_efficiency + 10)
+            self.exogeology = min(100, self.exogeology + 10)
         elif building_name == "Permaculture Paradise":
             self.market['agri'] = max(1, self.market['agri'] * 0.8)
         elif building_name == "Organic Certification Authority":
@@ -3805,9 +3806,9 @@ class Location:
         """Check if this location can mine a specific resource"""
         return resource_type in self.get_capabilities().get("can_mine", [])
 
-    def get_base_mining_efficiency(self):
+    def get_base_exogeology(self):
         """Get base mining efficiency for this location type"""
-        return self.get_capabilities().get("base_mining_efficiency", 0)
+        return self.get_capabilities().get("base_exogeology", 0)
 
     def get_research_multiplier(self):
         """Get research point multiplier for this location type"""
@@ -3820,7 +3821,7 @@ class Planet(Location):
 class AsteroidBase(Location):
     def __init__(self, name, tech_level, agri_level, research_points, economy):
         super().__init__(name, "Asteroid Base", tech_level, agri_level, research_points, economy)
-        self.mining_efficiency += 20  # Asteroid bases have better mining
+        self.exogeology += 20  # Asteroid bases have better mining
         self.quest_requirements = ["complete_basic_mining"]
 
     def generate_market(self):
@@ -4616,7 +4617,7 @@ class StoryManager:
             },
             2: {  # Mid game
                 "alien_ruins": self.unlock_alien_technology,
-                "market_dominance": self.unlock_market_manipulation,
+                "market_dominance": self.unlock_psychodynamics,
                 "innovation": self.unlock_advanced_research
             },
             3: {  # Late game
@@ -4975,14 +4976,14 @@ class StoryManager:
         self.game.display_story_message("Alien technology research now available!")
         self.game.ship.research_points += 100
 
-    def unlock_market_manipulation(self):
+    def unlock_psychodynamics(self):
         """Unlock market manipulation capabilities"""
         if not hasattr(self, 'market_unlocks'):
             self.market_unlocks = set()
         
         self.market_unlocks.add('manipulation')
         self.game.display_story_message("Market manipulation capabilities unlocked!")
-        self.game.enable_market_manipulation()
+        self.game.enable_psychodynamics()
 
     def unlock_advanced_research(self):
         """Unlock advanced research capabilities"""
@@ -5400,7 +5401,7 @@ class LocationCapabilities:
             "can_mine": ["salt", "fuel"],
             "has_cantina": True,
             "has_shop": True,
-            "base_mining_efficiency": 100,
+            "base_exogeology": 100,
             "research_multiplier": 1.0
         },
         "AsteroidBase": {
@@ -5410,7 +5411,7 @@ class LocationCapabilities:
             "can_mine": ["salt", "fuel"],
             "has_cantina": True,
             "has_shop": True,
-            "base_mining_efficiency": 150,  # Better at mining
+            "base_exogeology": 150,  # Better at mining
             "research_multiplier": 0.8
         },
         "DeepSpaceOutpost": {
@@ -5420,7 +5421,7 @@ class LocationCapabilities:
             "can_mine": [],
             "has_cantina": True,
             "has_shop": True,
-            "base_mining_efficiency": 0,
+            "base_exogeology": 0,
             "research_multiplier": 1.2
         },
         "ResearchColony": {
@@ -5430,7 +5431,7 @@ class LocationCapabilities:
             "can_mine": [],
             "has_cantina": False,
             "has_shop": True,
-            "base_mining_efficiency": 0,
+            "base_exogeology": 0,
             "research_multiplier": 2.0
         }
     }
