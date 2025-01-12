@@ -2473,52 +2473,206 @@ class Game:
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
     def visit_cantina(self):
-            self.display_simple_message("Welcome to the Cantina!", 1)
+        self.display_simple_message("Welcome to the Cantina!", 1)
 
-            # Add story-specific dialogue based on current chapter
-            if self.story_manager.current_chapter > 0:
-                chapter = self.story_manager.chapters[self.story_manager.current_chapter]
-                self.display_character_message("Cantina Owner",
-                    f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
+        # Add story-specific dialogue based on current chapter
+        if self.story_manager.current_chapter > 0:
+            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            self.display_character_message("Cantina Owner",
+                f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
 
-            action = self.validate_input(
-                "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q): ",
-                ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q']
-            )
+        action = self.validate_input(
+            "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q, story/s): ",
+            ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q', 'story', 's']
+        )
 
-            if action is None:
-                return
+        if action is None:
+            return
 
-            if action in ['buy map', 'bm']:
-                if self.ship.money >= 200:
-                    self.ship.money -= 200
-                    self.display_simple_message("You bought a map! Here are some new planet names and levels:", 1)
-                    for planet in self.locations:
-                        if planet.name not in self.known_locations:
-                            print(f"{planet.name} (Tech: {planet.tech_level}, Agri: {planet.agri_level})")
+        if action in ['story', 's']:
+            story_content = [["Story Progress & Achievements"]]
+            story_content.append([""])
+            
+            # Current chapter info
+            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            story_content.append([f"Current Chapter: {self.story_manager.current_chapter} - {chapter['title']}"])
+            story_content.append([f"Plot Points: {self.story_manager.plot_points}"])
+            
+            # Completed story beats
+            if self.story_manager.completed_story_beats:
+                story_content.append([""])
+                story_content.append(["Completed Story Elements"])
+                for beat in self.story_manager.completed_story_beats:
+                    story_content.append([f"• {beat.replace('_', ' ').title()}"])
+            
+            # Achievements
+            if hasattr(self.story_manager, 'unlocked_achievements') and self.story_manager.unlocked_achievements:
+                story_content.append([""])
+                story_content.append(["Achievements Unlocked"])
+                for achievement in self.story_manager.unlocked_achievements:
+                    story_content.append([f"• {achievement.replace('_', ' ').title()}"])
+            
+            # Location discoveries
+            if hasattr(self.story_manager, 'discovered_locations_by_type'):
+                story_content.append([""])
+                story_content.append(["Location Discoveries"])
+                for loc_type, count in self.story_manager.discovered_locations_by_type.items():
+                    story_content.append([f"• {loc_type}: {count} discovered"])
+            
+            # Ensure all rows have same number of columns
+            max_cols = max(len(row) for row in story_content)
+            story_content = [row + [""] * (max_cols - len(row)) for row in story_content]
+            print(self.create_box(story_content, 'double'))
+            time.sleep(3)
+
+        elif action in ['buy map', 'bm']:
+            if self.ship.money >= 200:
+                self.ship.money -= 200
+                new_locations = []
+                for location in self.locations:
+                    if location.name not in self.known_locations and location.location_type in self.unlocked_location_types:
+                        new_locations.append(location)
+                        self.known_locations.append(location.name)
+                
+                if new_locations:
+                    map_content = []
+                    # Header
+                    map_content.append(["New Locations Discovered!"])
+                    map_content.append([""])
+                    map_content.append(["Location", "Type", "Tech", "Agri", "Economy"])
+                    
+                    # Location data
+                    for location in new_locations:
+                        features = []
+                        if location.mining_platforms:
+                            features.append("Mining")
+                        if location.buildings:
+                            features.append("Buildings")
+                        if location.stockmarket_base:
+                            features.append("Stock Market")
+                        
+                        map_content.append([
+                            location.name,
+                            location.location_type,
+                            str(location.tech_level),
+                            str(location.agri_level),
+                            location.economy
+                        ])
+                        
+                        # Add features as separate rows with proper indentation
+                        if features:
+                            map_content.append(["└─ Features: " + ", ".join(features), "", "", "", ""])
+                    
+                    # Ensure all rows have same number of columns
+                    max_cols = max(len(row) for row in map_content)
+                    map_content = [row + [""] * (max_cols - len(row)) for row in map_content]
+                    print(self.create_box(map_content, 'double'))
+                    time.sleep(2)
                 else:
-                    self.display_simple_message("Not enough money to buy a map.")
-            elif action in ['update map', 'um']:
-                if self.ship.money >= 350:
-                    self.ship.money -= 350
-                    self.display_simple_message("You updated the map! Here are the commodities wanted:", 1)
-                    for planet in self.locations:
-                        print(f"{planet.name}: Tech - {self.format_money(planet.market['tech'])}, Agri - {self.format_money(planet.market['agri'])}")
+                    self.ship.money += 200  # Refund if no new locations
+                    self.display_simple_message("No new locations to discover!")
+            else:
+                self.display_simple_message("Not enough money to buy a map.")
+
+        elif action in ['update map', 'um']:
+            if self.ship.money >= 350:
+                self.ship.money -= 350
+                
+                market_content = []
+                # Header
+                market_content.append(["Location Information Update"])
+                market_content.append([""])
+                market_content.append(["Location", "Tech", "Agri", "Salt", "Fuel"])
+                
+                # Show detailed info for known locations
+                has_data = False
+                for location_name in self.known_locations:
+                    location = next((loc for loc in self.locations if loc.name == location_name), None)
+                    if location:
+                        has_data = True
+                        # Get market prices with potential trade bans
+                        tech_price = "BANNED" if 'tech' in location.banned_commodities else self.format_money(location.market['tech'])
+                        agri_price = "BANNED" if 'agri' in location.banned_commodities else self.format_money(location.market['agri'])
+                        salt_price = "BANNED" if 'salt' in location.banned_commodities else self.format_money(location.market['salt'])
+                        fuel_price = "BANNED" if 'fuel' in location.banned_commodities else self.format_money(location.market['fuel'])
+                        
+                        market_content.append([
+                            location.name,
+                            tech_price,
+                            agri_price,
+                            salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mining",
+                            fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mining"
+                        ])
+                        
+                        # Add special features as separate rows
+                        features = []
+                        if location.stockmarket_base:
+                            features.append("Stock Market")
+                        if location.buildings:
+                            features.append(f"Buildings: {', '.join(location.buildings)}")
+                        if location.mining_platforms:
+                            features.append(f"Mining Platforms: {len(location.mining_platforms)}")
+                            
+                        if features:
+                            for feature in features:
+                                market_content.append(["└─ " + feature, "", "", "", ""])
+                
+                # Show newly unlocked location types
+                potential_locations = [loc for loc in self.locations 
+                                    if loc.location_type in self.unlocked_location_types]
+                if len(potential_locations) > len(self.known_locations):
+                    market_content.append([""])
+                    market_content.append(["New Areas for Exploration"])
+                    for loc_type in self.unlocked_location_types:
+                        count = sum(1 for loc in potential_locations 
+                                if loc.location_type == loc_type and loc.name not in self.known_locations)
+                        if count > 0:
+                            market_content.append([f"• {count} undiscovered {loc_type}s", "", "", "", ""])
+                    has_data = True
+                
+                if has_data:
+                    # Ensure all rows have same number of columns
+                    max_cols = max(len(row) for row in market_content)
+                    market_content = [row + [""] * (max_cols - len(row)) for row in market_content]
+                    print(self.create_box(market_content, 'double'))
+                    time.sleep(3)
                 else:
-                    self.display_simple_message("Not enough money to update the map.")
-            elif action in ['listen to gossip', 'lg']:
-                if self.ship.money >= 150:
-                    self.ship.money -= 150
-                    self.display_simple_message("You listened to gossip! Here are some tips:", 1)
-                    for planet in self.locations:
-                        if planet.market['tech'] < 50:
-                            print(f"Cheap tech goods available on {planet.name}.")
-                        if planet.market['agri'] < 30:
-                            print(f"Cheap agri goods available on {planet.name}.")
-                        if planet.market['tech'] > 100:
-                            print(f"High price on tech goods on {planet.name}.")
-                        if planet.market['agri'] > 80:
-                            print(f"High price on agri goods on {planet.name}.")
+                    self.ship.money += 350  # Refund if no data to show
+                    self.display_simple_message("No new information available!")
+            else:
+                self.display_simple_message("Not enough money to update the map.")
+
+        elif action in ['listen to gossip', 'lg']:
+            if self.ship.money >= 150:
+                self.ship.money -= 150
+                gossip_content = [["Latest Market Gossip"]]
+                gossip_content.append([""])
+                
+                found_gossip = False
+                for location in self.locations:
+                    if location.name in self.known_locations:
+                        location_gossip = []
+                        if location.market['tech'] < 50:
+                            location_gossip.append(f"Cheap tech goods available")
+                        if location.market['agri'] < 30:
+                            location_gossip.append(f"Cheap agri goods available")
+                        if location.market['tech'] > 100:
+                            location_gossip.append(f"High tech prices")
+                        if location.market['agri'] > 80:
+                            location_gossip.append(f"High agri prices")
+                            
+                        if location_gossip:
+                            found_gossip = True
+                            gossip_content.append([location.name])
+                            for gossip in location_gossip:
+                                gossip_content.append([f"└─ {gossip}"])
+                
+                if found_gossip:
+                    # Ensure all rows have same number of columns
+                    max_cols = max(len(row) for row in gossip_content)
+                    gossip_content = [row + [""] * (max_cols - len(row)) for row in gossip_content]
+                    print(self.create_box(gossip_content, 'double'))
+                    
                     if random.random() < 0.3:  # 30% chance to get a quest
                         quest = Quest(
                             name=random.choice([
@@ -2535,21 +2689,36 @@ class Game:
                         )
                         self.quest_system.add_quest(quest)
                 else:
-                    self.display_simple_message("Not enough money to listen to gossip.")
-            elif action in ['quests', 'q']:
-                active_quests = [q for q in self.quest_system.active_quests if isinstance(q, Quest)]
-                if active_quests:
-                    self.display_simple_message("Active Quests:")
-                    for quest in active_quests:
-                        print(f"- {quest.name}: {quest.description}")
-                else:
-                    self.display_simple_message("No active quests.")
-                    
-            # Randomly introduce a demo character after reaching a new rank
-            if random.random() < 0.1:  # 10% chance
-                self.display_character_message("Mysterious Stranger", "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend.")
+                    self.display_simple_message("No interesting gossip today!")
+            else:
+                self.display_simple_message("Not enough money to listen to gossip.")
+                
+        elif action in ['quests', 'q']:
+            active_quests = [q for q in self.quest_system.active_quests if isinstance(q, Quest)]
+            if active_quests:
+                quest_content = [["Active Quests"]]
+                quest_content.append([""])
+                for quest in active_quests:
+                    quest_content.append([quest.name])
+                    quest_content.append([f"└─ {quest.description}"])
+                    quest_content.append([f"└─ Rewards: {self.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"])
+                    quest_content.append([""])
+                
+                # Ensure all rows have same number of columns
+                max_cols = max(len(row) for row in quest_content)
+                quest_content = [row + [""] * (max_cols - len(row)) for row in quest_content]
+                print(self.create_box(quest_content, 'double'))
+            else:
+                self.display_simple_message("No active quests.")
+        
+        # Randomly introduce a demo character after reaching a new rank
+        if random.random() < 0.1:  # 10% chance
+            self.display_character_message(
+                "Mysterious Stranger", 
+                "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend."
+            )
 
-            time.sleep(3)  # Pause to let the player read the information
+        time.sleep(3)  # Pause to let the player read the information
 
     def visit_shop(self):
         self.display_simple_message("Welcome to the Shop!", 1)
