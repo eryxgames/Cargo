@@ -600,6 +600,94 @@ class Game:
         return initial_locations
 
     def create_box(self, content, style='single'):
+        """Create a box that expands to terminal width consistently with validate_input width."""
+        # Get terminal width, subtracting exactly the same as word_wrap
+        term_width = shutil.get_terminal_size().columns - 4  # Match word_wrap padding exactly
+        
+        # Define box characters
+        chars = {
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│', 'sep': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║', 'sep': '║'},
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│', 'sep': '│'}
+        }[style]
+
+        # Calculate number of columns
+        num_cols = max(len(row) for row in content)
+        max_lengths = [0] * num_cols
+        
+        # Get maximum content length for each column
+        for row in content:
+            for i, cell in enumerate(row):
+                if i < num_cols:
+                    max_lengths[i] = max(max_lengths[i], len(str(cell)))
+
+        # Calculate spacing requirements
+        separator_space = 3  # Space for " │ " between columns
+        total_separator_width = separator_space * (num_cols - 1)
+        
+        # Calculate available space for content
+        available_content_width = term_width - total_separator_width
+
+        # Calculate proportional column widths
+        total_content_length = sum(max_lengths)
+        col_widths = []
+        remaining_width = available_content_width
+        
+        for i in range(num_cols):
+            if i == num_cols - 1:
+                # Last column gets remaining width
+                width = remaining_width
+            else:
+                # Calculate proportional width based on content length
+                proportion = max_lengths[i] / total_content_length
+                width = max(3, min(
+                    int(available_content_width * proportion),
+                    max_lengths[i] + 2
+                ))
+                remaining_width -= width
+            col_widths.append(width)
+
+        # Ensure minimum widths
+        for i in range(num_cols):
+            col_widths[i] = max(3, min(col_widths[i], max_lengths[i] + 10))
+
+        # Create the box
+        lines = []
+        
+        # Calculate the exact width used in word_wrap
+        horizontal_width = term_width
+        
+        # Top border
+        lines.append(f"{chars['tl']}{chars['h'] * horizontal_width}{chars['tr']}")
+        
+        # Content rows
+        for row in content:
+            # Pad row with empty strings if necessary
+            padded_row = row + [''] * (num_cols - len(row))
+            
+            # Format each cell
+            formatted_cells = []
+            for i, cell in enumerate(padded_row):
+                cell_str = str(cell)
+                if len(cell_str) > col_widths[i]:
+                    cell_str = cell_str[:col_widths[i]-3] + "..."
+                formatted_cells.append(f"{cell_str:<{col_widths[i]}}")
+            
+            # Join cells with separators and ensure total width matches
+            row_content = f" {(' ' + chars['sep'] + ' ').join(formatted_cells)} "
+            # Pad to match exact width if needed
+            padding_needed = horizontal_width - len(row_content)
+            if padding_needed > 0:
+                row_content += ' ' * padding_needed
+            row_str = f"{chars['v']}{row_content}{chars['v']}"
+            lines.append(row_str)
+        
+        # Bottom border
+        lines.append(f"{chars['bl']}{chars['h'] * horizontal_width}{chars['br']}")
+        
+        return '\n'.join(lines)
+
+    def create_wide_box(self, content, style='single'):
         """Create a box that expands to terminal width with proportionally sized columns."""
         # Get terminal width and account for borders and spacing
         term_width = shutil.get_terminal_size().columns
