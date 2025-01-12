@@ -600,29 +600,159 @@ class Game:
         return initial_locations
 
     def create_box(self, content, style='single'):
+        """Create a box that expands to terminal width with proportionally sized columns."""
+        # Get terminal width and account for borders and spacing
         term_width = shutil.get_terminal_size().columns
-        width = term_width - 4  # Adjust for padding
-
+        usable_width = term_width - 4  # Account for borders and minimum spacing
+        
+        # Define box characters
         chars = {
-            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│'},
-            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║'},
-            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│'}
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│', 'sep': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║', 'sep': '║'},
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│', 'sep': '│'}
         }[style]
 
-        lines = []
-        lines.append(f"{chars['tl']}{chars['h'] * width}{chars['tr']}")
-
-        # Determine the number of columns
-        num_columns = len(content[0])
-        col_widths = [max(len(str(cell)) for cell in col) for col in zip(*content)]
-
+        # Calculate number of columns and get content lengths
+        num_cols = max(len(row) for row in content)
+        max_lengths = [0] * num_cols
+        
+        # Get maximum content length for each column
         for row in content:
-            formatted_row = []
             for i, cell in enumerate(row):
-                formatted_row.append(f"{str(cell):<{col_widths[i]}}")
-            lines.append(f"{chars['v']} {'  '.join(formatted_row):<{width-2}} {chars['v']}")
+                if i < num_cols:
+                    max_lengths[i] = max(max_lengths[i], len(str(cell)))
 
-        lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
+        # Calculate spacing requirements
+        separator_space = 3  # Space for " │ " between columns
+        total_separator_width = separator_space * (num_cols - 1)
+        padding_width = 2  # Space for padding around content " x "
+        
+        # Calculate available space for content
+        available_content_width = usable_width - total_separator_width - padding_width
+        
+        # Calculate proportional column widths
+        total_content_length = sum(max_lengths)
+        col_widths = []
+        remaining_width = available_content_width
+        
+        for i in range(num_cols):
+            if i == num_cols - 1:
+                # Last column gets remaining width
+                width = remaining_width
+            else:
+                # Calculate proportional width
+                proportion = max_lengths[i] / total_content_length
+                width = max(3, min(
+                    int(available_content_width * proportion),
+                    max_lengths[i] + 2
+                ))
+                remaining_width -= width
+            col_widths.append(width)
+
+        # Ensure minimum widths and adjust if necessary
+        for i in range(num_cols):
+            col_widths[i] = max(3, min(col_widths[i], max_lengths[i] + 10))
+
+        # Calculate final horizontal width
+        horizontal_width = sum(col_widths) + total_separator_width + padding_width
+
+        # Create the box
+        lines = []
+        
+        # Top border
+        lines.append(f"{chars['tl']}{chars['h'] * horizontal_width}{chars['tr']}")
+        
+        # Content rows
+        for row in content:
+            # Pad row with empty strings if necessary
+            padded_row = row + [''] * (num_cols - len(row))
+            
+            # Format each cell
+            formatted_cells = []
+            for i, cell in enumerate(padded_row):
+                cell_str = str(cell)
+                if len(cell_str) > col_widths[i]:
+                    cell_str = cell_str[:col_widths[i]-3] + "..."
+                formatted_cells.append(f"{cell_str:<{col_widths[i]}}")
+            
+            # Join cells with separators
+            row_str = f"{chars['v']} {(' ' + chars['sep'] + ' ').join(formatted_cells)} {chars['v']}"
+            lines.append(row_str)
+        
+        # Bottom border
+        lines.append(f"{chars['bl']}{chars['h'] * horizontal_width}{chars['br']}")
+        
+        return '\n'.join(lines)
+
+    def create_compact_box(self, content, style='single'):
+        """Create a box with properly aligned borders and content."""
+        # Get terminal width and account for borders and spacing
+        term_width = shutil.get_terminal_size().columns
+        max_width = term_width - 4  # Account for left and right borders and minimum spacing
+        
+        # Define box characters
+        chars = {
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│', 'sep': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║', 'sep': '║'},
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│', 'sep': '│'}
+        }[style]
+
+        # Calculate number of columns and maximum width for each
+        num_cols = max(len(row) for row in content)
+        col_widths = [0] * num_cols
+        
+        # First pass: get maximum width needed for each column
+        for row in content:
+            for i, cell in enumerate(row):
+                if i < num_cols:
+                    col_widths[i] = max(col_widths[i], len(str(cell)))
+
+        # Calculate spacing components
+        separator_space = 3  # Space for " │ " between columns
+        total_separators_width = separator_space * (num_cols - 1)
+        content_width = sum(col_widths)
+
+        # Calculate total width including all spacing
+        total_width = content_width + total_separators_width + 2  # +2 for single space padding on each side
+
+        # If total width exceeds max_width, reduce column widths proportionally
+        if total_width > max_width:
+            excess = total_width - max_width
+            # Distribute reduction across columns
+            for i in range(num_cols):
+                reduction = int(excess * (col_widths[i] / content_width))
+                col_widths[i] = max(3, col_widths[i] - reduction)  # Ensure minimum width of 3
+                content_width = sum(col_widths)  # Recalculate content width after reduction
+
+        # Calculate final width for horizontal borders (should match content row width)
+        horizontal_width = content_width + total_separators_width + 2  # +2 for spaces next to borders
+
+        # Create the box
+        lines = []
+        
+        # Top border
+        lines.append(f"{chars['tl']}{chars['h'] * horizontal_width}{chars['tr']}")
+        
+        # Content rows
+        for row in content:
+            # Pad row with empty strings if necessary
+            padded_row = row + [''] * (num_cols - len(row))
+            
+            # Format each cell
+            formatted_cells = []
+            for i, cell in enumerate(padded_row):
+                cell_str = str(cell)
+                if len(cell_str) > col_widths[i]:
+                    cell_str = cell_str[:col_widths[i]-3] + "..."
+                formatted_cells.append(f"{cell_str:<{col_widths[i]}}")
+            
+            # Join cells with separators
+            row_str = f"{chars['v']} {(' ' + chars['sep'] + ' ').join(formatted_cells)} {chars['v']}"
+            lines.append(row_str)
+        
+        # Bottom border
+        lines.append(f"{chars['bl']}{chars['h'] * horizontal_width}{chars['br']}")
+        
         return '\n'.join(lines)
 
     def create_turn_info_box(self, content, style='single'):
@@ -904,7 +1034,7 @@ class Game:
         
         # Location section
         location_info = [
-            ["Location Information"],
+            ["MAP"],
             [f"Name: {self.current_location.name}"],
             [f"Type: {self.current_location.location_type}"],
             [f"Tech Level: {self.current_location.tech_level}"],
@@ -2580,7 +2710,7 @@ class Game:
                 
                 market_content = []
                 # Header
-                market_content.append(["Location Information Update"])
+                market_content.append(["Map Info Update"])
                 market_content.append([""])
                 market_content.append(["Location", "Tech", "Agri", "Salt", "Fuel"])
                 
