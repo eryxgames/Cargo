@@ -3,6 +3,26 @@ import os
 import time
 import shutil
 from math import floor
+# Define your logo data ONCE, at the module level:
+logo_data = [
+    "╔════════ C Δ R G Ω ════════╗",
+    "║     Space Trading Saga    ║",
+    "╚═══════════════════════════╝"
+]
+
+def display_logo(logo, centered=True):
+    """Displays the logo, optionally centered."""
+    try:
+        terminal_width = os.get_terminal_size().columns
+    except OSError:
+        terminal_width = 80  # Default if not in a terminal
+
+    for line in logo:
+        if centered:
+            padding = (terminal_width - len(line)) // 2
+            print(" " * padding + line)
+        else:
+            print(line)  # Just print without centering
 
 # Define the Planet class
 class Planet:
@@ -915,6 +935,70 @@ class Game:
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
+    # For buy map display in visit_cantina:
+    def format_map_content(self, new_locations):
+        map_content = []
+        # Header - keep it minimal
+        map_content.append(["Location", "Type", "T", "A", "Features"])
+        
+        # Location data
+        for location in new_locations:
+            features = []
+            if location.mining_platforms:
+                features.append("M")  # Mining
+            if location.buildings:
+                features.append("B")  # Buildings
+            if location.stockmarket_base:
+                features.append("S")  # Stock Market
+            
+            map_content.append([
+                location.name[:15],  # Limit name length
+                location.location_type[:10],  # Abbreviate type
+                str(location.tech_level),
+                str(location.agri_level),
+                "/".join(features) if features else "-"
+            ])
+        
+        return map_content
+
+    # For update map display in visit_cantina:
+    def format_market_content(self, locations):
+        market_content = []
+        # Header - keep it compact
+        market_content.append(["Location", "Tech", "Agri", "S/F", "Features"])
+        
+        for location in locations:
+            # Format prices compactly
+            tech_price = "BAN" if 'tech' in location.banned_commodities else self.format_money(location.market['tech'])
+            agri_price = "BAN" if 'agri' in location.banned_commodities else self.format_money(location.market['agri'])
+            
+            # Combine salt/fuel status
+            mining_status = []
+            if any(p['type'] == 'salt' for p in location.mining_platforms):
+                mining_status.append("S")
+            if any(p['type'] == 'fuel' for p in location.mining_platforms):
+                mining_status.append("F")
+            mining_str = "/".join(mining_status) if mining_status else "-"
+            
+            # Combine features into compact format
+            features = []
+            if location.stockmarket_base:
+                features.append("S")
+            if location.buildings:
+                features.append(f"B:{len(location.buildings)}")
+            if location.mining_platforms:
+                features.append(f"M:{len(location.mining_platforms)}")
+            
+            market_content.append([
+                location.name[:15],  # Limit name length
+                tech_price,
+                agri_price,
+                mining_str,
+                "/".join(features) if features else "-"
+            ])
+        
+        return market_content
+
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
             box_content = message
@@ -1223,15 +1307,13 @@ class Game:
 
     def choose_difficulty(self):
         self.clear_screen()
-        
+        display_logo(logo_data, centered=False)
         difficulty_info = [
             ["DIFFICULTY SELECTION"],
             ["  1. EASY"],
-            ["     Lower risks, higher profits"],
             ["  2. NORMAL"],
-            ["     Standard trading conditions"],
             ["  3. EXPERT"],
-            ["     High risk, high reward"]
+            ["     "]
             
         ]
         
@@ -1252,20 +1334,11 @@ class Game:
                 self.display_simple_message("Please select 1, 2, or 3.", 1)
 
 
-
     def get_player_name(self):
         self.clear_screen()
         
-        title = [
-            "╔════════ C Δ R G Ω ════════╗",
-            "║    Space Trading Saga     ║",
-            "╚═══════════════════════════╝"
-        ]
+        display_logo(logo_data, centered=False)
         
-        for line in title:
-            print(line)
-            time.sleep(0.1)
-
         self.display_simple_message([
             "Enter your pilot name",
             "Press Enter for random"
@@ -1274,10 +1347,10 @@ class Game:
         name = input(">>> ").strip()
         
         if not name:
-            titles = ["Captain", "Commander", "Pilot", "Admiral"]
-            surnames = ["Nova", "Drake", "Phoenix", "Wolf"]
+            titles = ["Captain", "Commander", "Pilot", "Hauler", "Trucker", "Starfarer", "Operator", "Rigger","Freerunner","Navigator", "Doc", "Docker" ]
+            surnames = ["Aen Stark", "Orr-Slagg", "Dragg Voxx", "Swigg", "Doc Brainac", "Json", "Nova", "Drake", "Phoenix", "Wolf", "Kayo Wu", "Lyra Nyx", "Elerra Solis", "Bryce", "Q'Ella", "Cael Yaro", "Q'Orin"]
             name = f"{random.choice(titles)} {random.choice(surnames)}"
-            self.display_simple_message(f"Generated name: {name}")
+            self.display_simple_message(f"Neural Signature Verified: {name}")
         
         self.display_simple_message(f"Welcome aboard, {name}!")    
         return name
@@ -1291,7 +1364,7 @@ class Game:
         elif self.current_location.research_points > 15:
             location_type = "research"
 
-        intro_text = f"\n  Welcome {self.player_name} to {self.current_location.name}, a {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
+        intro_text = f"\n  You arrive on {self.current_location.name}, a {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -2755,7 +2828,7 @@ class Game:
                 if new_locations:
                     map_content = []
                     # Header
-                    map_content.append(["New Locations Discovered!"])
+                    map_content.append(["New Locations!"])
                     map_content.append([""])
                     map_content.append(["Location", "Type", "Tech", "Agri", "Economy"])
                     
@@ -2798,7 +2871,7 @@ class Game:
                 
                 market_content = []
                 # Header
-                market_content.append(["Map Info Update"])
+                market_content.append(["Map Update"])
                 market_content.append([""])
                 market_content.append(["Location", "Tech", "Agri", "Salt", "Fuel"])
                 
@@ -2818,8 +2891,8 @@ class Game:
                             location.name,
                             tech_price,
                             agri_price,
-                            salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mining",
-                            fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mining"
+                            salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mine",
+                            fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mine"
                         ])
                         
                         # Add special features as separate rows
