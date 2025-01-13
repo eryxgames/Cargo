@@ -715,7 +715,7 @@ class Game:
                 formatted_cells.append(f"{cell_str:<{col_widths[i]}}")
             
             # Join cells with separators and ensure total width matches
-            row_content = f" {(' ' + chars['sep'] + ' ').join(formatted_cells)}"
+            row_content = f" {('' + chars['sep'] + ' ').join(formatted_cells)}"
             # Pad to match exact width if needed
             padding_needed = horizontal_width - len(row_content)
             if padding_needed > 0:
@@ -1951,9 +1951,9 @@ class Game:
             if found_location.name not in self.known_locations:
                 self.display_simple_message(f"Gained {total_gain} research points from discovering new location!")
             elif research_difference > 0:
-                self.display_simple_message(f"Gained {total_gain} research points from studying advanced technology!")
+                self.display_simple_message(f"Gained {total_gain} research points from clearing orbital junk!")
             else:
-                self.display_simple_message(f"Gained {total_gain} research points from comparative analysis!")
+                self.display_simple_message(f"Gained {total_gain} research points from salvaged debris!")
             
             self.turn += 1
             self.random_event()
@@ -4853,6 +4853,7 @@ class StoryManager:
                 f"Milestone Completed: {display_name}!",
                 f"Earned {points} plot points"
             ])
+            self.game.display_turn_info()  # Refresh display
 
     def check_chapter_progress(self):
         """Check for chapter advancement"""
