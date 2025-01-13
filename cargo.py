@@ -533,6 +533,74 @@ class Ship:
         elif property_name == 'speed':
             self.speed += amount
 
+class LocationCommands:
+    """Define available commands per location type"""
+    COMMANDS = {
+        "Planet": {
+            "base_commands": [
+                ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
+                ('travel', 't'), ('repair', 'r'), ('info', 'i'),
+                ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
+                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+            ],
+            "description": "Standard planetary commerce hub"
+        },
+        "AsteroidBase": {
+            "base_commands": [
+                ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
+                ('travel', 't'), ('repair', 'r'), ('info', 'i'),
+                ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
+                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+            ],
+            "description": "Mining and resource extraction facility"
+        },
+        "DeepSpaceOutpost": {
+            "base_commands": [
+                ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
+                ('travel', 't'), ('repair', 'r'), ('info', 'i'),
+                ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
+                ('action', 'a'), ('end', 'e')
+            ],
+            "description": "Strategic trading outpost"
+        },
+        "ResearchColony": {
+            "base_commands": [
+                ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
+                ('travel', 't'), ('research', 'r'), ('info', 'i'),
+                ('build', 'bl'), ('shop', 'sh'), ('action', 'a'),
+                ('end', 'e')
+            ],
+            "special_commands": {
+                "research": {
+                    "options": ["analyze", "experiment", "fundamental"],
+                    "description": "Conduct research activities"
+                }
+            },
+            "description": "Advanced scientific research facility. No repair facilities available."
+        }
+    }
+    @staticmethod
+    def get_available_commands(location_type):
+        """Get available commands for location type"""
+        commands = LocationCommands.COMMANDS.get(location_type, 
+                                               LocationCommands.COMMANDS["Planet"])
+        return commands["base_commands"]
+
+    @staticmethod
+    def get_special_commands(location_type):
+        """Get special commands if any"""
+        location_data = LocationCommands.COMMANDS.get(location_type, {})
+        return location_data.get("special_commands", {})
+
+    @staticmethod
+    def get_commands_for_location(location):
+        """Helper method to get all commands for a location instance"""
+        return {
+            "available": LocationCommands.get_available_commands(location.location_type),
+            "special": LocationCommands.get_special_commands(location.location_type)
+        }
+
+
 # Define the Game class
 class Game:
     def __init__(self):
@@ -1600,18 +1668,38 @@ class Game:
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
 
-            valid_actions = [
-                'buy', 'b', 'sell', 's', 'upgrade', 'u', 'travel', 't', 
-                'repair', 'r', 'info', 'i', 'build', 'bl', 'cantina', 'c', 
-                'shop', 'sh', 'action', 'a', 'mine', 'm', 'end', 'e',
-                'quit', 'q', 'resign', 'rs', 'version', 'v'
-            ]
+            # Get location commands
+            location_commands = self.current_location.commands
+            
+            # Create list of valid actions
+            valid_actions = []
+            for cmd, shortcut in location_commands["available"]:
+                valid_actions.extend([cmd, shortcut])
+            
+            # Add global commands
+            valid_actions.extend(['quit', 'q', 'resign', 'rs', 'version', 'v'])
 
             action = self.validate_input("Choose action: ", valid_actions)
 
             # Handle cancelled command
             if action is None:
                 return
+                    
+            # Handle research/repair based on location type
+            elif action in ['research', 'r']:
+                if isinstance(self.current_location, ResearchColony):
+                    self.handle_research_activities()
+                elif action == 'r':  # Only handle repair if 'r' and not at Research Colony
+                    if self.ship.damage > 0:
+                        cost = self.ship.damage * 10
+                        if self.ship.repair(cost):
+                            self.display_simple_message("Ship repaired.")
+                        else:
+                            self.display_simple_message(
+                                f"Not enough money to repair. Cost: {self.format_money(cost)}"
+                            )
+                    else:
+                        self.display_simple_message("Ship doesn't need repairs.")            
 
             elif action in ['buy', 'b']:
                 item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
@@ -2947,6 +3035,56 @@ class Game:
                 self.ship.damage += penalty[1]
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
+    def conduct_research_activity(self, activity_type):
+        """Handle research activities for quests"""
+        # Check if we're at a valid research location
+        if not isinstance(self.current_location, ResearchColony):
+            self.display_simple_message("This activity requires a Research Colony!")
+            return False
+            
+        # Find relevant research quests
+        research_quests = [q for q in self.quest_system.active_quests 
+                        if q.name == "Scientific Breakthrough"]
+        
+        if not research_quests:
+            self.display_simple_message("No active research quests!")
+            return False
+        
+        # Cost in research points
+        activity_costs = {
+            'analysis_completed': 20,
+            'experiments_conducted': 40
+        }
+        
+        cost = activity_costs.get(activity_type, 0)
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return False
+        
+        # Deduct cost and update quest progress
+        self.ship.research_points -= cost
+        for quest in research_quests:
+            if quest.update_research_progress(activity_type):
+                self.display_simple_message(f"Research activity completed: {activity_type}")
+                quest.complete(self)
+                return True
+                
+        return True
+
+    def handle_research_options(self):
+        """Add research options to action menu when at Research Colony"""
+        if isinstance(self.current_location, ResearchColony):
+            options = ['analyze', 'experiment', 'back']
+            choice = self.validate_input(
+                "Research options (analyze/experiment/back): ",
+                options
+            )
+            
+            if choice == 'analyze':
+                self.conduct_research_activity('analysis_completed')
+            elif choice == 'experiment':
+                self.conduct_research_activity('experiments_conducted')
+
     def visit_cantina(self):
         self.display_simple_message("Welcome to the Cantina!", 1)
 
@@ -3785,6 +3923,11 @@ class Location:
         self.market = self.generate_market()
         self.security_level = 5  # Initialize with medium security level
 
+    @property
+    def commands(self):
+        """Get all commands for this location"""
+        return LocationCommands.get_commands_for_location(self)
+    
     def calculate_mining_output(self, platform_type):
         """Calculate mining output based on efficiency and random factors"""
         base_output = random.randint(10, 20)
@@ -4114,6 +4257,33 @@ class Quest:
         self.completed = False
         self.target_progress = self.requirements.get('target_progress', 1)
         self.location_requirement = self.requirements.get('location_type', None)
+
+    # Add for special location quests
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {
+                'research_points_gained': 0,
+                'analysis_completed': 0,
+                'experiments_conducted': 0
+            }
+        
+        # Check if required criteria are met
+        criteria = self.requirements.get('completion_criteria', {})
+        for key, target in criteria.items():
+            if self.tracked_progress.get(key, 0) < target:
+                return False
+        return True
+
+    def update_research_progress(self, activity_type):
+        """Update progress for research activities"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {}
+        
+        if activity_type in self.tracked_progress:
+            self.tracked_progress[activity_type] += 1
+            return self.check_research_completion(self.game)
+        return False
 
     def check_completion(self, game):
         """Check if quest requirements are met"""
@@ -5057,6 +5227,22 @@ class LocationManager:
                     "reward_rp": 150
                 }
             },
+            "Planet": {
+                "unlock_requirements": {
+                    "research_points": 50,
+                    "trades_completed": 5
+                },
+                "unlock_quest": {
+                    "name": "Establish Trading Network",
+                    "description": "Complete trades across multiple systems",
+                    "reward_money": 5000,
+                    "reward_rp": 50,
+                    "completion_criteria": {
+                        "trades_completed": 10,
+                        "different_locations": 3
+                    }
+                }
+            },
             "ResearchColony": {
                 "unlock_requirements": {
                     "research_points": 100,
@@ -5066,7 +5252,12 @@ class LocationManager:
                     "name": "Scientific Breakthrough",
                     "description": "Assist in a major research project",
                     "reward_money": 20000,
-                    "reward_rp": 200
+                    "reward_rp": 200,
+                    "completion_criteria": {
+                        "research_points_gained": 150,
+                        "analysis_completed": 3,
+                        "experiments_conducted": 2
+                    }
                 }
             }
         }
