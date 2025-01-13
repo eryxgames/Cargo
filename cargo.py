@@ -401,29 +401,62 @@ class Action:
 # Define the Ship class
 class Ship:
     def __init__(self):
-        self.cargo = {'tech': 0, 'agri': 0, 'salt': 0, 'fuel': 0}
+        # Basic cargo and resources
+        self.cargo = {
+            'tech': 0,
+            'agri': 0,
+            'salt': 0,
+            'fuel': 0
+        }
         self.money = 1000
         self.damage = 0
-        self.upgrades = []
-        self.items = {}
+        self.research_points = 0
+
+        # Ship stats
         self.attack = 1
         self.defense = 1
         self.speed = 1
-        self.research_points = 0
+        
+        # Equipment and upgrades
+        self.upgrades = []
+        self.items = {}
+        
+        # Upgrade costs
         self.upgrade_costs = {
             'attack': 2000,
             'defense': 2000,
             'speed': 2000
         }
+        
+        # Item tracking
         self.item_purchase_count = {}
-        self.combat_victories = 0
-        self.combat_defeats = 0
+        
+        # Combat statistics
+        self.combat_victories = {
+            'total': 0,
+            'pirate': 0,
+            'raider': 0,
+            'militia': 0,
+            'alien': 0
+        }
+        self.combat_defeats = {
+            'total': 0,
+            'pirate': 0,
+            'raider': 0,
+            'militia': 0,
+            'alien': 0
+        }
         self.combat_stats = {
             'pirates_defeated': 0,
             'raiders_defeated': 0,
-            'militia_defeated': 0
+            'militia_defeated': 0,
+            'defeats_by_type': {}
         }
+        
+        # Trade statistics
         self.trade_profits = {}
+        
+        # Enemy-specific victories
         self.enemy_victories = {
             'pirate': 0,
             'raider': 0,
@@ -432,21 +465,18 @@ class Ship:
         }
 
     def record_combat_victory(self, enemy_type=None):
-        self.combat_victories += 1
-        if enemy_type and enemy_type in self.enemy_victories:
-            self.enemy_victories[enemy_type] += 1
-            stat_key = f'{enemy_type}s_defeated'
-            if stat_key in self.combat_stats:
-                self.combat_stats[stat_key] += 1
+        """Record a combat victory with proper type tracking"""
+        self.combat_victories['total'] += 1
+        if enemy_type:
+            if enemy_type in self.combat_victories:
+                self.combat_victories[enemy_type] += 1
 
     def record_combat_defeat(self, enemy_type=None):
-        self.combat_defeats += 1
-        if enemy_type and enemy_type in self.enemy_victories:
-            if 'defeats_by_type' not in self.combat_stats:
-                self.combat_stats['defeats_by_type'] = {}
-            if enemy_type not in self.combat_stats['defeats_by_type']:
-                self.combat_stats['defeats_by_type'][enemy_type] = 0
-            self.combat_stats['defeats_by_type'][enemy_type] += 1
+        """Record a combat defeat with proper type tracking"""
+        self.combat_defeats['total'] += 1
+        if enemy_type:
+            if enemy_type in self.combat_defeats:
+                self.combat_defeats[enemy_type] += 1
 
     def buy(self, item, quantity, price, planet, player_rank):
         # Quest-related information can be tracked here and passed to QuestSystem
@@ -1924,7 +1954,7 @@ class Game:
                         self.locations.extend(chapter[location_type])                
 
     def handle_building_construction(self, building_name, building_costs):
-        """Handle building construction with proper capability checking"""
+        """Handle building construction with proper capability checking and building process"""
         # Map short commands to full building names and their base types
         building_mapping = {
             'stockmarket': ('stockmarket', 'stockmarket'),
@@ -1943,42 +1973,57 @@ class Game:
             'm': ('Mining Facility', 'mining')
         }
 
-        # Get the full building name and base type
         if building_name not in building_mapping:
             self.display_simple_message("Invalid building type.")
-            return
-            
+            return False
+
         full_building_name, base_type = building_mapping[building_name]
-
-        # Debug info
-        capabilities = self.current_location.get_capabilities()
-        can_build = capabilities.get("can_build", [])
         
-        self.display_simple_message(f"Debug: Location type: {self.current_location.location_type}")
-        self.display_simple_message(f"Debug: Building base type: {base_type}")
-        self.display_simple_message(f"Debug: Can build list: {can_build}")
-
-        # Check if location can build this type of building
-        if base_type not in can_build:
-            self.display_simple_message(f"Cannot build {full_building_name} at this location type.")
-            return
-
         # Get base cost and calculate final cost
         base_cost = building_costs.get(base_type, 3000)
         cost_multiplier = self.current_location.buildings.count(full_building_name) + 1
         final_cost = base_cost * cost_multiplier
 
-        # Build if player can afford it
-        if self.ship.money >= final_cost:
-            self.ship.money -= final_cost
-            success = self.current_location.build_building(full_building_name)
-            if success:
-                self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} money.")
-            else:
-                self.ship.money += final_cost  # Refund if building failed
-                self.display_simple_message(f"Failed to build {full_building_name}.")
-        else:
+        # Debug info
+#        self.display_simple_message(f"Building request: {building_name}")
+#        self.display_simple_message(f"Full name: {full_building_name}")
+#        self.display_simple_message(f"Base type: {base_type}")
+#        self.display_simple_message(f"Location type: {self.current_location.location_type}")
+#        self.display_simple_message(f"Available money: {self.format_money(self.ship.money)}")
+#        self.display_simple_message(f"Building cost: {self.format_money(final_cost)}")
+
+        # Check if we can afford it
+        if self.ship.money < final_cost:
             self.display_simple_message(f"Not enough money. Cost: {self.format_money(final_cost)}")
+            return False
+
+        # Deduct money first (will be refunded if build fails)
+        self.ship.money -= final_cost
+
+        # Add building directly to location's building list
+        self.current_location.buildings.append(full_building_name)
+
+        # Apply building effects
+        if full_building_name == "Mining Facility":
+            self.current_location.exogeology = min(100, self.current_location.exogeology + 10)
+        elif full_building_name == "Permaculture Paradise":
+            self.current_location.market['agri'] = max(1, self.current_location.market['agri'] * 0.8)
+        elif full_building_name == "Organic Certification Authority":
+            self.current_location.market['agri'] = self.current_location.market['agri'] * 1.2
+        elif full_building_name == "Agrobot Assembly Line":
+            self.current_location.market['agri'] = max(1, self.current_location.market['agri'] * 0.6)
+        elif full_building_name == "The Nanotech Nexus":
+            self.current_location.market['tech'] = max(1, self.current_location.market['tech'] * 0.85)
+            self.current_location.market['agri'] = max(1, self.current_location.market['agri'] * 0.85)
+        elif full_building_name == "Neuroengineering Guild":
+            self.current_location.market['tech'] = self.current_location.market['tech'] * 1.3
+        elif full_building_name == "stockmarket":
+            self.current_location.stockmarket_base = True
+            self.current_location.market['tech'] = max(1, self.current_location.market['tech'] - 10)
+            self.current_location.market['agri'] = max(1, self.current_location.market['agri'] - 5)
+
+        self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} credits.")
+        return True
 
     def travel_to_location(self, location_name):
         """Handle travel to a new location"""
@@ -2593,8 +2638,7 @@ class Game:
         return details
 
     def handle_combat_event(self, event):
-        """Complete combat event handler with statistics tracking"""
-        # Define combat scenarios with their difficulties
+        """Handle combat event with proper victory/defeat recording"""
         combat_scenarios = {
             "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0, "enemy_type": "pirate"},
             "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2, "enemy_type": "pirate"},
@@ -2647,7 +2691,7 @@ class Game:
                 if stolen_cargo > 0:
                     losses.append(f"{stolen_cargo} {cargo_type}")
         
-        # Check for counter-attack opportunity
+        # Check for counter-attack opportunity, upd.
         if self.ship.attack > scenario["def"]:
             # Counter-attack successful - record victory
             self.ship.record_combat_victory(enemy_type)
@@ -3435,7 +3479,7 @@ class Game:
             self.story_manager.complete_milestone("first_trade")
 
         # First combat
-        if self.ship.combat_victories == 1:
+        if self.ship.combat_victories['total'] == 1:
             self.story_manager.complete_milestone("first_combat")
             
         # Basic license (after 5 successful trades)
@@ -3443,7 +3487,7 @@ class Game:
             self.story_manager.complete_milestone("basic_license")
 
         # Pirates and route security
-        if self.ship.enemy_victories.get('pirate', 0) >= 5:
+        if self.ship.combat_victories.get('pirate', 0) >= 5:
             self.story_manager.complete_milestone("defeat_pirates")
             if self.trades_completed >= 20:
                 self.story_manager.complete_milestone("secure_route")
@@ -3451,7 +3495,7 @@ class Game:
         # Mining milestones
         if any(loc.mining_platforms for loc in self.locations):
             self.story_manager.complete_milestone("first_mining")
-            miners_defended = self.ship.combat_victories >= 10
+            miners_defended = self.ship.combat_victories['total'] >= 10
             if miners_defended:
                 self.story_manager.complete_milestone("defend_miners")
 
@@ -4258,6 +4302,13 @@ class Quest:
         self.target_progress = self.requirements.get('target_progress', 1)
         self.location_requirement = self.requirements.get('location_type', None)
 
+    def __eq__(self, other):
+        """Define equality to help prevent duplicates"""
+        if not isinstance(other, Quest):
+            return False
+        return (self.name == other.name and 
+                self.quest_type == other.quest_type)
+
     # Add for special location quests
     def check_research_completion(self, game):
         """Check research quest requirements"""
@@ -4313,11 +4364,13 @@ class Quest:
         return False
 
     def check_combat_completion(self, game):
-        """Check combat quest requirements"""
+        """Check combat quest requirements with proper dictionary access"""
         if 'enemy_type' in self.requirements:
-            return game.ship.combat_victories.get(
-                self.requirements['enemy_type'], 0) >= self.requirements.get('amount', 1)
-        return game.ship.combat_victories >= self.requirements.get('amount', 1)
+            enemy_type = self.requirements['enemy_type']
+            required_amount = self.requirements.get('amount', 1)
+            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
+        # If no specific enemy type, check total victories
+        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
 
     def check_trade_completion(self, game):
         """Check trading quest requirements"""
@@ -4374,7 +4427,9 @@ class QuestSystem:
         self.available_quests = []  # For tuple-based quests (legacy support)
         self.completed_quests = []
         self.story_progress = 0
-        
+        self.quest_ids = set()  # Track unique quest IDs
+        self.quest_message_shown = set()  # Track shown quest messages
+
         # Quest line progression tracking
         self.quest_lines = {
             "mining": ["basic_mining", "advanced_mining", "expert_mining"],
@@ -4652,23 +4707,56 @@ class QuestSystem:
         self.check_quest_completion(self.game.ship, self.game.current_location)
 
     def complete_quest(self, quest):
-        """Handle quest completion and progression"""
-        if isinstance(quest, Quest):
-            # Handle Quest object completion
-            quest.complete(self.game)
+        """Handle quest completion and cleanup with full quest lifecycle"""
+        quest_id = f"{quest.name}_{quest.quest_type}"
+        
+        if quest in self.active_quests:
+            # Remove from active quests and add to completed
             self.active_quests.remove(quest)
             self.completed_quests.append(quest)
             
-            # Update quest line progression if applicable
-            for line_type, progression in self.quest_lines.items():
-                if quest.name in progression:
-                    self.quest_line_progress[line_type] += 1
-                    self.check_quest_line_completion(line_type)
-        else:
-            # Handle legacy tuple-based quest completion
-            self.available_quests.remove(quest)
-            self.completed_quests.append(quest)
-            self.story_progress += 1
+            # Award rewards
+            self.game.ship.money += quest.reward_money
+            self.game.ship.research_points += quest.reward_rp
+            
+            # Apply any special effects based on quest type
+            if quest.quest_type == 'mining':
+                self.game.current_location.exogeology = min(100, 
+                    self.game.current_location.exogeology + 5)  # Small mining efficiency boost
+            elif quest.quest_type == 'research':
+                boost = int(quest.reward_rp * 0.1)  # 10% bonus research points
+                self.game.ship.research_points += boost
+            
+            # Execute completion callback if exists
+            if quest.on_complete:
+                quest.on_complete()
+            
+            # Mark quest as completed
+            quest.completed = True
+            
+            # Clean up message tracking
+            if quest_id in self.quest_message_shown:
+                self.quest_message_shown.remove(quest_id)
+            
+            # Display completion message
+            self.game.display_story_message([
+                f"Quest Completed: {quest.name}",
+                f"Rewards:",
+                f"• {self.game.format_money(quest.reward_money)} credits",
+                f"• {quest.reward_rp} research points"
+            ])
+            
+            # Update story progression if applicable
+            if hasattr(self.game, 'story_manager'):
+                self.game.story_manager.handle_quest_completion(quest)
+            
+            # Check for milestone completion
+            if hasattr(self.game, 'check_milestone_triggers'):
+                self.game.check_milestone_triggers()
+            
+            return True
+            
+        return False
 
     def check_quest_line_completion(self, line_type):
         """Check if a quest line has been completed"""
@@ -4712,15 +4800,29 @@ class QuestSystem:
         return available_types
 
     def add_quest(self, quest):
-        """Add a new quest to active quests"""
-        if isinstance(quest, Quest):
-            self.active_quests.append(quest)
+        """Add a new quest with duplication check"""
+        # Create unique identifier for the quest
+        quest_id = f"{quest.name}_{quest.quest_type}"
+        
+        # Check if quest is already active
+        existing_quest = any(q.name == quest.name and q.quest_type == quest.quest_type 
+                           for q in self.active_quests)
+        if existing_quest:
+            return False  # Don't add duplicate quest
+        
+        # Check if we've already shown this quest message
+        if quest_id not in self.quest_message_shown:
             self.game.display_story_message([
                 "New Quest Available!",
                 quest.name,
                 quest.description,
                 f"Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
-            ])        
+            ])
+            self.quest_message_shown.add(quest_id)
+        
+        # Add quest to active quests
+        self.active_quests.append(quest)
+        return True
 
 class StoryManager:
     def __init__(self, game):
@@ -5046,11 +5148,10 @@ class StoryManager:
         for req, value in requirements.items():
             if req == "plot_points" and self.plot_points < value:
                 return False
-            elif req == "combat_victories" and self.game.ship.combat_victories < value:
+            elif req == "combat_victories" and self.game.ship.combat_victories['total'] < value:
                 return False
             elif req == "research_points" and self.game.ship.research_points < value:
                 return False
-            # Add other requirement checks
         return True
 
     def advance_chapter(self):
@@ -5353,9 +5454,10 @@ class LocationManager:
             if completed < requirements["mining_quests_completed"]:
                 return False
                 
-        # Check combat victories
+        # Check combat victories - now using total from dictionary
         if "combat_victories" in requirements:
-            if self.game.ship.combat_victories < requirements["combat_victories"]:
+            total_victories = self.game.ship.combat_victories['total']
+            if total_victories < requirements["combat_victories"]:
                 return False
                 
         # Check research points
@@ -5375,21 +5477,19 @@ class LocationManager:
         if location_type in self.location_quests:
             quest_data = self.location_quests[location_type]["unlock_quest"]
             
+            # Create quest with unique type
             quest = Quest(
                 name=quest_data["name"],
                 description=quest_data["description"],
                 reward_money=quest_data["reward_money"],
                 reward_rp=quest_data["reward_rp"],
-                quest_type="location_unlock",
+                quest_type=f"unlock_{location_type}",  # Make type unique
                 requirements={"location_type": location_type},
                 on_complete=lambda: self.complete_location_unlock(location_type)
             )
             
+            # Use central quest addition method
             self.game.quest_system.add_quest(quest)
-            self.game.display_story_message([
-                f"New Quest Available: {quest_data['name']}",
-                quest_data["description"]
-            ])
 
     def complete_location_unlock(self, location_type):
         """Handle the completion of a location unlock quest"""
