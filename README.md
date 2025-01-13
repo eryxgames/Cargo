@@ -87,6 +87,17 @@ git clone https://github.com/eryxgames/cargo.git
 # Run the game
 python cargo.py
 ```
+### Core dependencies
+```
+random
+os
+time
+shutil
+math
+```
+- These are standard library modules, no pip install needed.
+- The game currently uses only built-in Python modules.
+- Requires Python 3.7+ for proper f-strings and dictionary ordering
 
 ## Controls
 Simple text commands to navigate gameplay:
