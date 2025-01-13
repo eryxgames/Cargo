@@ -558,7 +558,8 @@ class Game:
         self.stellar_portal_available = False
         self.research = Research()
         self.action = Action()
-                # Add new tracking attributes
+                # Add new tracking attributes for story milestones
+        self.trades_completed = 0
         self.combat_difficulty = 1.0
         self.pirate_frequency = 1.0
         self.event_risk = 1.0
@@ -1649,7 +1650,8 @@ class Game:
                 if self.ship.buy(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
-                
+                    self.handle_trade('buy')  # Handle story attributes
+
             elif action in ['sell', 's']:
                 item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
                                         ['tech', 'agri', 'salt', 'fuel'])
@@ -1670,6 +1672,8 @@ class Game:
                 if self.ship.sell(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
+                    self.handle_trade('sell')  # tracking for story
+
 
             elif action in ['upgrade', 'u']:
                 property_name = self.validate_input(
@@ -2685,6 +2689,13 @@ class Game:
                 f"Ship took {damage}% damage from hazardous conditions."
             ], color='31')
 
+    # Add trade tracking to buy/sell methods
+    def handle_trade(self, action_type):
+        """Track trade completion"""
+        self.trades_completed += 1
+        if self.trades_completed == 1:
+            self.story_manager.complete_milestone("first_trade")
+
     def handle_trade_event(self, event):
         """Handle trade disruption events with full market impact"""
         event_types = {
@@ -3283,7 +3294,7 @@ class Game:
     def check_milestone_triggers(self):
         """Check for milestone triggers each turn"""
         # First trade
-        if self.trades_completed == 1:
+        if self.trades_completed == 2:
             self.story_manager.complete_milestone("first_trade")
 
         # First combat
@@ -3313,6 +3324,8 @@ class Game:
         if len(self.research.unlocked_options) >= 3:
             self.story_manager.complete_milestone("tech_breakthrough")
 
+
+    
     # ... The end score ...
 
     def display_score(self):
@@ -4986,6 +4999,19 @@ class StoryManager:
         """Extension point for modding"""
         if hasattr(self, 'enabled_events') and event_id in self.enabled_events:
             self.process_event("story", {"event_id": event_id})
+
+    def check_event_trigger(self, event, game):
+        """Check if an event triggers any story progression"""
+        # Handle event triggers based on event name
+        if isinstance(event, str):
+            if "Pirate" in event:
+                self.process_event("combat", {"enemy_type": "pirate"})
+            elif "artifact" in event.lower():
+                self.process_event("exploration", {"discovery_type": "artifact"})
+            elif "trade" in event.lower():
+                self.process_event("trade", {})
+            elif "research" in event.lower():
+                self.process_event("research", {})
 
 class LocationManager:
     """Manages location interactions with story and quest systems"""
