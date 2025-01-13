@@ -4428,6 +4428,7 @@ class QuestSystem:
         self.completed_quests = []
         self.story_progress = 0
         self.quest_ids = set()  # Track unique quest IDs
+        self.quest_message_shown = set()  # Track shown quest messages
 
         # Quest line progression tracking
         self.quest_lines = {
@@ -4706,11 +4707,11 @@ class QuestSystem:
         self.check_quest_completion(self.game.ship, self.game.current_location)
 
     def complete_quest(self, quest):
-        """Complete a quest and remove from tracking"""
+        """Handle quest completion and cleanup with full quest lifecycle"""
+        quest_id = f"{quest.name}_{quest.quest_type}"
+        
         if quest in self.active_quests:
-            # Remove from tracking
-            quest_id = f"{quest.name}_{quest.quest_type}"
-            self.quest_ids.remove(quest_id)
+            # Remove from active quests and add to completed
             self.active_quests.remove(quest)
             self.completed_quests.append(quest)
             
@@ -4718,12 +4719,24 @@ class QuestSystem:
             self.game.ship.money += quest.reward_money
             self.game.ship.research_points += quest.reward_rp
             
-            # Handle any completion callback
+            # Apply any special effects based on quest type
+            if quest.quest_type == 'mining':
+                self.game.current_location.exogeology = min(100, 
+                    self.game.current_location.exogeology + 5)  # Small mining efficiency boost
+            elif quest.quest_type == 'research':
+                boost = int(quest.reward_rp * 0.1)  # 10% bonus research points
+                self.game.ship.research_points += boost
+            
+            # Execute completion callback if exists
             if quest.on_complete:
                 quest.on_complete()
             
-            # Mark as completed
+            # Mark quest as completed
             quest.completed = True
+            
+            # Clean up message tracking
+            if quest_id in self.quest_message_shown:
+                self.quest_message_shown.remove(quest_id)
             
             # Display completion message
             self.game.display_story_message([
@@ -4733,11 +4746,16 @@ class QuestSystem:
                 f"• {quest.reward_rp} research points"
             ])
             
-            # Handle story progression if needed
+            # Update story progression if applicable
             if hasattr(self.game, 'story_manager'):
                 self.game.story_manager.handle_quest_completion(quest)
             
+            # Check for milestone completion
+            if hasattr(self.game, 'check_milestone_triggers'):
+                self.game.check_milestone_triggers()
+            
             return True
+            
         return False
 
     def check_quest_line_completion(self, line_type):
@@ -4782,29 +4800,29 @@ class QuestSystem:
         return available_types
 
     def add_quest(self, quest):
-        """Add a new quest to active quests with duplicate checking"""
-        # Create a unique identifier for the quest
+        """Add a new quest with duplication check"""
+        # Create unique identifier for the quest
         quest_id = f"{quest.name}_{quest.quest_type}"
         
-        # Check if this quest is already active
-        if quest_id in self.quest_ids:
+        # Check if quest is already active
+        existing_quest = any(q.name == quest.name and q.quest_type == quest.quest_type 
+                           for q in self.active_quests)
+        if existing_quest:
             return False  # Don't add duplicate quest
-            
-        # Add quest ID to tracking set
-        self.quest_ids.add(quest_id)
+        
+        # Check if we've already shown this quest message
+        if quest_id not in self.quest_message_shown:
+            self.game.display_story_message([
+                "New Quest Available!",
+                quest.name,
+                quest.description,
+                f"Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
+            ])
+            self.quest_message_shown.add(quest_id)
         
         # Add quest to active quests
         self.active_quests.append(quest)
-        
-        # Display quest announcement once
-        self.game.display_story_message([
-            "New Quest Available!",
-            quest.name,
-            quest.description,
-            f"Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
-        ])
-        
-        return True      
+        return True
 
 class StoryManager:
     def __init__(self, game):
@@ -5459,21 +5477,19 @@ class LocationManager:
         if location_type in self.location_quests:
             quest_data = self.location_quests[location_type]["unlock_quest"]
             
+            # Create quest with unique type
             quest = Quest(
                 name=quest_data["name"],
                 description=quest_data["description"],
                 reward_money=quest_data["reward_money"],
                 reward_rp=quest_data["reward_rp"],
-                quest_type="location_unlock",
+                quest_type=f"unlock_{location_type}",  # Make type unique
                 requirements={"location_type": location_type},
                 on_complete=lambda: self.complete_location_unlock(location_type)
             )
             
+            # Use central quest addition method
             self.game.quest_system.add_quest(quest)
-            self.game.display_story_message([
-                f"New Quest Available: {quest_data['name']}",
-                quest_data["description"]
-            ])
 
     def complete_location_unlock(self, location_type):
         """Handle the completion of a location unlock quest"""
