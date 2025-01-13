@@ -1295,7 +1295,7 @@ class Game:
         
         # Location section
         location_info = [
-            ["MAP"],
+            ["Location"],
             [f"Name: {self.current_location.name}"],
             [f"Type: {self.current_location.location_type}"],
             [f"Tech Level: {self.current_location.tech_level}"],
@@ -1318,7 +1318,7 @@ class Game:
                 location_info.append([f"  {commodity.capitalize()}: {duration} turns"])
 
         # Add buildings
-        location_info.append(["Buildings:"])
+        location_info.append(["Networks (Built):"])
         if self.current_location.buildings:
             building_counts = {}
             for building in self.current_location.buildings:
@@ -1356,7 +1356,7 @@ class Game:
             content.append([ship_line, location_line])
 
         print(self.create_box(content, 'double'))
-        time.sleep(3)
+        time.sleep(4)
 
     def build_mining_platform(self):
         """Build a new mining platform on the current planet"""
