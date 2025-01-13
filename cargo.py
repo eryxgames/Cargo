@@ -715,7 +715,7 @@ class Game:
                 formatted_cells.append(f"{cell_str:<{col_widths[i]}}")
             
             # Join cells with separators and ensure total width matches
-            row_content = f" {(' ' + chars['sep'] + ' ').join(formatted_cells)} "
+            row_content = f" {(' ' + chars['sep'] + ' ').join(formatted_cells)}"
             # Pad to match exact width if needed
             padding_needed = horizontal_width - len(row_content)
             if padding_needed > 0:
@@ -2693,8 +2693,7 @@ class Game:
     def handle_trade(self, action_type):
         """Track trade completion"""
         self.trades_completed += 1
-        if self.trades_completed == 1:
-            self.story_manager.complete_milestone("first_trade")
+
 
     def handle_trade_event(self, event):
         """Handle trade disruption events with full market impact"""
@@ -4552,6 +4551,14 @@ class StoryManager:
         self.current_chapter = 0
         self.plot_points = 0
         self.completed_story_beats = set()
+        self.milestone_display_names = {
+            "first_trade": "First Trades",
+            "first_combat": "First Combat Victories",
+            "basic_license": "Basic Trading License",
+            "defeat_pirates": "Pirate Threat Eliminated",
+            "secure_route": "Trade Route Secured", 
+            "establish_base": "New Base Established"
+        }        
         self.story_states = {
             "pirate_threat": False,
             "alien_discovery": False,
@@ -4841,9 +4848,9 @@ class StoryManager:
             self.completed_story_beats.add(milestone)
             points = self.milestone_points.get(milestone, 0)
             self.plot_points += points
-            
+            display_name = self.milestone_display_names.get(milestone, milestone.replace("_", " ").title())
             self.game.display_story_message([
-                f"Milestone Completed: {milestone}!",
+                f"Milestone Completed: {display_name}!",
                 f"Earned {points} plot points"
             ])
 
