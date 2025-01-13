@@ -4046,8 +4046,15 @@ class Location:
         return resource_type in self.get_capabilities().get("can_mine", [])
 
     def get_base_exogeology(self):
-        """Get base mining efficiency for this location type"""
-        return self.get_capabilities().get("base_exogeology", 0)
+        """Get base mining efficiency with randomized ranges per location type"""
+        ranges = {
+            "Planet": (35, 65),
+            "AsteroidBase": (68, 78),
+            "DeepSpaceOutpost": (42, 52),
+            "ResearchColony": (16, 36)
+        }
+        base_range = ranges.get(self.location_type, (50, 60))
+        return random.randint(*base_range)
 
     def get_research_multiplier(self):
         """Get research point multiplier for this location type"""
