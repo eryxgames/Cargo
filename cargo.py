@@ -464,6 +464,10 @@ class Ship:
             'alien': 0
         }
 
+                # Initialize passenger-related attributes
+        self.passenger_modules = []
+        self.passenger_reputation = 0
+
     def record_combat_victory(self, enemy_type=None):
         """Record a combat victory with proper type tracking"""
         self.combat_victories['total'] += 1
@@ -571,7 +575,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Standard planetary commerce hub"
         },
@@ -580,7 +584,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Mining and resource extraction facility"
         },
@@ -589,7 +593,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('end', 'e')
+                ('action', 'a'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Strategic trading outpost"
         },
@@ -598,7 +602,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('research', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('shop', 'sh'), ('action', 'a'),
-                ('end', 'e')
+                ('port', 'p'), ('end', 'e')
             ],
             "special_commands": {
                 "research": {
@@ -609,6 +613,7 @@ class LocationCommands:
             "description": "Advanced scientific research facility. No repair facilities available."
         }
     }
+
     @staticmethod
     def get_available_commands(location_type):
         """Get available commands for location type"""
@@ -630,7 +635,6 @@ class LocationCommands:
             "special": LocationCommands.get_special_commands(location.location_type)
         }
 
-
 # Define the Game class
 class Game:
     def __init__(self):
@@ -651,7 +655,6 @@ class Game:
         self.quest_system = QuestSystem(self)
         self.unlocked_location_types = {"Planet"}
         self.location_manager = LocationManager(self)
-        self.display_starting_info()
         self.secret_quest_available = False
         self.stellar_portal_available = False
         self.research = Research()
@@ -670,6 +673,16 @@ class Game:
         self.trade_bonus = 0
         self.repair_discount = 0
         self.combat_bonus = 0
+                # Add port system
+        self.port_system = Port(self)
+        self.display_starting_info()
+
+    # Modified Ship class initialization to include passenger modules
+    def init_ship(self):
+        self.ship = Ship()
+        self.ship.passenger_modules = []  # Initialize empty passenger modules list
+        self.ship.passenger_reputation = 0  # Initialize passenger reputation
+
 
     def get_terminal_width(self):
         return shutil.get_terminal_size().columns
@@ -1228,6 +1241,15 @@ class Game:
     # Update Game class methods
     def display_turn_info(self):
         self.clear_screen()
+
+        # Calculate passenger stats
+        total_passengers = 0
+        total_capacity = 0
+        if hasattr(self.ship, 'passenger_modules'):
+            for module in self.ship.passenger_modules:
+                total_passengers += len(module.passengers)
+                total_capacity += module.capacity
+
         status_content = [
             ["CΔRGΩ", "Ship", f"{self.current_location.location_type}"],
             [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_location.name}"],
@@ -1235,7 +1257,8 @@ class Game:
             [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_location.agri_level}"],
             [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_location.economy}"],
             [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.exogeology}%"],
-            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"]
+            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"],
+            [f"PAX: {total_passengers}/{total_capacity}", f"REP: {self.ship.passenger_reputation}", ""]
         ]
         
         # Add story progress if available
@@ -1271,11 +1294,11 @@ class Game:
                 market_content.append([f"{commodity.capitalize()}", f"{duration} turns"])
         print(self.create_box(market_content, 'single'))
 
-        # Command menu with new options
+        # Display commands including port
         commands = [
             ["Commands: buy/b, sell/s, upgrade/u,"],
             ["travel/t, repair/r, info/i, build/bl,"],
-            ["cantina/c, shop/sh, action/a, end/e"],
+            ["cantina/c, shop/sh, action/a, port/p, end/e"]
         ]
         print(self.create_box(commands, 'round'))
 
@@ -1701,6 +1724,13 @@ class Game:
             # Get location commands
             location_commands = self.current_location.commands
             
+            # Update port system if port command is available
+            port_is_available = False
+            for cmd, shortcut in location_commands["available"]:
+                if cmd == 'port' or shortcut == 'p':
+                    port_is_available = True
+                    self.port_system.update_passengers(self.current_location.name)
+            
             # Create list of valid actions
             valid_actions = []
             for cmd, shortcut in location_commands["available"]:
@@ -1714,7 +1744,7 @@ class Game:
             # Handle cancelled command
             if action is None:
                 return
-                    
+                        
             # Handle research/repair based on location type
             elif action in ['research', 'r']:
                 if isinstance(self.current_location, ResearchColony):
@@ -1737,12 +1767,10 @@ class Game:
                 if item is None:
                     return
 
-                # Check if item can be traded
                 if not self.current_location.can_trade(item):
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
-                # Check for mining platform requirement for salt and fuel
                 if item in ['salt', 'fuel']:
                     has_platform = any(p['type'] == item for p in self.current_location.mining_platforms)
                     if not has_platform:
@@ -1754,13 +1782,11 @@ class Game:
                     return
 
                 if quantity == 'max':
-                    # Only calculate max if the item's price is non-zero
                     price = self.current_location.market[item]
                     if price <= 0:
                         self.display_simple_message(f"Cannot calculate maximum: {item} has no valid price.")
                         return
                         
-                    # Calculate tax rate for this transaction
                     tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
                     price_with_tax = price * (1 + tax_rate)
                     quantity = int(self.ship.money / price_with_tax)
@@ -1768,7 +1794,7 @@ class Game:
                 if self.ship.buy(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
-                    self.handle_trade('buy')  # Handle story attributes
+                    self.handle_trade('buy')
 
             elif action in ['sell', 's']:
                 item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
@@ -1790,8 +1816,7 @@ class Game:
                 if self.ship.sell(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
-                    self.handle_trade('sell')  # tracking for story
-
+                    self.handle_trade('sell')
 
             elif action in ['upgrade', 'u']:
                 property_name = self.validate_input(
@@ -1804,7 +1829,6 @@ class Game:
                 cost = self.ship.upgrade_costs[property_name]
                 if self.ship.upgrade(property_name, cost):
                     self.display_simple_message(f"Upgraded {property_name}.")
-                    # Increase cost for next upgrade
                     self.ship.upgrade_costs[property_name] = int(cost * 1.5)
 
             elif action in ['travel', 't']:
@@ -1838,15 +1862,6 @@ class Game:
                         
                     self.travel_to_location(location_name)
 
-            elif action in ['repair', 'r']:
-                cost = self.ship.damage * 10
-                if self.ship.repair(cost):
-                    self.display_simple_message("Ship repaired.")
-                else:
-                    self.display_simple_message(
-                        f"Not enough money to repair. Cost: {self.format_money(cost)}"
-                    )
-
             elif action in ['info', 'i']:
                 self.display_location_info()
 
@@ -1861,7 +1876,6 @@ class Game:
                     'mining': 10000
                 }
 
-                # Create the validation options list
                 valid_options = [
                     'stockmarket', 'sm',
                     'permaculture', 'pc',
@@ -1880,20 +1894,26 @@ class Game:
                 if building_name is None:
                     return
 
-                # Handle building construction - removed building_options parameter
                 self.handle_building_construction(building_name, building_costs)
 
             elif action in ['cantina', 'c']:
                 self.visit_cantina()
 
             elif action in ['shop', 'sh']:
-                self.visit_shop()  # Changed from self.shop()
+                self.visit_shop()
 
             elif action in ['action', 'a']:
                 self.handle_actions()
 
             elif action in ['mine', 'm']:
                 self.handle_mining()
+                
+            elif action in ['port', 'p']:
+                if port_is_available:
+                    self.port_system.handle_port_menu()
+                    self.port_system.update_passenger_satisfaction()
+                else:
+                    self.display_simple_message("No port available at this location.")
 
             elif action in ['version', 'v']:
                 display_logo(logo_data, centered=True)
@@ -1915,12 +1935,60 @@ class Game:
                 return    
 
             elif action in ['end', 'e']:
+                # Update passenger satisfaction at end of turn if port is available
+                if port_is_available:
+                    self.port_system.update_passenger_satisfaction()
                 self.turn += 1
                 self.random_event()
                 return
 
             else:
                 self.display_simple_message("Invalid action.")
+
+    # Add passenger event handlers
+    def handle_passenger_celebration(self):
+        """Handle passenger celebration event"""
+        for module in self.ship.passenger_modules:
+            for passenger in module.passengers:
+                passenger.satisfaction = min(100, passenger.satisfaction + 10)
+        self.display_simple_message("Passengers are having a celebration! Satisfaction increased!")
+
+    def handle_passenger_complaint(self):
+        """Handle passenger complaint event"""
+        for module in self.ship.passenger_modules:
+            for passenger in module.passengers:
+                passenger.satisfaction = max(0, passenger.satisfaction - 15)
+        self.display_simple_message("Passengers have filed complaints! Satisfaction decreased!")
+
+    def handle_medical_emergency(self):
+        """Handle medical emergency event"""
+        cost = random.randint(500, 1500)
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.display_simple_message(f"Medical emergency handled! Cost: {self.format_money(cost)}")
+        else:
+            # If can't afford medical care, big satisfaction hit
+            for module in self.ship.passenger_modules:
+                for passenger in module.passengers:
+                    passenger.satisfaction = max(0, passenger.satisfaction - 30)
+            self.display_simple_message("Couldn't afford medical care! Passengers very unhappy!")
+
+    def handle_vip_request(self):
+        """Handle VIP passenger request"""
+        cost = random.randint(1000, 2000)
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.ship.passenger_reputation += 2
+            self.display_simple_message(f"VIP request handled! Cost: {self.format_money(cost)}, Reputation increased!")
+        else:
+            self.ship.passenger_reputation = max(0, self.ship.passenger_reputation - 1)
+            self.display_simple_message("Couldn't fulfill VIP request! Reputation decreased!")
+
+    def handle_passenger_trade_info(self):
+        """Handle passengers sharing trade information"""
+        # Reveal profitable trade opportunities
+        self.display_simple_message("Passengers shared valuable trade information!")
+        # Implement trade tip functionality here                
 
     def unlock_location_type(self, location_type):
         """Unlock a new type of location and add its instances to available locations"""
@@ -2364,6 +2432,30 @@ class Game:
 
     def random_event(self):
         """Enhanced random event handler with complete implementation"""
+        # Add passenger-related events
+        if hasattr(self.ship, 'passenger_modules') and any(m.passengers for m in self.ship.passenger_modules):
+            # 10% chance of passenger event if carrying passengers
+            if random.random() < 0.1:
+                passenger_events = [
+                    "Passenger celebration boosts morale!",
+                    "Passenger complaint about accommodations!",
+                    "Medical emergency with passenger!",
+                    "VIP passenger requests special treatment!",
+                    "Passengers share valuable trade information!"
+                ]
+                event = random.choice(passenger_events)
+                
+                if "celebration" in event:
+                    self.handle_passenger_celebration()
+                elif "complaint" in event:
+                    self.handle_passenger_complaint()
+                elif "medical" in event:
+                    self.handle_medical_emergency()
+                elif "VIP" in event:
+                    self.handle_vip_request()
+                elif "trade" in event:
+                    self.handle_passenger_trade_info()
+
         # Define all possible events with their categories
         events = {
             "combat": [
@@ -4193,6 +4285,371 @@ class Game:
 
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
+
+class PassengerModule:
+    def __init__(self, name, capacity, comfort_level, cost):
+        self.name = name
+        self.capacity = capacity  # How many passengers it can hold
+        self.comfort_level = comfort_level  # 1-5, affects passenger satisfaction and payment
+        self.cost = cost
+        self.passengers = []
+
+class Passenger:
+    def __init__(self, name, destination, wealth_level):
+        self.name = name
+        self.destination = destination
+        self.wealth_level = wealth_level  # 1-5, affects payment
+        self.satisfaction = 100  # Starts at 100, can decrease based on journey
+        self.turns_waiting = 0
+
+class Port:
+    def __init__(self, game):
+        self.game = game
+        self.available_modules = {
+            "basic_passenger": {
+                "name": "Basic Passenger Module",
+                "capacity": 4,
+                "comfort_level": 1,
+                "cost": 5000
+            },
+            "standard_passenger": {
+                "name": "Standard Passenger Module",
+                "capacity": 8,
+                "comfort_level": 2,
+                "cost": 10000
+            },
+            "luxury_passenger": {
+                "name": "Luxury Passenger Module",
+                "capacity": 4,
+                "comfort_level": 4,
+                "cost": 20000
+            },
+            "life_support": {
+                "name": "Life Support Extension",
+                "capacity": 4,
+                "comfort_level": 1,
+                "cost": 8000
+            },
+            "business_cabin": {
+                "name": "Business Class Cabin",
+                "capacity": 2,
+                "comfort_level": 5,
+                "cost": 25000
+            }
+        }
+        
+        # List of passengers waiting at each location
+        self.waiting_passengers = {}
+        
+        # Passenger names for random generation
+        self.first_names = ["John", "Emma", "Zara", "Chen", "Raj", "Ana", "Igor", "Yuki", "Omar", "Luna"]
+        self.last_names = ["Smith", "Patel", "Wong", "Garcia", "Petrov", "Tanaka", "Mueller", "Kim", "Hassan", "Silva"]
+        
+    def generate_passenger(self, current_location):
+        """Generate a random passenger"""
+        name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
+        # Choose destination from known locations except current
+        possible_destinations = [loc for loc in self.game.known_locations if loc != current_location]
+        if not possible_destinations:
+            return None
+        destination = random.choice(possible_destinations)
+        wealth_level = random.randint(1, 5)
+        return Passenger(name, destination, wealth_level)
+
+    def update_passengers(self, location):
+        """Update passenger list at a location"""
+        if location not in self.waiting_passengers:
+            self.waiting_passengers[location] = []
+            
+        # Remove passengers waiting too long
+        self.waiting_passengers[location] = [p for p in self.waiting_passengers[location] 
+                                           if p.turns_waiting < 10]
+                                           
+        # Add new passengers (1-3 per turn)
+        new_passengers = random.randint(1, 3)
+        for _ in range(new_passengers):
+            passenger = self.generate_passenger(location)
+            if passenger:
+                self.waiting_passengers[location].append(passenger)
+                
+        # Update waiting turns
+        for passenger in self.waiting_passengers[location]:
+            passenger.turns_waiting += 1
+
+    def calculate_fare(self, passenger, module):
+        """Calculate passenger fare based on distance, comfort, and wealth"""
+        base_fare = 100 * passenger.wealth_level
+        comfort_multiplier = 1 + (module.comfort_level * 0.2)
+        distance_multiplier = 1
+        
+        # Add distance calculation if game has that mechanic
+        # distance_multiplier = calculate_distance(current, destination)
+        
+        return int(base_fare * comfort_multiplier * distance_multiplier)
+
+    def display_port_info(self):
+        """Display port information and options"""
+        content = []
+        
+        # Show installed modules
+        content.append(["Installed Passenger Modules"])
+        if hasattr(self.game.ship, 'passenger_modules'):
+            for module in self.game.ship.passenger_modules:
+                passengers = len(module.passengers)
+                content.append([
+                    f"{module.name}",
+                    f"({passengers}/{module.capacity} passengers)",
+                    f"Comfort Level: {module.comfort_level}"
+                ])
+        else:
+            content.append(["No passenger modules installed"])
+            
+        # Show current passengers
+        content.append([""])
+        content.append(["Current Passengers"])
+        total_passengers = 0
+        if hasattr(self.game.ship, 'passenger_modules'):
+            for module in self.game.ship.passenger_modules:
+                for passenger in module.passengers:
+                    total_passengers += 1
+                    content.append([
+                        f"{passenger.name}",
+                        f"→ {passenger.destination}",
+                        f"Satisfaction: {passenger.satisfaction}%"
+                    ])
+        if total_passengers == 0:
+            content.append(["No passengers currently aboard"])
+
+        # Show waiting passengers at current location
+        content.append([""])
+        content.append(["Waiting Passengers"])
+        location = self.game.current_location.name
+        if location in self.waiting_passengers and self.waiting_passengers[location]:
+            for passenger in self.waiting_passengers[location]:
+                content.append([
+                    f"{passenger.name}",
+                    f"→ {passenger.destination}",
+                    f"Wealth Level: {passenger.wealth_level}"
+                ])
+        else:
+            content.append(["No passengers waiting"])
+            
+        return self.game.create_box(content, 'double')
+
+    def handle_port_menu(self):
+        """Handle port menu options"""
+        self.game.display_simple_message("Welcome to the Stardock Port!")
+        
+        while True:
+            options = ['view', 'v', 'modules', 'm', 'board', 'b', 'unload', 'u', 'back']
+            action = self.game.validate_input(
+                "Choose action (view/v, modules/m, board/b, unload/u, back): ",
+                options
+            )
+            
+            if action in ['back', None]:
+                break
+                
+            elif action in ['view', 'v']:
+                print(self.display_port_info())
+                
+            elif action in ['modules', 'm']:
+                self.handle_module_purchase()
+                
+            elif action in ['board', 'b']:
+                self.handle_passenger_boarding()
+                
+            elif action in ['unload', 'u']:
+                self.handle_passenger_unloading()
+
+    def handle_module_purchase(self):
+        """Handle purchase of new modules"""
+        content = [["Available Modules"]]
+        content.append(["Name", "Capacity", "Comfort", "Cost"])
+        
+        for module_id, module in self.available_modules.items():
+            content.append([
+                module["name"],
+                str(module["capacity"]),
+                str(module["comfort_level"]),
+                str(self.game.format_money(module["cost"]))
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        module_id = self.game.validate_input(
+            "Choose module to buy (or 'back'): ",
+            list(self.available_modules.keys()) + ['back']
+        )
+        
+        if module_id == 'back':
+            return
+            
+        module = self.available_modules[module_id]
+        if self.game.ship.money >= module["cost"]:
+            self.game.ship.money -= module["cost"]
+            
+            if not hasattr(self.game.ship, 'passenger_modules'):
+                self.game.ship.passenger_modules = []
+                
+            new_module = PassengerModule(
+                module["name"],
+                module["capacity"],
+                module["comfort_level"],
+                module["cost"]
+            )
+            self.game.ship.passenger_modules.append(new_module)
+            
+            self.game.display_simple_message(f"Purchased {module['name']}!")
+        else:
+            self.game.display_simple_message("Not enough money!")
+
+    def handle_passenger_boarding(self):
+        """Handle passenger boarding process"""
+        location = self.game.current_location.name
+        
+        if not hasattr(self.game.ship, 'passenger_modules'):
+            self.game.display_simple_message("No passenger modules installed!")
+            return
+            
+        if location not in self.waiting_passengers or not self.waiting_passengers[location]:
+            self.game.display_simple_message("No passengers waiting!")
+            return
+            
+        # Show waiting passengers
+        content = [["Waiting Passengers"]]
+        content.append(["Name", "Destination", "Wealth", "Est. Fare"])
+        
+        available_modules = [m for m in self.game.ship.passenger_modules 
+                           if len(m.passengers) < m.capacity]
+        
+        if not available_modules:
+            self.game.display_simple_message("No room for more passengers!")
+            return
+            
+        # Show each passenger and their details
+        for i, passenger in enumerate(self.waiting_passengers[location], 1):
+            # Calculate best possible fare with available modules
+            best_module = max(available_modules, key=lambda m: m.comfort_level)
+            est_fare = self.calculate_fare(passenger, best_module)
+            
+            content.append([
+                f"{i}. {passenger.name}",
+                passenger.destination,
+                str(passenger.wealth_level),
+                self.game.format_money(est_fare)
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        # Get passenger choice
+        choice = self.game.validate_input(
+            f"Choose passenger number (1-{len(self.waiting_passengers[location])} or 'back'): ",
+            [str(i) for i in range(1, len(self.waiting_passengers[location]) + 1)] + ['back']
+        )
+        
+        if choice == 'back':
+            return
+            
+        passenger = self.waiting_passengers[location][int(choice) - 1]
+        
+        # Show available modules
+        content = [["Available Modules"]]
+        content.append(["Module", "Comfort", "Space", "Est. Fare"])
+        
+        for i, module in enumerate(available_modules, 1):
+            fare = self.calculate_fare(passenger, module)
+            content.append([
+                f"{i}. {module.name}",
+                str(module.comfort_level),
+                f"{len(module.passengers)}/{module.capacity}",
+                self.game.format_money(fare)
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        # Get module choice
+        module_choice = self.game.validate_input(
+            f"Choose module number (1-{len(available_modules)} or 'back'): ",
+            [str(i) for i in range(1, len(available_modules) + 1)] + ['back']
+        )
+        
+        if module_choice == 'back':
+            return
+            
+        chosen_module = available_modules[int(module_choice) - 1]
+        
+        # Board passenger
+        chosen_module.passengers.append(passenger)
+        self.waiting_passengers[location].remove(passenger)
+        
+        self.game.display_simple_message(f"Passenger {passenger.name} boarded!")
+
+    def handle_passenger_unloading(self):
+        """Handle passenger unloading and payment"""
+        if not hasattr(self.game.ship, 'passenger_modules'):
+            self.game.display_simple_message("No passenger modules installed!")
+            return
+            
+        current_location = self.game.current_location.name
+        passengers_to_unload = []
+        
+        # Find passengers that have reached their destination
+        for module in self.game.ship.passenger_modules:
+            for passenger in module.passengers[:]:  # Create copy for iteration
+                if passenger.destination == current_location:
+                    fare = self.calculate_fare(passenger, module)
+                    satisfaction_multiplier = passenger.satisfaction / 100
+                    final_payment = int(fare * satisfaction_multiplier)
+                    
+                    self.game.ship.money += final_payment
+                    module.passengers.remove(passenger)
+                    
+                    passengers_to_unload.append((passenger, final_payment))
+                    
+        if passengers_to_unload:
+            content = [["Passengers Disembarked"]]
+            total_earnings = 0
+            
+            for passenger, payment in passengers_to_unload:
+                content.append([
+                    passenger.name,
+                    f"Payment: {self.game.format_money(payment)}",
+                    f"Satisfaction: {passenger.satisfaction}%"
+                ])
+                total_earnings += payment
+                
+            content.append([""])
+            content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
+            
+            print(self.game.create_box(content, 'double'))
+        else:
+            self.game.display_simple_message("No passengers to unload here!")
+
+    def update_passenger_satisfaction(self):
+        """Update passenger satisfaction during travel"""
+        if not hasattr(self.game.ship, 'passenger_modules'):
+            return
+            
+        for module in self.game.ship.passenger_modules:
+            for passenger in module.passengers:
+                # Base satisfaction change
+                change = 0
+                
+                # Comfort level effect
+                if module.comfort_level >= passenger.wealth_level:
+                    change += 2  # Satisfied with comfort
+                else:
+                    change -= 3  # Dissatisfied with comfort
+                    
+                # Ship damage effect
+                if self.game.ship.damage > 50:
+                    change -= 5
+                elif self.game.ship.damage > 25:
+                    change -= 2
+                    
+                # Update satisfaction
+                passenger.satisfaction = max(0, min(100, passenger.satisfaction + change))
 
 class Shop:
     def __init__(self):
