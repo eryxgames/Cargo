@@ -3116,18 +3116,345 @@ class Game:
         return True
 
     def handle_research_options(self):
-        """Add research options to action menu when at Research Colony"""
-        if isinstance(self.current_location, ResearchColony):
-            options = ['analyze', 'experiment', 'back']
-            choice = self.validate_input(
-                "Research options (analyze/experiment/back): ",
-                options
-            )
+        """Enhanced research options system"""
+        if not isinstance(self.current_location, ResearchColony):
+            self.display_simple_message("Research options only available at Research Colonies!")
+            return
+
+        # Show current research points and colony specialization
+        specialization = getattr(self.current_location, 'research_specialization', 
+                            random.choice(['quantum', 'xenology', 'engineering', 'temporal']))
+        self.current_location.research_specialization = specialization
+        
+        research_content = [
+            ["Research Laboratory Options"],
+            [f"Available Research Points: {self.ship.research_points}"],
+            [f"Colony Specialization: {specialization.title()}"],
+            [""],
+            ["1. Analyze (20 RP) - Safe, steady progress"],
+            ["2. Experiment (40 RP) - Risky, higher rewards"],
+            ["3. Breakthrough (100 RP) - Major discovery attempt"],
+            ["4. Collaborate (30 RP) - Work with colony scientists"]
+        ]
+        print(self.create_box(research_content, 'double'))
+
+        choice = self.validate_input(
+            "Choose research action (1-4, or 'back'): ",
+            ['1', '2', '3', '4', 'back']
+        )
+        
+        if choice == 'back':
+            return
             
-            if choice == 'analyze':
-                self.conduct_research_activity('analysis_completed')
-            elif choice == 'experiment':
-                self.conduct_research_activity('experiments_conducted')
+        if choice == '1':
+            self.conduct_analysis(specialization)
+        elif choice == '2':
+            self.conduct_experiment(specialization)
+        elif choice == '3':
+            self.attempt_breakthrough(specialization)
+        elif choice == '4':
+            self.collaborate_research(specialization)
+
+    def conduct_analysis(self, specialization):
+        """Safe research analysis with guaranteed small rewards and chance for items"""
+        cost = 20
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Base rewards
+        tech_bonus = random.randint(5, 15)
+        money_bonus = random.randint(500, 1500)
+        
+        # Specialization bonuses
+        if specialization == 'quantum':
+            tech_bonus *= 1.5
+        elif specialization == 'engineering':
+            money_bonus *= 1.5
+        
+        # Chance for bonus item or ship stat
+        if random.random() < 0.2:  # 20% chance for bonus
+            bonus_type = random.choice(['item', 'stat'])
+            if bonus_type == 'item':
+                research_items = {
+                    'quantum': ['quantum_analyzer', 'entanglement_core', 'quantum_shield'],
+                    'xenology': ['xeno_scanner', 'translation_matrix', 'alien_artifact'],
+                    'engineering': ['efficiency_module', 'repair_nanites', 'power_core'],
+                    'temporal': ['time_dilator', 'causality_shield', 'temporal_lens']
+                }
+                item = random.choice(research_items[specialization])
+                self.ship.acquire_item(item)
+                self.display_simple_message(f"Bonus research item acquired: {item}!")
+            else:
+                stat = random.choice(['attack', 'defense', 'speed'])
+                bonus = 1
+                if stat == 'attack':
+                    self.ship.attack += bonus
+                elif stat == 'defense':
+                    self.ship.defense += bonus
+                else:
+                    self.ship.speed += bonus
+                self.display_simple_message(f"Ship {stat} improved by {bonus}!")
+
+        # Generate research findings
+        findings = {
+            'quantum': [
+                "Quantum field fluctuations mapped",
+                "Superposition states stabilized",
+                "Entanglement patterns documented",
+                "Wave function variations recorded"
+            ],
+            'xenology': [
+                "Alien artifact patterns analyzed",
+                "Bio-signatures catalogued",
+                "Cultural markers identified",
+                "Xenotechnology principles documented"
+            ],
+            'engineering': [
+                "Efficiency algorithms optimized",
+                "Material stress patterns mapped",
+                "Power distribution improved",
+                "Systems integration enhanced"
+            ],
+            'temporal': [
+                "Temporal anomalies measured",
+                "Causality patterns documented",
+                "Time dilation effects mapped",
+                "Chronological variations recorded"
+            ]
+        }
+        
+        result = random.choice(findings[specialization])
+        
+        self.ship.money += money_bonus
+        self.ship.research_points += tech_bonus
+        
+        self.display_simple_message([
+            f"Analysis Complete: {result}",
+            f"Gained {tech_bonus} research points",
+            f"Earned {self.format_money(money_bonus)} credits"
+        ])
+
+    def conduct_experiment(self, specialization):
+        """Risky research with variable outcomes and enhanced rewards"""
+        cost = 40
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Success chance based on specialization
+        base_chance = 0.7
+        if specialization == 'engineering':
+            base_chance += 0.1
+        
+        if random.random() < base_chance:
+            # Successful experiment
+            reward_mult = random.uniform(1.5, 3.0)
+            tech_bonus = int(cost * reward_mult)
+            money_bonus = int(1000 * reward_mult)
+            
+            # Enhanced rewards
+            if random.random() < 0.4:  # 40% chance for significant bonus
+                advanced_items = {
+                    'quantum': {
+                        'items': ['quantum_core_v2', 'phase_shifter', 'quantum_capacitor'],
+                        'stat_bonus': {'attack': 2, 'defense': 1, 'speed': 2}
+                    },
+                    'xenology': {
+                        'items': ['alien_reactor', 'xeno_shield', 'biotech_enhancer'],
+                        'stat_bonus': {'attack': 1, 'defense': 2, 'speed': 1}
+                    },
+                    'engineering': {
+                        'items': ['fusion_drive', 'nanotech_armor', 'power_amplifier'],
+                        'stat_bonus': {'attack': 2, 'defense': 2, 'speed': 1}
+                    },
+                    'temporal': {
+                        'items': ['time_dilation_core', 'temporal_shield', 'causality_engine'],
+                        'stat_bonus': {'attack': 1, 'defense': 1, 'speed': 3}
+                    }
+                }
+                
+                # Either get an advanced item or stat bonus
+                if random.random() < 0.5:
+                    item = random.choice(advanced_items[specialization]['items'])
+                    self.ship.acquire_item(item)
+                    self.display_simple_message(f"Advanced research item acquired: {item}!")
+                else:
+                    stat_bonuses = advanced_items[specialization]['stat_bonus']
+                    for stat, bonus in stat_bonuses.items():
+                        if random.random() < 0.5:  # 50% chance for each stat
+                            if stat == 'attack':
+                                self.ship.attack += bonus
+                            elif stat == 'defense':
+                                self.ship.defense += bonus
+                            else:
+                                self.ship.speed += bonus
+                            self.display_simple_message(f"Ship {stat} improved by {bonus}!")
+
+            # Special bonuses based on specialization
+            special_outcomes = {
+                'quantum': ["Quantum Computing Breakthrough", 
+                        lambda: setattr(self.ship, 'quantum_bonus', True)],
+                'xenology': ["Alien Technology Integration", 
+                            lambda: setattr(self.ship, 'alien_tech', True)],
+                'engineering': ["Advanced Engineering Insights", 
+                            lambda: setattr(self.ship, 'engineering_bonus', True)],
+                'temporal': ["Temporal Mechanics Discovery", 
+                            lambda: setattr(self.ship, 'temporal_bonus', True)]
+            }
+            
+            outcome, effect = special_outcomes[specialization]
+            effect()  # Apply the special effect
+            
+            self.display_simple_message([
+                f"Experiment Success: {outcome}!",
+                f"Gained {tech_bonus} research points",
+                f"Earned {self.format_money(money_bonus)} credits",
+                "Special ability unlocked!"
+            ])
+            
+            self.ship.money += money_bonus
+            self.ship.research_points += tech_bonus
+            
+        else:
+            # Failed experiment
+            damage = random.randint(5, 15)
+            self.ship.damage = min(99, self.ship.damage + damage)
+            lost_points = random.randint(5, 15)
+            self.ship.research_points = max(0, self.ship.research_points - lost_points)
+            
+            self.display_simple_message([
+                "Experiment Failed!",
+                f"Ship took {damage}% damage",
+                f"Lost {lost_points} research points"
+            ])
+
+    def attempt_breakthrough(self, specialization):
+        """Attempt a major research breakthrough"""
+        cost = 100
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Breakthrough chance increases with more research points spent
+        breakthrough_chance = min(0.8, 0.3 + (self.ship.research_points / 1000))
+        
+        if random.random() < breakthrough_chance:
+            # Major breakthrough
+            breakthrough_rewards = {
+                'quantum': {
+                    'name': "Quantum Tunneling Drive",
+                    'effect': lambda: setattr(self.ship, 'speed', self.ship.speed + 2),
+                    'bonus_rp': 300,
+                    'bonus_money': 50000
+                },
+                'xenology': {
+                    'name': "Xenomorph Shield Matrix",
+                    'effect': lambda: setattr(self.ship, 'defense', self.ship.defense + 2),
+                    'bonus_rp': 250,
+                    'bonus_money': 40000
+                },
+                'engineering': {
+                    'name': "Nano-fabrication System",
+                    'effect': lambda: setattr(self.ship, 'engineering_level', 
+                                            getattr(self.ship, 'engineering_level', 0) + 1),
+                    'bonus_rp': 200,
+                    'bonus_money': 60000
+                },
+                'temporal': {
+                    'name': "Temporal Compression Field",
+                    'effect': lambda: setattr(self.ship, 'temporal_compression', True),
+                    'bonus_rp': 400,
+                    'bonus_money': 45000
+                }
+            }
+            
+            reward = breakthrough_rewards[specialization]
+            reward['effect']()  # Apply the special effect
+            
+            self.ship.research_points += reward['bonus_rp']
+            self.ship.money += reward['bonus_money']
+            
+            self.display_simple_message([
+                f"Major Breakthrough: {reward['name']}!",
+                f"Gained {reward['bonus_rp']} research points",
+                f"Earned {self.format_money(reward['bonus_money'])} credits",
+                "Revolutionary technology acquired!"
+            ])
+            
+        else:
+            # Minor breakthrough
+            bonus_rp = random.randint(50, 150)
+            bonus_money = random.randint(5000, 15000)
+            
+            self.ship.research_points += bonus_rp
+            self.ship.money += bonus_money
+            
+            self.display_simple_message([
+                "Minor Breakthrough Achieved",
+                f"Gained {bonus_rp} research points",
+                f"Earned {self.format_money(bonus_money)} credits"
+            ])
+
+    def collaborate_research(self, specialization):
+        """Collaborate with colony scientists"""
+        cost = 30
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Collaboration projects
+        projects = {
+            'quantum': [
+                ("Quantum Encryption", 1.2),
+                ("Entanglement Network", 1.3),
+                ("Quantum Computing", 1.4)
+            ],
+            'xenology': [
+                ("Alien Languages", 1.2),
+                ("Xenobiology", 1.3),
+                ("First Contact Protocols", 1.4)
+            ],
+            'engineering': [
+                ("Power Systems", 1.2),
+                ("Shield Technology", 1.3),
+                ("Propulsion Theory", 1.4)
+            ],
+            'temporal': [
+                ("Time Dilation", 1.2),
+                ("Causality Mechanics", 1.3),
+                ("Temporal Physics", 1.4)
+            ]
+        }
+        
+        project, multiplier = random.choice(projects[specialization])
+        
+        # Calculate rewards
+        research_gain = int(cost * multiplier)
+        money_gain = int(2000 * multiplier)
+        
+        # Colony gains permanent bonus to future research
+        colony_bonus = random.uniform(0.05, 0.15)  # 5-15% bonus
+        current_multiplier = getattr(self.current_location, 'research_multiplier', 1.0)
+        self.current_location.research_multiplier = current_multiplier + colony_bonus
+        
+        self.ship.research_points += research_gain
+        self.ship.money += money_gain
+        
+        self.display_simple_message([
+            f"Collaboration Project: {project}",
+            f"Gained {research_gain} research points",
+            f"Earned {self.format_money(money_gain)} credits",
+            f"Colony research efficiency increased by {int(colony_bonus * 100)}%"
+        ])
 
     def visit_cantina(self):
         self.display_simple_message("Welcome to the Cantina!", 1)
