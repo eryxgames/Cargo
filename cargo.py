@@ -1718,7 +1718,7 @@ class Game:
             # Handle research/repair based on location type
             elif action in ['research', 'r']:
                 if isinstance(self.current_location, ResearchColony):
-                    self.handle_research_activities()
+                    self.handle_research_options()
                 elif action == 'r':  # Only handle repair if 'r' and not at Research Colony
                     if self.ship.damage > 0:
                         cost = self.ship.damage * 10
