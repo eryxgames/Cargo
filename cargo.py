@@ -1296,11 +1296,11 @@ class Game:
 
         # Display commands including port
         commands = [
-            ["Commands: buy/b, sell/s, upgrade/u,"],
-            ["travel/t, repair/r, info/i, build/bl,"],
-            ["cantina/c, shop/sh, action/a, port/p, end/e"]
+            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, info/i..."],
+        
         ]
-        print(self.create_box(commands, 'round'))
+    #    print(self.create_box(commands, 'round'))
+        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, info/i...", 1)
 
         # Display active effects
         if self.research.unlocked_options:
