@@ -1359,11 +1359,11 @@ class Game:
             [f"Hull Damage: {self.ship.damage}%"],
             [f"Money: {self.format_money(self.ship.money)}"],
             [f"Research Points: {self.ship.research_points}"],
-            ["Cargo:"],
-            [f"  Tech: {self.format_money(self.ship.cargo['tech'])}"],
-            [f"  Agri: {self.format_money(self.ship.cargo['agri'])}"],
-            [f"  Salt: {self.format_money(self.ship.cargo['salt'])}"],
-            [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
+    #        ["Cargo:"],
+    #        [f"  Tech: {self.format_money(self.ship.cargo['tech'])}"],
+    #        [f"  Agri: {self.format_money(self.ship.cargo['agri'])}"],
+    #        [f"  Salt: {self.format_money(self.ship.cargo['salt'])}"],
+    #        [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
             ["Items:"]
         ]
         
@@ -1376,15 +1376,23 @@ class Game:
 
         # Add combat statistics if they exist
         if hasattr(self.ship, 'combat_victories'):
-            ship_info.extend([
-                ["Combat Record:"],
-                [f"  Victories: {self.ship.combat_victories}"],
-                [f"  Defeats: {self.ship.combat_defeats}"]
-            ])
-            if hasattr(self.ship, 'enemy_victories'):
-                for enemy_type, count in self.ship.enemy_victories.items():
-                    if count > 0:
-                        ship_info.append([f"  {enemy_type.capitalize()} defeats: {count}"])
+                    ship_info.append(["Combat Record:"])
+                    # Format victories
+                    ship_info.extend([
+                        [f"  Total Victories: {self.ship.combat_victories.get('total', 0)}"],
+                        [f"  ├─ Pirates: {self.ship.combat_victories.get('pirate', 0)}"],
+                        [f"  ├─ Raiders: {self.ship.combat_victories.get('raider', 0)}"],
+                        [f"  ├─ Militia: {self.ship.combat_victories.get('militia', 0)}"],
+                        [f"  └─ Aliens: {self.ship.combat_victories.get('alien', 0)}"]
+                    ])
+                    # Format defeats
+                    ship_info.extend([
+                        [f"  Total Defeats: {self.ship.combat_defeats.get('total', 0)}"],
+                        [f"  ├─ Pirates: {self.ship.combat_defeats.get('pirate', 0)}"],
+                        [f"  ├─ Raiders: {self.ship.combat_defeats.get('raider', 0)}"],
+                        [f"  ├─ Militia: {self.ship.combat_defeats.get('militia', 0)}"],
+                        [f"  └─ Aliens: {self.ship.combat_defeats.get('alien', 0)}"]
+                    ])
         
         # Location section
         location_info = [
