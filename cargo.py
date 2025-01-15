@@ -1067,6 +1067,40 @@ class Game:
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
 
+    def handle_travel(self):
+        """Centralized travel handler that can be called from anywhere in the game"""
+        if "navcomp" in self.ship.items:
+            self.display_simple_message("Choose a location to travel to:")
+            # Display known locations with numbers
+            for i, location in enumerate(self.known_locations, 1):
+                print(f"{i}. {location}")
+            
+            self.display_simple_message("Enter the number or name of the location (or 'cancel'): ", 0)
+            choice = input(">>> ").strip()
+            
+            if not choice or choice.lower() == 'cancel':
+                self.display_simple_message("Travel cancelled.")
+                return False
+                
+            if choice.isdigit():
+                index = int(choice) - 1
+                if 0 <= index < len(self.known_locations):
+                    return self.travel_to_location(self.known_locations[index])
+                else:
+                    self.display_simple_message("Invalid location number.")
+                    return False
+            else:
+                return self.travel_to_location(choice)
+        else:
+            self.display_simple_message("Enter location name (or 'cancel'): ", 0)
+            location_name = input(">>> ").strip()
+            
+            if not location_name or location_name.lower() == 'cancel':
+                self.display_simple_message("Travel cancelled.")
+                return False
+                
+            return self.travel_to_location(location_name)
+
     # For buy map display in visit_cantina:
     def format_map_content(self, new_locations):
         map_content = []
@@ -4437,72 +4471,79 @@ class Port:
         return self.game.create_box(content, 'double')
 
     def handle_port_menu(self):
-        """Handle port menu options"""
-        self.game.display_simple_message("Welcome to the Stardock Port!")
-        
-        while True:
-            options = ['view', 'v', 'modules', 'm', 'board', 'b', 'unload', 'u', 'back']
-            action = self.game.validate_input(
-                "Choose action (view/v, modules/m, board/b, unload/u, back): ",
-                options
-            )
-            
-            if action in ['back', None]:
-                break
+            """Handle port menu options"""
+            self.game.display_simple_message("Welcome to the Stardock Port!", 1)
+
+            while True:
+                options = ['view', 'v', 'modules', 'm', 'board', 'b', 'unload', 'u', 'travel', 't', 'back']
+                action = self.game.validate_input(
+                    "Choose action (view/v, modules/m, board/b, unload/u, travel/t, back): ",
+                    options
+                )
                 
-            elif action in ['view', 'v']:
-                print(self.display_port_info())
-                
-            elif action in ['modules', 'm']:
-                self.handle_module_purchase()
-                
-            elif action in ['board', 'b']:
-                self.handle_passenger_boarding()
-                
-            elif action in ['unload', 'u']:
-                self.handle_passenger_unloading()
+                if action in ['back', None]:
+                    break
+                    
+                elif action in ['view', 'v']:
+                    print(self.display_port_info())
+                    
+                elif action in ['modules', 'm']:
+                    self.handle_module_purchase()
+                    
+                elif action in ['board', 'b']:
+                    self.handle_passenger_boarding()
+                    
+                elif action in ['unload', 'u']:
+                    self.handle_passenger_unloading()
+
+                elif action in ['travel', 't']:
+                    if self.game.handle_travel():
+                        break  # Exit port menu after successful travel
 
     def handle_module_purchase(self):
-        """Handle purchase of new modules"""
-        content = [["Available Modules"]]
-        content.append(["Name", "Capacity", "Comfort", "Cost"])
-        
-        for module_id, module in self.available_modules.items():
-            content.append([
-                module["name"],
-                str(module["capacity"]),
-                str(module["comfort_level"]),
-                str(self.game.format_money(module["cost"]))
-            ])
+            """Handle purchase of new modules"""
+            content = [["Available Modules"]]
+            content.append(["Name", "Capacity", "Comfort", "Cost"])
             
-        print(self.game.create_box(content, 'double'))
-        
-        module_id = self.game.validate_input(
-            "Choose module to buy (or 'back'): ",
-            list(self.available_modules.keys()) + ['back']
-        )
-        
-        if module_id == 'back':
-            return
-            
-        module = self.available_modules[module_id]
-        if self.game.ship.money >= module["cost"]:
-            self.game.ship.money -= module["cost"]
-            
-            if not hasattr(self.game.ship, 'passenger_modules'):
-                self.game.ship.passenger_modules = []
+            for module_id, module in self.available_modules.items():
+                content.append([
+                    module["name"],
+                    str(module["capacity"]),
+                    str(module["comfort_level"]),
+                    str(self.game.format_money(module["cost"]))
+                ])
                 
-            new_module = PassengerModule(
-                module["name"],
-                module["capacity"],
-                module["comfort_level"],
-                module["cost"]
-            )
-            self.game.ship.passenger_modules.append(new_module)
+            print(self.game.create_box(content, 'double'))
             
-            self.game.display_simple_message(f"Purchased {module['name']}!")
-        else:
-            self.game.display_simple_message("Not enough money!")
+            module_id = self.game.validate_input(
+                "Choose module to buy (or 'back'): ",
+                list(self.available_modules.keys()) + ['back']
+            )
+            
+            # Handle cancellation or back command
+            if module_id is None or module_id == 'back':
+                return
+                
+            # Only proceed if we have a valid module_id
+            if module_id in self.available_modules:
+                module = self.available_modules[module_id]
+                if self.game.ship.money >= module["cost"]:
+                    self.game.ship.money -= module["cost"]
+                    
+                    if not hasattr(self.game.ship, 'passenger_modules'):
+                        self.game.ship.passenger_modules = []
+                        
+                    new_module = PassengerModule(
+                        module["name"],
+                        module["capacity"],
+                        module["comfort_level"],
+                        module["cost"]
+                    )
+                    self.game.ship.passenger_modules.append(new_module)
+                    
+                    self.game.display_simple_message(f"Purchased {module['name']}!")
+                else:
+                    self.game.display_simple_message("Not enough money!")
 
     def handle_passenger_boarding(self):
         """Handle passenger boarding process"""
