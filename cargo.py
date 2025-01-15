@@ -4650,65 +4650,252 @@ class Quest:
 
 class Contract:
     def __init__(self, contract_type, duration, requirements, rewards):
-        self.contract_type = contract_type  # 'passenger' or 'cargo'
-        self.duration = duration  # number of turns
-        self.requirements = requirements  # dict of requirements
-        self.rewards = rewards  # dict of rewards
-        self.progress = 0
+        self.contract_type = contract_type
+        self.duration = duration
+        self.requirements = requirements
+        self.rewards = rewards
+        self.progress = {
+            'amount': 0,
+            'destinations_visited': set(),
+            'passengers_delivered': 0,
+            'required_destinations': set(requirements.get('destinations', []))
+        }
         self.completed = False
         self.failed = False
         self.turns_active = 0
-                # Add description field based on type and requirements
         self.description = self._generate_description()
+        self.start_turn = None  # Turn when contract was accepted
+        self.completion_turn = None  # Turn when contract was completed
+        self.bonus_rewards = {}  # Additional rewards for exceptional performance
+        self._satisfaction_scores = []  # Initialize empty list for satisfaction scores
+
+    def accept(self, current_turn):
+        """Initialize contract when accepted"""
+        self.start_turn = current_turn
+        self.turns_active = 0
+        return True
+
+    def fail(self, reason="time_expired"):
+        """Mark contract as failed with reason"""
+        self.failed = True
+        self.failure_reason = reason
+        return {"status": "failed", "reason": reason}
 
     def _generate_description(self):
-        """Generate a human-readable description of the contract"""
+        """Generate detailed contract description"""
         if self.contract_type == "passenger":
+            desc = []
             if "passenger_class" in self.requirements:
-                return f"Transport {self.requirements['count']} {self.requirements['passenger_class']}-class passengers"
-            elif "passenger_count" in self.requirements:
-                return f"Transport {self.requirements['passenger_count']} passengers"
-            return "Passenger transport contract"
+                desc.append(f"Transport {self.requirements['count']} {self.requirements['passenger_class']}-class passengers")
+            if "destinations" in self.requirements:
+                desc.append(f"To: {', '.join(self.requirements['destinations'])}")
+            if "min_satisfaction" in self.requirements:
+                desc.append(f"Minimum satisfaction: {self.requirements['min_satisfaction']}%")
+            return " | ".join(desc)
         elif self.contract_type == "cargo":
+            desc = []
             if "cargo_type" in self.requirements:
-                amount = self.requirements.get("min_amount", "some")
-                return f"Transport {amount} units of {self.requirements['cargo_type']}"
-            elif "min_trades" in self.requirements:
-                return f"Complete {self.requirements['min_trades']} cargo trades"
-            return "Cargo transport contract"
-        return "Generic contract"        
+                desc.append(f"Transport {self.requirements['min_amount']} units of {self.requirements['cargo_type']}")
+            if "destinations" in self.requirements:
+                desc.append(f"To: {', '.join(self.requirements['destinations'])}")
+            return " | ".join(desc)
+        return "Generic contract"
+
+    def calculate_final_reward(self):
+        """Calculate final reward including bonuses"""
+        if not self.completed:
+            return None
+
+        total_reward = dict(self.rewards)  # Start with base rewards
+
+        # Early completion bonus
+        if self.turns_active < self.duration / 2:
+            total_reward["money"] = int(total_reward["money"] * 1.5)
+            total_reward["reputation"] = int(total_reward["reputation"] * 1.2)
+
+        # Perfect satisfaction bonus for passenger contracts
+        if self.contract_type == "passenger" and self.get_average_satisfaction() >= 95:
+            total_reward["money"] = int(total_reward["money"] * 1.3)
+            total_reward["reputation"] += 10
+
+        # Add any bonus rewards
+        for reward_type, amount in self.bonus_rewards.items():
+            if reward_type in total_reward:
+                total_reward[reward_type] += amount
+            else:
+                total_reward[reward_type] = amount
+
+        return total_reward
+
+    def get_average_satisfaction(self):
+        """Calculate average passenger satisfaction"""
+        if not self._satisfaction_scores:
+            return 0
+        return sum(self._satisfaction_scores) / len(self._satisfaction_scores)
+
+    def get_progress_report(self):
+        """Get detailed progress report"""
+        report = {
+            "type": self.contract_type,
+            "duration": {
+                "total": self.duration,
+                "remaining": max(0, self.duration - self.turns_active),
+                "elapsed": self.turns_active
+            },
+            "progress": {
+                "destinations": {
+                    "visited": list(self.progress['destinations_visited']),
+                    "required": list(self.progress['required_destinations']),
+                    "remaining": list(self.progress['required_destinations'] - 
+                                   self.progress['destinations_visited'])
+                }
+            }
+        }
+
+        if self.contract_type == "passenger":
+            report["progress"].update({
+                "passengers": {
+                    "delivered": self.progress['passengers_delivered'],
+                    "required": self.requirements.get('count', 0),
+                    "remaining": max(0, self.requirements.get('count', 0) - 
+                                  self.progress['passengers_delivered'])
+                },
+                "satisfaction": self.get_average_satisfaction()
+            })
+        elif self.contract_type == "cargo":
+            report["progress"].update({
+                "cargo": {
+                    "delivered": self.progress['amount'],
+                    "required": self.requirements.get('min_amount', 0),
+                    "remaining": max(0, self.requirements.get('min_amount', 0) - 
+                                  self.progress['amount'])
+                }
+            })
+
+        return report
+
+    def update_progress(self, event_data):
+        """Update contract progress based on events"""
+        self.turns_active += 1
+        if self.turns_active > self.duration:
+            return self.fail("time_expired")
+
+        current_location = event_data["location"]
+        
+        if self.contract_type == "passenger":
+            delivered_passengers = event_data.get("delivered_passengers", [])
+            for passenger in delivered_passengers:
+                if "passenger_class" in self.requirements:
+                    if passenger.classification["code"] == self.requirements["passenger_class"]:
+                        self.progress['passengers_delivered'] += 1
+                        self._satisfaction_scores.append(passenger.satisfaction)
+                        if current_location in self.required_destinations:
+                            self.progress['destinations_visited'].add(current_location)
+
+        elif self.contract_type == "cargo":
+            if event_data.get("trade_completed"):
+                cargo_type = event_data.get("cargo_type")
+                amount = event_data.get("amount", 0)
+                
+                if cargo_type == self.requirements.get("cargo_type"):
+                    self.progress['amount'] += amount
+                    if current_location in self.required_destinations:
+                        self.progress['destinations_visited'].add(current_location)
+
+        completion_status = self._check_completion()
+        return completion_status
+
+    def _check_completion(self):
+        """Check if contract requirements are met"""
+        if self.failed:
+            return {"status": "failed", "reason": getattr(self, 'failure_reason', 'unknown')}
+
+        status = {"status": "in_progress"}
+
+        if self.contract_type == "passenger":
+            passengers_complete = self.progress['passengers_delivered'] >= self.requirements.get('count', 0)
+            destinations_complete = len(self.progress['destinations_visited']) >= len(self.required_destinations)
+            satisfaction_requirement = self.requirements.get('min_satisfaction', 0)
+            satisfaction_met = self.get_average_satisfaction() >= satisfaction_requirement
+
+            status.update({
+                "passengers_complete": passengers_complete,
+                "destinations_complete": destinations_complete,
+                "satisfaction_met": satisfaction_met
+            })
+
+            if passengers_complete and destinations_complete and satisfaction_met:
+                self.completed = True
+                self.completion_turn = self.turns_active
+                status["status"] = "completed"
+
+        elif self.contract_type == "cargo":
+            amount_complete = self.progress['amount'] >= self.requirements.get('min_amount', 0)
+            destinations_complete = len(self.progress['destinations_visited']) >= len(self.required_destinations)
+
+            status.update({
+                "amount_complete": amount_complete,
+                "destinations_complete": destinations_complete
+            })
+
+            if amount_complete and destinations_complete:
+                self.completed = True
+                self.completion_turn = self.turns_active
+                status["status"] = "completed"
+
+        return status
+
+    def add_bonus_reward(self, reward_type, amount):
+        """Add bonus reward for exceptional performance"""
+        if reward_type not in self.bonus_rewards:
+            self.bonus_rewards[reward_type] = 0
+        self.bonus_rewards[reward_type] += amount
+
+    def get_remaining_requirements(self):
+        """Get list of remaining requirements to complete contract"""
+        remaining = []
+        
+        if self.contract_type == "passenger":
+            passengers_remaining = self.requirements.get('count', 0) - self.progress['passengers_delivered']
+            if passengers_remaining > 0:
+                remaining.append(f"Deliver {passengers_remaining} more {self.requirements['passenger_class']}-class passengers")
+                
+        elif self.contract_type == "cargo":
+            cargo_remaining = self.requirements.get('min_amount', 0) - self.progress['amount']
+            if cargo_remaining > 0:
+                remaining.append(f"Deliver {cargo_remaining} more units of {self.requirements['cargo_type']}")
+
+        # Check destinations for both types
+        remaining_destinations = self.progress['required_destinations'] - self.progress['destinations_visited']
+        if remaining_destinations:
+            remaining.append(f"Visit: {', '.join(remaining_destinations)}")
+
+        return remaining
 
     @staticmethod
     def generate_passenger_contract():
+        """Generate a passenger transport contract"""
         contract_types = [
             {
-                "description": "VIP Transport",
+                "desc_template": "VIP Transport",
                 "requirements": {
                     "passenger_class": random.choice(["S", "M", "E"]),
                     "count": random.randint(3, 8),
-                    "destination": None  # To be filled based on game state
+                    "destinations": [random.choice(["Alpha", "Beta", "Gamma"])],
+                    "min_satisfaction": 80
                 },
                 "duration": 10,
                 "base_reward": 25000
             },
             {
-                "description": "Group Transport",
+                "desc_template": "Group Transport",
                 "requirements": {
                     "passenger_count": random.randint(10, 20),
-                    "min_satisfaction": 80
+                    "destinations": [random.choice(["Delta", "Epsilon", "Zeta"])],
+                    "min_satisfaction": 70
                 },
                 "duration": 15,
                 "base_reward": 35000
-            },
-            {
-                "description": "Specialist Transfer",
-                "requirements": {
-                    "passenger_class": random.choice(["S", "R"]),
-                    "count": random.randint(5, 10),
-                    "min_wealth_level": 3
-                },
-                "duration": 12,
-                "base_reward": 30000
             }
         ]
         
@@ -4726,22 +4913,25 @@ class Contract:
 
     @staticmethod
     def generate_cargo_contract():
+        """Generate a cargo transport contract"""
         contract_types = [
             {
-                "description": "Exclusive Trading",
+                "desc_template": "Exclusive Trading",
                 "requirements": {
                     "cargo_type": random.choice(["tech", "agri"]),
                     "min_amount": random.randint(100, 300),
-                    "restricted_routes": []  # To be filled based on game state
+                    "destinations": [random.choice(["Alpha", "Beta", "Gamma"])],
+                    "restricted_routes": []
                 },
                 "duration": 8,
                 "base_reward": 20000
             },
             {
-                "description": "Resource Distribution",
+                "desc_template": "Resource Distribution",
                 "requirements": {
                     "cargo_types": ["tech", "agri", "salt", "fuel"],
-                    "min_trades": random.randint(5, 10)
+                    "min_trades": random.randint(5, 10),
+                    "destinations": [random.choice(["Delta", "Epsilon", "Zeta"])]
                 },
                 "duration": 12,
                 "base_reward": 30000
@@ -4760,48 +4950,11 @@ class Contract:
             }
         )
 
-    def update_progress(self, event_data):
-        """Update contract progress based on events"""
-        if self.completed or self.failed:
-            return
-
-        self.turns_active += 1
-        if self.turns_active > self.duration:
-            self.failed = True
-            return
-
-        if self.contract_type == "passenger":
-            self._update_passenger_progress(event_data)
-        else:
-            self._update_cargo_progress(event_data)
-
-    def _update_passenger_progress(self, event_data):
-        if "delivered_passengers" in event_data:
-            for passenger in event_data["delivered_passengers"]:
-                if "passenger_class" in self.requirements:
-                    if passenger.classification["code"] == self.requirements["passenger_class"]:
-                        self.progress += 1
-                else:
-                    self.progress += 1
-
-        if self.progress >= self.requirements.get("count", 0):
-            self.completed = True
-
-    def _update_cargo_progress(self, event_data):
-        if "trade_completed" in event_data:
-            cargo_type = event_data["cargo_type"]
-            if "cargo_type" in self.requirements:
-                if cargo_type == self.requirements["cargo_type"]:
-                    self.progress += event_data["amount"]
-            elif "cargo_types" in self.requirements:
-                if cargo_type in self.requirements["cargo_types"]:
-                    self.progress += 1
-
-        if (("min_amount" in self.requirements and self.progress >= self.requirements["min_amount"]) or
-            ("min_trades" in self.requirements and self.progress >= self.requirements["min_trades"])):
-            self.completed = True
-
-
+    def __str__(self):
+        """String representation of contract"""
+        status = "Completed" if self.completed else "Failed" if self.failed else "Active"
+        return f"{self.description} [{status}] ({self.turns_active}/{self.duration} turns)"
+    
 class StoryContract(Contract):
     """Extended contract class for story-related missions"""
     def __init__(self, contract_type, duration, requirements, rewards, story_data):
@@ -5163,18 +5316,18 @@ class Port:
                     self.game.display_simple_message("Not enough money!")
 
     def handle_passenger_boarding(self):
-        """Handle passenger boarding process"""
+        """Handle passenger boarding with streamlined interface"""
         while True:
             location = self.game.current_location.name
             
             if not hasattr(self.game.ship, 'passenger_modules'):
                 self.game.display_simple_message("No passenger modules installed!")
                 return
-                
+                    
             if location not in self.waiting_passengers or not self.waiting_passengers[location]:
                 self.game.display_simple_message("No passengers waiting!")
                 return
-                
+                    
             # Get available modules (with space)
             available_modules = [m for m in self.game.ship.passenger_modules 
                             if len(m.passengers) < m.capacity]
@@ -5183,7 +5336,7 @@ class Port:
                 self.game.display_simple_message("No room for more passengers!")
                 return
 
-            # Display current module status
+            # Show current module status
             module_status = [["Current Module Status"]]
             for module in self.game.ship.passenger_modules:
                 passengers_info = []
@@ -5197,17 +5350,18 @@ class Port:
                 for p_info in passengers_info:
                     module_status.append([f"└─ {p_info}"])
             print(self.game.create_box(module_status, 'single'))
-                
+
             # Show waiting passengers
             content = [["Waiting Passengers"]]
-            content.append(["Name", "Destination", "Class", "Est. Fare"])
+            content.append(["#", "Name", "Destination", "Class", "Est. Fare"])
             
             waiting_passengers = self.waiting_passengers[location]
             for i, passenger in enumerate(waiting_passengers, 1):
                 best_module = max(available_modules, key=lambda m: m.comfort_level)
                 est_fare = self.calculate_fare(passenger, best_module)
                 content.append([
-                    f"{i}. {passenger.name} [{passenger.classification['code']}]",
+                    str(i),
+                    f"{passenger.name} [{passenger.classification['code']}]",
                     passenger.destination,
                     f"L{passenger.wealth_level}",
                     self.game.format_money(est_fare)
@@ -5215,49 +5369,121 @@ class Port:
             
             print(self.game.create_box(content, 'double'))
 
-            # Show menu options
-            menu_content = [["Boarding Options"]]
-            menu_content.append(["1. Select passengers"])
-            menu_content.append(["2. View module details"])
-            menu_content.append(["3. Back to port menu"])
-            print(self.game.create_box(menu_content, 'single'))
-
-            choice = self.game.validate_input("Choose option: ", ['1', '2', '3', 'back'])
+            # Direct selection prompt
+            self.game.display_simple_message(
+                "Enter passenger numbers (e.g., '1 2 15'), 'mv' for module view, Enter to Cancel:", 0
+            )
             
-            if choice in ['3', 'back']:
+            selection = input(">>> ").strip().lower()
+            
+            if not selection:  # Empty Enter
+                return
+                
+            if selection == 'mv':  # Module view
+                self.display_module_details()
+                continue
+                
+            try:
+                # Parse space-separated numbers
+                passenger_nums = [int(num) for num in selection.split()]
+                
+                # Validate numbers
+                if all(1 <= num <= len(waiting_passengers) for num in passenger_nums):
+                    selected_passengers = [waiting_passengers[num-1] for num in passenger_nums]
+                    if selected_passengers:
+                        # Handle module assignment for selected passengers
+                        self.handle_module_assignment(selected_passengers, available_modules)
+                else:
+                    self.game.display_simple_message("Invalid passenger number(s)")
+                    
+            except ValueError:
+                self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
+
+    def handle_module_assignment(self, selected_passengers, available_modules):
+        """Handle assigning selected passengers to modules"""
+        passengers_left = selected_passengers.copy()
+        
+        while passengers_left and available_modules:
+            # Show remaining passengers
+            content = [["Remaining Passengers"]]
+            for i, passenger in enumerate(passengers_left, 1):
+                content.append([
+                    f"{i}. {passenger.name} [{passenger.classification['code']}]",
+                    f"→ {passenger.destination}",
+                    f"Level: {passenger.wealth_level}"
+                ])
+            print(self.game.create_box(content, 'single'))
+            
+            # Show available modules
+            module_content = [["Available Modules"]]
+            for i, module in enumerate(available_modules, 1):
+                module_content.append([
+                    f"{i}. {module.name}",
+                    f"({len(module.passengers)}/{module.capacity})",
+                    f"Comfort: {module.comfort_level}"
+                ])
+            print(self.game.create_box(module_content, 'single'))
+            
+            # Get module choice
+            self.game.display_simple_message(
+                "Choose module number (Enter to cancel):", 0
+            )
+            choice = input(">>> ").strip()
+            
+            if not choice:  # Cancel current assignment
                 break
                 
-            elif choice == '1':
-                # Batch selection
-                selected_passengers = self.handle_passenger_selection(waiting_passengers)
-                if selected_passengers:
-                    # Module assignment for selected passengers
-                    self.handle_module_assignment(selected_passengers, available_modules)
+            try:
+                module_num = int(choice)
+                if 1 <= module_num <= len(available_modules):
+                    chosen_module = available_modules[module_num - 1]
+                    if len(chosen_module.passengers) >= chosen_module.capacity:
+                        self.game.display_simple_message("Module is full!")
+                        continue
+                        
+                    # Add first remaining passenger
+                    passenger = passengers_left.pop(0)
+                    chosen_module.passengers.append(passenger)
+                    self.game.display_simple_message(f"Assigned {passenger.name} to {chosen_module.name}")
                     
-            elif choice == '2':
-                # Show detailed module information
-                module_info = [["Module Details"]]
-                for module in self.game.ship.passenger_modules:
+                    # Remove full modules from available list
+                    if len(chosen_module.passengers) >= chosen_module.capacity:
+                        available_modules.remove(chosen_module)
+                else:
+                    self.game.display_simple_message("Invalid module number")
+            except ValueError:
+                self.game.display_simple_message("Invalid input. Please enter a number.")
+        
+        # Update waiting passengers list
+        location = self.game.current_location.name
+        self.waiting_passengers[location] = [p for p in self.waiting_passengers[location] 
+                                        if p not in selected_passengers or 
+                                        p in sum((m.passengers for m in self.game.ship.passenger_modules), [])
+                                        ]
+
+    def display_module_details(self):
+        """Show detailed module information"""
+        module_info = [["Module Details"]]
+        for module in self.game.ship.passenger_modules:
+            module_info.append([
+                f"{module.name}",
+                f"Capacity: {module.capacity}",
+                f"Comfort Level: {module.comfort_level}"
+            ])
+            if module.passengers:
+                module_info.append(["Current Passengers:"])
+                for p in module.passengers:
                     module_info.append([
-                        f"{module.name}",
-                        f"Capacity: {module.capacity}",
-                        f"Comfort Level: {module.comfort_level}"
+                        f"└─ {p.name} [{p.classification['code']}]",
+                        f"To: {p.destination}",
+                        f"Satisfaction: {p.satisfaction}%"
                     ])
-                    if module.passengers:
-                        module_info.append(["Current Passengers:"])
-                        for p in module.passengers:
-                            module_info.append([
-                                f"└─ {p.name} [{p.classification['code']}]",
-                                f"To: {p.destination}",
-                                f"Satisfaction: {p.satisfaction}%"
-                            ])
-                    else:
-                        module_info.append(["└─ Empty"])
-                    module_info.append([""])
-                print(self.game.create_box(module_info, 'double'))
-
-                input("Press Enter to continue...")
-
+            else:
+                module_info.append(["└─ Empty"])
+            module_info.append([""])
+                
+        print(self.game.create_box(module_info, 'double'))
+        input("Press Enter to continue...")
 
     def handle_passenger_selection(self, available_passengers):
         """Handle batch passenger selection"""
