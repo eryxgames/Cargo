@@ -5351,9 +5351,9 @@ class Port:
                     module_status.append([f"└─ {p_info}"])
             print(self.game.create_box(module_status, 'single'))
 
-            # Show waiting passengers
-            content = [["Waiting Passengers"]]
-            content.append(["#", "Name", "Destination", "Class", "Est. Fare"])
+            # Show waiting passengers in port
+            content = [["Port"]]
+            content.append(["#", "Name", "Dest.", "Class", "≈Fare"])
             
             waiting_passengers = self.waiting_passengers[location]
             for i, passenger in enumerate(waiting_passengers, 1):
@@ -5585,14 +5585,14 @@ class Port:
                     passengers_to_unload.append((passenger, final_payment))
                     
         if passengers_to_unload:
-            content = [["Passengers Disembarked"]]
+            content = [["Pass. Disembarked"]]
             total_earnings = 0
             
             for passenger, payment in passengers_to_unload:
                 content.append([
                     passenger.name,
-                    f"Payment: {self.game.format_money(payment)}",
-                    f"Satisfaction: {passenger.satisfaction}%"
+                    f"Fare: {self.game.format_money(payment)}",
+                    f"Satisfied: {passenger.satisfaction}%"
                 ])
                 total_earnings += payment
                 
