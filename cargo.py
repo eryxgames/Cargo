@@ -1866,35 +1866,7 @@ class Game:
                     self.ship.upgrade_costs[property_name] = int(cost * 1.5)
 
             elif action in ['travel', 't']:
-                if "navcomp" in self.ship.items:
-                    self.display_simple_message("Choose a location to travel to:")
-                    for i, location in enumerate(self.known_locations, 1):
-                        print(f"{i}. {location}")
-                    
-                    self.display_simple_message("Enter the number or name of the location (or 'cancel'): ", 0)
-                    choice = input(">>> ").strip()
-                    
-                    if not choice or choice.lower() == 'cancel':
-                        self.display_simple_message("Travel cancelled.")
-                        return
-                        
-                    if choice.isdigit():
-                        index = int(choice) - 1
-                        if 0 <= index < len(self.known_locations):
-                            self.travel_to_location(self.known_locations[index])
-                        else:
-                            self.display_simple_message("Invalid location number.")
-                    else:
-                        self.travel_to_location(choice)
-                else:
-                    self.display_simple_message("Enter location name (or 'cancel'): ", 0)
-                    location_name = input(">>> ").strip()
-                    
-                    if not location_name or location_name.lower() == 'cancel':
-                        self.display_simple_message("Travel cancelled.")
-                        return
-                        
-                    self.travel_to_location(location_name)
+                self.handle_travel()
 
             elif action in ['info', 'i']:
                 self.display_location_info()
