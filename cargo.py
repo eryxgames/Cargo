@@ -1166,77 +1166,76 @@ class Game:
         return market_content
 
     def handle_contract_menu(self):
-            """Unified contract menu for both Port and Cantina"""
-            if not hasattr(self, 'contract_manager'):
-                self.contract_manager = ContractManager(self)
-                
-            # Refresh contracts if needed
-            self.contract_manager.refresh_available_contracts()
+        if not hasattr(self, 'contract_manager'):
+            self.contract_manager = ContractManager(self)
+            
+        self.contract_manager.refresh_available_contracts()
 
-            while True:
-                options = {
-                    'view': 'View Available Contracts',
-                    'status': 'Check Active Contracts',
-                    'complete': 'Complete Contract',
-                    'back': 'Return to Main Menu'
-                }
-                
-                # Show menu
-                menu_content = [["Contract Management"]]
-                for cmd, desc in options.items():
-                    menu_content.append([f"{cmd}: {desc}"])
-                print(self.create_box(menu_content, 'single'))
+        while True:
+            options = {
+                'view/v': 'View Available Contracts',
+                'status/s': 'Check Active Contracts',
+                'complete/c': 'Complete Contract',
+                'back/b': 'Return to Main Menu'
+            }
+            
+            menu_content = [["Contract Management"]]
+            for cmd, desc in options.items():
+                menu_content.append([f"{cmd}: {desc}"])
+            print(self.create_box(menu_content, 'single'))
 
-                action = self.validate_input(
-                    "Choose action: ",
-                    list(options.keys())
-                )
+            action = self.validate_input(
+                "Choose action: ",
+                ['view', 'v', 'status', 's', 'complete', 'c', 'back', 'b', '']
+            )
+            
+            if action in ['', 'back', 'b']:
+                break
                 
-                if action == 'back':
-                    break
+            elif action in ['view', 'v']:
+                if self.contract_manager.available_contracts:
+                    contract_content = [["Available Contracts"]]
+                    for i, contract in enumerate(self.contract_manager.available_contracts):
+                        contract_content.append([""])
+                        contract_content.append([f"Contract #{i+1}"])
+                        for info_line in self.contract_manager.get_contract_display_info(contract):
+                            contract_content.append([info_line])
                     
-                elif action == 'view':
-                    if self.contract_manager.available_contracts:
-                        contract_content = [["Available Contracts"]]
-                        for i, contract in enumerate(self.contract_manager.available_contracts):
-                            contract_content.append([""])
-                            contract_content.append([f"Contract #{i+1}"])
-                            for info_line in self.contract_manager.get_contract_display_info(contract):
-                                contract_content.append([info_line])
-                        
-                        print(self.create_box(contract_content, 'double'))
-                        
-                        choice = self.validate_input(
-                            f"Accept contract (1-{len(self.contract_manager.available_contracts)}) or 'back': ",
-                            [str(i+1) for i in range(len(self.contract_manager.available_contracts))] + ['back']
-                        )
-                        
-                        if choice != 'back':
-                            success, message = self.contract_manager.accept_contract(int(choice) - 1)
-                            self.display_simple_message(message)
-                    else:
-                        self.display_simple_message("No contracts available currently.")
-                        
-                elif action == 'status':
-                    status_content = self.contract_manager.display_contract_status()
-                    print(self.create_box(status_content, 'double'))
-                    input("Press Enter to continue...")
+                    print(self.create_box(contract_content, 'double'))
                     
-                elif action == 'complete':
-                    if self.contract_manager.active_contracts:
-                        event_data = {
-                            "location": self.current_location.name,
-                            "delivered_passengers": [p for module in self.ship.passenger_modules 
-                                                for p in module.passengers 
-                                                if p.destination == self.current_location.name],
-                            "trade_completed": True,
-                            "cargo_type": None,
-                            "amount": 0
-                        }
-                        self.contract_manager.update_contract_progress(event_data)
-                        self.display_simple_message("Contract progress updated!")
-                    else:
-                        self.display_simple_message("No active contracts.")
+                    choice = self.validate_input(
+                        f"Accept contract (1-{len(self.contract_manager.available_contracts)}) or 'back': ",
+                        [str(i+1) for i in range(len(self.contract_manager.available_contracts))] + ['back', 'b', '']
+                    )
+                    
+                    if choice in ['', 'back', 'b']:
+                        continue
+                    
+                    success, message = self.contract_manager.accept_contract(int(choice) - 1)
+                    self.display_simple_message(message)
+                else:
+                    self.display_simple_message("No contracts available currently.")
+                    
+            elif action in ['status', 's']:
+                status_content = self.contract_manager.display_contract_status()
+                print(self.create_box(status_content, 'double'))
+                input("Press Enter to continue...")
+                
+            elif action in ['complete', 'c']:
+                if self.contract_manager.active_contracts:
+                    event_data = {
+                        "location": self.current_location.name,
+                        "delivered_passengers": [p for module in self.ship.passenger_modules 
+                                            for p in module.passengers 
+                                            if p.destination == self.current_location.name],
+                        "trade_completed": True,
+                        "cargo_type": None,
+                        "amount": 0
+                    }
+                    self.contract_manager.update_contract_progress(event_data)
+                    self.display_simple_message("Contract progress updated!")
+                else:
+                    self.display_simple_message("No active contracts.")
 
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
@@ -4477,6 +4476,10 @@ class SpecialCharacter:
         self.full_name = f"{title} {name}"
         self.met = False
         self.quests_given = []
+        self.relationship = 0  # -100 to 100
+        self.last_interaction = None
+        self.location_preference = None
+        self.special_contracts = []
 
 class SpecialCharacterGenerator:
     def __init__(self):
@@ -4512,39 +4515,138 @@ class SpecialCharacterGenerator:
         self.known_characters[character.full_name] = character
         return character        
 
-class PassengerModule:
-    def __init__(self, name, capacity, comfort_level, cost):
+class Quest:
+    def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
+                 requirements=None, on_complete=None):
         self.name = name
-        self.capacity = capacity  # How many passengers it can hold
-        self.comfort_level = comfort_level  # 1-5, affects passenger satisfaction and payment
-        self.cost = cost
-        self.passengers = []
+        self.description = description
+        self.reward_money = reward_money
+        self.reward_rp = reward_rp  # Research Points reward
+        self.quest_type = quest_type
+        self.requirements = requirements or {}
+        self.on_complete = on_complete
+        self.progress = 0
+        self.completed = False
+        self.target_progress = self.requirements.get('target_progress', 1)
+        self.location_requirement = self.requirements.get('location_type', None)
 
-class Passenger:
-    def __init__(self, name, destination, wealth_level):
-        self.name = name
-        self.destination = destination
-        self.wealth_level = wealth_level  # 1-5
-        self.satisfaction = 100
-        self.turns_waiting = 0
-        # Add passenger classification
-        self.classification = self.generate_classification()
+    def __eq__(self, other):
+        """Define equality to help prevent duplicates"""
+        if not isinstance(other, Quest):
+            return False
+        return (self.name == other.name and 
+                self.quest_type == other.quest_type)
+
+    # Add for special location quests
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {
+                'research_points_gained': 0,
+                'analysis_completed': 0,
+                'experiments_conducted': 0
+            }
         
-    def generate_classification(self):
-        classifications = [
-            ("S", "Scientist", "science"),
-            ("M", "Military", "military"),
-            ("E", "Engineer", "engineering"),
-            ("T", "Trader", "trade"),
-            ("D", "Diplomat", "diplomacy"),
-            ("R", "Researcher", "research")
-        ]
-        class_code, class_name, class_type = random.choice(classifications)
-        return {
-            "code": class_code,
-            "name": class_name,
-            "type": class_type
-        }
+        # Check if required criteria are met
+        criteria = self.requirements.get('completion_criteria', {})
+        for key, target in criteria.items():
+            if self.tracked_progress.get(key, 0) < target:
+                return False
+        return True
+
+    def update_research_progress(self, activity_type):
+        """Update progress for research activities"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {}
+        
+        if activity_type in self.tracked_progress:
+            self.tracked_progress[activity_type] += 1
+            return self.check_research_completion(self.game)
+        return False
+
+    def check_completion(self, game):
+        """Check if quest requirements are met"""
+        if self.completed:
+            return False
+
+        if self.quest_type == "mining":
+            return self.check_mining_completion(game)
+        elif self.quest_type == "combat":
+            return self.check_combat_completion(game)
+        elif self.quest_type == "trade":
+            return self.check_trade_completion(game)
+        elif self.quest_type == "exploration":
+            return self.check_exploration_completion(game)
+        elif self.quest_type == "research":
+            return self.check_research_completion(game)
+        
+        # Generic quest completion check
+        return self.progress >= self.target_progress
+
+    def check_mining_completion(self, game):
+        """Check mining quest requirements"""
+        if 'resource_type' in self.requirements:
+            resource = self.requirements['resource_type']
+            target_amount = self.requirements.get('amount', 0)
+            return game.ship.cargo[resource] >= target_amount
+        return False
+
+    def check_combat_completion(self, game):
+        """Check combat quest requirements with proper dictionary access"""
+        if 'enemy_type' in self.requirements:
+            enemy_type = self.requirements['enemy_type']
+            required_amount = self.requirements.get('amount', 1)
+            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
+        # If no specific enemy type, check total victories
+        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
+
+    def check_trade_completion(self, game):
+        """Check trading quest requirements"""
+        if 'commodity' in self.requirements:
+            target_profit = self.requirements.get('profit', 0)
+            return game.ship.trade_profits.get(
+                self.requirements['commodity'], 0) >= target_profit
+        return False
+
+    def check_exploration_completion(self, game):
+        """Check exploration quest requirements"""
+        if 'location_type' in self.requirements:
+            discovered = len([loc for loc in game.discovered_locations 
+                            if loc.location_type == self.requirements['location_type']])
+            return discovered >= self.requirements.get('amount', 1)
+        return False
+
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if 'research_type' in self.requirements:
+            return self.requirements['research_type'] in game.research.unlocked_options
+        return game.ship.research_points >= self.requirements.get('target_points', 0)
+
+    def complete(self, game):
+        """Complete the quest and award rewards"""
+        if not self.completed:
+            self.completed = True
+            game.ship.money += self.reward_money
+            game.ship.research_points += self.reward_rp
+            
+            # Call completion callback if exists
+            if self.on_complete:
+                self.on_complete()
+            
+            # Display completion message
+            game.display_story_message([
+                f"Quest Completed: {self.name}",
+                f"Rewards:",
+                f"• {game.format_money(self.reward_money)} credits",
+                f"• {self.reward_rp} research points"
+            ])
+
+    def update_progress(self, amount=1):
+        """Update quest progress"""
+        if not self.completed:
+            self.progress += amount
+            return self.progress >= self.target_progress
+        return False
 
 class Contract:
     def __init__(self, contract_type, duration, requirements, rewards):
@@ -4698,6 +4800,142 @@ class Contract:
         if (("min_amount" in self.requirements and self.progress >= self.requirements["min_amount"]) or
             ("min_trades" in self.requirements and self.progress >= self.requirements["min_trades"])):
             self.completed = True
+
+
+class StoryContract(Contract):
+    """Extended contract class for story-related missions"""
+    def __init__(self, contract_type, duration, requirements, rewards, story_data):
+        super().__init__(contract_type, duration, requirements, rewards)
+        self.story_data = story_data
+        self.special_character = story_data.get("character", None)
+        self.plot_points = story_data.get("plot_points", 0)
+        self.milestone_trigger = story_data.get("milestone", None)
+        self.follow_up_contract = story_data.get("follow_up", None)
+
+    @staticmethod
+    def generate_story_contract(character, milestone):
+        """Generate a contract tied to story progression"""
+        contract_types = {
+            "military": [
+                {
+                    "type": "combat",
+                    "description": "Special security operation",
+                    "duration": 8,
+                    "requirements": {"combat_victories": 3},
+                    "rewards": {"money": 25000, "reputation": 30}
+                }
+            ],
+            "science": [
+                {
+                    "type": "research",
+                    "description": "Critical research mission",
+                    "duration": 10,
+                    "requirements": {"research_points": 100},
+                    "rewards": {"money": 20000, "reputation": 25}
+                }
+            ],
+            "trade": [
+                {
+                    "type": "cargo",
+                    "description": "Strategic resource transport",
+                    "duration": 6,
+                    "requirements": {"cargo_amount": 200},
+                    "rewards": {"money": 30000, "reputation": 20}
+                }
+            ]
+        }
+        
+        spec = character.specialization
+        if spec in contract_types:
+            template = random.choice(contract_types[spec])
+            return StoryContract(
+                contract_type=template["type"],
+                duration=template["duration"],
+                requirements=template["requirements"],
+                rewards=template["rewards"],
+                story_data={
+                    "character": character,
+                    "milestone": milestone,
+                    "plot_points": 10
+                }
+            )
+        return None
+
+class ClassificationBasedQuest(Quest):
+    """Extended quest class for passenger classification-based missions"""
+    def __init__(self, classification, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.required_classification = classification
+        self.passengers_helped = []
+        self.special_events = []
+
+    @staticmethod
+    def generate_for_classification(classification):
+        """Generate a quest specific to passenger classification"""
+        quest_templates = {
+            "S": {  # Scientists
+                "name": "Scientific Expedition",
+                "description": "Help scientists reach research sites",
+                "reward_multiplier": 1.5
+            },
+            "M": {  # Military
+                "name": "Tactical Deployment",
+                "description": "Transport military personnel",
+                "reward_multiplier": 1.3
+            },
+            "E": {  # Engineers
+                "name": "Engineering Project",
+                "description": "Transport engineering teams",
+                "reward_multiplier": 1.4
+            }
+        }
+        
+        if classification in quest_templates:
+            template = quest_templates[classification]
+            return ClassificationBasedQuest(
+                classification=classification,
+                name=template["name"],
+                description=template["description"],
+                reward_money=5000 * template["reward_multiplier"],
+                reward_rp=50 * template["reward_multiplier"],
+                quest_type="passenger"
+            )
+        return None
+
+class PassengerModule:
+    def __init__(self, name, capacity, comfort_level, cost):
+        self.name = name
+        self.capacity = capacity  # How many passengers it can hold
+        self.comfort_level = comfort_level  # 1-5, affects passenger satisfaction and payment
+        self.cost = cost
+        self.passengers = []
+
+class Passenger:
+    def __init__(self, name, destination, wealth_level):
+        self.name = name
+        self.destination = destination
+        self.wealth_level = wealth_level  # 1-5
+        self.satisfaction = 100
+        self.turns_waiting = 0
+        # Add passenger classification
+        self.classification = self.generate_classification()
+        
+    def generate_classification(self):
+        classifications = [
+            ("S", "Scientist", "science"),
+            ("M", "Military", "military"),
+            ("E", "Engineer", "engineering"),
+            ("T", "Trader", "trade"),
+            ("D", "Diplomat", "diplomacy"),
+            ("R", "Researcher", "research")
+        ]
+        class_code, class_name, class_type = random.choice(classifications)
+        return {
+            "code": class_code,
+            "name": class_name,
+            "type": class_type
+        }
+
 
 class Port:
     def __init__(self, game):
@@ -5870,138 +6108,7 @@ class ResearchColony(Location):
         market['tech'] = min(150, market['tech'] + 30)
         return market
 
-class Quest:
-    def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
-                 requirements=None, on_complete=None):
-        self.name = name
-        self.description = description
-        self.reward_money = reward_money
-        self.reward_rp = reward_rp  # Research Points reward
-        self.quest_type = quest_type
-        self.requirements = requirements or {}
-        self.on_complete = on_complete
-        self.progress = 0
-        self.completed = False
-        self.target_progress = self.requirements.get('target_progress', 1)
-        self.location_requirement = self.requirements.get('location_type', None)
 
-    def __eq__(self, other):
-        """Define equality to help prevent duplicates"""
-        if not isinstance(other, Quest):
-            return False
-        return (self.name == other.name and 
-                self.quest_type == other.quest_type)
-
-    # Add for special location quests
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {
-                'research_points_gained': 0,
-                'analysis_completed': 0,
-                'experiments_conducted': 0
-            }
-        
-        # Check if required criteria are met
-        criteria = self.requirements.get('completion_criteria', {})
-        for key, target in criteria.items():
-            if self.tracked_progress.get(key, 0) < target:
-                return False
-        return True
-
-    def update_research_progress(self, activity_type):
-        """Update progress for research activities"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {}
-        
-        if activity_type in self.tracked_progress:
-            self.tracked_progress[activity_type] += 1
-            return self.check_research_completion(self.game)
-        return False
-
-    def check_completion(self, game):
-        """Check if quest requirements are met"""
-        if self.completed:
-            return False
-
-        if self.quest_type == "mining":
-            return self.check_mining_completion(game)
-        elif self.quest_type == "combat":
-            return self.check_combat_completion(game)
-        elif self.quest_type == "trade":
-            return self.check_trade_completion(game)
-        elif self.quest_type == "exploration":
-            return self.check_exploration_completion(game)
-        elif self.quest_type == "research":
-            return self.check_research_completion(game)
-        
-        # Generic quest completion check
-        return self.progress >= self.target_progress
-
-    def check_mining_completion(self, game):
-        """Check mining quest requirements"""
-        if 'resource_type' in self.requirements:
-            resource = self.requirements['resource_type']
-            target_amount = self.requirements.get('amount', 0)
-            return game.ship.cargo[resource] >= target_amount
-        return False
-
-    def check_combat_completion(self, game):
-        """Check combat quest requirements with proper dictionary access"""
-        if 'enemy_type' in self.requirements:
-            enemy_type = self.requirements['enemy_type']
-            required_amount = self.requirements.get('amount', 1)
-            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
-        # If no specific enemy type, check total victories
-        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
-
-    def check_trade_completion(self, game):
-        """Check trading quest requirements"""
-        if 'commodity' in self.requirements:
-            target_profit = self.requirements.get('profit', 0)
-            return game.ship.trade_profits.get(
-                self.requirements['commodity'], 0) >= target_profit
-        return False
-
-    def check_exploration_completion(self, game):
-        """Check exploration quest requirements"""
-        if 'location_type' in self.requirements:
-            discovered = len([loc for loc in game.discovered_locations 
-                            if loc.location_type == self.requirements['location_type']])
-            return discovered >= self.requirements.get('amount', 1)
-        return False
-
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if 'research_type' in self.requirements:
-            return self.requirements['research_type'] in game.research.unlocked_options
-        return game.ship.research_points >= self.requirements.get('target_points', 0)
-
-    def complete(self, game):
-        """Complete the quest and award rewards"""
-        if not self.completed:
-            self.completed = True
-            game.ship.money += self.reward_money
-            game.ship.research_points += self.reward_rp
-            
-            # Call completion callback if exists
-            if self.on_complete:
-                self.on_complete()
-            
-            # Display completion message
-            game.display_story_message([
-                f"Quest Completed: {self.name}",
-                f"Rewards:",
-                f"• {game.format_money(self.reward_money)} credits",
-                f"• {self.reward_rp} research points"
-            ])
-
-    def update_progress(self, amount=1):
-        """Update quest progress"""
-        if not self.completed:
-            self.progress += amount
-            return self.progress >= self.target_progress
-        return False
 
 class QuestSystem:
     def __init__(self, game):
@@ -6739,6 +6846,72 @@ class StoryManager:
                 f"Earned {points} plot points"
             ])
             self.game.display_turn_info()  # Refresh display
+
+    # Add to StoryManager class
+    def add_story_integration_methods(StoryManager):
+        def track_special_character_encounter(self, character):
+            """Track when special characters are met"""
+            if not hasattr(self, 'character_encounters'):
+                self.character_encounters = {}
+            
+            if character.full_name not in self.character_encounters:
+                self.character_encounters[character.full_name] = {
+                    "first_met": self.game.turn,
+                    "encounters": 0,
+                    "quests_completed": 0,
+                    "relationship": 0
+                }
+            
+            self.character_encounters[character.full_name]["encounters"] += 1
+            
+            # Check for story triggers
+            if self.character_encounters[character.full_name]["encounters"] == 3:
+                self.trigger_story_event("recurring_contact", {"character": character})
+
+        def handle_classification_event(self, classification, event_type):
+            """Handle events based on passenger classification"""
+            events = {
+                "S": {  # Scientists
+                    "discovery": "Scientific breakthrough aboard ship!",
+                    "bonus": lambda: setattr(self.game.ship, "research_points", 
+                                        self.game.ship.research_points + 50)
+                },
+                "M": {  # Military
+                    "discovery": "Military escort improves ship defenses!",
+                    "bonus": lambda: setattr(self.game.ship, "defense", 
+                                        self.game.ship.defense + 1)
+                },
+                "E": {  # Engineers
+                    "discovery": "Engineering improvements boost ship systems!",
+                    "bonus": lambda: setattr(self.game.ship, "speed", 
+                                        self.game.ship.speed + 1)
+                }
+            }
+            
+            if classification in events:
+                event = events[classification]
+                self.game.display_story_message(event["discovery"])
+                event["bonus"]()
+                self.plot_points += 5
+
+        def check_character_milestones(self):
+            """Check for character-related story milestones"""
+            if not hasattr(self, 'character_encounters'):
+                return
+                
+            total_encounters = sum(data["encounters"] for data in self.character_encounters.values())
+            total_quests = sum(data["quests_completed"] for data in self.character_encounters.values())
+            
+            # Milestone triggers
+            if total_encounters >= 10 and "network_established" not in self.completed_story_beats:
+                self.complete_milestone("network_established")
+                
+            if total_quests >= 5 and "trusted_contact" not in self.completed_story_beats:
+                self.complete_milestone("trusted_contact")
+
+        StoryManager.track_special_character_encounter = track_special_character_encounter
+        StoryManager.handle_classification_event = handle_classification_event
+        StoryManager.check_character_milestones = check_character_milestones
 
     def check_chapter_progress(self):
         """Check for chapter advancement"""
