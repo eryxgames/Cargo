@@ -1860,12 +1860,14 @@ class Game:
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
-                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                quantity = self.validate_quantity_input("Enter quantity to sell (max/m, half/h): ")
                 if quantity is None:
                     return
 
                 if quantity == 'max':
                     quantity = self.ship.cargo[item]
+                if quantity == 'half':
+                    quantity = (self.ship.cargo[item]) // 2
 
                 if self.ship.sell(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
