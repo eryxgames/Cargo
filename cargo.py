@@ -1165,6 +1165,79 @@ class Game:
         
         return market_content
 
+    def handle_contract_menu(self):
+            """Unified contract menu for both Port and Cantina"""
+            if not hasattr(self, 'contract_manager'):
+                self.contract_manager = ContractManager(self)
+                
+            # Refresh contracts if needed
+            self.contract_manager.refresh_available_contracts()
+
+            while True:
+                options = {
+                    'view': 'View Available Contracts',
+                    'status': 'Check Active Contracts',
+                    'complete': 'Complete Contract',
+                    'back': 'Return to Main Menu'
+                }
+                
+                # Show menu
+                menu_content = [["Contract Management"]]
+                for cmd, desc in options.items():
+                    menu_content.append([f"{cmd}: {desc}"])
+                print(self.create_box(menu_content, 'single'))
+
+                action = self.validate_input(
+                    "Choose action: ",
+                    list(options.keys())
+                )
+                
+                if action == 'back':
+                    break
+                    
+                elif action == 'view':
+                    if self.contract_manager.available_contracts:
+                        contract_content = [["Available Contracts"]]
+                        for i, contract in enumerate(self.contract_manager.available_contracts):
+                            contract_content.append([""])
+                            contract_content.append([f"Contract #{i+1}"])
+                            for info_line in self.contract_manager.get_contract_display_info(contract):
+                                contract_content.append([info_line])
+                        
+                        print(self.create_box(contract_content, 'double'))
+                        
+                        choice = self.validate_input(
+                            f"Accept contract (1-{len(self.contract_manager.available_contracts)}) or 'back': ",
+                            [str(i+1) for i in range(len(self.contract_manager.available_contracts))] + ['back']
+                        )
+                        
+                        if choice != 'back':
+                            success, message = self.contract_manager.accept_contract(int(choice) - 1)
+                            self.display_simple_message(message)
+                    else:
+                        self.display_simple_message("No contracts available currently.")
+                        
+                elif action == 'status':
+                    status_content = self.contract_manager.display_contract_status()
+                    print(self.create_box(status_content, 'double'))
+                    input("Press Enter to continue...")
+                    
+                elif action == 'complete':
+                    if self.contract_manager.active_contracts:
+                        event_data = {
+                            "location": self.current_location.name,
+                            "delivered_passengers": [p for module in self.ship.passenger_modules 
+                                                for p in module.passengers 
+                                                if p.destination == self.current_location.name],
+                            "trade_completed": True,
+                            "cargo_type": None,
+                            "amount": 0
+                        }
+                        self.contract_manager.update_contract_progress(event_data)
+                        self.display_simple_message("Contract progress updated!")
+                    else:
+                        self.display_simple_message("No active contracts.")
+
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
             box_content = message
@@ -4294,6 +4367,172 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
+class ContractManager:
+    def __init__(self, game):
+        self.game = game
+        self.available_contracts = []
+        self.active_contracts = []
+        self.completed_contracts = []
+        self.max_active_contracts = 3
+        self.contract_refresh_turns = 0
+
+    def refresh_available_contracts(self):
+        """Refresh available contracts every 5 turns"""
+        if self.game.turn - self.contract_refresh_turns >= 5:
+            self.contract_refresh_turns = self.game.turn
+            self.available_contracts = []
+            # Generate 2-4 new contracts
+            num_contracts = random.randint(2, 4)
+            for _ in range(num_contracts):
+                if random.random() < 0.6:  # 60% chance for cargo contract
+                    contract = Contract.generate_cargo_contract()
+                else:
+                    contract = Contract.generate_passenger_contract()
+                self.available_contracts.append(contract)
+
+    def accept_contract(self, contract_index):
+        """Accept a contract from available contracts"""
+        if contract_index >= len(self.available_contracts):
+            return False, "Invalid contract selection."
+            
+        if len(self.active_contracts) >= self.max_active_contracts:
+            return False, "Maximum number of active contracts reached."
+            
+        contract = self.available_contracts.pop(contract_index)
+        self.active_contracts.append(contract)
+        return True, f"Contract accepted: {contract.description}"
+
+    def update_contract_progress(self, event_data):
+        """Update progress for all active contracts based on event data"""
+        for contract in self.active_contracts[:]:  # Create copy to allow removal
+            contract.update_progress(event_data)
+            if contract.completed:
+                self.handle_contract_completion(contract)
+            elif contract.failed:
+                self.handle_contract_failure(contract)
+                
+    def handle_contract_completion(self, contract):
+        """Handle rewards for completed contract"""
+        self.active_contracts.remove(contract)
+        self.completed_contracts.append(contract)
+        
+        # Award rewards
+        self.game.ship.money += contract.rewards["money"]
+        self.game.reputation += contract.rewards["reputation"]
+        self.game.story_manager.plot_points += contract.rewards["plot_points"]
+        
+        # Special reward if completing multiple contracts
+        streak_bonus = len([c for c in self.completed_contracts[-5:] 
+                          if not c.failed]) * 0.1  # 10% bonus per recent completion
+        if streak_bonus > 0:
+            bonus_money = int(contract.rewards["money"] * streak_bonus)
+            self.game.ship.money += bonus_money
+            return f"Contract completed with {streak_bonus*100}% streak bonus! +{bonus_money} credits"
+        return "Contract completed successfully!"
+
+    def handle_contract_failure(self, contract):
+        """Handle consequences of failed contract"""
+        self.active_contracts.remove(contract)
+        self.completed_contracts.append(contract)
+        reputation_penalty = -10
+        self.game.reputation += reputation_penalty
+        return f"Contract failed. Reputation penalty: {reputation_penalty}"
+
+    def get_contract_display_info(self, contract):
+        """Get formatted display info for a contract"""
+        info = []
+        info.append(f"Type: {contract.contract_type.title()}")
+        info.append(f"Duration: {contract.duration} turns")
+        
+        # Requirements
+        if contract.contract_type == "passenger":
+            if "passenger_class" in contract.requirements:
+                class_code = contract.requirements["passenger_class"]
+                count = contract.requirements["count"]
+                info.append(f"Required: {count} {class_code}-class passengers")
+            if "passenger_count" in contract.requirements:
+                info.append(f"Required: {contract.requirements['passenger_count']} total passengers")
+            if "min_satisfaction" in contract.requirements:
+                info.append(f"Min. Satisfaction: {contract.requirements['min_satisfaction']}%")
+        else:  # cargo contract
+            if "cargo_type" in contract.requirements:
+                info.append(f"Cargo: {contract.requirements['cargo_type']}")
+                if "min_amount" in contract.requirements:
+                    info.append(f"Amount: {contract.requirements['min_amount']} units")
+            if "min_trades" in contract.requirements:
+                info.append(f"Required Trades: {contract.requirements['min_trades']}")
+        
+        # Rewards
+        info.append(f"Reward: {self.game.format_money(contract.rewards['money'])} credits")
+        info.append(f"Reputation: +{contract.rewards['reputation']}")
+        if contract.rewards['plot_points'] > 0:
+            info.append(f"Plot Points: +{contract.rewards['plot_points']}")
+            
+        return info
+
+    def display_contract_status(self):
+        """Get status display for active contracts"""
+        if not self.active_contracts:
+            return [["No active contracts"]]
+            
+        status = [["Active Contracts", "Progress", "Time Left"]]
+        for contract in self.active_contracts:
+            if contract.contract_type == "passenger":
+                progress = f"{contract.progress}/{contract.requirements.get('count', '?')}"
+            else:
+                progress = f"{contract.progress}/{contract.requirements.get('min_amount', '?')}"
+            time_left = contract.duration - contract.turns_active
+            status.append([
+                contract.description,
+                progress,
+                f"{time_left} turns"
+            ])
+        return status
+
+class SpecialCharacter:
+    def __init__(self, title, name, role, specialization):
+        self.title = title
+        self.name = name
+        self.role = role
+        self.specialization = specialization
+        self.full_name = f"{title} {name}"
+        self.met = False
+        self.quests_given = []
+
+class SpecialCharacterGenerator:
+    def __init__(self):
+        self.titles = {
+            "military": ["Fleet Commander", "Fleet Admiral", "Security Chief", "Defense Director"],
+            "science": ["Research Coordinator", "Science Director", "Chief Researcher", "Lab Supervisor"],
+            "trade": ["Trade Minister", "Commerce Director", "Market Supervisor", "Exchange Chief"],
+            "engineering": ["Engineering Chief", "Tech Director", "Systems Coordinator", "Project Lead"]
+        }
+        
+        self.surnames = ["Wu", "Cheng", "Tahoe", "Singh", "Patel", "Kim", "Rodriguez", "Novak", 
+                        "Chen", "Zhang", "Yamamoto", "Anderson", "Silva", "Kumar", "Hassan"]
+        
+        self.roles = {
+            "military": ["Combat training", "Fleet operations", "Security protocols", "Defense systems"],
+            "science": ["Research projects", "Lab experiments", "Data analysis", "Discovery missions"],
+            "trade": ["Market analysis", "Trade routes", "Economic planning", "Resource management"],
+            "engineering": ["System upgrades", "Tech maintenance", "Innovation projects", "Infrastructure"]
+        }
+        
+        self.known_characters = {}  # Track generated characters
+
+    def generate_character(self, specialization):
+        title = random.choice(self.titles[specialization])
+        name = random.choice(self.surnames)
+        role = random.choice(self.roles[specialization])
+        
+        # Ensure unique combination
+        while f"{title} {name}" in self.known_characters:
+            name = random.choice(self.surnames)
+            
+        character = SpecialCharacter(title, name, role, specialization)
+        self.known_characters[character.full_name] = character
+        return character        
+
 class PassengerModule:
     def __init__(self, name, capacity, comfort_level, cost):
         self.name = name
@@ -4306,9 +4545,161 @@ class Passenger:
     def __init__(self, name, destination, wealth_level):
         self.name = name
         self.destination = destination
-        self.wealth_level = wealth_level  # 1-5, affects payment
-        self.satisfaction = 100  # Starts at 100, can decrease based on journey
+        self.wealth_level = wealth_level  # 1-5
+        self.satisfaction = 100
         self.turns_waiting = 0
+        # Add passenger classification
+        self.classification = self.generate_classification()
+        
+    def generate_classification(self):
+        classifications = [
+            ("S", "Scientist", "science"),
+            ("M", "Military", "military"),
+            ("E", "Engineer", "engineering"),
+            ("T", "Trader", "trade"),
+            ("D", "Diplomat", "diplomacy"),
+            ("R", "Researcher", "research")
+        ]
+        class_code, class_name, class_type = random.choice(classifications)
+        return {
+            "code": class_code,
+            "name": class_name,
+            "type": class_type
+        }
+
+class Contract:
+    def __init__(self, contract_type, duration, requirements, rewards):
+        self.contract_type = contract_type  # 'passenger' or 'cargo'
+        self.duration = duration  # number of turns
+        self.requirements = requirements  # dict of requirements
+        self.rewards = rewards  # dict of rewards
+        self.progress = 0
+        self.completed = False
+        self.failed = False
+        self.turns_active = 0
+
+    @staticmethod
+    def generate_passenger_contract():
+        contract_types = [
+            {
+                "description": "VIP Transport",
+                "requirements": {
+                    "passenger_class": random.choice(["S", "M", "E"]),
+                    "count": random.randint(3, 8),
+                    "destination": None  # To be filled based on game state
+                },
+                "duration": 10,
+                "base_reward": 25000
+            },
+            {
+                "description": "Group Transport",
+                "requirements": {
+                    "passenger_count": random.randint(10, 20),
+                    "min_satisfaction": 80
+                },
+                "duration": 15,
+                "base_reward": 35000
+            },
+            {
+                "description": "Specialist Transfer",
+                "requirements": {
+                    "passenger_class": random.choice(["S", "R"]),
+                    "count": random.randint(5, 10),
+                    "min_wealth_level": 3
+                },
+                "duration": 12,
+                "base_reward": 30000
+            }
+        ]
+        
+        contract_type = random.choice(contract_types)
+        return Contract(
+            contract_type="passenger",
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 25,
+                "plot_points": 5
+            }
+        )
+
+    @staticmethod
+    def generate_cargo_contract():
+        contract_types = [
+            {
+                "description": "Exclusive Trading",
+                "requirements": {
+                    "cargo_type": random.choice(["tech", "agri"]),
+                    "min_amount": random.randint(100, 300),
+                    "restricted_routes": []  # To be filled based on game state
+                },
+                "duration": 8,
+                "base_reward": 20000
+            },
+            {
+                "description": "Resource Distribution",
+                "requirements": {
+                    "cargo_types": ["tech", "agri", "salt", "fuel"],
+                    "min_trades": random.randint(5, 10)
+                },
+                "duration": 12,
+                "base_reward": 30000
+            }
+        ]
+        
+        contract_type = random.choice(contract_types)
+        return Contract(
+            contract_type="cargo",
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 20,
+                "plot_points": 3
+            }
+        )
+
+    def update_progress(self, event_data):
+        """Update contract progress based on events"""
+        if self.completed or self.failed:
+            return
+
+        self.turns_active += 1
+        if self.turns_active > self.duration:
+            self.failed = True
+            return
+
+        if self.contract_type == "passenger":
+            self._update_passenger_progress(event_data)
+        else:
+            self._update_cargo_progress(event_data)
+
+    def _update_passenger_progress(self, event_data):
+        if "delivered_passengers" in event_data:
+            for passenger in event_data["delivered_passengers"]:
+                if "passenger_class" in self.requirements:
+                    if passenger.classification["code"] == self.requirements["passenger_class"]:
+                        self.progress += 1
+                else:
+                    self.progress += 1
+
+        if self.progress >= self.requirements.get("count", 0):
+            self.completed = True
+
+    def _update_cargo_progress(self, event_data):
+        if "trade_completed" in event_data:
+            cargo_type = event_data["cargo_type"]
+            if "cargo_type" in self.requirements:
+                if cargo_type == self.requirements["cargo_type"]:
+                    self.progress += event_data["amount"]
+            elif "cargo_types" in self.requirements:
+                if cargo_type in self.requirements["cargo_types"]:
+                    self.progress += 1
+
+        if (("min_amount" in self.requirements and self.progress >= self.requirements["min_amount"]) or
+            ("min_trades" in self.requirements and self.progress >= self.requirements["min_trades"])):
+            self.completed = True
 
 class Port:
     def __init__(self, game):
@@ -4445,34 +4836,50 @@ class Port:
         return self.game.create_box(content, 'double')
 
     def handle_port_menu(self):
-            """Handle port menu options"""
-            self.game.display_simple_message("Welcome to the Stardock Port!", 1)
+        """Handle port menu options"""
+        self.game.display_simple_message("Welcome to the Stardock Port!", 1)
 
-            while True:
-                options = ['view', 'v', 'modules', 'm', 'board', 'b', 'unload', 'u', 'travel', 't', 'back']
-                action = self.game.validate_input(
-                    "Choose action (view/v, modules/m, board/b, unload/u, travel/t, back): ",
-                    options
-                )
+        while True:
+            options = {
+                'view': ('v', "View Port Info"),
+                'modules': ('m', "Purchase Modules"),
+                'board': ('b', "Board Passengers"),
+                'unload': ('u', "Unload Passengers"),
+                'contracts': ('c', "Manage Contracts"),
+                'travel': ('t', "Travel"),
+                'back': ('', "Return to Main Menu")
+            }
+            
+            # Show menu
+            menu_content = [["Port Services"]]
+            for cmd, (shortcut, desc) in options.items():
+                menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
+            print(self.game.create_box(menu_content, 'single'))
+
+            valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
+            action = self.game.validate_input("Choose action: ", valid_inputs)
+            
+            if action in ['back', None]:
+                break
                 
-                if action in ['back', None]:
+            elif action in ['view', 'v']:
+                print(self.display_port_info())
+                
+            elif action in ['modules', 'm']:
+                self.handle_module_purchase()
+                
+            elif action in ['board', 'b']:
+                self.handle_passenger_boarding()
+                
+            elif action in ['unload', 'u']:
+                self.handle_passenger_unloading()
+            
+            elif action in ['contracts', 'c']:
+                self.game.handle_contract_menu()
+            
+            elif action in ['travel', 't']:
+                if self.game.handle_travel():
                     break
-                    
-                elif action in ['view', 'v']:
-                    print(self.display_port_info())
-                    
-                elif action in ['modules', 'm']:
-                    self.handle_module_purchase()
-                    
-                elif action in ['board', 'b']:
-                    self.handle_passenger_boarding()
-                    
-                elif action in ['unload', 'u']:
-                    self.handle_passenger_unloading()
-
-                elif action in ['travel', 't']:
-                    if self.game.handle_travel():
-                        break  # Exit port menu after successful travel
 
     def handle_module_purchase(self):
             """Handle purchase of new modules"""
