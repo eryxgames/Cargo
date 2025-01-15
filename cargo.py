@@ -1210,19 +1210,21 @@ class Game:
     def validate_quantity_input(self, prompt):
         while True:
             self.display_simple_message(prompt, 0)
-            try:
+            try:    
                 user_input = input(">>> ").strip().lower()
                 if not user_input:
                     self.display_simple_message("Command cancelled.")
                     return None
-                if user_input == 'max':
+                if user_input in ['max', 'm']:
                     return 'max'
+                if user_input in ['half', 'h']:
+                    return 'half'
                 quantity = int(user_input)
                 if quantity > 0:
                     return quantity
-                self.display_simple_message("Please enter a positive number or 'max'", 1)
+                self.display_simple_message("Please enter a positive number, 'max/m', or 'half/h'", 1)
             except ValueError:
-                self.display_simple_message("Invalid input. Please enter a number or 'max'", 1)
+                self.display_simple_message("Invalid input. Please enter a number, 'max/m', or 'half/h'", 1)
 
     def validate_planet_input(self, prompt):
         while True:
@@ -1825,19 +1827,23 @@ class Game:
                         self.display_simple_message(f"No mining platform for {item} on this planet.")
                         return
 
-                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                quantity = self.validate_quantity_input("Enter quantity (max/m, half/h): ")
                 if quantity is None:
                     return
 
+                price = self.current_location.market[item]
+                if price <= 0:
+                    self.display_simple_message(f"Cannot calculate amount: {item} has no valid price.")
+                    return
+                    
+                tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
+                price_with_tax = price * (1 + tax_rate)
+                max_quantity = int(self.ship.money / price_with_tax)
+
                 if quantity == 'max':
-                    price = self.current_location.market[item]
-                    if price <= 0:
-                        self.display_simple_message(f"Cannot calculate maximum: {item} has no valid price.")
-                        return
-                        
-                    tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
-                    price_with_tax = price * (1 + tax_rate)
-                    quantity = int(self.ship.money / price_with_tax)
+                    quantity = max_quantity
+                elif quantity == 'half':
+                    quantity = (max_quantity + 1) // 2  # Round up division
 
                 if self.ship.buy(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
