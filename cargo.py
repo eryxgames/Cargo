@@ -1754,7 +1754,7 @@ class Game:
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
-
+            
             # Get location commands
             location_commands = self.current_location.commands
             
@@ -1946,6 +1946,7 @@ class Game:
                     self.port_system.update_passenger_satisfaction()
                 self.turn += 1
                 self.random_event()
+                self.shop.reset_turn()  # Reset shop state at end of each turn 
                 return
 
             else:
@@ -2163,6 +2164,7 @@ class Game:
                 self.display_simple_message(f"Gained {total_gain} research points from salvaged debris!")
             
             self.turn += 1
+            self.shop.reset_turn()
             self.random_event()
             return True
         else:
