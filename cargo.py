@@ -1166,76 +1166,10 @@ class Game:
         return market_content
 
     def handle_contract_menu(self):
+        """Route contract menu handling to ContractManager"""
         if not hasattr(self, 'contract_manager'):
             self.contract_manager = ContractManager(self)
-            
-        self.contract_manager.refresh_available_contracts()
-
-        while True:
-            options = {
-                'view/v': 'View Available Contracts',
-                'status/s': 'Check Active Contracts',
-                'complete/c': 'Complete Contract',
-                'back/b': 'Return to Main Menu'
-            }
-            
-            menu_content = [["Contract Management"]]
-            for cmd, desc in options.items():
-                menu_content.append([f"{cmd}: {desc}"])
-            print(self.create_box(menu_content, 'single'))
-
-            action = self.validate_input(
-                "Choose action: ",
-                ['view', 'v', 'status', 's', 'complete', 'c', 'back', 'b', '']
-            )
-            
-            if action in ['', 'back', 'b']:
-                break
-                
-            elif action in ['view', 'v']:
-                if self.contract_manager.available_contracts:
-                    contract_content = [["Available Contracts"]]
-                    for i, contract in enumerate(self.contract_manager.available_contracts):
-                        contract_content.append([""])
-                        contract_content.append([f"Contract #{i+1}"])
-                        for info_line in self.contract_manager.get_contract_display_info(contract):
-                            contract_content.append([info_line])
-                    
-                    print(self.create_box(contract_content, 'double'))
-                    
-                    choice = self.validate_input(
-                        f"Accept contract (1-{len(self.contract_manager.available_contracts)}) or 'back': ",
-                        [str(i+1) for i in range(len(self.contract_manager.available_contracts))] + ['back', 'b', '']
-                    )
-                    
-                    if choice in ['', 'back', 'b']:
-                        continue
-                    
-                    success, message = self.contract_manager.accept_contract(int(choice) - 1)
-                    self.display_simple_message(message)
-                else:
-                    self.display_simple_message("No contracts available currently.")
-                    
-            elif action in ['status', 's']:
-                status_content = self.contract_manager.display_contract_status()
-                print(self.create_box(status_content, 'double'))
-                input("Press Enter to continue...")
-                
-            elif action in ['complete', 'c']:
-                if self.contract_manager.active_contracts:
-                    event_data = {
-                        "location": self.current_location.name,
-                        "delivered_passengers": [p for module in self.ship.passenger_modules 
-                                            for p in module.passengers 
-                                            if p.destination == self.current_location.name],
-                        "trade_completed": True,
-                        "cargo_type": None,
-                        "amount": 0
-                    }
-                    self.contract_manager.update_contract_progress(event_data)
-                    self.display_simple_message("Contract progress updated!")
-                else:
-                    self.display_simple_message("No active contracts.")
+        self.contract_manager.handle_contract_menu()
 
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
@@ -4354,6 +4288,193 @@ class ContractManager:
         self.max_active_contracts = 3
         self.contract_refresh_turns = 0
 
+    def handle_contract_menu(self):
+        """Improved contract management menu"""
+        # Refresh contracts if needed
+        self.refresh_available_contracts()
+
+        while True:
+            # First show active contracts with their status
+            active_content = [["Active Contracts"]]
+            if self.active_contracts:
+                for contract in self.active_contracts:
+                    active_content.append([
+                        contract.description,
+                        contract.get_progress_description(),
+                        "READY TO CLAIM" if contract.completed and not getattr(contract, 'rewards_claimed', False) else 
+                        "FAILED" if contract.failed else 
+                        f"{contract.duration - contract.turns_active} turns left"
+                    ])
+            else:
+                active_content.append(["No active contracts"])
+            print(self.game.create_box(active_content, 'double'))
+
+            # Show available commands
+            options = {
+                'view': ('v', "View new contracts"),
+                'claim': ('c', "Claim completed contract rewards"),
+                'status': ('s', "Check detailed contract status"),
+                'back': ('', "Return to previous menu")
+            }
+
+            menu_content = [["Contract Management"]]
+            for cmd, (shortcut, desc) in options.items():
+                menu_content.append([f"{cmd}/{shortcut}" if shortcut else cmd, desc])
+            print(self.game.create_box(menu_content, 'single'))
+
+            action = self.game.validate_input(
+                "Choose action: ",
+                list(options.keys()) + [s[0] for s in options.values() if s[0]] + ['']
+            )
+
+            if not action:  # Empty Enter returns to previous menu
+                break
+
+            elif action in ['view', 'v']:
+                self.show_available_contracts()
+
+            elif action in ['claim', 'c']:
+                self.claim_completed_contracts()
+
+            elif action in ['status', 's']:
+                self.show_detailed_status()
+
+    def show_available_contracts(self):
+        """Show available contracts for acceptance"""
+        if not self.available_contracts:
+            self.game.display_simple_message("No contracts available currently.")
+            return
+
+        contract_content = [["Available Contracts"]]
+        for i, contract in enumerate(self.available_contracts, 1):
+            contract_content.append([""])
+            contract_content.append([f"Contract #{i}"])
+            for info_line in self.get_contract_display_info(contract):
+                contract_content.append([info_line])
+        
+        print(self.game.create_box(contract_content, 'double'))
+        
+        choice = self.game.validate_input(
+            f"Accept contract (1-{len(self.available_contracts)}) or Enter to cancel: ",
+            [str(i) for i in range(1, len(self.available_contracts) + 1)] + ['']
+        )
+        
+        if not choice:  # Empty Enter cancels
+            return
+        
+        success, message = self.accept_contract(int(choice) - 1)
+        self.game.display_simple_message(message)
+
+    def claim_completed_contracts(self):
+        """Handle claiming rewards for completed contracts"""
+        completed = [c for c in self.active_contracts if c.completed and not c.rewards_claimed]
+        
+        if not completed:
+            self.game.display_simple_message("No completed contracts to claim!")
+            return
+
+        # Show completed contracts
+        content = [["Completed Contracts Ready to Claim"]]
+        for i, contract in enumerate(completed, 1):
+            content.append([
+                f"{i}. {contract.description}",
+                f"Reward: {self.game.format_money(contract.rewards['money'])}",
+                f"Rep: +{contract.rewards['reputation']}"
+            ])
+        print(self.game.create_box(content, 'double'))
+
+        # Get contract choice
+        self.game.display_simple_message("Enter contract number to claim (Enter to cancel):", 0)
+        valid_inputs = [str(i) for i in range(1, len(completed) + 1)] + ['']
+        choice = self.game.validate_input(">>> ", valid_inputs)
+
+        if not choice:  # Empty Enter cancels
+            return
+
+        # Claim rewards
+        contract = completed[int(choice) - 1]
+        self.handle_contract_completion(contract)
+
+    def show_detailed_status(self):
+        """Show detailed status of all active contracts"""
+        if not self.active_contracts:
+            self.game.display_simple_message("No active contracts!")
+            return
+
+        for contract in self.active_contracts:
+            content = [[f"Contract: {contract.description}"]]
+            
+            # Add requirements
+            if contract.contract_type == "passenger":
+                content.append([
+                    f"Required: {contract.requirements['count']} {contract.requirements['passenger_class']}-class passengers",
+                    f"Delivered: {contract.progress['passengers_delivered']}"
+                ])
+            else:  # cargo contract
+                content.append([
+                    f"Required: {contract.requirements['min_amount']} units of {contract.requirements['cargo_type']}",
+                    f"Delivered: {contract.progress['amount']}"
+                ])
+
+            # Add route info
+            content.append([
+                f"Route: {contract.requirements['source']} → {contract.requirements['destination']}"
+            ])
+            if contract.progress['destinations_visited']:
+                content.append([f"Visited: {', '.join(contract.progress['destinations_visited'])}"])
+
+            # Add time info
+            time_left = contract.duration - contract.turns_active
+            content.append([f"Time remaining: {time_left} turns"])
+
+            print(self.game.create_box(content, 'single'))
+            print()  # Add space between contracts
+
+        input("Press Enter to continue...")
+
+    def update_contract_progress(self, event_data):
+        """Automatic contract progress update"""
+        for contract in self.active_contracts[:]:  # Create copy to allow removal
+            status = contract.update_progress(event_data)
+            
+            # If contract is completed, handle it immediately
+            if status["status"] == "completed" and not contract.rewards_claimed:
+                self.game.display_simple_message([
+                    "Contract Completed!",
+                    contract.description,
+                    "Use 'claim' command to collect rewards."
+                ])
+            elif status["status"] == "failed":
+                self.handle_contract_failure(contract)
+
+    def handle_contract_completion(self, contract):
+        """Handle completed contract and reward claiming"""
+        if contract not in self.active_contracts:
+            return
+
+        if contract.rewards_claimed:
+            return
+
+        # Calculate and award final rewards
+        rewards = contract.calculate_final_reward()
+        self.game.ship.money += rewards["money"]
+        self.game.reputation += rewards["reputation"]
+        self.game.story_manager.plot_points += rewards["plot_points"]
+
+        # Mark contract as claimed and move to completed list
+        contract.rewards_claimed = True
+        self.active_contracts.remove(contract)
+        self.completed_contracts.append(contract)
+
+        # Display completion message
+        self.game.display_simple_message([
+            "Contract Rewards Claimed!",
+            f"Earned {self.game.format_money(rewards['money'])} credits",
+            f"Reputation +{rewards['reputation']}",
+            f"Plot Points +{rewards['plot_points']}"
+        ])
+
+
     def refresh_available_contracts(self):
         """Refresh available contracts every 5 turns"""
         if self.game.turn - self.contract_refresh_turns >= 5:
@@ -4551,45 +4672,7 @@ class ContractManager:
         self.active_contracts.append(contract)
         return True, f"Contract accepted: {contract.description}"
 
-    def update_contract_progress(self, event_data):
-        """Update progress for all active contracts based on event data"""
-        for contract in self.active_contracts[:]:  # Create copy to allow removal
-            contract.update_progress(event_data)
-            if contract.completed:
-                self.handle_contract_completion(contract)
-            elif contract.failed:
-                self.handle_contract_failure(contract)
 
-    def handle_contract_completion(self, contract):
-        """Handle completed contract"""
-        self.active_contracts.remove(contract)
-        self.completed_contracts.append(contract)
-        
-        # Calculate and award final rewards
-        rewards = contract.calculate_final_reward()
-        self.game.ship.money += rewards["money"]
-        self.game.reputation += rewards["reputation"]
-        self.game.story_manager.plot_points += rewards["plot_points"]
-        
-        # Display completion message
-        self.game.display_simple_message([
-            "Contract Completed!",
-            f"Earned {self.game.format_money(rewards['money'])} credits",
-            f"Reputation +{rewards['reputation']}",
-            f"Plot Points +{rewards['plot_points']}"
-        ])
-
-    def handle_contract_failure(self, contract):
-        """Handle failed contract"""
-        self.active_contracts.remove(contract)
-        self.completed_contracts.append(contract)
-        reputation_penalty = -10
-        self.game.reputation += reputation_penalty
-        self.game.display_simple_message([
-            "Contract Failed!",
-            f"Reputation penalty: {reputation_penalty}",
-            "Reason: " + contract.failure_reason
-        ])
 
 class SpecialCharacter:
     def __init__(self, title, name, role, specialization):
