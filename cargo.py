@@ -4556,6 +4556,25 @@ class Contract:
         self.completed = False
         self.failed = False
         self.turns_active = 0
+                # Add description field based on type and requirements
+        self.description = self._generate_description()
+
+    def _generate_description(self):
+        """Generate a human-readable description of the contract"""
+        if self.contract_type == "passenger":
+            if "passenger_class" in self.requirements:
+                return f"Transport {self.requirements['count']} {self.requirements['passenger_class']}-class passengers"
+            elif "passenger_count" in self.requirements:
+                return f"Transport {self.requirements['passenger_count']} passengers"
+            return "Passenger transport contract"
+        elif self.contract_type == "cargo":
+            if "cargo_type" in self.requirements:
+                amount = self.requirements.get("min_amount", "some")
+                return f"Transport {amount} units of {self.requirements['cargo_type']}"
+            elif "min_trades" in self.requirements:
+                return f"Complete {self.requirements['min_trades']} cargo trades"
+            return "Cargo transport contract"
+        return "Generic contract"        
 
     @staticmethod
     def generate_passenger_contract():
