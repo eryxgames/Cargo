@@ -1996,7 +1996,10 @@ class Game:
 
             elif action in ['version', 'v']:
                 display_logo(logo_data, centered=True)
-                print_centered_text("Version 1.0")
+                print_centered_text("")
+                print_centered_text("Created by Dan Sandner")
+                print_centered_text("v1.0.2, ©2025")
+
                 time.sleep(3)
                 return    
 
