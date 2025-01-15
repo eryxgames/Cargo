@@ -4474,6 +4474,33 @@ class ContractManager:
             f"Plot Points +{rewards['plot_points']}"
         ])
 
+    def check_contract_requirements(self, contract_type, location):
+        """Check if location meets contract requirements"""
+        if contract_type == "passenger":
+            return hasattr(self.game.ship, 'passenger_modules') and \
+                   any(len(m.passengers) < m.capacity for m in self.game.ship.passenger_modules)
+        elif contract_type == "cargo":
+            return any(cargo > 0 for cargo in self.game.ship.cargo.values())
+        return False
+
+    def get_contract_requirements(self, contract):
+        """Get formatted requirements for a contract"""
+        reqs = []
+        if contract.contract_type == "passenger":
+            if "passenger_class" in contract.requirements:
+                reqs.append(f"- {contract.requirements['count']} {contract.requirements['passenger_class']}-class passengers")
+            if "min_satisfaction" in contract.requirements:
+                reqs.append(f"- Minimum satisfaction: {contract.requirements['min_satisfaction']}%")
+        else:  # cargo contract
+            if "cargo_type" in contract.requirements:
+                reqs.append(f"- {contract.requirements['min_amount']} units of {contract.requirements['cargo_type']}")
+        
+        # Add route requirements
+        source = contract.requirements.get('source', 'Any')
+        dest = contract.requirements.get('destination', 'Any')
+        reqs.append(f"- Route: {source} → {dest}")
+        
+        return reqs
 
     def refresh_available_contracts(self):
         """Refresh available contracts every 5 turns"""
