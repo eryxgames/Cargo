@@ -2,14 +2,14 @@
 
 # CARGO: Space Trading Saga in Eryxian Universe
 
-A text-based space trading and exploration game where you navigate between planets, outposts, and stations as a merchant captain.
+A text-based space trading and exploration game where you navigate between planets, outposts, bases, and stations as a merchant captain of a modular cargo hauler.
 
 ```console
 >>> 
                   ╔════════ C Δ R G Ω ════════╗
                   ║     Space Trading Saga    ║
                   ╚═══════════════════════════╝
-                           Version 1.0a
+                          Version 1.0.1a
 
 ```
 
@@ -18,7 +18,7 @@ A text-based space trading and exploration game where you navigate between plane
   - Multiple commodities (tech, agricultural goods, minerals, fuel)
   - Market prices affected by local economy and events
   - Trade embargoes and temporary bans
-  - Tax rates based on reputation and location
+  - Tariff rates based on reputation and location
 
 - [x] Multiple Location Types
   - Planets with diverse economies
@@ -73,11 +73,16 @@ A text-based space trading and exploration game where you navigate between plane
   - Location unlocks
   - Building development
 
-- [x] Cantina System
-  - Location information
+- [x] Cantina and Shop Systems
+  - Location information and maps
   - Quest availability
-  - Market updates
+  - Market updates and items
   - Story progression tracking
+     
+- [x] Passenger Transport
+  - Passengers can embark on locations
+  - Develop story and plot points 
+  - Character Quests    
 
 ## Installation
 ```bash
@@ -88,6 +93,7 @@ git clone https://github.com/eryxgames/cargo.git
 python cargo.py
 ```
 ### Core dependencies
+- These are standard library modules, no pip install needed.
 ```
 random
 os
@@ -95,7 +101,6 @@ time
 shutil
 math
 ```
-- These are standard library modules, no pip install needed.
 - The game currently uses only built-in Python modules.
 - Requires Python 3.7+ for proper f-strings and dictionary ordering
 
