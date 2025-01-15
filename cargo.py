@@ -4429,7 +4429,7 @@ class Port:
                 content.append([
                     f"{passenger.name}",
                     f"→ {passenger.destination}",
-                    f"Wealth Level: {passenger.wealth_level}"
+                    f"Class: {passenger.wealth_level}"
                 ])
         else:
             content.append(["No passengers waiting"])
@@ -4518,7 +4518,7 @@ class Port:
             
         # Show waiting passengers
         content = [["Waiting Passengers"]]
-        content.append(["Name", "Destination", "Wealth", "Est. Fare"])
+        content.append(["Name", "Destination", "Class", "Fare"])
         
         available_modules = [m for m in self.game.ship.passenger_modules 
                            if len(m.passengers) < m.capacity]
@@ -4555,7 +4555,7 @@ class Port:
         
         # Show available modules
         content = [["Available Modules"]]
-        content.append(["Module", "Comfort", "Space", "Est. Fare"])
+        content.append(["Module", "Comfort", "Space", "Est."])
         
         for i, module in enumerate(available_modules, 1):
             fare = self.calculate_fare(passenger, module)
