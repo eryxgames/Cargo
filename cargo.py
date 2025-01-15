@@ -4904,85 +4904,100 @@ class Port:
 
     def handle_passenger_boarding(self):
         """Handle passenger boarding process"""
-        location = self.game.current_location.name
-        
-        if not hasattr(self.game.ship, 'passenger_modules'):
-            self.game.display_simple_message("No passenger modules installed!")
-            return
+        while True:
+            location = self.game.current_location.name
             
-        if location not in self.waiting_passengers or not self.waiting_passengers[location]:
-            self.game.display_simple_message("No passengers waiting!")
-            return
+            if not hasattr(self.game.ship, 'passenger_modules'):
+                self.game.display_simple_message("No passenger modules installed!")
+                return
+                
+            if location not in self.waiting_passengers or not self.waiting_passengers[location]:
+                self.game.display_simple_message("No passengers waiting!")
+                return
+                
+            # Get available modules (with space)
+            available_modules = [m for m in self.game.ship.passenger_modules 
+                            if len(m.passengers) < m.capacity]
             
-        # Show waiting passengers
-        content = [["Waiting Passengers"]]
-        content.append(["Name", "Destination", "Class", "Fare"])
-        
-        available_modules = [m for m in self.game.ship.passenger_modules 
-                           if len(m.passengers) < m.capacity]
-        
-        if not available_modules:
-            self.game.display_simple_message("No room for more passengers!")
-            return
+            if not available_modules:
+                self.game.display_simple_message("No room for more passengers!")
+                return
+
+            # Display current module status
+            module_status = [["Current Module Status"]]
+            for module in self.game.ship.passenger_modules:
+                passengers_info = []
+                for p in module.passengers:
+                    passengers_info.append(f"{p.name} [{p.classification['code']}] → {p.destination}")
+                module_status.append([
+                    f"{module.name}",
+                    f"({len(module.passengers)}/{module.capacity})",
+                    f"Comfort: {module.comfort_level}"
+                ])
+                for p_info in passengers_info:
+                    module_status.append([f"└─ {p_info}"])
+            print(self.game.create_box(module_status, 'single'))
+                
+            # Show waiting passengers
+            content = [["Waiting Passengers"]]
+            content.append(["Name", "Destination", "Class", "Est. Fare"])
             
-        # Show each passenger and their details
-        for i, passenger in enumerate(self.waiting_passengers[location], 1):
-            # Calculate best possible fare with available modules
-            best_module = max(available_modules, key=lambda m: m.comfort_level)
-            est_fare = self.calculate_fare(passenger, best_module)
+            waiting_passengers = self.waiting_passengers[location]
+            for i, passenger in enumerate(waiting_passengers, 1):
+                best_module = max(available_modules, key=lambda m: m.comfort_level)
+                est_fare = self.calculate_fare(passenger, best_module)
+                content.append([
+                    f"{i}. {passenger.name} [{passenger.classification['code']}]",
+                    passenger.destination,
+                    f"L{passenger.wealth_level}",
+                    self.game.format_money(est_fare)
+                ])
             
-            content.append([
-                f"{i}. {passenger.name}",
-                passenger.destination,
-                str(passenger.wealth_level),
-                self.game.format_money(est_fare)
-            ])
+            print(self.game.create_box(content, 'double'))
+
+            # Show menu options
+            menu_content = [["Boarding Options"]]
+            menu_content.append(["1. Select passengers"])
+            menu_content.append(["2. View module details"])
+            menu_content.append(["3. Back to port menu"])
+            print(self.game.create_box(menu_content, 'single'))
+
+            choice = self.game.validate_input("Choose option: ", ['1', '2', '3', 'back'])
             
-        print(self.game.create_box(content, 'double'))
-        
-        # Get passenger choice
-        choice = self.game.validate_input(
-            f"Choose passenger number (1-{len(self.waiting_passengers[location])} or 'back'): ",
-            [str(i) for i in range(1, len(self.waiting_passengers[location]) + 1)] + ['back']
-        )
-        
-        if choice == 'back':
-            return
-            
-        passenger = self.waiting_passengers[location][int(choice) - 1]
-        
-        # Show available modules
-        content = [["Available Modules"]]
-        content.append(["Module", "Comfort", "Space", "Est."])
-        
-        for i, module in enumerate(available_modules, 1):
-            fare = self.calculate_fare(passenger, module)
-            content.append([
-                f"{i}. {module.name}",
-                str(module.comfort_level),
-                f"{len(module.passengers)}/{module.capacity}",
-                self.game.format_money(fare)
-            ])
-            
-        print(self.game.create_box(content, 'double'))
-        
-        # Get module choice
-        module_choice = self.game.validate_input(
-            f"Choose module number (1-{len(available_modules)} or 'back'): ",
-            [str(i) for i in range(1, len(available_modules) + 1)] + ['back']
-        )
-        
-        if module_choice == 'back':
-            return
-            
-        chosen_module = available_modules[int(module_choice) - 1]
-        
-        # Board passenger
-        chosen_module.passengers.append(passenger)
-        self.waiting_passengers[location].remove(passenger)
-        
-        self.game.display_simple_message(f"Passenger {passenger.name} boarded!")
-        
+            if choice in ['3', 'back']:
+                break
+                
+            elif choice == '1':
+                # Batch selection
+                selected_passengers = self.handle_passenger_selection(waiting_passengers)
+                if selected_passengers:
+                    # Module assignment for selected passengers
+                    self.handle_module_assignment(selected_passengers, available_modules)
+                    
+            elif choice == '2':
+                # Show detailed module information
+                module_info = [["Module Details"]]
+                for module in self.game.ship.passenger_modules:
+                    module_info.append([
+                        f"{module.name}",
+                        f"Capacity: {module.capacity}",
+                        f"Comfort Level: {module.comfort_level}"
+                    ])
+                    if module.passengers:
+                        module_info.append(["Current Passengers:"])
+                        for p in module.passengers:
+                            module_info.append([
+                                f"└─ {p.name} [{p.classification['code']}]",
+                                f"To: {p.destination}",
+                                f"Satisfaction: {p.satisfaction}%"
+                            ])
+                    else:
+                        module_info.append(["└─ Empty"])
+                    module_info.append([""])
+                print(self.game.create_box(module_info, 'double'))
+
+                input("Press Enter to continue...")
+
 
     def handle_passenger_selection(self, available_passengers):
         """Handle batch passenger selection"""
