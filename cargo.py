@@ -4982,6 +4982,84 @@ class Port:
         self.waiting_passengers[location].remove(passenger)
         
         self.game.display_simple_message(f"Passenger {passenger.name} boarded!")
+        
+
+    def handle_passenger_selection(self, available_passengers):
+        """Handle batch passenger selection"""
+        self.game.display_simple_message("Enter passenger numbers separated by spaces (e.g., '1 2 15') or 'back':", 0)
+        while True:
+            try:
+                selection = input(">>> ").strip().lower()
+                if selection == 'back':
+                    return None
+                    
+                # Parse space-separated numbers
+                passenger_nums = [int(num) for num in selection.split()]
+                
+                # Validate numbers
+                if all(1 <= num <= len(available_passengers) for num in passenger_nums):
+                    return [available_passengers[num-1] for num in passenger_nums]
+                else:
+                    self.game.display_simple_message("Invalid passenger number(s)")
+                    return None
+                    
+            except ValueError:
+                self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
+                return None        
+
+    def handle_module_assignment(self, selected_passengers, available_modules):
+        """Handle assigning selected passengers to modules"""
+        passengers_left = selected_passengers.copy()
+        
+        while passengers_left and available_modules:
+            # Show remaining passengers
+            content = [["Remaining Passengers"]]
+            for i, passenger in enumerate(passengers_left, 1):
+                content.append([
+                    f"{i}. {passenger.name} [{passenger.classification['code']}]",
+                    passenger.destination
+                ])
+            print(self.game.create_box(content, 'single'))
+            
+            # Show available modules
+            module_content = [["Available Modules"]]
+            for i, module in enumerate(available_modules, 1):
+                module_content.append([
+                    f"{i}. {module.name}",
+                    f"({len(module.passengers)}/{module.capacity})",
+                    f"Comfort: {module.comfort_level}"
+                ])
+            print(self.game.create_box(module_content, 'single'))
+            
+            # Get module choice
+            module_choice = self.game.validate_input(
+                "Choose module number or 'back': ",
+                [str(i) for i in range(1, len(available_modules) + 1)] + ['back']
+            )
+            
+            if module_choice == 'back':
+                break
+                
+            chosen_module = available_modules[int(module_choice) - 1]
+            if len(chosen_module.passengers) >= chosen_module.capacity:
+                self.game.display_simple_message("Module is full!")
+                continue
+                
+            # Add first remaining passenger
+            passenger = passengers_left.pop(0)
+            chosen_module.passengers.append(passenger)
+            self.game.display_simple_message(f"Assigned {passenger.name} to {chosen_module.name}")
+            
+            # Remove full modules
+            if len(chosen_module.passengers) >= chosen_module.capacity:
+                available_modules.remove(chosen_module)
+                
+        # Update waiting passengers list
+        location = self.game.current_location.name
+        self.waiting_passengers[location] = [p for p in self.waiting_passengers[location] 
+                                           if p not in selected_passengers or 
+                                           p not in sum((m.passengers for m in self.game.ship.passenger_modules), [])]
+
 
     def handle_passenger_unloading(self):
         """Handle passenger unloading and payment"""
