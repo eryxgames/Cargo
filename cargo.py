@@ -4443,15 +4443,24 @@ class ContractManager:
         for contract in self.active_contracts:
             content = [[f"Contract: {contract.description}"]]
             
-            # Add requirements
+            # Add requirements based on contract type
             if contract.contract_type == "passenger":
+                delivered = contract.progress['passengers_delivered']
+                required = (contract.requirements.get('count') or 
+                        contract.requirements.get('passenger_count', 0))
+                
                 content.append([
-                    f"Required: {contract.requirements['count']} {contract.requirements['passenger_class']}-class passengers",
-                    f"Delivered: {contract.progress['passengers_delivered']}"
+                    f"Required: {required} passengers",
+                    f"Delivered: {delivered}"
                 ])
+                
+                if 'passenger_class' in contract.requirements:
+                    content.append([
+                        f"Class: {contract.requirements['passenger_class']}"
+                    ])
             else:  # cargo contract
                 content.append([
-                    f"Required: {contract.requirements['min_amount']} units of {contract.requirements['cargo_type']}",
+                    f"Required: {contract.requirements.get('min_amount', 0)} units of {contract.requirements.get('cargo_type', 'cargo')}",
                     f"Delivered: {contract.progress['amount']}"
                 ])
 
