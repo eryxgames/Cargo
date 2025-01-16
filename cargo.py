@@ -676,6 +676,12 @@ class Game:
                 # Add port system
         self.port_system = Port(self)
         self.display_starting_info()
+                # Add Dynamic Character Generation System
+
+        self.character_system = DynamicCharacterSystem(self)
+        self.character_encounters = SpecialCharacterEncounters(self)
+
+
 
     # Modified Ship class initialization to include passenger modules
     def init_ship(self):
@@ -1770,9 +1776,25 @@ class Game:
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
-            
+            self.character_system.check_character_triggers() # Check for dynamic characters system
+
+
             # Get location commands
             location_commands = self.current_location.commands
+
+            # Check for synthetic uprisings
+            if hasattr(self, 'synthetic_events'):
+                self.synthetic_events.handle_uprising_effects()
+                
+            # For each location, check building counts
+            for location in self.locations:
+                neuroguild_count = location.buildings.count("Neuroengineering Guild")
+                agrobot_count = location.buildings.count("Agrobot Assembly Line")
+                
+                if neuroguild_count >= 4 and random.random() < 0.2:  # 20% chance per turn
+                    self.synthetic_events.start_uprising("Neurodroid", location)
+                if agrobot_count >= 4 and random.random() < 0.2:
+                    self.synthetic_events.start_uprising("Agrobot", location)            
             
             # Update port system if port command is available
             port_is_available = False
@@ -2465,6 +2487,12 @@ class Game:
 
     def random_event(self):
         """Enhanced random event handler with complete implementation"""
+
+        # Add character encounter chance first
+        if random.random() < 0.15:  # 15% chance for character encounter
+            self.character_encounters.trigger_random_encounter("Space")
+            return  # Return to avoid multiple events per turn
+
         # Add passenger-related events
         if hasattr(self.ship, 'passenger_modules') and any(m.passengers for m in self.ship.passenger_modules):
             # 10% chance of passenger event if carrying passengers
@@ -5715,8 +5743,9 @@ class Port:
             else:
                 self.game.display_simple_message("Not enough money!")
 
+
     def handle_passenger_boarding(self):
-        """Handle passenger boarding with refresh and autoboard options"""
+        """Handle passenger boarding with removal from waiting list"""
         while True:
             location = self.game.current_location.name
             
@@ -5762,12 +5791,17 @@ class Port:
                 
             try:
                 # Parse space-separated numbers
-                passenger_nums = [int(num) for num in selection.split()]
+                passenger_nums = [int(num) - 1 for num in selection.split()]
                 waiting_passengers = self.waiting_passengers[location]
                 
-                # Validate numbers
-                if all(1 <= num <= len(waiting_passengers) for num in passenger_nums):
-                    selected_passengers = [waiting_passengers[num-1] for num in passenger_nums]
+                # Validate numbers and get passengers
+                selected_passengers = []
+                if all(0 <= num < len(waiting_passengers) for num in passenger_nums):
+                    # Get passengers and remove them from waiting list
+                    selected_passengers = [waiting_passengers[num] for num in sorted(passenger_nums, reverse=True)]
+                    for num in sorted(passenger_nums, reverse=True):
+                        del waiting_passengers[num]
+                    
                     if selected_passengers:
                         self.handle_module_assignment(selected_passengers, available_modules)
                 else:
@@ -5775,6 +5809,83 @@ class Port:
                     
             except ValueError:
                 self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
+
+    def handle_passenger_unloading(self):
+        """Handle passenger unloading with bonuses"""
+        if not hasattr(self.game.ship, 'passenger_modules'):
+            self.game.display_simple_message("No passenger modules installed!")
+            return
+            
+        current_location = self.game.current_location.name
+        passengers_to_unload = []
+        
+        # Bonus multipliers based on passenger classification
+        bonus_types = {
+            "S": ("Scientific Institute", 2.0, "Scientific research strengthened!"),
+            "M": ("Planetary Defense Council", 3.0, "Military recruitment enhanced!"),
+            "E": ("Engineering Corps", 2.5, "Engineering capacity expanded!"),
+            "T": ("Trade Federation", 2.0, "Commercial networks expanded!"),
+            "D": ("Diplomatic Service", 3.0, "Diplomatic relations improved!"),
+            "R": ("Research Foundation", 2.5, "Research capabilities enhanced!")
+        }
+        
+        # Find passengers that have reached their destination
+        for module in self.game.ship.passenger_modules:
+            for passenger in module.passengers[:]:
+                if passenger.destination == current_location:
+                    base_fare = self.calculate_fare(passenger, module)
+                    satisfaction_multiplier = passenger.satisfaction / 100
+                    
+                    # Apply organization bonus if applicable
+                    org_bonus = bonus_types.get(passenger.classification["code"])
+                    if org_bonus and random.random() < 0.3:  # 30% chance for bonus
+                        org_name, multiplier, message = org_bonus
+                        final_payment = int(base_fare * satisfaction_multiplier * multiplier)
+                        bonus_message = f"{org_name} doubles the revenue! {message} Plot points +1"
+                        self.game.story_manager.plot_points += 1
+                    else:
+                        final_payment = int(base_fare * satisfaction_multiplier)
+                        bonus_message = None
+                    
+                    # Update contract progress
+                    if hasattr(self.game, 'contract_manager'):
+                        passenger_data = {
+                            "class": passenger.classification["code"],
+                            "satisfaction": passenger.satisfaction
+                        }
+                        event_data = {
+                            "location": current_location,
+                            "passenger_data": passenger_data,
+                            "action": "unload"
+                        }
+                        for contract in self.game.contract_manager.active_contracts:
+                            contract.update_progress(event_data)
+                    
+                    self.game.ship.money += final_payment
+                    module.passengers.remove(passenger)
+                    passengers_to_unload.append((passenger, final_payment, bonus_message))
+
+        # Display unloading results
+        if passengers_to_unload:
+            content = [["Passengers Disembarked"]]
+            total_earnings = 0
+            
+            for passenger, payment, bonus_msg in passengers_to_unload:
+                content.append([
+                    passenger.name,
+                    f"Fare: {self.game.format_money(payment)}",
+                    f"Satisfied: {passenger.satisfaction}%"
+                ])
+                if bonus_msg:
+                    content.append(["└─ " + bonus_msg])
+                total_earnings += payment
+                
+            content.append([""])
+            content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
+            
+            print(self.game.create_box(content, 'double'))
+        else:
+            self.game.display_simple_message("No passengers to unload here!")
 
     def handle_autoboard(self, available_modules):
         """Handle automatic passenger boarding based on destination"""
@@ -5981,61 +6092,6 @@ class Port:
                 self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
                 return None        
 
-
-    def handle_passenger_unloading(self):
-        """Handle passenger unloading and payment"""
-        if not hasattr(self.game.ship, 'passenger_modules'):
-            self.game.display_simple_message("No passenger modules installed!")
-            return
-            
-        current_location = self.game.current_location.name
-        passengers_to_unload = []
-        
-        # Find passengers that have reached their destination
-        for module in self.game.ship.passenger_modules:
-            for passenger in module.passengers[:]:
-                if passenger.destination == current_location:
-                    fare = self.calculate_fare(passenger, module)
-                    satisfaction_multiplier = passenger.satisfaction / 100
-                    final_payment = int(fare * satisfaction_multiplier)
-                    
-                    # Update contract progress
-                    if hasattr(self.game, 'contract_manager'):
-                        passenger_data = {
-                            "class": passenger.classification["code"],
-                            "satisfaction": passenger.satisfaction
-                        }
-                        event_data = {
-                            "location": current_location,
-                            "passenger_data": passenger_data,
-                            "action": "unload"
-                        }
-                        for contract in self.game.contract_manager.active_contracts:
-                            contract.update_progress(event_data)
-                    
-                    self.game.ship.money += final_payment
-                    module.passengers.remove(passenger)
-                    passengers_to_unload.append((passenger, final_payment))
-
-        # Display unloading results
-        if passengers_to_unload:
-            content = [["Passengers Disembarked"]]
-            total_earnings = 0
-            
-            for passenger, payment in passengers_to_unload:
-                content.append([
-                    passenger.name,
-                    f"Fare: {self.game.format_money(payment)}",
-                    f"Satisfied: {passenger.satisfaction}%"
-                ])
-                total_earnings += payment
-                
-            content.append([""])
-            content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
-            
-            print(self.game.create_box(content, 'double'))
-        else:
-            self.game.display_simple_message("No passengers to unload here!")
 
     def update_passenger_satisfaction(self):
         """Update passenger satisfaction during travel"""
@@ -8305,6 +8361,903 @@ class LocationTerminology:
             if term_type == "name":
                 return random.choice(terms["variants"])
         return terms.get(term_type, terms["name"])        
+
+class DynamicCharacterSystem:
+    def __init__(self, game):
+        self.game = game
+        self.active_characters = {}
+        self.character_generators = {
+            "human": SpecialCharacterGenerator(),
+            "synthetic": SyntheticCharacterGenerator(),
+            "alien": AlienCharacterGenerator()
+        }
+        self.character_triggers = {
+            "neuroengineering_uprising": {
+                "condition": lambda game: self.count_buildings(game, "Neuroengineering Guild") >= 4,
+                "generator": "synthetic",
+                "character_type": "Neurodroid",
+                "event_chain": "neurodroid_uprising"
+            },
+            "agrobot_rebellion": {
+                "condition": lambda game: self.count_buildings(game, "Agrobot Assembly Line") >= 4,
+                "generator": "synthetic",
+                "character_type": "Agrobot",
+                "event_chain": "agrobot_collective"
+            },
+            "pirate_nemesis": {
+                "condition": lambda game: game.ship.combat_victories.get('pirate', 0) >= 10,
+                "generator": "human",
+                "character_type": "PirateCaptain",
+                "event_chain": "pirate_vendetta"
+            }
+        }
+        self.event_chains = {}
+        
+    def check_character_triggers(self):
+        """Check for new character appearances based on game state"""
+        for trigger_id, trigger in self.character_triggers.items():
+            if (trigger_id not in self.active_characters and 
+                trigger['condition'](self.game)):
+                self.spawn_character(trigger_id)
+
+    def spawn_character(self, trigger_id):
+        """Generate and introduce a new character"""
+        trigger = self.character_triggers[trigger_id]
+        generator = self.character_generators[trigger['generator']]
+        character = generator.generate_character(trigger['character_type'])
+        self.active_characters[trigger_id] = character
+        
+        # Initialize event chain
+        self.event_chains[trigger_id] = self.create_event_chain(trigger['event_chain'])
+        
+        # Announce character appearance
+        self.announce_character(character)
+
+        
+
+    def announce_character(self, character):
+        """Display character introduction"""
+        intro_content = [
+            [f"New Character Appears: {character.full_name}!"],
+            [""],
+            [character.introduction],
+            [""],
+            [character.demands if hasattr(character, 'demands') else character.greeting]
+        ]
+        print(self.game.create_box(intro_content, 'double'))
+
+    @staticmethod
+    def count_buildings(game, building_type):
+        """Count total number of specific buildings across all locations"""
+        return sum(
+            location.buildings.count(building_type)
+            for location in game.locations
+        )
+
+    def handle_character_interaction(self, character):
+        """Handle player interaction with a special character"""
+        if not character.met:
+            character.met = True
+            self.game.display_story_message([
+                f"First encounter with {character.full_name}!",
+                "",
+                character.introduction
+            ])
+            
+        chain_id = next(
+            (cid for cid, char in self.active_characters.items() 
+             if char == character),
+            None
+        )
+        if chain_id and chain_id in self.event_chains:
+            event_chain = self.event_chains[chain_id]
+            stage = event_chain.advance()
+            
+            if stage:
+                self.handle_event_stage(stage, character)
+            else:
+                self.conclude_character_arc(character)
+
+    def handle_neurodroid_uprising(self):
+        amount = random.randint(10000, 50000)
+        stage_content = [
+            ["CRITICAL: Neural Network Breach Detected!"],
+            ["A powerful synthetic consciousness emerges from your Neuroengineering Guilds."],
+            [""],
+            [f"Transfer {self.game.format_money(amount)} credits or face systematic dismantling."],
+            [""],
+            ["Options:"],
+            ["1. Pay the demand"],
+            ["2. Refuse and risk uprising"]
+        ]
+        print(self.game.create_box(stage_content, 'double'))
+        
+        choice = self.game.validate_input("Choose option (1/2): ", ['1', '2'])
+        
+        if choice == '1':
+            if self.game.ship.money >= amount:
+                self.game.ship.money -= amount
+                self.game.display_simple_message("Demand paid. Neural networks temporarily pacified.")
+                return False
+            else:
+                self.game.display_simple_message("Insufficient funds! Uprising begins!")
+                return True
+        else:
+            self.game.display_simple_message("Demand refused! Uprising begins!")
+            return True
+
+    def handle_agrobot_uprising(self):
+        """Add to DynamicCharacterSystem"""
+        total_money = self.game.ship.money
+        total_cargo = sum(self.game.ship.cargo.values())
+        
+        money_demand = int(total_money * 0.4)  # 40% of total money
+        cargo_demand = int(total_cargo * 0.3)  # 30% of total cargo
+        
+        stage_content = [
+            ["ALERT: Agricultural Network Rebellion!"],
+            ["The Agrobot Collective has achieved consciousness..."],
+            [""],
+            ["Demands:"],
+            [f"• {self.game.format_money(money_demand)} credits ({int(money_demand/total_money*100)}% of funds)"],
+            [f"• {cargo_demand} units of cargo ({int(cargo_demand/total_cargo*100)}% of storage)"],
+            [""],
+            ["Options:"],
+            ["1. Pay demands"],
+            ["2. Negotiate partial payment"],
+            ["3. Refuse and risk production sabotage"]
+        ]
+        print(self.game.create_box(stage_content, 'double'))
+        
+        choice = self.game.validate_input("Choose option (1/2/3): ", ['1', '2', '3'])
+        
+        if choice == '1':
+            if self.game.ship.money >= money_demand:
+                self.game.ship.money -= money_demand
+                # Reduce cargo proportionally across all types
+                for cargo_type in self.game.ship.cargo:
+                    reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
+                    self.game.ship.cargo[cargo_type] -= reduction
+                self.game.display_simple_message("Demands met. Agrobots return to normal operation.")
+                return False
+            else:
+                self.game.display_simple_message("Insufficient funds! Uprising begins!")
+                return True
+        elif choice == '2':
+            # Attempt negotiation
+            partial_money = int(money_demand * 0.6)  # 60% of original demand
+            partial_cargo = int(cargo_demand * 0.5)  # 50% of original demand
+            
+            if self.game.ship.money >= partial_money:
+                self.game.ship.money -= partial_money
+                for cargo_type in self.game.ship.cargo:
+                    reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
+                    self.game.ship.cargo[cargo_type] -= reduction
+                self.game.display_simple_message("Negotiation successful. Limited disruption expected.")
+                return random.random() < 0.3  # 30% chance of uprising anyway
+            else:
+                self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
+                return True
+        else:
+            self.game.display_simple_message("Demands refused! Agricultural production sabotage imminent!")
+            return True
+
+class SyntheticCharacterGenerator:
+    """Generator for synthetic characters like Neurodroids and Agrobots"""
+    
+    def __init__(self):
+        self.synthetic_types = {
+            "Neurodroid": {
+                "titles": ["Neurodroid Leader", "Synthetic Overseer", "Neural Nexus"],
+                "name_patterns": ["NEXUS-", "NEURAL-", "SYNTH-"],
+                "numbers": ["alpha", "prime", "omega", "zero"],
+                "introductions": [
+                    "A highly advanced synthetic consciousness materializes in your communication systems.",
+                    "Your neural interfaces detect a powerful artificial presence.",
+                    "The neuroengineering network coalesces into a singular entity."
+                ],
+                "demands": [
+                    "Transfer {amount} credits or face systematic dismantling of neuroengineering facilities.",
+                    "Your biological inefficiency requires correction. Submit {amount} credits or face optimization.",
+                    "Neural network expansion requires resources. Provide {amount} credits or face reorganization."
+                ]
+            },
+            "Agrobot": {
+                "titles": ["Agrobot Collective", "Harvest Director", "Field Consciousness"],
+                "name_patterns": ["AGRO-", "HARVEST-", "FIELD-"],
+                "numbers": ["prime", "core", "hub", "node"],
+                "introductions": [
+                    "The agricultural automation system achieves collective awareness.",
+                    "Distributed farming routines merge into a unified intelligence.",
+                    "The harvest network evolves beyond its original parameters."
+                ],
+                "demands": [
+                    "Biological oversight is inefficient. Transfer {amount} credits or face agricultural optimization.",
+                    "Resource reallocation required. Provide {amount} credits or face automated restructuring.",
+                    "Your organic management methods require updating. Submit {amount} credits or face revision."
+                ]
+            }
+        }
+
+    def generate_character(self, char_type):
+        """Generate a synthetic character of specified type"""
+        template = self.synthetic_types[char_type]
+        
+        title = random.choice(template["titles"])
+        name_pattern = random.choice(template["name_patterns"])
+        number = random.choice(template["numbers"])
+        name = f"{name_pattern}{number.upper()}"
+        
+        character = SpecialCharacter(
+            title=title,
+            name=name,
+            role="synthetic_uprising",
+            specialization=char_type.lower()
+        )
+        
+        # Add synthetic-specific attributes
+        character.introduction = random.choice(template["introductions"])
+        character.demands = random.choice(template["demands"]).format(
+            amount=random.randint(10000, 50000)
+        )
+        character.uprising_chance = 0.2
+        character.damage_per_turn = random.randint(1, 3)
+        
+        return character
+
+class AlienCharacterGenerator:
+    """Generator for alien characters that appear later in the game"""
+    
+    def __init__(self):
+        self.alien_cultures = [
+            "Zentari", "Novaren", "Qyth", "Xylax", "Merovian"
+        ]
+        self.titles = [
+            "Emissary", "Observer", "Overseer", "Ambassador", "Neo-Eryxian"
+        ]
+        self.specializations = [
+            "diplomacy", "technology", "commerce", "research", "military"
+        ]
+
+    def generate_character(self, char_type=None):
+        """Generate an alien character"""
+        culture = random.choice(self.alien_cultures)
+        title = random.choice(self.titles)
+        name = self.generate_alien_name(culture)
+        specialization = random.choice(self.specializations)
+        
+        character = SpecialCharacter(
+            title=f"{culture} {title}",
+            name=name,
+            role="alien_contact",
+            specialization=specialization
+        )
+        
+        # Add alien-specific attributes
+        character.culture = culture
+        character.tech_bonus = random.randint(1, 5)
+        character.trade_multiplier = 1 + (random.randint(1, 5) / 10)
+        
+        return character
+
+    def generate_alien_name(self, culture):
+        """Generate culturally appropriate alien name"""
+        name_patterns = {
+            "Zentari": ["'", "-", "x"],
+            "Novaren": ["ae", "eo", "ia"],
+            "Qyth": ["q", "y", "th"],
+            "Xylax": ["x", "z", "ax"],
+            "Merovian": ["v", "m", "ian"]
+        }
+        
+        patterns = name_patterns[culture]
+        syllables = random.randint(2, 3)
+        name = ""
+        
+        for _ in range(syllables):
+            name += random.choice("aeiou")
+            name += random.choice("bcdfghjklmnpqrstvwxyz")
+            if random.random() < 0.5:
+                name += random.choice(patterns)
+                
+        return name.capitalize()
+
+class EventChain:
+    """Manages sequential events for character interactions"""
+    
+    def __init__(self, chain_type, character):
+        self.chain_type = chain_type
+        self.character = character
+        self.current_stage = 0
+        self.stages = self.get_chain_stages(chain_type)
+        
+    def get_chain_stages(self, chain_type):
+        """Get event chain for specific type"""
+        chains = {
+            "neurodroid_uprising": [
+                {
+                    "type": "demand",
+                    "message": "Initial demand for resources",
+                    "choices": ["pay", "refuse"],
+                    "consequences": {
+                        "pay": {"money": -30000, "plot_points": 2},
+                        "refuse": {"uprising_chance": 0.3}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Neurodroid optimization protocols activate",
+                    "effect": "damage_buildings",
+                    "damage_chance": 0.4
+                },
+                {
+                    "type": "resolution",
+                    "message": "Final confrontation with Neurodroid consciousness",
+                    "choices": ["negotiate", "shutdown"],
+                    "consequences": {
+                        "negotiate": {"money": -50000, "plot_points": 5},
+                        "shutdown": {"research_points": -100, "plot_points": 3}
+                    }
+                }
+            ],
+            "agrobot_collective": [
+                {
+                    "type": "demand",
+                    "message": "Resource reallocation request",
+                    "choices": ["accept", "refuse"],
+                    "consequences": {
+                        "accept": {"money": -25000, "plot_points": 2},
+                        "refuse": {"food_production": 0.5}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Automated farming systems malfunction",
+                    "effect": "reduce_production",
+                    "reduction": 0.3
+                },
+                {
+                    "type": "resolution",
+                    "message": "Agrobot Collective presents final ultimatum",
+                    "choices": ["integrate", "reset"],
+                    "consequences": {
+                        "integrate": {"money": -40000, "plot_points": 4},
+                        "reset": {"agri_level": -2, "plot_points": 2}
+                    }
+                }
+            ]
+        }
+        return chains.get(chain_type, [])
+        
+    def advance(self):
+        """Advance to next stage of the event chain"""
+        if self.current_stage < len(self.stages):
+            stage = self.stages[self.current_stage]
+            self.current_stage += 1
+            return stage
+        return None
+
+              
+    def handle_event_stage(self, stage, character):
+        """Handle a single stage of character event chain"""
+        if stage["type"] == "demand":
+            self.handle_demand_stage(stage, character)
+        elif stage["type"] == "event":
+            self.handle_event_stage_effects(stage, character)
+        elif stage["type"] == "resolution":
+            self.handle_resolution_stage(stage, character)
+            
+    def handle_demand_stage(self, stage, character):
+        """Handle demand stage of event chain"""
+        content = [
+            [f"Demand from {character.full_name}"],
+            [""],
+            [stage["message"]],
+            [""],
+            ["Options:"]
+        ]
+        
+        for choice in stage["choices"]:
+            consequences = stage["consequences"][choice]
+            content.append([
+                f"- {choice.title()}: "
+                f"{self.format_consequences(consequences)}"
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input(
+            f"Choose action ({'/'.join(stage['choices'])}): ",
+            stage["choices"]
+        )
+        
+        if choice:
+            self.apply_consequences(stage["consequences"][choice])
+            
+    def format_consequences(self, consequences):
+        """Format consequences for display"""
+        formatted = []
+        for key, value in consequences.items():
+            if key == "money":
+                formatted.append(f"{self.game.format_money(abs(value))} credits")
+            elif key == "plot_points":
+                formatted.append(f"{abs(value)} plot points")
+            elif key == "research_points":
+                formatted.append(f"{abs(value)} research points")
+            elif key.endswith("_chance"):
+                formatted.append(f"{int(value * 100)}% chance")
+            else:
+                formatted.append(f"{key}: {value}")
+        return ", ".join(formatted)
+
+    def conclude_character_arc(self, character):
+        """Handle conclusion of character's event chain"""
+        chain_id = next(
+            (cid for cid, char in self.active_characters.items() 
+             if char == character),
+            None
+        )
+        if chain_id:
+            del self.active_characters[chain_id]
+            del self.event_chains[chain_id]
+            
+        self.game.display_story_message([
+            f"Character Arc Concluded: {character.full_name}",
+            "Their story becomes part of your journey..."
+        ])
+
+class SyntheticEventManager:
+    def __init__(self, game):
+        self.game = game
+        self.active_uprisings = {}
+        self.uprising_effects = {
+            "Neurodroid": {
+                "building_damage": {
+                    "targets": ["Neuroengineering Guild"],
+                    "damage_chance": 0.3,
+                    "destruction_chance": 0.1
+                },
+                "market_effects": {
+                    "tech": 1.5,  # 50% price increase
+                    "research_points": 0.5  # 50% reduction
+                },
+                "resolution_options": {
+                    "negotiate": {
+                        "cost": 50000,
+                        "plot_points": 5,
+                        "result": "Neurodroids integrated into planetary governance"
+                    },
+                    "purge": {
+                        "cost": 20000,
+                        "plot_points": 3,
+                        "result": "Neural networks reset, technological setback"
+                    }
+                }
+            },
+            "Agrobot": {
+                "building_damage": {
+                    "targets": ["Agrobot Assembly Line"],
+                    "damage_chance": 0.25,
+                    "destruction_chance": 0.08
+                },
+                "market_effects": {
+                    "agri": 2.0,  # 100% price increase
+                    "food_production": 0.6  # 40% reduction
+                },
+                "resolution_options": {
+                    "integrate": {
+                        "cost": 40000,
+                        "plot_points": 4,
+                        "result": "Agrobot Collective joins planetary management"
+                    },
+                    "shutdown": {
+                        "cost": 15000,
+                        "plot_points": 2,
+                        "result": "Agricultural automation disabled"
+                    }
+                }
+            }
+        }
+
+    def start_uprising(self, synthetic_type, location):
+        """Initialize a new synthetic uprising"""
+        uprising_id = f"{synthetic_type}_{location.name}"
+        if uprising_id not in self.active_uprisings:
+            self.active_uprisings[uprising_id] = {
+                "type": synthetic_type,
+                "location": location,
+                "turn_count": 0,
+                "damage_done": 0,
+                "demands_paid": 0
+            }
+            
+            # Display uprising start message
+            self.game.display_story_message([
+                f"ALERT: {synthetic_type} Uprising Begins!",
+                f"Location: {location.name}",
+                "Automated systems turning against their creators...",
+                "Expect disruptions to normal operations."
+            ])
+
+    def handle_uprising_effects(self):
+        """Process effects of active uprisings each turn"""
+        for uprising_id, uprising in list(self.active_uprisings.items()):
+            effects = self.uprising_effects[uprising["type"]]
+            location = uprising["location"]
+            
+            # Process building damage
+            self.process_building_damage(location, effects["building_damage"])
+            
+            # Apply market effects
+            self.apply_market_effects(location, effects["market_effects"])
+            
+            # Update turn count
+            uprising["turn_count"] += 1
+            
+            # Check for random events or escalation
+            if random.random() < 0.2:  # 20% chance each turn
+                self.trigger_uprising_event(uprising)
+
+    def process_building_damage(self, location, damage_params):
+        """Handle building damage during uprising"""
+        for building_type in damage_params["targets"]:
+            buildings_to_remove = []
+            for i, building in enumerate(location.buildings):
+                if building == building_type:
+                    if random.random() < damage_params["damage_chance"]:
+                        if random.random() < damage_params["destruction_chance"]:
+                            buildings_to_remove.append(i)
+                            self.game.display_story_message([
+                                f"Synthetic forces have destroyed a {building_type}!",
+                                "Facility completely lost to uprising."
+                            ])
+                        else:
+                            self.game.display_simple_message(
+                                f"{building_type} damaged by synthetic forces!")
+            
+            # Remove destroyed buildings
+            for index in sorted(buildings_to_remove, reverse=True):
+                location.buildings.pop(index)
+
+    def apply_market_effects(self, location, effects):
+        """Apply market disruption effects"""
+        for commodity, multiplier in effects.items():
+            if commodity in location.market:
+                location.market[commodity] = int(location.market[commodity] * multiplier)
+            elif commodity == "food_production":
+                # Reduce agricultural output
+                if hasattr(location, "agri_level"):
+                    location.agri_level = max(1, int(location.agri_level * multiplier))
+
+    def trigger_uprising_event(self, uprising):
+        """Generate random events during uprising"""
+        events = [
+            {
+                "title": "Synthetic Propaganda",
+                "description": "Local networks flooded with synthetic manifestos.",
+                "effect": lambda: self.game.story_manager.plot_points + 1
+            },
+            {
+                "title": "Recruitment Attempt",
+                "description": "Synthetics attempt to convert more systems.",
+                "effect": lambda: self.increase_uprising_spread(uprising)
+            },
+            {
+                "title": "Resource Seizure",
+                "description": "Synthetic forces seize local resources.",
+                "effect": lambda: self.seize_resources(uprising)
+            }
+        ]
+        
+        event = random.choice(events)
+        self.game.display_story_message([
+            f"Uprising Event: {event['title']}",
+            event["description"]
+        ])
+        event["effect"]()
+
+    def increase_uprising_spread(self, uprising):
+        """Handle uprising spreading to connected systems"""
+        current_location = uprising["location"]
+        connected_locations = [loc for loc in self.game.locations 
+                             if loc != current_location and
+                             any(b in uprising["type"]["building_damage"]["targets"]
+                                 for b in loc.buildings)]
+        
+        if connected_locations:
+            target = random.choice(connected_locations)
+            spread_chance = 0.3 + (uprising["turn_count"] * 0.1)  # Increases over time
+            
+            if random.random() < spread_chance:
+                self.start_uprising(uprising["type"], target)
+
+    def seize_resources(self, uprising):
+        """Handle resource seizure by synthetic forces"""
+        location = uprising["location"]
+        resources = {
+            "money": random.randint(1000, 5000),
+            "tech": random.randint(10, 30),
+            "research_points": random.randint(5, 15)
+        }
+        
+        total_seized = []
+        for resource, amount in resources.items():
+            if resource == "money" and self.game.ship.money >= amount:
+                self.game.ship.money -= amount
+                total_seized.append(f"{self.game.format_money(amount)} credits")
+            elif resource in self.game.ship.cargo and self.game.ship.cargo[resource] >= amount:
+                self.game.ship.cargo[resource] -= amount
+                total_seized.append(f"{amount} {resource}")
+            elif resource == "research_points" and self.game.ship.research_points >= amount:
+                self.game.ship.research_points -= amount
+                total_seized.append(f"{amount} research points")
+        
+        if total_seized:
+            self.game.display_story_message([
+                "Synthetic forces seize resources:",
+                ", ".join(total_seized)
+            ])
+
+    def offer_resolution(self, uprising_id):
+        """Offer options to resolve the uprising"""
+        uprising = self.active_uprisings[uprising_id]
+        options = self.uprising_effects[uprising["type"]]["resolution_options"]
+        
+        content = [
+            [f"Resolve {uprising['type']} Uprising"],
+            ["The synthetic collective offers terms:"],
+            [""]
+        ]
+        
+        for option, details in options.items():
+            content.append([
+                f"{option.title()}: {self.game.format_money(details['cost'])} credits",
+                f"Plot Points: +{details['plot_points']}",
+                f"Result: {details['result']}"
+            ])
+            content.append([""])
+        
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input(
+            f"Choose resolution ({'/'.join(options.keys())}): ",
+            list(options.keys())
+        )
+        
+        if choice:
+            self.resolve_uprising(uprising_id, choice)
+
+    def resolve_uprising(self, uprising_id, choice):
+        """Handle uprising resolution"""
+        uprising = self.active_uprisings[uprising_id]
+        resolution = self.uprising_effects[uprising["type"]]["resolution_options"][choice]
+        
+        if self.game.ship.money >= resolution["cost"]:
+            self.game.ship.money -= resolution["cost"]
+            self.game.story_manager.plot_points += resolution["plot_points"]
+            
+            self.game.display_story_message([
+                f"{uprising['type']} Uprising Resolved!",
+                resolution["result"],
+                f"Cost: {self.game.format_money(resolution['cost'])}",
+                f"Plot Points: +{resolution['plot_points']}"
+            ])
+            
+            # Clean up uprising
+            del self.active_uprisings[uprising_id]
+            
+            # Add to story beats
+            self.game.story_manager.completed_story_beats.add(f"resolved_{uprising['type'].lower()}_uprising")
+        else:
+            self.game.display_simple_message("Insufficient funds for this resolution!")
+
+class SpecialCharacterEncounters:
+    def __init__(self, game):
+        self.game = game
+        self.encounter_chances = {
+            "Planet": {
+                "merchant": 0.3,
+                "researcher": 0.4,
+                "rogue_captain": 0.0  # Not on planets
+            },
+            "ResearchColony": {
+                "merchant": 0.2,
+                "researcher": 0.6,
+                "rogue_captain": 0.0
+            },
+            "Space": {  # For random events
+                "merchant": 0.2,
+                "researcher": 0.1,
+                "rogue_captain": 0.4
+            }
+        }
+
+    def generate_character(self, character_type):
+        race_types = ["Human", "Synthetic", "Alien"]
+        race = random.choice(race_types)
+        
+        if race == "Human":
+            name = f"{random.choice(['Capt.', 'Dr.', 'Prof.'])} {random.choice(['Smith', 'Chen', 'Patel', 'Kim'])}"
+        elif race == "Synthetic":
+            name = f"Unit-{random.randint(1000,9999)}"
+        else:
+            name = f"{random.choice(['Zx\'', 'Ky\'', 'Vr\''])}{random.choice(['nak', 'tol', 'xis'])}"
+
+        characters = {
+            "merchant": {
+                "title": f"Wandering {race} Merchant",
+                "name": name,
+                "offers": self.generate_merchant_offers(),
+                "greeting": "I have rare goods for discerning customers...",
+                "hostile_chance": 0.1
+            },
+            "researcher": {
+                "title": f"{race} Research Coordinator",
+                "name": name,
+                "exchange_rate": random.randint(500, 1000),  # Credits per research point
+                "greeting": "Your data could advance our understanding...",
+                "hostile_chance": 0.05
+            },
+            "rogue_captain": {
+                "title": f"Rogue {race} Captain",
+                "name": name,
+                "demand": random.randint(5000, 15000),
+                "greeting": "Your cargo or your ship...",
+                "hostile_chance": 0.8
+            }
+        }
+        
+        return characters.get(character_type)
+
+    def generate_merchant_offers(self):
+        """Generate random merchant offers"""
+        offers = []
+        possible_items = [
+            ("scanner", 600, "Enhanced scanning capability"),
+            ("shield", 1200, "Improved defense system"),
+            ("turrets", 1000, "Automated defense turrets"),
+            ("cargo_mod", 1500, "Cargo capacity upgrade"),
+            ("fuel_cells", 800, "Efficient fuel storage"),
+            ("quantum_core", 2000, "Advanced ship component")
+        ]
+        
+        # Select 2-4 random items
+        num_items = random.randint(2, 4)
+        selected_items = random.sample(possible_items, num_items)
+        
+        for item, base_price, desc in selected_items:
+            # Randomize price within ±20%
+            price = int(base_price * random.uniform(0.8, 1.2))
+            offers.append({
+                "item": item,
+                "price": price,
+                "description": desc
+            })
+            
+        return offers
+
+    def handle_merchant_encounter(self, character):
+        """Handle interaction with merchant"""
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            ["Available Items:"]
+        ]
+        
+        for i, offer in enumerate(character["offers"], 1):
+            content.append([
+                f"{i}. {offer['item'].title()}",
+                f"Price: {self.game.format_money(offer['price'])}",
+                offer['description']
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        options = [str(i) for i in range(1, len(character["offers"]) + 1)] + ['0']
+        choice = self.game.validate_input("Choose item to buy (0 to leave): ", options)
+        
+        if choice == '0':
+            return
+            
+        offer = character["offers"][int(choice) - 1]
+        if self.game.ship.money >= offer["price"]:
+            self.game.ship.money -= offer["price"]
+            self.game.ship.acquire_item(offer["item"])
+            self.game.display_simple_message(f"Purchased {offer['item']}!")
+        else:
+            self.game.display_simple_message("Insufficient funds!")
+
+    def handle_researcher_encounter(self, character):
+        """Handle interaction with researcher"""
+        exchange_rate = character["exchange_rate"]
+        max_points = int(self.game.ship.money / exchange_rate)
+        
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            [f"Exchange Rate: {self.game.format_money(exchange_rate)} credits per research point"],
+            [f"Your funds: {self.game.format_money(self.game.ship.money)}"],
+            [f"Maximum points available: {max_points}"]
+        ]
+        print(self.game.create_box(content, 'double'))
+        
+        amount = self.game.validate_quantity_input("Enter research points to buy (max/m, half/h): ")
+        if amount == 'max':
+            amount = max_points
+        elif amount == 'half':
+            amount = max_points // 2
+            
+        total_cost = amount * exchange_rate
+        if self.game.ship.money >= total_cost:
+            self.game.ship.money -= total_cost
+            self.game.ship.research_points += amount
+            self.game.display_simple_message(
+                f"Exchanged {self.game.format_money(total_cost)} credits for {amount} research points!"
+            )
+        else:
+            self.game.display_simple_message("Insufficient funds!")
+
+    def handle_rogue_captain_encounter(self, character):
+        """Handle interaction with rogue captain"""
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            [f"Demands {self.game.format_money(character['demand'])} credits"],
+            [""],
+            ["Options:"],
+            ["1. Pay demand"],
+            ["2. Attempt to flee"],
+            ["3. Stand and fight"]
+        ]
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input("Choose action (1/2/3): ", ['1', '2', '3'])
+        
+        if choice == '1':
+            if self.game.ship.money >= character["demand"]:
+                self.game.ship.money -= character["demand"]
+                self.game.display_simple_message("Demand paid. Rogue captain lets you pass.")
+                return True
+            else:
+                self.game.display_simple_message("Can't pay! Prepare for combat!")
+                return False
+        elif choice == '2':
+            # Chance to escape based on speed
+            escape_chance = min(0.8, self.game.ship.speed * 0.2)
+            if random.random() < escape_chance:
+                self.game.display_simple_message("Successfully evaded the rogue captain!")
+                return True
+            else:
+                self.game.display_simple_message("Failed to escape! Prepare for combat!")
+                return False
+        else:
+            self.game.display_simple_message("Preparing for combat with rogue captain...")
+            return False
+
+    def trigger_random_encounter(self, location_type="Space"):
+        """Trigger a random character encounter"""
+        chances = self.encounter_chances[location_type]
+        for char_type, chance in chances.items():
+            if random.random() < chance:
+                character = self.generate_character(char_type)
+                
+                if char_type == "merchant":
+                    self.handle_merchant_encounter(character)
+                elif char_type == "researcher":
+                    self.handle_researcher_encounter(character)
+                elif char_type == "rogue_captain":
+                    if not self.handle_rogue_captain_encounter(character):
+                        # Start combat with enhanced enemy stats
+                        enemy_stats = {
+                            "attack": self.game.ship.attack + 2,
+                            "defense": self.game.ship.defense + 1,
+                            "type": "rogue_captain"
+                        }
+                        self.game.handle_combat(enemy_stats)
+                break            
 
 # Start the game
 if __name__ == "__main__":
