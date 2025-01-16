@@ -2951,12 +2951,17 @@ class Game:
         """Handle trade completion and contract/quest updates"""
         self.trades_completed += 1
         
-        trade_data = {
-            "location": self.current_location.name,
-            "trade_completed": True
-        }
-        
-        if action_type == "sell":
+        # Get the commodity from the last trade
+        if action_type == 'sell':
+            last_trade = next((item for item in ['tech', 'agri', 'salt', 'fuel'] 
+                            if self.ship.cargo[item] < self.ship.cargo.get(item, 0)), None)
+            
+            trade_data = {
+                "location": self.current_location.name,
+                "trade_completed": True,
+                "commodity": last_trade
+            }
+            
             if hasattr(self, 'contract_manager'):
                 for contract in self.contract_manager.active_contracts:
                     contract.check_trade_completion(
