@@ -2947,27 +2947,26 @@ class Game:
             ], color='31')
 
     # Add trade tracking to buy/sell methods
-    def handle_trade(self, action_type):
+    def handle_trade(self, action_type, commodity=None, quantity=None):
         """Handle trade completion and contract/quest updates"""
         self.trades_completed += 1
         
-        # Get the commodity from the last trade
-        if action_type == 'sell':
-            last_trade = next((item for item in ['tech', 'agri', 'salt', 'fuel'] 
-                            if self.ship.cargo[item] < self.ship.cargo.get(item, 0)), None)
+        trade_data = {
+            "action": action_type,
+            "location": self.current_location.name,
+            "trade_completed": True,
+        }
+
+        if action_type == 'sell' and commodity and quantity:
+            trade_data.update({
+                "commodity": commodity,
+                "amount": quantity
+            })
             
-            trade_data = {
-                "location": self.current_location.name,
-                "trade_completed": True,
-                "commodity": last_trade
-            }
-            
+            # Update contracts
             if hasattr(self, 'contract_manager'):
                 for contract in self.contract_manager.active_contracts:
-                    contract.check_trade_completion(
-                        self.current_location.name,
-                        trade_data
-                    )
+                    contract.update_progress(trade_data)
         
         if hasattr(self, 'quest_system'):
             for quest in self.quest_system.active_quests:
@@ -4336,13 +4335,25 @@ class ContractManager:
             # First show active contracts with their status
             active_content = [["Active Contracts"]]
             if self.active_contracts:
-                for contract in self.active_contracts:
+                for i, contract in enumerate(self.active_contracts, 1):
+                    # Fix turns remaining calculation
+                    turns_left = max(0, contract.duration - contract.turns_active)
+                    status = "READY TO CLAIM" if contract.completed and not contract.rewards_claimed else \
+                            "FAILED" if contract.failed else \
+                            f"{turns_left} turns left"
+                    
+                    # Fix progress display
+                    if contract.contract_type == "cargo":
+                        progress = f"{contract.progress['amount']}/{contract.requirements.get('min_amount', 0)}"
+                    else:  # passenger contract
+                        required = contract.requirements.get('count', 
+                                contract.requirements.get('passenger_count', 0))
+                        progress = f"{contract.progress['passengers_delivered']}/{required}"
+                    
                     active_content.append([
-                        contract.description,
-                        contract.get_progress_description(),
-                        "READY TO CLAIM" if contract.completed and not getattr(contract, 'rewards_claimed', False) else 
-                        "FAILED" if contract.failed else 
-                        f"{contract.duration - contract.turns_active} turns left"
+                        f"{i}. {contract.description}",
+                        f"Progress: {progress}",
+                        status
                     ])
             else:
                 active_content.append(["No active contracts"])
@@ -4509,7 +4520,7 @@ class ContractManager:
         self.game.reputation += rewards["reputation"]
         self.game.story_manager.plot_points += rewards["plot_points"]
 
-        # Mark contract as claimed and move to completed list
+        # Mark contract as claimed
         contract.rewards_claimed = True
         self.active_contracts.remove(contract)
         self.completed_contracts.append(contract)
@@ -5117,34 +5128,39 @@ class Contract:
         """Update contract progress based on events"""
         self.turns_active += 1
         if self.turns_active > self.duration:
-            self.failure_reason = "Time expired"
-            self.failed = True
             return {"status": "failed", "reason": "time_expired"}
 
-        current_location = event_data["location"]
+        current_location = event_data.get("location")
         target_destination = self.requirements.get('destination')
+        source_location = self.requirements.get('source')
+
+        # Skip if not at correct source/destination
+        if self.contract_type == "cargo":
+            if source_location and current_location != source_location and current_location != target_destination:
+                return {"status": "in_progress"}
 
         if self.contract_type == "passenger":
-            delivered_passengers = event_data.get("delivered_passengers", [])
-            for passenger in delivered_passengers:
-                if current_location == target_destination:
-                    if "passenger_class" in self.requirements:
-                        if passenger.classification["code"] == self.requirements["passenger_class"]:
-                            self.progress['passengers_delivered'] += 1
-                            self.progress['destinations_visited'].add(current_location)
-                    else:
+            if current_location == target_destination and event_data.get("passenger_data"):
+                passenger_data = event_data["passenger_data"]
+                if "passenger_class" in self.requirements:
+                    if passenger_data["class"] == self.requirements["passenger_class"]:
                         self.progress['passengers_delivered'] += 1
                         self.progress['destinations_visited'].add(current_location)
+                else:
+                    self.progress['passengers_delivered'] += 1
+                    self.progress['destinations_visited'].add(current_location)
+                print(f"Contract {self.description} progress: {self.progress['passengers_delivered']}/{self.requirements.get('count', 0)} passengers")
 
         elif self.contract_type == "cargo":
-            if event_data.get("trade_completed"):
-                cargo_type = event_data.get("cargo_type")
+            is_trade = event_data.get("trade_completed", False) or event_data.get("action") == "sell"
+            if is_trade and current_location == target_destination:
+                cargo_type = event_data.get("cargo_type") or event_data.get("commodity")
                 amount = event_data.get("amount", 0)
                 
-                if current_location == target_destination:
-                    if cargo_type == self.requirements.get("cargo_type"):
-                        self.progress['amount'] += amount
-                        self.progress['destinations_visited'].add(current_location)
+                if cargo_type == self.requirements.get("cargo_type"):
+                    self.progress['amount'] += amount
+                    self.progress['destinations_visited'].add(current_location)
+                    print(f"Contract {self.description} progress: {self.progress['amount']}/{self.requirements.get('min_amount', 0)} {cargo_type}")
 
         return self._check_completion()
 
@@ -5169,6 +5185,7 @@ class Contract:
 
             if delivered >= required and reached_destination:
                 self.completed = True
+                self.rewards_claimed = False  # Initialize rewards flag
                 status["status"] = "completed"
 
         elif self.contract_type == "cargo":
@@ -5184,6 +5201,7 @@ class Contract:
 
             if amount_delivered >= amount_required and reached_destination:
                 self.completed = True
+                self.rewards_claimed = False  # Initialize rewards flag
                 status["status"] = "completed"
 
         return status
@@ -5927,19 +5945,33 @@ class Port:
         
         # Find passengers that have reached their destination
         for module in self.game.ship.passenger_modules:
-            for passenger in module.passengers[:]:  # Create copy for iteration
+            for passenger in module.passengers[:]:
                 if passenger.destination == current_location:
                     fare = self.calculate_fare(passenger, module)
                     satisfaction_multiplier = passenger.satisfaction / 100
                     final_payment = int(fare * satisfaction_multiplier)
                     
+                    # Update contract progress
+                    if hasattr(self.game, 'contract_manager'):
+                        passenger_data = {
+                            "class": passenger.classification["code"],
+                            "satisfaction": passenger.satisfaction
+                        }
+                        event_data = {
+                            "location": current_location,
+                            "passenger_data": passenger_data,
+                            "action": "unload"
+                        }
+                        for contract in self.game.contract_manager.active_contracts:
+                            contract.update_progress(event_data)
+                    
                     self.game.ship.money += final_payment
                     module.passengers.remove(passenger)
-                    
                     passengers_to_unload.append((passenger, final_payment))
-                    
+
+        # Display unloading results
         if passengers_to_unload:
-            content = [["Pass. Disembarked"]]
+            content = [["Passengers Disembarked"]]
             total_earnings = 0
             
             for passenger, payment in passengers_to_unload:
