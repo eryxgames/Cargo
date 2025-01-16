@@ -5622,8 +5622,8 @@ class Port:
             print(self.game.create_box(module_status, 'single'))
 
             # Show waiting passengers in port
-            content = [["Port"]]
-            content.append(["#", "Name", "Dest.", "Class", "≈Fare"])
+#            content = [["Port"]]
+            content.append(["#", "Waiting on {self.current_location.name}", "Dest.", "Cls.", "≈Fare"])
             
             waiting_passengers = self.waiting_passengers[location]
             for i, passenger in enumerate(waiting_passengers, 1):
