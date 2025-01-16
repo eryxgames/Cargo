@@ -2948,8 +2948,26 @@ class Game:
 
     # Add trade tracking to buy/sell methods
     def handle_trade(self, action_type):
-        """Track trade completion"""
+        """Handle trade completion and contract/quest updates"""
         self.trades_completed += 1
+        
+        trade_data = {
+            "location": self.current_location.name,
+            "trade_completed": True
+        }
+        
+        if action_type == "sell":
+            if hasattr(self, 'contract_manager'):
+                for contract in self.contract_manager.active_contracts:
+                    contract.check_trade_completion(
+                        self.current_location.name,
+                        trade_data
+                    )
+        
+        if hasattr(self, 'quest_system'):
+            for quest in self.quest_system.active_quests:
+                if quest.quest_type == "cantina":
+                    quest.update_cantina_progress(trade_data)
 
 
     def handle_trade_event(self, event):
@@ -4787,6 +4805,25 @@ class Quest:
         return (self.name == other.name and 
                 self.quest_type == other.quest_type)
 
+    # Cantina quests from listen to gossip, added to Quest class
+    def update_cantina_progress(self, event_data):
+        """Update cantina quest progress"""
+        if self.quest_type != "cantina":
+            return False
+            
+        location = event_data.get("location")
+        if "Deliver" in self.name and event_data.get("trade_completed"):
+            commodity = self.name.split()[2].lower()  # Extract commodity from name
+            if event_data.get("commodity") == commodity:
+                self.progress += event_data.get("amount", 0)
+                return self.progress >= self.requirements.get("amount", 0)
+                
+        elif "Transport" in self.name and event_data.get("passenger_delivered"):
+            self.progress += 1
+            return self.progress >= self.requirements.get("count", 0)
+                
+        return False
+
     # Add for special location quests
     def check_research_completion(self, game):
         """Check research quest requirements"""
@@ -4955,6 +4992,39 @@ class Contract:
             return f"{desc} ({route})"
 
         return "Generic contract"
+
+    # Add to Contract class for completion of contracts
+    def check_trade_completion(self, location, trade_data):
+        """Check if a trade completes contract requirements"""
+        if not self.completed and self.contract_type == "cargo":
+            if (location == self.requirements["destination"] and 
+                trade_data["commodity"] == self.requirements["cargo_type"]):
+                self.progress["amount"] += trade_data["amount"]
+                self.progress["destinations_visited"].add(location)
+                
+                if (self.progress["amount"] >= self.requirements["min_amount"] and 
+                    self.requirements["destination"] in self.progress["destinations_visited"]):
+                    self.completed = True
+                    return True
+        return False
+
+    def check_passenger_completion(self, location, passenger_data):
+        """Check if passenger delivery completes contract requirements"""
+        if not self.completed and self.contract_type == "passenger":
+            if location == self.requirements["destination"]:
+                if "passenger_class" in self.requirements:
+                    if passenger_data["class"] == self.requirements["passenger_class"]:
+                        self.progress["passengers_delivered"] += 1
+                else:
+                    self.progress["passengers_delivered"] += 1
+                
+                self.progress["destinations_visited"].add(location)
+                
+                if (self.progress["passengers_delivered"] >= self.requirements.get("count", 0) and
+                    self.requirements["destination"] in self.progress["destinations_visited"]):
+                    self.completed = True
+                    return True
+        return False
 
     def calculate_final_reward(self):
         """Calculate final reward including bonuses"""
