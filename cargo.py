@@ -5698,7 +5698,7 @@ class Port:
 
             # Show waiting passengers in port
             content = [[""]]
-            content.append(["#", f"Waiting on {self.current_location.name}", "Dest.", "Cls.", "≈Fare"])
+            content.append(["#", f"Waiting on {self.game.current_location.name}", "Dest.", "Cls.", "≈Fare"])
             
             waiting_passengers = self.waiting_passengers[location]
             for i, passenger in enumerate(waiting_passengers, 1):
