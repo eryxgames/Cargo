@@ -3774,7 +3774,7 @@ class Game:
                 'back': ('', "Return to Main Menu")
             }
 
-            menu_content = [["Cantina Services"]]
+            menu_content = [[f"Cantina Services - {self.current_location.name}"]]
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.create_box(menu_content, 'single'))
@@ -5457,7 +5457,7 @@ class Port:
                 content.append([
                     f"{module.name}",
                     f"({passengers}/{module.capacity} passengers)",
-                    f"Comfort Level: {module.comfort_level}"
+                    f"Comfort Lvl.: {module.comfort_level}"
                 ])
         else:
             content.append(["No passenger modules installed"])
@@ -5510,7 +5510,7 @@ class Port:
             }
             
             # Show menu
-            menu_content = [["Port Services"]]
+            menu_content = [[f"Port Services - {self.game.current_location.name}"]]
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.game.create_box(menu_content, 'single'))
@@ -5622,8 +5622,8 @@ class Port:
             print(self.game.create_box(module_status, 'single'))
 
             # Show waiting passengers in port
-#            content = [["Port"]]
-            content.append(["#", "Waiting on {self.current_location.name}", "Dest.", "Cls.", "≈Fare"])
+            content = [[""]]
+            content.append(["#", f"Waiting on {self.current_location.name}", "Dest.", "Cls.", "≈Fare"])
             
             waiting_passengers = self.waiting_passengers[location]
             for i, passenger in enumerate(waiting_passengers, 1):
@@ -5746,7 +5746,7 @@ class Port:
                     module_info.append([
                         f"└─ {p.name} [{p.classification['code']}]",
                         f"To: {p.destination}",
-                        f"Satisfaction: {p.satisfaction}%"
+                        f"Satisf.: {p.satisfaction}%"
                     ])
             else:
                 module_info.append(["└─ Empty"])
