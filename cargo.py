@@ -4924,18 +4924,55 @@ class SpecialCharacterGenerator:
         self.known_characters = {}  # Track generated characters
         self.add_vip_templates()
 
-    def generate_character(self, specialization):
-        title = random.choice(self.titles[specialization])
-        name = random.choice(self.surnames)
-        role = random.choice(self.roles[specialization])
-        
-        # Ensure unique combination
-        while f"{title} {name}" in self.known_characters:
-            name = random.choice(self.surnames)
+    def generate_character(self, char_type):
+        """Generate a character based on type"""
+        if char_type == "VIPPassenger":
+            # Use existing VIP templates
+            vip_type = random.choice(list(self.vip_templates.keys()))
+            template = self.vip_templates[vip_type]
             
-        character = SpecialCharacter(title, name, role, specialization)
-        self.known_characters[character.full_name] = character
-        return character       
+            title = random.choice(template["titles"])
+            name = random.choice(self.surnames)
+            role = random.choice(template["roles"])
+            
+            character = SpecialCharacter(
+                title=f"{vip_type} {title}",
+                name=name,
+                role=role,
+                specialization="VIP"
+            )
+            
+            # Add VIP-specific attributes
+            character.rewards = dict(template["rewards"])
+            character.special_abilities = list(template["special_abilities"])
+            
+            # Scale rewards based on reputation (from original code)
+            reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+            character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+            
+            return character
+        
+        elif char_type == "PirateCaptain":
+            title = "Rogue Captain"
+            name = f"Captain {random.choice(self.surnames)}"
+            character = SpecialCharacter(title, name, "pirate", "combat")
+            character.combat_stats = {
+                "attack": 3,
+                "defense": 2,
+                "reward": random.randint(5000, 15000)
+            }
+            return character
+            
+        elif char_type == "Neurodroid" or char_type == "Agrobot":
+            title = f"{char_type} Leader"
+            name = f"Unit-{random.randint(1000,9999)}"
+            character = SpecialCharacter(title, name, "synthetic", char_type.lower())
+            character.demand = random.randint(10000, 50000)
+            character.uprising_chance = 0.3
+            return character
+
+        # Return None if character type not recognized
+        return None     
 
     # Added to SpecialCharacterGenerator class for vip passengers
     def add_vip_templates(self):
@@ -8568,7 +8605,9 @@ class DynamicCharacterSystem:
         self.character_generators = {
             "human": SpecialCharacterGenerator(),
             "synthetic": SyntheticCharacterGenerator(),
-            "alien": AlienCharacterGenerator()
+            "alien": AlienCharacterGenerator(),
+            "special": SpecialCharacterGenerator()  # Use SpecialCharacterGenerator for VIPs
+
         }
         self.character_triggers = {
             "neuroengineering_uprising": {
@@ -8588,7 +8627,18 @@ class DynamicCharacterSystem:
                 "generator": "human",
                 "character_type": "PirateCaptain",
                 "event_chain": "pirate_vendetta"
-            }
+            },
+            # Add VIP passenger trigger with correct generator type
+            "vip_passenger": {
+                "condition": lambda game: (
+                    hasattr(game.ship, 'passenger_reputation') and 
+                    game.ship.passenger_reputation >= 40 and
+                    game.turn - game.reputation_manager.last_vip_spawn >= 5
+                ),
+                "generator": "human",  # Changed from 'special' to 'human'
+                "character_type": "VIPPassenger",
+                "event_chain": None
+            }            
         }
         self.event_chains = {}
         self.add_passenger_triggers()
