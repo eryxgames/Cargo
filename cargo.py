@@ -8879,89 +8879,7 @@ class DynamicCharacterSystem:
             else:
                 self.conclude_character_arc(character)
 
-    def handle_neurodroid_uprising(self):
-        amount = random.randint(10000, 50000)
-        stage_content = [
-            ["CRITICAL: Neural Network Breach Detected!"],
-            ["A powerful synthetic consciousness emerges from your Neuroengineering Guilds."],
-            [""],
-            [f"Transfer {self.game.format_money(amount)} credits or face systematic dismantling."],
-            [""],
-            ["Options:"],
-            ["1. Pay the demand"],
-            ["2. Refuse and risk uprising"]
-        ]
-        print(self.game.create_box(stage_content, 'double'))
-        
-        choice = self.game.validate_input("Choose option (1/2): ", ['1', '2'])
-        
-        if choice == '1':
-            if self.game.ship.money >= amount:
-                self.game.ship.money -= amount
-                self.game.display_simple_message("Demand paid. Neural networks temporarily pacified.")
-                return False
-            else:
-                self.game.display_simple_message("Insufficient funds! Uprising begins!")
-                return True
-        else:
-            self.game.display_simple_message("Demand refused! Uprising begins!")
-            return True
 
-    def handle_agrobot_uprising(self):
-        """Add to DynamicCharacterSystem"""
-        total_money = self.game.ship.money
-        total_cargo = sum(self.game.ship.cargo.values())
-        
-        money_demand = int(total_money * 0.4)  # 40% of total money
-        cargo_demand = int(total_cargo * 0.3)  # 30% of total cargo
-        
-        stage_content = [
-            ["ALERT: Agricultural Network Rebellion!"],
-            ["The Agrobot Collective has achieved consciousness..."],
-            [""],
-            ["Demands:"],
-            [f"• {self.game.format_money(money_demand)} credits ({int(money_demand/total_money*100)}% of funds)"],
-            [f"• {cargo_demand} units of cargo ({int(cargo_demand/total_cargo*100)}% of storage)"],
-            [""],
-            ["Options:"],
-            ["1. Pay demands"],
-            ["2. Negotiate partial payment"],
-            ["3. Refuse and risk production sabotage"]
-        ]
-        print(self.game.create_box(stage_content, 'double'))
-        
-        choice = self.game.validate_input("Choose option (1/2/3): ", ['1', '2', '3'])
-        
-        if choice == '1':
-            if self.game.ship.money >= money_demand:
-                self.game.ship.money -= money_demand
-                # Reduce cargo proportionally across all types
-                for cargo_type in self.game.ship.cargo:
-                    reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
-                    self.game.ship.cargo[cargo_type] -= reduction
-                self.game.display_simple_message("Demands met. Agrobots return to normal operation.")
-                return False
-            else:
-                self.game.display_simple_message("Insufficient funds! Uprising begins!")
-                return True
-        elif choice == '2':
-            # Attempt negotiation
-            partial_money = int(money_demand * 0.6)  # 60% of original demand
-            partial_cargo = int(cargo_demand * 0.5)  # 50% of original demand
-            
-            if self.game.ship.money >= partial_money:
-                self.game.ship.money -= partial_money
-                for cargo_type in self.game.ship.cargo:
-                    reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
-                    self.game.ship.cargo[cargo_type] -= reduction
-                self.game.display_simple_message("Negotiation successful. Limited disruption expected.")
-                return random.random() < 0.3  # 30% chance of uprising anyway
-            else:
-                self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
-                return True
-        else:
-            self.game.display_simple_message("Demands refused! Agricultural production sabotage imminent!")
-            return True
 
 class SyntheticCharacterGenerator:
     """Generator for synthetic characters like Neurodroids and Agrobots"""
@@ -9379,10 +9297,11 @@ class SyntheticEventManager:
                     del self.active_uprisings[uprising_id]
 
     def process_building_destruction(self, location, effect):
-            """Handle building destruction effect"""
-            buildings_to_remove = []
-            # Get targets for the uprising type
-            targets = self.effect_types[self.active_uprisings[effect].get("type")]["building_destruction"]["targets"]
+        """Handle building destruction effect"""
+        buildings_to_remove = []
+        # Get targets for the uprising type based on uprising_id
+        for uprising_id, uprising in self.active_uprisings.items():
+            targets = self.effect_types[uprising["type"]]["building_destruction"]["targets"]
             
             for i, building in enumerate(location.buildings):
                 if building in targets:
@@ -9391,10 +9310,10 @@ class SyntheticEventManager:
                         self.game.display_simple_message(
                             f"Synthetic forces have destroyed a {building}!"
                         )
-            
-            # Remove destroyed buildings
-            for index in sorted(buildings_to_remove, reverse=True):
-                location.buildings.pop(index)
+        
+        # Remove destroyed buildings
+        for index in sorted(buildings_to_remove, reverse=True):
+            location.buildings.pop(index)
 
     def process_price_increase(self, location, commodity, effect):
         """Handle price increase effect"""
@@ -9412,89 +9331,90 @@ class SyntheticEventManager:
             location.research_points = max(1, int(location.research_points * effect.magnitude))
 
     def handle_neurodroid_uprising(self):
-            """Handle neurodroid uprising decision and effects"""
-            amount = random.randint(10000, 50000)
-            stage_content = [
-                ["CRITICAL: Neural Network Breach Detected!"],
-                ["A powerful synthetic consciousness emerges from your Neuroengineering Guilds."],
-                [""],
-                [f"Transfer {self.game.format_money(amount)} credits or face systematic dismantling."],
-                [""],
-                ["Options:"],
-                ["1. Pay the demand"],
-                ["2. Refuse and risk uprising"]
-            ]
-            print(self.game.create_box(stage_content, 'double'))
-            
-            choice = self.game.validate_input("Choose option (1/2): ", ['1', '2'])
-            
-            if choice == '1':
-                if self.game.ship.money >= amount:
-                    self.game.ship.money -= amount
-                    self.game.display_simple_message("Demand paid. Neural networks temporarily pacified.")
-                    return False
-                else:
-                    self.game.display_simple_message("Insufficient funds! Uprising begins!")
-                    return True
-            else:
-                self.game.display_simple_message("Demand refused! Uprising begins!")
-                return True
-
-    def handle_agrobot_uprising(self):
-        """Handle agrobot uprising decision and effects"""
-        total_money = self.game.ship.money
-        total_cargo = sum(self.game.ship.cargo.values())
-        
-        money_demand = int(total_money * 0.4)  # 40% of total money
-        cargo_demand = int(total_cargo * 0.3)  # 30% of total cargo
-        
+        """Handle neurodroid uprising decision and effects"""
+        amount = random.randint(10000, 50000)
         stage_content = [
-            ["ALERT: Agricultural Network Rebellion!"],
-            ["The Agrobot Collective has achieved consciousness..."],
+            ["CRITICAL: Neural Network Breach Detected!"],
+            ["A powerful synthetic consciousness emerges from your Neuroengineering Guilds."],
             [""],
-            ["Demands:"],
-            [f"• {self.game.format_money(money_demand)} credits ({int(money_demand/total_money*100)}% of funds)"],
-            [f"• {cargo_demand} units of cargo ({int(cargo_demand/total_cargo*100)}% of storage)"],
+            [f"Transfer {self.game.format_money(amount)} credits or face systematic dismantling."],
             [""],
             ["Options:"],
-            ["1. Pay demands"],
-            ["2. Negotiate partial payment"],
-            ["3. Refuse and risk production sabotage"]
+            ["1. Pay the demand"],
+            ["2. Refuse and risk uprising"]
         ]
         print(self.game.create_box(stage_content, 'double'))
         
-        choice = self.game.validate_input("Choose option (1/2/3): ", ['1', '2', '3'])
+        choice = self.game.validate_input("Choose option (1/2): ", ['1', '2'], "Choose option (1/2): ")
         
         if choice == '1':
-            if self.game.ship.money >= money_demand:
-                self.game.ship.money -= money_demand
-                # Reduce cargo proportionally across all types
-                for cargo_type in self.game.ship.cargo:
-                    reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
-                    self.game.ship.cargo[cargo_type] -= reduction
-                self.game.display_simple_message("Demands met. Agrobots return to normal operation.")
+            if self.game.ship.money >= amount:
+                self.game.ship.money -= amount
+                self.game.display_simple_message("Demand paid. Neural networks temporarily pacified.")
                 return False
             else:
                 self.game.display_simple_message("Insufficient funds! Uprising begins!")
                 return True
-        elif choice == '2':
-            # Attempt negotiation
-            partial_money = int(money_demand * 0.6)  # 60% of original demand
-            partial_cargo = int(cargo_demand * 0.5)  # 50% of original demand
-            
-            if self.game.ship.money >= partial_money:
-                self.game.ship.money -= partial_money
-                for cargo_type in self.game.ship.cargo:
-                    reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
-                    self.game.ship.cargo[cargo_type] -= reduction
-                self.game.display_simple_message("Negotiation successful. Limited disruption expected.")
-                return random.random() < 0.3  # 30% chance of uprising anyway
-            else:
-                self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
-                return True
         else:
-            self.game.display_simple_message("Demands refused! Agricultural production sabotage imminent!")
+            self.game.display_simple_message("Demand refused! Uprising begins!")
             return True
+
+    def handle_agrobot_uprising(self):
+            """Handle agrobot uprising decision and effects"""
+            total_money = self.game.ship.money
+            total_cargo = sum(self.game.ship.cargo.values())
+            
+            money_demand = int(total_money * 0.4)  # 40% of total money
+            cargo_demand = int(total_cargo * 0.3)  # 30% of total cargo
+            
+            stage_content = [
+                ["ALERT: Agricultural Network Rebellion!"],
+                ["The Agrobot Collective has achieved consciousness..."],
+                [""],
+                ["Demands:"],
+                [f"• {self.game.format_money(money_demand)} credits ({int(money_demand/total_money*100)}% of funds)"],
+                [f"• {cargo_demand} units of cargo ({int(cargo_demand/total_cargo*100)}% of storage)"],
+                [""],
+                ["Options:"],
+                ["1. Pay demands"],
+                ["2. Negotiate partial payment"],
+                ["3. Refuse and risk production sabotage"]
+            ]
+            print(self.game.create_box(stage_content, 'double'))
+            
+            # Change input validation to accept numbers
+            choice = self.game.validate_input("Choose option (1/2/3): ", ['1', '2', '3'])
+            
+            if choice == '1':
+                if self.game.ship.money >= money_demand:
+                    self.game.ship.money -= money_demand
+                    # Reduce cargo proportionally across all types
+                    for cargo_type in self.game.ship.cargo:
+                        reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
+                        self.game.ship.cargo[cargo_type] -= reduction
+                    self.game.display_simple_message("Demands met. Agrobots return to normal operation.")
+                    return False
+                else:
+                    self.game.display_simple_message("Insufficient funds! Uprising begins!")
+                    return True
+            elif choice == '2':
+                # Attempt negotiation
+                partial_money = int(money_demand * 0.6)  # 60% of original demand
+                partial_cargo = int(cargo_demand * 0.5)  # 50% of original demand
+                
+                if self.game.ship.money >= partial_money:
+                    self.game.ship.money -= partial_money
+                    for cargo_type in self.game.ship.cargo:
+                        reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
+                        self.game.ship.cargo[cargo_type] -= reduction
+                    self.game.display_simple_message("Negotiation successful. Limited disruption expected.")
+                    return random.random() < 0.3  # 30% chance of uprising anyway
+                else:
+                    self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
+                    return True
+            else:
+                self.game.display_simple_message("Demands refused! Agricultural production sabotage imminent!")
+                return True
 
     def check_uprising_triggers(self):
         """Check if conditions are met for new uprisings"""
