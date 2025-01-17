@@ -659,7 +659,7 @@ class Game:
         self.stellar_portal_available = False
         self.research = Research()
         self.action = Action()
-                # Add new tracking attributes for story milestones
+        # Add new tracking attributes for story milestones
         self.trades_completed = 0
         self.combat_difficulty = 1.0
         self.pirate_frequency = 1.0
@@ -673,15 +673,19 @@ class Game:
         self.trade_bonus = 0
         self.repair_discount = 0
         self.combat_bonus = 0
-                # Add port system
+        # Add systems
         self.port_system = Port(self)
-        self.display_starting_info()
-                # Add Dynamic Character Generation System
-
+        self.contract_manager = ContractManager(self)
+        self.resource_transport = ResourceTransportQuest(self)
+        self.reputation_manager = PassengerReputationManager(self)
+        self.synthetic_events = SyntheticEventManager(self)
         self.character_system = DynamicCharacterSystem(self)
         self.character_encounters = SpecialCharacterEncounters(self)
-        self.init_reputation_system()
-
+        self.discovered_locations = set()
+        self.cooldowns = {}
+        self.story_events = {}
+        
+        self.display_starting_info()
 
 
 
@@ -2796,7 +2800,7 @@ class Game:
         return details
 
     def handle_combat_event(self, event):
-        """Handle combat event with proper victory/defeat recording"""
+        """Handle combat event with proper victory/defeat recording and reputation gains"""
         combat_scenarios = {
             "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0, "enemy_type": "pirate"},
             "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2, "enemy_type": "pirate"},
@@ -2812,8 +2816,13 @@ class Game:
         # Check for automatic defense
         if "turrets" in self.ship.items and random.random() < 0.4:
             self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
-            # Count automatic defense as a victory
+            # Count automatic defense as a victory and add reputation
             self.ship.record_combat_victory(enemy_type)
+            if enemy_type == "pirate":
+                rep_gain = random.randint(1, 3)  # Smaller gain for automated defense
+                self.reputation += rep_gain
+                self.ship.passenger_reputation += rep_gain
+                self.display_simple_message(f"Gained {rep_gain} reputation for automated pirate defense!")
             # Gain some experience even when automatically defending
             self.ship.research_points += int(5 * scenario["reward_mult"])
             return
@@ -2849,7 +2858,7 @@ class Game:
                 if stolen_cargo > 0:
                     losses.append(f"{stolen_cargo} {cargo_type}")
         
-        # Check for counter-attack opportunity, upd.
+        # Check for counter-attack opportunity
         if self.ship.attack > scenario["def"]:
             # Counter-attack successful - record victory
             self.ship.record_combat_victory(enemy_type)
@@ -2863,32 +2872,54 @@ class Game:
             self.ship.money += rewards["money"]
             self.ship.research_points += rewards["research"]
             
+            # Add reputation gains for pirate victories
+            if enemy_type == "pirate":
+                rep_gain = random.randint(2, 5)
+                self.reputation += rep_gain
+                self.ship.passenger_reputation += rep_gain
+                rep_message = f"\nReputation increased by {rep_gain} for defeating pirates!"
+            else:
+                rep_message = ""
+            
             if losses:
                 loss_text = ", ".join(losses)
                 self.display_simple_message(
                     f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
+                    rep_message,
                     3, color='32'
                 )
             else:
                 self.display_simple_message(
                     f"Event! {event} caused {damage_dealt}% damage!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
+                    rep_message,
                     3, color='32'
                 )
         else:
             # Combat defeat - record defeat with enemy type
             self.ship.record_combat_defeat(enemy_type)
             
+            # Lose reputation on pirate defeats
+            if enemy_type == "pirate":
+                rep_loss = random.randint(1, 3)
+                self.reputation = max(0, self.reputation - rep_loss)
+                self.ship.passenger_reputation = max(0, self.ship.passenger_reputation - rep_loss)
+                rep_message = f"\nLost {rep_loss} reputation from pirate defeat!"
+            else:
+                rep_message = ""
+            
             if losses:
                 loss_text = ", ".join(losses)
                 self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!",
+                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!" +
+                    rep_message,
                     3, color='31'
                 )
             else:
                 self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage!",
+                    f"Event! {event} caused {damage_dealt}% damage!" +
+                    rep_message,
                     3, color='31'
                 )
 
@@ -8517,18 +8548,19 @@ class DynamicCharacterSystem:
                 trigger['condition'](self.game)):
                 self.spawn_character(trigger_id)
 
+
     def spawn_character(self, trigger_id):
-        """Generate and introduce a new character"""
-        trigger = self.character_triggers[trigger_id]
-        generator = self.character_generators[trigger['generator']]
-        character = generator.generate_character(trigger['character_type'])
-        self.active_characters[trigger_id] = character
-        
-        # Initialize event chain
-        self.event_chains[trigger_id] = self.create_event_chain(trigger['event_chain'])
-        
-        # Announce character appearance
-        self.announce_character(character)
+            """Generate and introduce a new character"""
+            trigger = self.character_triggers[trigger_id]
+            generator = self.character_generators[trigger['generator']]
+            character = generator.generate_character(trigger['character_type'])
+            self.active_characters[trigger_id] = character
+            
+            # Initialize event chain
+            self.event_chains[trigger_id] = self.create_event_chain(trigger['event_chain'], character)
+            
+            # Announce character appearance
+            self.announce_character(character)
 
         
 
