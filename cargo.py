@@ -9635,6 +9635,9 @@ class SpecialCharacterEncounters:
         print(self.game.create_box(content, 'double'))
         
         amount = self.game.validate_quantity_input("Enter research points to buy (max/m, half/h): ")
+
+        if amount is None:  # Add this to check empty Enter
+            return
         if amount == 'max':
             amount = max_points
         elif amount == 'half':
