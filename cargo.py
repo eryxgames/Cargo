@@ -939,6 +939,50 @@ class Game:
         
         return '\n'.join(lines)
 
+    def create_character_box(self, character_content, style='round'):
+        """Create a character display box optimized for different terminal widths"""
+        try:
+            term_width = os.get_terminal_size().columns
+        except OSError:
+            term_width = 80  # Default width
+            
+        # Adjust width based on terminal size
+        if term_width < 60:
+            content_width = term_width - 4
+            compact_mode = True
+        else:
+            content_width = min(80, term_width - 4)  # Cap at 80 chars
+            compact_mode = False
+            
+        chars = {
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║'},
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│'}
+        }[style]
+        
+        lines = []
+        lines.append(f"{chars['tl']}{chars['h'] * content_width}{chars['tr']}")
+        
+        # Process title section
+        if 'title' in character_content:
+            wrapped_title = self.word_wrap(character_content['title'], content_width - 2)
+            for line in wrapped_title:
+                lines.append(f"{chars['v']} {line:<{content_width-2}} {chars['v']}")
+            lines.append(f"{chars['v']}{chars['h'] * content_width}{chars['v']}")
+        
+        # Process main content with proper sections
+        for section in ['introduction', 'description', 'demands', 'options']:
+            if section in character_content:
+                if not compact_mode:
+                    lines.append(f"{chars['v']}{' ' * content_width}{chars['v']}")
+                
+                wrapped_content = self.word_wrap(character_content[section], content_width - 2)
+                for line in wrapped_content:
+                    lines.append(f"{chars['v']} {line:<{content_width-2}} {chars['v']}")
+        
+        lines.append(f"{chars['bl']}{chars['h'] * content_width}{chars['br']}")
+        return '\n'.join(lines)
+
     def create_compact_box(self, content, style='single'):
         """Create a box with properly aligned borders and content."""
         # Get terminal width and account for borders and spacing
@@ -8565,15 +8609,15 @@ class DynamicCharacterSystem:
         
 
     def announce_character(self, character):
-        """Display character introduction"""
-        intro_content = [
-            [f"New Character Appears: {character.full_name}!"],
-            [""],
-            [character.introduction],
-            [""],
-            [character.demands if hasattr(character, 'demands') else character.greeting]
-        ]
-        print(self.game.create_box(intro_content, 'double'))
+        """Display character introduction using dedicated character box"""
+        content = {
+            'title': f"{character.full_name}",
+            'introduction': character.introduction,
+            'demands': getattr(character, 'demands', None),
+            'options': "1. Accept  2. Negotiate  3. Refuse" if hasattr(character, 'demands') else None
+        }
+        
+        print(self.create_character_box(content, 'double'))
 
     def add_passenger_triggers(self):
         """Add passenger-related triggers to character system"""
