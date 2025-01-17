@@ -8584,7 +8584,10 @@ class DynamicCharacterSystem:
         self.event_chains = {}
         self.add_passenger_triggers()
         self.create_passenger_event_chains()
-        
+
+    def create_character_box(self, character_content, style='round'):
+        return self.game.create_character_box(character_content, style)
+
     def check_character_triggers(self):
         """Check for new character appearances based on game state"""
         for trigger_id, trigger in self.character_triggers.items():
