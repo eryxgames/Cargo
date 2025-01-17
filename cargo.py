@@ -6266,18 +6266,21 @@ class Port:
         sorted_passengers = sorted(passengers, key=lambda p: p.wealth_level, reverse=True)
         
         assigned = 0
-        for passenger in sorted_passengers:
+        location = self.game.current_location.name
+        
+        for passenger in sorted_passengers[:]:  # Use slice to create copy for iteration
             for module in sorted_modules:
                 if len(module.passengers) < module.capacity:
                     module.passengers.append(passenger)
-                    passengers.remove(passenger)
+                    if passenger in self.waiting_passengers[location]:  # Remove from waiting list
+                        self.waiting_passengers[location].remove(passenger)
                     assigned += 1
                     self.game.display_simple_message(
                         f"Auto-assigned {passenger.name} to {module.name}"
                     )
                     break
         
-        remaining = len(passengers)
+        remaining = len(passengers) - assigned
         if remaining > 0:
             self.game.display_simple_message(f"Could not assign {remaining} passengers - no space left")
 
