@@ -9676,7 +9676,7 @@ class SpecialCharacterEncounters:
         elif race == "Synthetic":
             name = f"Unit-{random.randint(1000,9999)}"
         else:
-            name = f"{random.choice(['Zx\'', 'Ky\'', 'Vr\''])}{random.choice(['nak', 'tol', 'xis'])}"
+            name = f"{random.choice(['Zx', 'Ky', 'Vr'])}{random.choice(['ak', 'tol', 'xis'])}"
 
         characters = {
             "merchant": {
