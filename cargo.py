@@ -680,6 +680,8 @@ class Game:
 
         self.character_system = DynamicCharacterSystem(self)
         self.character_encounters = SpecialCharacterEncounters(self)
+        self.init_reputation_system()
+
 
 
 
@@ -689,6 +691,9 @@ class Game:
         self.ship.passenger_modules = []  # Initialize empty passenger modules list
         self.ship.passenger_reputation = 0  # Initialize passenger reputation
 
+    # Initialize reputation manager in Game class
+    def init_reputation_system(self):
+        self.reputation_manager = PassengerReputationManager(self)
 
     def get_terminal_width(self):
         return shutil.get_terminal_size().columns
@@ -3254,6 +3259,20 @@ class Game:
                 self.ship.damage += penalty[1]
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
+    def handle_combat(self, enemy_stats):
+        """Handle combat with enemy ships"""
+        enemy_attack = enemy_stats.get("attack", 2)
+        enemy_defense = enemy_stats.get("defense", 1)
+        enemy_type = enemy_stats.get("type", "pirate")
+        
+        self.battle_event(enemy_attack, enemy_defense, self.ship.speed)
+        if enemy_type == "rogue_captain":
+            # Add special rewards for defeating rogue captain
+            if enemy_attack < self.ship.attack:
+                self.ship.money += random.randint(2000, 5000)
+                special_items = ["quantum_core", "advanced_shield", "neural_hack"]
+                self.ship.acquire_item(random.choice(special_items))
+
     def conduct_research_activity(self, activity_type):
         """Handle research activities for quests"""
         # Check if we're at a valid research location
@@ -4823,6 +4842,7 @@ class SpecialCharacterGenerator:
         }
         
         self.known_characters = {}  # Track generated characters
+        self.add_vip_templates()
 
     def generate_character(self, specialization):
         title = random.choice(self.titles[specialization])
@@ -4835,7 +4855,69 @@ class SpecialCharacterGenerator:
             
         character = SpecialCharacter(title, name, role, specialization)
         self.known_characters[character.full_name] = character
-        return character        
+        return character       
+
+    # Added to SpecialCharacterGenerator class for vip passengers
+    def add_vip_templates(self):
+        """Add VIP passenger templates to character generator"""
+        self.vip_templates = {
+            "Corporate": {
+                "titles": ["CEO", "Director", "Executive"],
+                "roles": ["business", "finance", "trade"],
+                "rewards": {
+                    "base_money": 30000,
+                    "reputation": 15,
+                    "plot_points": 5
+                },
+                "special_abilities": ["market_insider"]
+            },
+            "Political": {
+                "titles": ["Senator", "Councilor", "Minister"],
+                "roles": ["governance", "diplomacy", "policy"],
+                "rewards": {
+                    "base_money": 40000,
+                    "reputation": 20,
+                    "plot_points": 8
+                },
+                "special_abilities": ["system_influence"]
+            },
+            "Scientific": {
+                "titles": ["Professor", "Director", "Chief Researcher"],
+                "roles": ["research", "development", "innovation"],
+                "rewards": {
+                    "base_money": 35000,
+                    "reputation": 18,
+                    "plot_points": 10
+                },
+                "special_abilities": ["research_bonus"]
+            }
+        }
+
+    def generate_vip_passenger(self):
+        """Generate a VIP passenger with special characteristics"""
+        vip_type = random.choice(list(self.vip_templates.keys()))
+        template = self.vip_templates[vip_type]
+        
+        title = random.choice(template["titles"])
+        name = random.choice(self.surnames)
+        role = random.choice(template["roles"])
+        
+        character = SpecialCharacter(
+            title=f"{vip_type} {title}",
+            name=name,
+            role=role,
+            specialization="VIP"
+        )
+        
+        # Add VIP-specific attributes
+        character.rewards = dict(template["rewards"])
+        character.special_abilities = list(template["special_abilities"])
+        
+        # Scale rewards based on reputation
+        reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+        character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+        
+        return character     
 
 class Quest:
     def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
@@ -5811,81 +5893,114 @@ class Port:
                 self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
 
     def handle_passenger_unloading(self):
-        """Handle passenger unloading with bonuses"""
-        if not hasattr(self.game.ship, 'passenger_modules'):
-            self.game.display_simple_message("No passenger modules installed!")
-            return
-            
-        current_location = self.game.current_location.name
-        passengers_to_unload = []
-        
-        # Bonus multipliers based on passenger classification
-        bonus_types = {
-            "S": ("Scientific Institute", 2.0, "Scientific research strengthened!"),
-            "M": ("Planetary Defense Council", 3.0, "Military recruitment enhanced!"),
-            "E": ("Engineering Corps", 2.5, "Engineering capacity expanded!"),
-            "T": ("Trade Federation", 2.0, "Commercial networks expanded!"),
-            "D": ("Diplomatic Service", 3.0, "Diplomatic relations improved!"),
-            "R": ("Research Foundation", 2.5, "Research capabilities enhanced!")
-        }
-        
-        # Find passengers that have reached their destination
-        for module in self.game.ship.passenger_modules:
-            for passenger in module.passengers[:]:
-                if passenger.destination == current_location:
-                    base_fare = self.calculate_fare(passenger, module)
-                    satisfaction_multiplier = passenger.satisfaction / 100
-                    
-                    # Apply organization bonus if applicable
-                    org_bonus = bonus_types.get(passenger.classification["code"])
-                    if org_bonus and random.random() < 0.3:  # 30% chance for bonus
-                        org_name, multiplier, message = org_bonus
-                        final_payment = int(base_fare * satisfaction_multiplier * multiplier)
-                        bonus_message = f"{org_name} doubles the revenue! {message} Plot points +1"
-                        self.game.story_manager.plot_points += 1
-                    else:
-                        final_payment = int(base_fare * satisfaction_multiplier)
-                        bonus_message = None
-                    
-                    # Update contract progress
-                    if hasattr(self.game, 'contract_manager'):
-                        passenger_data = {
-                            "class": passenger.classification["code"],
-                            "satisfaction": passenger.satisfaction
-                        }
-                        event_data = {
-                            "location": current_location,
-                            "passenger_data": passenger_data,
-                            "action": "unload"
-                        }
-                        for contract in self.game.contract_manager.active_contracts:
-                            contract.update_progress(event_data)
-                    
-                    self.game.ship.money += final_payment
-                    module.passengers.remove(passenger)
-                    passengers_to_unload.append((passenger, final_payment, bonus_message))
-
-        # Display unloading results
-        if passengers_to_unload:
-            content = [["Passengers Disembarked"]]
+            """Handle passenger unloading with reputation effects and bonuses"""
+            if not hasattr(self.game.ship, 'passenger_modules'):
+                self.game.display_simple_message("No passenger modules installed!")
+                return
+                
+            current_location = self.game.current_location.name
+            passengers_to_unload = []
             total_earnings = 0
             
-            for passenger, payment, bonus_msg in passengers_to_unload:
-                content.append([
-                    passenger.name,
-                    f"Fare: {self.game.format_money(payment)}",
-                    f"Satisfied: {passenger.satisfaction}%"
-                ])
-                if bonus_msg:
-                    content.append(["└─ " + bonus_msg])
-                total_earnings += payment
-                
-            content.append([""])
-            content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
+            # Bonus multipliers based on passenger classification
+            bonus_types = {
+                "S": ("Scientific Institute", 2.0, "Scientific research strengthened!"),
+                "M": ("Planetary Defense Council", 3.0, "Military recruitment enhanced!"),
+                "E": ("Engineering Corps", 2.5, "Engineering capacity expanded!"),
+                "T": ("Trade Federation", 2.0, "Commercial networks expanded!"),
+                "D": ("Diplomatic Service", 3.0, "Diplomatic relations improved!"),
+                "R": ("Research Foundation", 2.5, "Research capabilities enhanced!")
+            }
             
-            print(self.game.create_box(content, 'double'))
-        else:
-            self.game.display_simple_message("No passengers to unload here!")
+            # Find passengers that have reached their destination
+            for module in self.game.ship.passenger_modules:
+                for passenger in module.passengers[:]:
+                    if passenger.destination == current_location:
+                        # Calculate fare with reputation multiplier
+                        base_fare = self.calculate_fare(passenger, module)
+                        reputation_multiplier = self.game.reputation_manager.get_fare_multiplier()
+                        satisfaction_multiplier = passenger.satisfaction / 100
+                        bonus_multiplier = 1.0  # Default multiplier
+
+                        # Apply organization bonus if applicable
+                        org_bonus = bonus_types.get(passenger.classification["code"])
+                        bonus_message = None
+                        if org_bonus and random.random() < 0.3:  # 30% chance for bonus
+                            org_name, multiplier, message = org_bonus
+                            bonus_multiplier = multiplier
+                            bonus_message = f"{org_name} doubles the revenue! {message} Plot points +1"
+                            self.game.story_manager.plot_points += 1
+
+                        # Calculate final payment with all multipliers
+                        final_payment = int(base_fare * satisfaction_multiplier * reputation_multiplier * bonus_multiplier)
+
+                        # Update reputation
+                        reputation_change = self.game.reputation_manager.update_reputation(
+                            passenger.satisfaction)
+
+                        # Handle special passengers
+                        if hasattr(passenger, 'is_vip'):
+                            self.game.reputation_manager.handle_vip_delivery(passenger)
+                        elif hasattr(passenger, 'is_story_character'):
+                            self.game.reputation_manager.handle_story_character_delivery(passenger)
+
+                        # Update contract progress if available
+                        if hasattr(self.game, 'contract_manager'):
+                            passenger_data = {
+                                "class": passenger.classification["code"],
+                                "satisfaction": passenger.satisfaction
+                            }
+                            event_data = {
+                                "location": current_location,
+                                "passenger_data": passenger_data,
+                                "action": "unload"
+                            }
+                            for contract in self.game.contract_manager.active_contracts:
+                                contract.update_progress(event_data)
+
+                        # Record unloading result
+                        passengers_to_unload.append({
+                            'passenger': passenger,
+                            'payment': final_payment,
+                            'satisfaction': passenger.satisfaction,
+                            'reputation_change': reputation_change,
+                            'bonus_message': bonus_message
+                        })
+
+                        # Apply payment and remove passenger
+                        self.game.ship.money += final_payment
+                        module.passengers.remove(passenger)
+                        total_earnings += final_payment
+
+            # Display unloading results
+            if passengers_to_unload:
+                content = [["Passengers Disembarked"]]
+                
+                for result in passengers_to_unload:
+                    passenger = result['passenger']
+                    content.append([
+                        passenger.name,
+                        f"Fare: {self.game.format_money(result['payment'])}",
+                        f"Satisfied: {result['satisfaction']}%"
+                    ])
+                    
+                    # Add reputation change if significant
+                    if abs(result['reputation_change']) >= 0.1:
+                        content.append([
+                            f"└─ Reputation Change: {'+' if result['reputation_change'] > 0 else ''}{result['reputation_change']:.1f}"
+                        ])
+                    
+                    # Add bonus message if any
+                    if result['bonus_message']:
+                        content.append([f"└─ {result['bonus_message']}"])
+                
+                content.append([""])
+                content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
+                
+                print(self.game.create_box(content, 'double'))
+            else:
+                self.game.display_simple_message("No passengers to unload here!")
+
 
     def handle_autoboard(self, available_modules):
         """Handle automatic passenger boarding based on destination"""
@@ -8392,6 +8507,8 @@ class DynamicCharacterSystem:
             }
         }
         self.event_chains = {}
+        self.add_passenger_triggers()
+        self.create_passenger_event_chains()
         
     def check_character_triggers(self):
         """Check for new character appearances based on game state"""
@@ -8425,6 +8542,222 @@ class DynamicCharacterSystem:
             [character.demands if hasattr(character, 'demands') else character.greeting]
         ]
         print(self.game.create_box(intro_content, 'double'))
+
+    def add_passenger_triggers(self):
+        """Add passenger-related triggers to character system"""
+        self.character_triggers.update({
+            "galactic_alliance": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 60 and 
+                    game.story_manager.current_chapter >= 2
+                ),
+                "generator": "human",
+                "character_type": "DiplomaticEnvoy",
+                "event_chain": "galactic_alliance"
+            },
+            "system_rebellion": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 70 and 
+                    game.story_manager.current_chapter >= 3 and
+                    len([loc for loc in game.locations if hasattr(loc, 'controlled_by_player')]) >= 2
+                ),
+                "generator": "human",
+                "character_type": "RebelCommander",
+                "event_chain": "system_rebellion"
+            },
+            "ancient_mysteries": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 80 and 
+                    game.story_manager.current_chapter >= 4 and
+                    "alien_artifacts" in game.story_manager.completed_story_beats
+                ),
+                "generator": "alien",
+                "character_type": "AncientScholar",
+                "event_chain": "ancient_mysteries"
+            },
+            "vip_passenger": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 40 and
+                    game.turn - game.reputation_manager.last_vip_spawn >= 5
+                ),
+                "generator": "special",  # Will use SpecialCharacterGenerator
+                "character_type": "VIPPassenger",
+                "event_chain": None  # VIPs don't need event chains
+            }
+        })
+
+    def create_passenger_event_chains(self):
+        """Create event chains for passenger-related stories"""
+        self.event_chains.update({
+            "galactic_alliance": [
+                {
+                    "type": "dialogue",
+                    "message": "Discuss galactic politics and potential alliances",
+                    "choices": ["support_alliance", "remain_neutral", "oppose_alliance"],
+                    "consequences": {
+                        "support_alliance": {
+                            "reputation": 15,
+                            "plot_points": 5,
+                            "unlock": "diplomatic_missions"
+                        },
+                        "remain_neutral": {
+                            "reputation": 5,
+                            "plot_points": 2
+                        },
+                        "oppose_alliance": {
+                            "reputation": -10,
+                            "plot_points": 3,
+                            "unlock": "independent_contracts"
+                        }
+                    }
+                },
+                {
+                    "type": "mission",
+                    "message": "Transport diplomatic delegation",
+                    "requirements": {
+                        "destinations": 3,
+                        "min_satisfaction": 90
+                    },
+                    "rewards": {
+                        "money": 50000,
+                        "reputation": 20,
+                        "plot_points": 8
+                    }
+                }
+            ],
+            "system_rebellion": [
+                {
+                    "type": "covert_transport",
+                    "message": "Transport rebel leaders without detection",
+                    "risk": 0.3,
+                    "rewards": {
+                        "money": 75000,
+                        "reputation": 25,
+                        "plot_points": 10
+                    },
+                    "failure_consequences": {
+                        "reputation": -30,
+                        "banned_systems": ["Alpha", "Beta"]
+                    }
+                },
+                {
+                    "type": "supply_run",
+                    "message": "Deliver crucial supplies to rebel bases",
+                    "cargo_requirements": {
+                        "tech": 100,
+                        "agri": 150
+                    },
+                    "rewards": {
+                        "money": 100000,
+                        "reputation": 30,
+                        "plot_points": 15
+                    }
+                }
+            ],
+            "ancient_mysteries": [
+                {
+                    "type": "exploration",
+                    "message": "Visit ancient ruins with the scholar",
+                    "locations": ["Ruins Alpha", "Ruins Beta"],
+                    "discoveries": {
+                        "artifacts": 3,
+                        "research_points": 200
+                    },
+                    "rewards": {
+                        "money": 150000,
+                        "reputation": 40,
+                        "plot_points": 20
+                    }
+                }
+            ]
+        })        
+
+    def create_event_chain(self, chain_type, character):
+        """Create new event chain for character with complete chain definitions"""
+        event_chain_templates = {
+            "neurodroid_uprising": [
+                {
+                    "type": "demand",
+                    "message": "Initial demand for resources",
+                    "choices": ["pay", "refuse"],
+                    "consequences": {
+                        "pay": {"money": -30000, "plot_points": 2},
+                        "refuse": {"uprising_chance": 0.3}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Neurodroid optimization protocols activate",
+                    "effect": "damage_buildings",
+                    "damage_chance": 0.4
+                }
+            ],
+            "agrobot_collective": [
+                {
+                    "type": "demand",
+                    "message": "Resource reallocation request",
+                    "choices": ["accept", "refuse"],
+                    "consequences": {
+                        "accept": {"money": -25000, "plot_points": 2},
+                        "refuse": {"food_production": 0.5}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Automated farming systems malfunction",
+                    "effect": "reduce_production",
+                    "reduction": 0.3
+                }
+            ],
+            "rogue_captain": [
+                {
+                    "type": "combat",
+                    "message": "Ship-to-ship engagement",
+                    "enemy_stats": {
+                        "attack": 3,
+                        "defense": 2,
+                        "type": "rogue_captain"
+                    }
+                },
+                {
+                    "type": "aftermath",
+                    "message": "Combat resolution",
+                    "rewards": {
+                        "victory": {"money": 5000, "items": ["quantum_core"]},
+                        "defeat": {"damage": 30}
+                    }
+                }
+            ],
+            "merchant_visit": [
+                {
+                    "type": "trade",
+                    "message": "Special inventory available",
+                    "offers": self.generate_special_offers(),
+                    "duration": 3  # Turns available
+                }
+            ],
+            "researcher_exchange": [
+                {
+                    "type": "exchange",
+                    "message": "Knowledge transfer proposition",
+                    "rate": random.randint(500, 1000),  # Credits per research point
+                    "max_points": 50
+                }
+            ]
+        }
+
+        stages = event_chain_templates.get(chain_type, [])
+        return EventChain(chain_type, character, stages)
+
+    def generate_special_offers(self):
+        """Generate special merchant offers"""
+        possible_items = [
+            ("quantum_shield", 3000, "Advanced defense system"),
+            ("neural_boost", 2500, "Research point multiplier"),
+            ("cargo_expander", 4000, "Increased storage capacity"),
+            ("stealth_drive", 5000, "Improved escape chances")
+        ]
+        return random.sample(possible_items, random.randint(2, 3))        
 
     @staticmethod
     def count_buildings(game, building_type):
@@ -8665,11 +8998,12 @@ class AlienCharacterGenerator:
 class EventChain:
     """Manages sequential events for character interactions"""
     
-    def __init__(self, chain_type, character):
+    def __init__(self, chain_type, character, stages):
         self.chain_type = chain_type
         self.character = character
+        self.stages = stages
         self.current_stage = 0
-        self.stages = self.get_chain_stages(chain_type)
+        self.completed_stages = []
         
     def get_chain_stages(self, chain_type):
         """Get event chain for specific type"""
@@ -8734,9 +9068,47 @@ class EventChain:
         if self.current_stage < len(self.stages):
             stage = self.stages[self.current_stage]
             self.current_stage += 1
+            self.completed_stages.append(stage)
             return stage
         return None
+    
+    def get_current_stage(self):
+        """Get current stage without advancing"""
+        if self.current_stage < len(self.stages):
+            return self.stages[self.current_stage]
+        return None
 
+    def is_complete(self):
+        """Check if chain is complete"""
+        return self.current_stage >= len(self.stages)
+
+    def get_progress(self):
+        """Get chain progress information"""
+        return {
+            "completed": len(self.completed_stages),
+            "total": len(self.stages),
+            "percentage": (len(self.completed_stages) / len(self.stages)) * 100
+        }
+
+    def handle_stage_outcome(self, choice):
+        """Handle player choice outcomes for current stage"""
+        stage = self.get_current_stage()
+        if not stage:
+            return None
+            
+        if stage["type"] == "demand" and choice in stage["choices"]:
+            consequences = stage["consequences"][choice]
+            return consequences
+        elif stage["type"] == "combat":
+            return stage["enemy_stats"]
+        elif stage["type"] == "event":
+            return stage["effect"]
+        return None
+
+    def reset_chain(self):
+        """Reset the event chain to beginning"""
+        self.current_stage = 0
+        self.completed_stages = []
               
     def handle_event_stage(self, stage, character):
         """Handle a single stage of character event chain"""
@@ -9258,6 +9630,299 @@ class SpecialCharacterEncounters:
                         }
                         self.game.handle_combat(enemy_stats)
                 break            
+
+class PassengerReputationManager:
+    """Manages passenger reputation effects and related story/character events"""
+    def __init__(self, game):
+        self.game = game
+        self.reputation_thresholds = {
+            20: "Reliable Transport",
+            40: "Luxury Provider",
+            60: "Elite Service",
+            80: "Legendary Captain",
+            100: "Stellar Legend"
+        }
+        self.vip_characters = {
+            "Ambassador": {
+                "rep_required": 30,
+                "plot_points": 3,
+                "rewards": {"money": 15000, "reputation": 10}
+            },
+            "Corporate Executive": {
+                "rep_required": 50,
+                "plot_points": 5,
+                "rewards": {"money": 25000, "reputation": 15}
+            },
+            "Research Director": {
+                "rep_required": 70,
+                "plot_points": 8,
+                "rewards": {"money": 40000, "reputation": 20}
+            }
+        }
+        self.story_characters = {
+            "Diplomatic Envoy": {
+                "rep_required": 45,
+                "trigger_chapter": 2,
+                "event_chain": "galactic_alliance"
+            },
+            "Rebel Leader": {
+                "rep_required": 65,
+                "trigger_chapter": 3,
+                "event_chain": "system_rebellion"
+            },
+            "Ancient Scholar": {
+                "rep_required": 85,
+                "trigger_chapter": 4,
+                "event_chain": "ancient_mysteries"
+            }
+        }
+        self.last_vip_spawn = 0
+        self.spawned_characters = set()
+        self.active_story_chains = {}
+
+    def update_reputation(self, satisfaction):
+        """Update passenger reputation based on satisfaction"""
+        base_change = (satisfaction - 75) / 25  # -1 to +1 base change
+        
+        # Apply modifiers based on passenger class
+        class_multipliers = {
+            "S": 1.5,  # Scientists
+            "M": 1.3,  # Military
+            "E": 1.4   # Engineers
+        }
+        
+        # Get current passenger's class if available
+        passenger_class = getattr(self.game.current_passenger, 'classification', {}).get('code', '')
+        multiplier = class_multipliers.get(passenger_class, 1.0)
+        
+        reputation_change = base_change * multiplier
+        
+        # Apply final change
+        old_rep = self.game.ship.passenger_reputation
+        self.game.ship.passenger_reputation = max(-100, min(100, 
+            self.game.ship.passenger_reputation + reputation_change))
+        
+        # Check for threshold crossings
+        self.check_reputation_thresholds(old_rep, self.game.ship.passenger_reputation)
+        
+        return reputation_change
+
+    def check_reputation_thresholds(self, old_rep, new_rep):
+        """Check if any reputation thresholds were crossed"""
+        for threshold, title in self.reputation_thresholds.items():
+            if old_rep < threshold <= new_rep:
+                self.game.display_story_message([
+                    f"Reputation Milestone Achieved: {title}!",
+                    "Your excellent service is becoming legendary.",
+                    f"Passenger Reputation: {int(new_rep)}"
+                ])
+                # Trigger appropriate events
+                self.check_character_spawns()
+                self.check_story_triggers()
+
+    def check_character_spawns(self):
+        """Check if it's time to spawn a VIP character"""
+        current_turn = self.game.turn
+        reputation = self.game.ship.passenger_reputation
+        
+        # Only spawn every 5 turns minimum
+        if current_turn - self.last_vip_spawn < 5:
+            return
+            
+        # Check VIP characters
+        for char_type, data in self.vip_characters.items():
+            if (reputation >= data["rep_required"] and 
+                char_type not in self.spawned_characters and
+                random.random() < 0.3):  # 30% chance if all conditions met
+                
+                # Generate VIP character
+                character = self.game.character_generators["human"].generate_character(
+                    title=char_type,
+                    specialization="VIP"
+                )
+                
+                # Add to waiting passengers
+                if self.game.current_location.name in self.game.port_system.waiting_passengers:
+                    passenger = Passenger(
+                        character.name,
+                        random.choice(list(self.game.known_locations)),
+                        wealth_level=5
+                    )
+                    passenger.is_vip = True
+                    passenger.rewards = data["rewards"]
+                    passenger.plot_points = data["plot_points"]
+                    
+                    self.game.port_system.waiting_passengers[
+                        self.game.current_location.name].append(passenger)
+                    
+                    self.game.display_story_message([
+                        f"VIP Passenger Available: {char_type} {character.name}",
+                        "Your reputation has attracted important attention!",
+                        f"Rewards: {self.game.format_money(data['rewards']['money'])} credits",
+                        f"Plot Points: {data['plot_points']}"
+                    ])
+                    
+                    self.spawned_characters.add(char_type)
+                    self.last_vip_spawn = current_turn
+
+    # Update to use enhanced systems of special passengers
+    def spawn_special_passenger(self):
+        """Spawn a special passenger using enhanced character systems"""
+        # Check for story character triggers
+        for trigger_id, trigger in self.game.character_system.character_triggers.items():
+            if (trigger_id in ["galactic_alliance", "system_rebellion", "ancient_mysteries"] and
+                trigger["condition"](self.game) and
+                trigger_id not in self.game.character_system.active_characters):
+                
+                # Generate character and create event chain
+                character = self.game.character_system.generate_character(trigger_id)
+                event_chain = self.game.character_system.create_event_chain(
+                    trigger["event_chain"],
+                    character
+                )
+                
+                # Add as special passenger
+                self.add_special_passenger_to_port(character, event_chain)
+                return True
+                
+        # Check for VIP passenger trigger
+        if self.game.character_system.character_triggers["vip_passenger"]["condition"](self.game):
+            vip_character = self.game.character_generators["special"].generate_vip_passenger()
+            self.add_special_passenger_to_port(vip_character)
+            return True
+            
+        return False
+
+    def add_special_passenger_to_port(self, character, event_chain=None):
+        """Add a special character as a passenger to the current port"""
+        if self.game.current_location.name in self.game.port_system.waiting_passengers:
+            passenger = Passenger(
+                character.name,
+                random.choice(list(self.game.known_locations)),
+                wealth_level=5
+            )
+            
+            # Add character-specific attributes
+            passenger.character = character
+            passenger.is_special = True
+            if event_chain:
+                passenger.event_chain = event_chain
+                passenger.is_story_character = True
+            elif hasattr(character, 'rewards'):
+                passenger.is_vip = True
+                passenger.rewards = character.rewards
+                passenger.special_abilities = character.special_abilities
+                
+            self.game.port_system.waiting_passengers[
+                self.game.current_location.name].append(passenger)
+                
+            # Display appropriate message
+            if event_chain:
+                self.game.display_story_message([
+                    f"Special Story Passenger Available: {character.title} {character.name}",
+                    "This passenger could change the course of your journey...",
+                    "Transport them to unlock new story possibilities!"
+                ])
+            else:
+                self.game.display_story_message([
+                    f"VIP Passenger Available: {character.title} {character.name}",
+                    f"Potential Reward: {self.game.format_money(character.rewards['base_money'])} credits",
+                    f"Special Ability: {character.special_abilities[0]}"
+                ])
+
+    def check_story_triggers(self):
+        """Check if any story characters should be triggered"""
+        reputation = self.game.ship.passenger_reputation
+        current_chapter = self.game.story_manager.current_chapter
+        
+        for char_type, data in self.story_characters.items():
+            if (reputation >= data["rep_required"] and
+                current_chapter >= data["trigger_chapter"] and
+                char_type not in self.spawned_characters):
+                
+                # Generate story character
+                character = self.game.character_system.character_generators["human"].generate_character(
+                    title=char_type,
+                    specialization="story"
+                )
+                
+                # Create event chain
+                event_chain = self.game.character_system.create_event_chain(
+                    data["event_chain"],
+                    character
+                )
+                
+                # Add to active chains
+                self.active_story_chains[char_type] = event_chain
+                
+                # Add to current location's waiting passengers
+                if self.game.current_location.name in self.game.port_system.waiting_passengers:
+                    passenger = Passenger(
+                        character.name,
+                        random.choice(list(self.game.known_locations)),
+                        wealth_level=5
+                    )
+                    passenger.is_story_character = True
+                    passenger.event_chain = event_chain
+                    
+                    self.game.port_system.waiting_passengers[
+                        self.game.current_location.name].append(passenger)
+                    
+                    self.game.display_story_message([
+                        f"Special Passenger Appears: {char_type} {character.name}",
+                        "This passenger seems to have an interesting story...",
+                        "Transport them to advance the narrative!"
+                    ])
+                    
+                    self.spawned_characters.add(char_type)
+
+    def handle_vip_delivery(self, passenger):
+        """Handle delivery of VIP passenger"""
+        if hasattr(passenger, 'is_vip') and passenger.is_vip:
+            # Award rewards
+            self.game.ship.money += passenger.rewards["money"]
+            self.game.ship.passenger_reputation += passenger.rewards["reputation"]
+            self.game.story_manager.plot_points += passenger.plot_points
+            
+            self.game.display_story_message([
+                f"VIP Passenger Successfully Delivered!",
+                f"Earned {self.game.format_money(passenger.rewards['money'])} credits",
+                f"Reputation +{passenger.rewards['reputation']}",
+                f"Plot Points +{passenger.plot_points}"
+            ])
+
+    def handle_story_character_delivery(self, passenger):
+        """Handle delivery of story character"""
+        if hasattr(passenger, 'is_story_character') and passenger.is_story_character:
+            # Advance event chain
+            event_chain = passenger.event_chain
+            stage = event_chain.advance()
+            
+            if stage:
+                self.game.character_system.handle_event_stage(stage, passenger)
+            
+            if event_chain.is_complete():
+                char_type = next(k for k, v in self.active_story_chains.items() 
+                               if v == event_chain)
+                del self.active_story_chains[char_type]
+                
+                self.game.display_story_message([
+                    f"Story Arc Complete: {char_type}",
+                    "A new chapter in your journey unfolds..."
+                ])
+
+    def get_fare_multiplier(self):
+        """Get fare multiplier based on reputation"""
+        reputation = self.game.ship.passenger_reputation
+        if reputation >= 80:
+            return 2.0
+        elif reputation >= 60:
+            return 1.5
+        elif reputation >= 40:
+            return 1.3
+        elif reputation >= 20:
+            return 1.1
+        return 1.0
 
 # Start the game
 if __name__ == "__main__":
