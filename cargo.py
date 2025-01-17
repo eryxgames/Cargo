@@ -1243,28 +1243,33 @@ class Game:
         if pause > 0:
             time.sleep(pause)
 
-    def validate_input(self, prompt, valid_options):
-        term_width = shutil.get_terminal_size().columns
+    def validate_input(self, default_prompt, valid_options, prompt=None):
+            """
+            Validate user input against a list of valid options
+            default_prompt: Default prompt text
+            valid_options: List of valid input options
+            prompt: Optional custom prompt to override default
+            """
+            term_width = shutil.get_terminal_size().columns
 
-        while True:
-            wrapped_prompt = self.word_wrap(prompt, term_width - 4)  # Account for padding
-            self.display_simple_message(wrapped_prompt, 0)
+            while True:
+                wrapped_prompt = self.word_wrap(prompt or default_prompt, term_width - 4)
+                self.display_simple_message(wrapped_prompt, 0)
 
-            try:
-                user_input = input(">>> ").strip().lower()
-                if not user_input:
-                    self.display_simple_message("Command cancelled.")
-                    return None
-                if user_input in valid_options:
-                    return user_input
-                self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
-            except KeyboardInterrupt:
-                print(f"Do you want to exit? (yes/no):")
-#                self.display_message("Do you want to exit? (yes/no)", 0)
-                confirm = input(">>> ").strip().lower()
-                if confirm == 'yes':
-                    self.display_simple_message("Goodbye!", 1)
-                    exit()
+                try:
+                    user_input = input(">>> ").strip().lower()
+                    if not user_input:
+                        self.display_simple_message("Command cancelled.")
+                        return None
+                    if user_input in valid_options:
+                        return user_input
+                    self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
+                except KeyboardInterrupt:
+                    print(f"Do you want to exit? (yes/no):")
+                    confirm = input(">>> ").strip().lower()
+                    if confirm == 'yes':
+                        self.display_simple_message("Goodbye!", 1)
+                        exit()
 
     def validate_quantity_input(self, prompt):
         while True:
@@ -9374,21 +9379,22 @@ class SyntheticEventManager:
                     del self.active_uprisings[uprising_id]
 
     def process_building_destruction(self, location, effect):
-        """Handle building destruction effect"""
-        buildings_to_remove = []
-        effect_type = self.effect_types[effect.effect_type]
-        
-        for i, building in enumerate(location.buildings):
-            if building in effect_type["building_destruction"]["targets"]:
-                if random.random() < effect.magnitude:  # destruction chance
-                    buildings_to_remove.append(i)
-                    self.game.display_simple_message(
-                        f"Synthetic forces have destroyed a {building}!"
-                    )
-        
-        # Remove destroyed buildings
-        for index in sorted(buildings_to_remove, reverse=True):
-            location.buildings.pop(index)
+            """Handle building destruction effect"""
+            buildings_to_remove = []
+            # Get targets for the uprising type
+            targets = self.effect_types[self.active_uprisings[effect].get("type")]["building_destruction"]["targets"]
+            
+            for i, building in enumerate(location.buildings):
+                if building in targets:
+                    if random.random() < effect.magnitude:  # destruction chance
+                        buildings_to_remove.append(i)
+                        self.game.display_simple_message(
+                            f"Synthetic forces have destroyed a {building}!"
+                        )
+            
+            # Remove destroyed buildings
+            for index in sorted(buildings_to_remove, reverse=True):
+                location.buildings.pop(index)
 
     def process_price_increase(self, location, commodity, effect):
         """Handle price increase effect"""
