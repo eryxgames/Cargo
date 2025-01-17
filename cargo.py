@@ -9886,34 +9886,34 @@ class PassengerReputationManager:
         self.active_story_chains = {}
 
     def update_reputation(self, satisfaction, passenger=None):
-            """Update passenger reputation based on satisfaction"""
-            base_change = (satisfaction - 75) / 25  # -1 to +1 base change
-            
-            # Apply modifiers based on passenger class
-            class_multipliers = {
-                "S": 1.5,  # Scientists
-                "M": 1.3,  # Military
-                "E": 1.4   # Engineers
-            }
-            
-            # Get passenger's class if available
-            if passenger and hasattr(passenger, 'classification'):
-                passenger_class = passenger.classification.get('code', '')
-                multiplier = class_multipliers.get(passenger_class, 1.0)
-            else:
-                multiplier = 1.0
-            
-            reputation_change = base_change * multiplier
-            
-            # Apply final change
-            old_rep = self.game.ship.passenger_reputation
-            self.game.ship.passenger_reputation = max(-100, min(100, 
-                self.game.ship.passenger_reputation + reputation_change))
-            
-            # Check for threshold crossings
-            self.check_reputation_thresholds(old_rep, self.game.ship.passenger_reputation)
-            
-            return reputation_change
+        """Update passenger reputation based on satisfaction"""
+        base_change = (satisfaction - 75) / 25  # -1 to +1 base change
+        
+        # Apply modifiers based on passenger class
+        class_multipliers = {
+            "S": 1.5,  # Scientists
+            "M": 1.3,  # Military
+            "E": 1.4   # Engineers
+        }
+        
+        # Get passenger's class if available
+        if passenger and hasattr(passenger, 'classification'):
+            passenger_class = passenger.classification.get('code', '')
+            multiplier = class_multipliers.get(passenger_class, 1.0)
+        else:
+            multiplier = 1.0
+        
+        reputation_change = base_change * multiplier
+        
+        # Apply final change and round to one decimal
+        old_rep = self.game.ship.passenger_reputation
+        self.game.ship.passenger_reputation = round(max(-100, min(100, 
+            self.game.ship.passenger_reputation + reputation_change)), 1)
+        
+        # Check for threshold crossings
+        self.check_reputation_thresholds(old_rep, self.game.ship.passenger_reputation)
+        
+        return round(reputation_change, 1)  # Also round the return value
 
     def check_reputation_thresholds(self, old_rep, new_rep):
         """Check if any reputation thresholds were crossed"""
