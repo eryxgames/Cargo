@@ -8819,11 +8819,11 @@ class DynamicCharacterSystem:
             "neurodroid_uprising": [
                 {
                     "type": "demand",
-                    "message": "Initial demand for resources",
-                    "choices": ["pay", "refuse"],
+                    "choices": ["accept", "negotiate", "refuse"],
                     "consequences": {
-                        "pay": {"money": -30000, "plot_points": 2},
-                        "refuse": {"uprising_chance": 0.3}
+                        "accept": {"money": -30000, "plot_points": 2},
+                        "negotiate": {"money": -15000, "plot_points": 1, "uprising_chance": 0.3},
+                        "refuse": {"uprising_chance": 0.6}
                     }
                 },
                 {
@@ -8831,15 +8831,23 @@ class DynamicCharacterSystem:
                     "message": "Neurodroid optimization protocols activate",
                     "effect": "damage_buildings",
                     "damage_chance": 0.4
+                },
+                {
+                    "type": "resolution",
+                    "choices": ["shutdown", "compromise"],
+                    "consequences": {
+                        "shutdown": {"research_points": -100, "plot_points": 3},
+                        "compromise": {"money": -50000, "plot_points": 5}
+                    }
                 }
             ],
             "agrobot_collective": [
                 {
                     "type": "demand",
-                    "message": "Resource reallocation request",
-                    "choices": ["accept", "refuse"],
+                    "choices": ["accept", "negotiate", "refuse"],
                     "consequences": {
                         "accept": {"money": -25000, "plot_points": 2},
+                        "negotiate": {"money": -12000, "plot_points": 1, "food_production": 0.8},
                         "refuse": {"food_production": 0.5}
                     }
                 },
@@ -8848,6 +8856,14 @@ class DynamicCharacterSystem:
                     "message": "Automated farming systems malfunction",
                     "effect": "reduce_production",
                     "reduction": 0.3
+                },
+                {
+                    "type": "resolution",
+                    "choices": ["reset", "integrate"],
+                    "consequences": {
+                        "reset": {"agri_level": -2, "plot_points": 2},
+                        "integrate": {"money": -40000, "plot_points": 4}
+                    }
                 }
             ],
             "rogue_captain": [
@@ -9172,38 +9188,50 @@ class EventChain:
     def handle_event_stage(self, stage, character):
         """Handle a single stage of character event chain"""
         if stage["type"] == "demand":
-            self.handle_demand_stage(stage, character)
+            return self.handle_demand_stage(stage, character)
         elif stage["type"] == "event":
-            self.handle_event_stage_effects(stage, character)
+            return self.handle_event_stage_effects(stage, character)
         elif stage["type"] == "resolution":
-            self.handle_resolution_stage(stage, character)
-            
+            return self.handle_resolution_stage(stage, character)
+        return False
+
     def handle_demand_stage(self, stage, character):
-        """Handle demand stage of event chain"""
-        content = [
-            [f"Demand from {character.full_name}"],
-            [""],
-            [stage["message"]],
-            [""],
-            ["Options:"]
-        ]
+        """Handle demand stage with dynamic choices"""
+        choices = list(stage.get("consequences", {}).keys())
+        options_text = "  ".join(f"{i}. {choice.title()}" for i, choice in enumerate(choices, 1))
         
-        for choice in stage["choices"]:
-            consequences = stage["consequences"][choice]
-            content.append([
-                f"- {choice.title()}: "
-                f"{self.format_consequences(consequences)}"
-            ])
-            
-        print(self.game.create_box(content, 'double'))
+        content = {
+            'title': f"{character.full_name}",
+            'introduction': character.introduction,
+            'demands': character.demands,
+            'options': options_text
+        }
         
+        print(self.game.create_character_box(content, 'double'))
+        
+        valid_inputs = [str(i) for i in range(1, len(choices) + 1)]
         choice = self.game.validate_input(
-            f"Choose action ({'/'.join(stage['choices'])}): ",
-            stage["choices"]
+            "Choose action: ",
+            valid_inputs,
+            f"Choose action (1-{len(choices)}): "
         )
         
         if choice:
-            self.apply_consequences(stage["consequences"][choice])
+            consequence_key = choices[int(choice) - 1]
+            consequences = stage["consequences"].get(consequence_key, {})
+            self.game.apply_consequences(consequences)
+            return True
+        
+        return False
+    
+    def apply_consequences(self, consequences):
+        """Apply consequences of character interaction choices"""
+        if "money" in consequences:
+            self.ship.money += consequences["money"]
+        if "plot_points" in consequences:
+            self.story_manager.plot_points += consequences["plot_points"]
+        if "reputation" in consequences:
+            self.ship.passenger_reputation += consequences["reputation"]    
             
     def format_consequences(self, consequences):
         """Format consequences for display"""
