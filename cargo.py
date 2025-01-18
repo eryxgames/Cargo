@@ -5713,19 +5713,19 @@ class Port:
         self.game = game
         self.available_modules = {
                 "1": {
-                    "name": "Basic Passenger Module",
+                    "name": "Basic Passenger",
                     "capacity": 4,
                     "comfort_level": 1,
                     "cost": 5000
                 },
                 "2": {
-                    "name": "Standard Passenger Module",
+                    "name": "Standard Passenger",
                     "capacity": 8,
                     "comfort_level": 2,
                     "cost": 10000
                 },
                 "3": {
-                    "name": "Luxury Passenger Module",
+                    "name": "Luxury Passenger",
                     "capacity": 4,
                     "comfort_level": 4,
                     "cost": 20000
@@ -5737,7 +5737,7 @@ class Port:
                     "cost": 8000
                 },
                 "5": {
-                    "name": "Business Class Module",
+                    "name": "Business Class A",
                     "capacity": 2,
                     "comfort_level": 5,
                     "cost": 25000
@@ -5750,14 +5750,14 @@ class Port:
                     "special": "research_bonus"
                 },
                 "7": {
-                    "name": "Colony Transport Module",
+                    "name": "Colony Transport Mod.",
                     "capacity": 12,
                     "comfort_level": 2,
                     "cost": 35000,
                     "special": "colonist_bonus"
                 },
                 "8": {
-                    "name": "Diplomatic Suite Module",
+                    "name": "Diplomatic Suite Mod.",
                     "capacity": 1,
                     "comfort_level": 6,
                     "cost": 40000,
@@ -5920,9 +5920,10 @@ class Port:
         """Handle purchase of new modules with numbered selection"""
         while True:
 #            self.game.clear_screen()
-            content = [[""]]
+            content = [["", f"¤: {self.game.format_money(self.game.ship.money)}"]]
     #        content.append([""])  # Empty line for spacing
-            content.append(["#", "Module Type", "Cap.", "Comf.", "Cost", "Special"])
+            content.append(["#", "Module Types:", "Cap.", "Comf.", "Cost"])
+#            content.append(["#", "Module Types:", "Cap.", "Comf.", "Cost", "Special"])
             
             for module_id, module in self.available_modules.items():
                 special = module.get("special", "-")
@@ -5932,7 +5933,7 @@ class Port:
                     str(module["capacity"]),
                     str(module["comfort_level"]),
                     str(self.game.format_money(module["cost"])),
-                    special
+#                    special #yet uinimplemented module special
                 ])
                     
             print(self.game.create_box(content, 'double'))
@@ -7601,9 +7602,9 @@ class StoryManager:
                 "title": "The Pirate Threat",
                 "description": "Protect trade routes from increasing pirate activity",
                 "requirements": {
-                    "plot_points": 15,
-                    "combat_victories": 3,
-                    "trades_completed": 10
+                    "plot_points": 15
+    #                "combat_victories": 3,
+    #                "trades_completed": 10
                 },
                 "milestones": [
                     "defeat_pirates",
@@ -7620,9 +7621,9 @@ class StoryManager:
                 "title": "Mining Frontiers", 
                 "description": "Exploit rich asteroid resources",
                 "requirements": {
-                    "plot_points": 30,
-                    "mining_platforms": 1,
-                    "research_points": 100
+                    "plot_points": 50
+    #                "mining_platforms": 1,
+    #                "research_points": 100
                 },
                 "milestones": [
                     "first_mining",
@@ -7639,9 +7640,9 @@ class StoryManager:
                 "title": "Strange Signals",
                 "description": "Investigate mysterious deep space transmissions",
                 "requirements": {
-                    "plot_points": 50,
-                    "research_points": 200,
-                    "locations_discovered": 5
+                    "plot_points": 100
+    #                "research_points": 200,
+    #                "locations_discovered": 5
                 },
                 "milestones": [
                     "signal_source",
@@ -7658,9 +7659,9 @@ class StoryManager:
                 "title": "Research & Discovery",
                 "description": "Study ancient alien technology",
                 "requirements": {
-                    "plot_points": 75,
-                    "research_points": 400,
-                    "artifacts_found": 3
+                    "plot_points": 200
+    #                "research_points": 400,
+    #                "artifacts_found": 3
                 },
                 "milestones": [
                     "research_hub",
@@ -7677,9 +7678,9 @@ class StoryManager:
                 "title": "Galactic Crisis",
                 "description": "Face an awakening ancient threat",
                 "requirements": {
-                    "plot_points": 100,
-                    "controlled_stations": 3,
-                    "research_complete": True
+                    "plot_points": 400
+    #                "controlled_stations": 3,
+    #                "research_complete": True
                 },
                 "milestones": [
                     "crisis_warning",
@@ -7691,7 +7692,26 @@ class StoryManager:
                     "research_points": 1000,
                     "unlock": "legendary_status"
                 }
-            }
+            },
+            6: {
+                "title": "Final Chapter",
+                "description": "Journey into the unknown and beyond",
+                "requirements": {
+                    "plot_points": 700
+    #                "controlled_stations": 3,
+    #                "research_complete": True
+                },
+                "milestones": [
+    #                "crisis_warning",
+    #                "unite_systems",
+     #               "final_stand"
+                ],
+                "rewards": {
+                    "money": 500000,
+                    "research_points": 1000,
+                    "unlock": "legendary_status"
+                }
+            }            
         }
 
         self.milestone_points = {
@@ -7952,6 +7972,7 @@ class StoryManager:
             f"• {rewards.get('research_points', 0)} research points",
             f"• Unlocked: {rewards['unlock']}"
         ])
+        input("Press Enter to continue...")
 
     def update_story_states(self, event_type, details):
         """Update story state flags based on events"""
