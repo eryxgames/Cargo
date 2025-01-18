@@ -4921,7 +4921,9 @@ class SpecialCharacter:
         self.special_contracts = []
 
 class SpecialCharacterGenerator:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game  # Store game instance
+    
         self.titles = {
             "military": ["Fleet Commander", "Fleet Admiral", "Security Chief", "Defense Director"],
             "science": ["Research Coordinator", "Science Director", "Chief Researcher", "Lab Supervisor"],
@@ -8664,10 +8666,10 @@ class DynamicCharacterSystem:
         self.game = game
         self.active_characters = {}
         self.character_generators = {
-            "human": SpecialCharacterGenerator(),
+            "human": SpecialCharacterGenerator(game),
             "synthetic": SyntheticCharacterGenerator(),
             "alien": AlienCharacterGenerator(),
-            "special": SpecialCharacterGenerator()  # Use SpecialCharacterGenerator for VIPs
+            "special": SpecialCharacterGenerator(game)  # Use SpecialCharacterGenerator for VIPs
 
         }
         self.character_triggers = {
@@ -9129,7 +9131,8 @@ class SyntheticCharacterGenerator:
 class AlienCharacterGenerator:
     """Generator for alien characters that appear later in the game"""
     
-    def __init__(self):
+    def __init__(self,game):
+        self.game = game
         self.alien_cultures = [
             "Zentari", "Novaren", "Qyth", "Xylax", "Merovian"
         ]
