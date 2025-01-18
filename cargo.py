@@ -1775,13 +1775,13 @@ class Game:
     def display_starting_info(self):
         """Display initial game information with location context"""
         # Get location info based on current_location
-        location_type = "industrial"
+        location_type = "an industrial"
         if self.current_location.agri_level > self.current_location.tech_level:
-            location_type = "agricultural"
+            location_type = "an agricultural"
         elif self.current_location.research_points > 15:
-            location_type = "research"
+            location_type = "a research"
 
-        intro_text = f"\n  You arrive on {self.current_location.name}, a {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
+        intro_text = f"\n  You arrive on {self.current_location.name}, {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
