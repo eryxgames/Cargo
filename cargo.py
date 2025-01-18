@@ -1092,7 +1092,7 @@ class Game:
 
         return '\n'.join(box)
 
-    def display_simple_message(self, message, pause=2, style='round', color=None):
+    def display_simple_message(self, message, pause=1, style='round', color=None):
         if isinstance(message, list):
             box_content = message
         else:
@@ -1104,6 +1104,21 @@ class Game:
         print(box)
         if pause > 0:
             time.sleep(pause)
+
+    def fast_message(self, message, pause=0.5, style='round', color=None, clear_screen=True):
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
+
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
+        if clear_screen:
+            self.clear_screen()            
 
     def create_simple_box(self, content, style='single'):
         term_width = shutil.get_terminal_size().columns
@@ -3954,6 +3969,7 @@ class Game:
                 self.display_story_status()
 
             time.sleep(1)
+            self.clear_screen()
 
     def visit_shop(self):
         """Enhanced shop interface with persistent sold items"""
@@ -5844,6 +5860,7 @@ class Port:
             content.append(["No passengers waiting"])
             
         return self.game.create_box(content, 'double')
+    
 
     def handle_port_menu(self):
         """Handle port menu options"""
@@ -5875,6 +5892,7 @@ class Port:
                 
             elif action in ['view', 'v']:
                 print(self.display_port_info())
+                time.sleep(2)
                 
             elif action in ['modules', 'm']:
                 self.handle_module_purchase()
@@ -5892,55 +5910,66 @@ class Port:
                 if self.game.handle_travel():
                     break
 
+            self.game.clear_screen()
+
     def handle_module_purchase(self):
         """Handle purchase of new modules with numbered selection"""
-        content = [[""]]
-#        content.append([""])  # Empty line for spacing
-        content.append(["#", "Module Type", "Cap.", "Comf.", "Cost", "Special"])
-        
-        for module_id, module in self.available_modules.items():
-            special = module.get("special", "-")
-            content.append([
-                module_id,
-                module["name"],
-                str(module["capacity"]),
-                str(module["comfort_level"]),
-                str(self.game.format_money(module["cost"])),
-                special
-            ])
-                
-        print(self.game.create_box(content, 'double'))
-        
-        module_id = self.game.validate_input(
-            "Enter module number to buy (or 'back'): ",
-            list(self.available_modules.keys()) + ['back']
-        )
-        
-        if module_id == 'back':
-            return
-                
-        if module_id in self.available_modules:
-            module = self.available_modules[module_id]
-            if self.game.ship.money >= module["cost"]:
-                self.game.ship.money -= module["cost"]
-                
-                if not hasattr(self.game.ship, 'passenger_modules'):
-                    self.game.ship.passenger_modules = []
-                    
-                new_module = PassengerModule(
+        while True:
+#            self.game.clear_screen()
+            content = [[""]]
+    #        content.append([""])  # Empty line for spacing
+            content.append(["#", "Module Type", "Cap.", "Comf.", "Cost", "Special"])
+            
+            for module_id, module in self.available_modules.items():
+                special = module.get("special", "-")
+                content.append([
+                    module_id,
                     module["name"],
-                    module["capacity"],
-                    module["comfort_level"],
-                    module["cost"]
-                )
-                if "special" in module:
-                    new_module.special = module["special"]
-                
-                self.game.ship.passenger_modules.append(new_module)
-                
-                self.game.display_simple_message(f"Purchased {module['name']}!")
-            else:
-                self.game.display_simple_message("Not enough money!")
+                    str(module["capacity"]),
+                    str(module["comfort_level"]),
+                    str(self.game.format_money(module["cost"])),
+                    special
+                ])
+                    
+            print(self.game.create_box(content, 'double'))
+            
+            module_id = self.game.validate_input(
+                "Enter module number to buy (or 'back'): ",
+                list(self.available_modules.keys()) + ['back']
+            )
+            
+            if module_id == 'back':
+                self.game.clear_screen()
+                return
+                    
+            if module_id in self.available_modules:
+                module = self.available_modules[module_id]
+                if self.game.ship.money >= module["cost"]:
+                    self.game.ship.money -= module["cost"]
+                    
+                    if not hasattr(self.game.ship, 'passenger_modules'):
+                        self.game.ship.passenger_modules = []
+                        
+                    new_module = PassengerModule(
+                        module["name"],
+                        module["capacity"],
+                        module["comfort_level"],
+                        module["cost"]
+                    )
+                    if "special" in module:
+                        new_module.special = module["special"]
+                    
+                    self.game.ship.passenger_modules.append(new_module)
+                    
+                    self.game.display_simple_message(f"Purchased {module['name']}!")
+#                    time.sleep(1)
+                    self.game.clear_screen()
+                    return
+                else:
+                    self.game.display_simple_message("Not enough money!")
+#                    time.sleep(1)
+                    self.game.clear_screen()
+                    return
 
 
     def handle_passenger_boarding(self):
@@ -5950,10 +5979,12 @@ class Port:
             
             if not hasattr(self.game.ship, 'passenger_modules'):
                 self.game.display_simple_message("No passenger modules installed!")
+                self.game.clear_screen()
                 return
                         
             if location not in self.waiting_passengers or not self.waiting_passengers[location]:
                 self.game.display_simple_message("No passengers waiting!")
+                self.game.clear_screen()
                 return
                         
             available_modules = [m for m in self.game.ship.passenger_modules 
@@ -5961,6 +5992,7 @@ class Port:
             
             if not available_modules:
                 self.game.display_simple_message("No room for more passengers!")
+                self.game.clear_screen()
                 return
 
             # Show module status
@@ -6106,6 +6138,7 @@ class Port:
                 print(self.game.create_box(content, 'double'))
             else:
                 self.game.display_simple_message("No passengers to unload here!")
+                self.game.clear_screen()
 
     def get_bonus_type(self, passenger):
         """Get bonus type based on passenger classification"""
