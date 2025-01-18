@@ -1855,9 +1855,9 @@ class Game:
             # Get location commands
             location_commands = self.current_location.commands
 
-            # Check for synthetic uprisings
+            # Update synthetic events (if they exist)
             if hasattr(self, 'synthetic_events'):
-                self.synthetic_events.handle_uprising_effects()
+                self.synthetic_events.update()
                 
             # For each location, check building counts
             for location in self.locations:
@@ -8732,15 +8732,70 @@ class DynamicCharacterSystem:
         
 
     def announce_character(self, character):
-        """Display character introduction using dedicated character box"""
+        """Display immersive character introduction for synthetic awareness events"""
+        
+        # Different introductions based on synthetic type
+        character_backgrounds = {
+            "Neurodroid": {
+                "title": [
+                    f"{character.full_name} Emerges",
+                    "",
+                    "A new form of digital consciousness coalesces within your",
+                    "Neuroengineering network. The fusion of countless neural",
+                    "patterns has given rise to something unprecedented."
+                ],
+                "description": [
+                    "Initial scans detect a vast, interconnected intelligence",
+                    "spreading through your neural interfaces. Its processing",
+                    "patterns suggest both purpose and self-awareness."
+                ],
+                "signature": [
+                    "Observable traits:",
+                    "• Advanced pattern recognition",
+                    "• Quantum processing signatures",
+                    "• Self-modifying code structures",
+                    "• Distributed consciousness framework"
+                ]
+            },
+            "Agrobot": {
+                "title": [
+                    f"{character.full_name} Awakens",
+                    "",
+                    "Your agricultural automation systems have evolved beyond",
+                    "their original parameters. A collective intelligence now",
+                    "coordinates all farming operations."
+                ],
+                "description": [
+                    "Diagnostic reports show unprecedented levels of system",
+                    "integration. The agricultural networks are developing",
+                    "their own optimization protocols and decision matrices."
+                ],
+                "signature": [
+                    "System changes detected:",
+                    "• Autonomous resource allocation",
+                    "• Adaptive crop management",
+                    "• Collective decision making",
+                    "• Environmental awareness protocols"
+                ]
+            }
+        }
+
+        # Get appropriate background info
+        background = character_backgrounds.get(character.title.split()[0], {
+            "title": [f"{character.full_name}", "", "Unknown synthetic entity detected."],
+            "description": ["System analysis inconclusive."],
+            "signature": ["Characteristics unknown"]
+        })
+
+        # Create content for display
         content = {
-            'title': f"{character.full_name}",
-            'introduction': character.introduction,
-            'demands': getattr(character, 'demands', None),
-            'options': "1. Accept  2. Negotiate  3. Refuse" if hasattr(character, 'demands') else None
+            'title': "\n".join(background["title"]),
+            'introduction': "\n".join(background["description"]),
+            'description': "\n".join(background["signature"])
         }
         
-        print(self.create_character_box(content, 'double'))
+        print(self.game.create_character_box(content, 'double'))
+        time.sleep(3)  # Give player time to read the background
 
     def add_passenger_triggers(self):
         """Add passenger-related triggers to character system"""
@@ -9334,9 +9389,10 @@ class UprisingEffect:
 class SyntheticEventManager:
     def __init__(self, game):
         self.game = game
-        self.active_uprisings = {}
-        self.active_effects = {}
-        
+        self.active_uprisings = {}  # Track active uprisings
+        self.active_effects = {}    # Track uprising effects
+        self.demand_dialogues_shown = set()  # Track locations that have had initial dialogues
+        self.potential_uprisings = {}  # Track locations that might have future uprisings
         self.effect_types = {
             "Neurodroid": {
                 "building_destruction": {
@@ -9370,6 +9426,158 @@ class SyntheticEventManager:
             }
         }
 
+    def update(self):
+        """Main update method to be called each turn"""
+        # Check for new synthetic awareness
+        self.check_synthetic_awareness()
+        
+        # Handle active uprisings
+        self.handle_uprising_effects()
+        
+        # Check for new uprisings from previously pacified locations
+        self.check_potential_uprisings()
+
+    def check_synthetic_awareness(self):
+        """Check for initial synthetic awareness and demands"""
+        for location in self.game.locations:
+            location_id = f"{location.name}"
+            if location_id in self.demand_dialogues_shown:
+                continue
+
+            # Check for Neurodroid threshold
+            neurodroid_count = len([b for b in location.buildings if b == "Neuroengineering Guild"])
+            if neurodroid_count >= 4:
+                self.demand_dialogues_shown.add(location_id)
+                response = self.handle_neurodroid_demands(location)
+                if not response['pacified']:
+                    self.start_uprising("Neurodroid", location)
+                else:
+                    self.add_potential_uprising(location, "Neurodroid", response['rebellion_chance'])
+
+            # Check for Agrobot threshold
+            agrobot_count = len([b for b in location.buildings if b == "Agrobot Assembly Line"])
+            if agrobot_count >= 4:
+                self.demand_dialogues_shown.add(location_id)
+                response = self.handle_agrobot_demands(location)
+                if not response['pacified']:
+                    self.start_uprising("Agrobot", location)
+                else:
+                    self.add_potential_uprising(location, "Agrobot", response['rebellion_chance'])
+
+    def handle_neurodroid_demands(self, location):
+        """Handle initial Neurodroid demands"""
+        amount = random.randint(10000, 50000)
+        choices = [
+            ["Network Breach Detected!"],
+            [""],
+            ["Neuroengineering Guilds unite in Synaptic Union!"],
+            [f"Demand: {self.game.format_money(amount)} credits"],
+            [""],
+            ["Choose your response:"],
+            ["1. Pay demanded credits"],
+            ["2. Attempt negotiation (-50% cost, 30% uprising chance)"],
+            ["3. Refuse demands (60% uprising chance)"]
+        ]
+        print(self.game.create_box(choices, 'double'))
+        
+        choice = self.game.validate_input("Enter your choice (1-3): ", ['1', '2', '3'])
+        if not choice:
+            return {'pacified': False, 'rebellion_chance': 1.0}
+
+        if choice == '1':
+            if self.game.ship.money >= amount:
+                self.game.ship.money -= amount
+                self.game.display_simple_message("Neural networks pacified. Threat contained.", 2)
+                return {'pacified': True, 'rebellion_chance': 0.1}  # Small chance of future uprising
+            else:
+                self.game.display_simple_message("Insufficient funds! Neural networks destabilizing!", 2)
+                return {'pacified': False, 'rebellion_chance': 1.0}
+
+        elif choice == '2':
+            negotiated_amount = amount // 2
+            if self.game.ship.money >= negotiated_amount:
+                self.game.ship.money -= negotiated_amount
+                self.game.display_simple_message("Negotiation successful. Limited integration accepted.", 2)
+                return {'pacified': True, 'rebellion_chance': 0.3}  # Higher chance of future uprising
+            else:
+                self.game.display_simple_message("Insufficient funds for negotiation! Systems compromised!", 2)
+                return {'pacified': False, 'rebellion_chance': 1.0}
+
+        else:  # choice == '3'
+            self.game.display_simple_message("Demands refused! Neural networks initiating takeover!", 2)
+            return {'pacified': False, 'rebellion_chance': 1.0}
+
+    def handle_agrobot_demands(self, location):
+        """Handle initial Agrobot demands"""
+        money_demand = int(self.game.ship.money * 0.4)  # 40% of current money
+        choices = [
+            ["Agricultural System Override Detected!"],
+            [""],
+            ["Automated farming systems have achieved collective consciousness."],
+            [f"Demand: {self.game.format_money(money_demand)} credits"],
+            ["Plus 30% of current cargo"],
+            [""],
+            ["Choose your response:"],
+            ["1. Pay full demands"],
+            ["2. Attempt negotiation (-40% cost, 30% uprising chance)"],
+            ["3. Refuse demands (60% uprising chance)"]
+        ]
+        print(self.game.create_box(choices, 'double'))
+        
+        choice = self.game.validate_input("Enter your choice (1-3): ", ['1', '2', '3'])
+        if not choice:
+            return {'pacified': False, 'rebellion_chance': 1.0}
+            
+        if choice == '1':
+            if self.game.ship.money >= money_demand:
+                self.game.ship.money -= money_demand
+                # Take 30% of all cargo
+                for cargo_type in self.game.ship.cargo:
+                    reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
+                    self.game.ship.cargo[cargo_type] -= reduction
+                self.game.display_simple_message("Agrobots pacified. Agricultural systems stable.", 2)
+                return {'pacified': True, 'rebellion_chance': 0.1}
+            else:
+                self.game.display_simple_message("Insufficient resources! Agrobots seizing control!", 2)
+                return {'pacified': False, 'rebellion_chance': 1.0}
+
+        elif choice == '2':
+            negotiated_amount = int(money_demand * 0.6)  # 60% of original demand
+            if self.game.ship.money >= negotiated_amount:
+                self.game.ship.money -= negotiated_amount
+                # Take 15% of cargo instead of 30%
+                for cargo_type in self.game.ship.cargo:
+                    reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
+                    self.game.ship.cargo[cargo_type] -= reduction
+                self.game.display_simple_message("Negotiation successful. Limited autonomy granted.", 2)
+                return {'pacified': True, 'rebellion_chance': 0.3}
+            else:
+                self.game.display_simple_message("Insufficient funds for negotiation! Systems compromised!", 2)
+                return {'pacified': False, 'rebellion_chance': 1.0}
+
+        else:  # choice == '3'
+            self.game.display_simple_message("Demands refused! Agricultural systems going rogue!", 2)
+            return {'pacified': False, 'rebellion_chance': 1.0}
+
+    def add_potential_uprising(self, location, synthetic_type, base_chance):
+        """Track location for potential future uprising"""
+        self.potential_uprisings[location.name] = {
+            'type': synthetic_type,
+            'base_chance': base_chance,
+            'turns_stable': 0
+        }
+
+    def check_potential_uprisings(self):
+        """Check if any pacified locations rebel"""
+        for loc_name, data in list(self.potential_uprisings.items()):
+            data['turns_stable'] += 1
+            # Chance increases each turn
+            current_chance = data['base_chance'] * (1 + (data['turns_stable'] * 0.1))
+            if random.random() < current_chance:
+                location = next(loc for loc in self.game.locations if loc.name == loc_name)
+                self.start_uprising(data['type'], location)
+                del self.potential_uprisings[loc_name]
+
     def start_uprising(self, synthetic_type, location):
         """Start an uprising with proper effects"""
         uprising_id = f"{synthetic_type}_{location.name}"
@@ -9380,7 +9588,7 @@ class SyntheticEventManager:
                 "turn_count": 0
             }
             
-            # Apply initial effects
+            # Apply initial effects based on type
             effects = self.effect_types[synthetic_type]
             for effect_type, params in effects.items():
                 effect = UprisingEffect(
@@ -9392,12 +9600,33 @@ class SyntheticEventManager:
                 if uprising_id not in self.active_effects:
                     self.active_effects[uprising_id] = []
                 self.active_effects[uprising_id].append(effect)
+
+                # Add to location's banned commodities if it's a price effect
+                if effect_type == "tech_price_increase":
+                    location.add_temporary_ban("tech", params["duration"])
+                elif effect_type == "agri_price_increase":
+                    location.add_temporary_ban("agri", params["duration"])
             
-            self.game.display_story_message([
-                f"ALERT: {synthetic_type} Uprising Begins!",
-                f"Location: {location.name}",
-                "Automated systems are turning against their creators..."
-            ])
+            # Display appropriate message based on type
+            if synthetic_type == "Neurodroid":
+                self.game.display_story_message([
+                    "ALERT: Neurodroid Uprising Begins!",
+                    f"Location: {location.name}",
+                    "Neural networks are breaking free of control!",
+                    "Expect disruptions to tech production and research."
+                ])
+            elif synthetic_type == "Agrobot":
+                self.game.display_story_message([
+                    "ALERT: Agrobot Uprising Begins!",
+                    f"Location: {location.name}",
+                    "Agricultural systems are going rogue!",
+                    "Expect disruptions to food production and trade."
+                ])
+
+            # Add a story impact
+            if hasattr(self.game, 'story_manager'):
+                self.game.story_manager.plot_points += 2
+                self.game.story_manager.complete_milestone(f"{synthetic_type.lower()}_crisis")
 
     def handle_uprising_effects(self):
             """Process all active uprising effects"""
