@@ -9670,8 +9670,11 @@ class SyntheticEventManager:
                     event["description"]
                 ])
                 
-                # Execute effect
-                event["effect"]()
+                # Execute effect with parameters
+                if "params" in event:
+                    event["effect"](**event["params"])
+                else:
+                    event["effect"]()
 
     def add_plot_points(self, amount):
         """Add plot points from synthetic event"""
