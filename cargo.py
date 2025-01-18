@@ -5879,7 +5879,8 @@ class Port:
             }
             
             # Show menu
-            menu_content = [[f"Port Services - {self.game.current_location.name}"]]
+            menu_content = [[f"Port Services {self.game.current_location.name} | PAX Checkout: {sum(len(module.passengers) for module in self.game.ship.passenger_modules)}/{sum(module.capacity for module in self.game.ship.passenger_modules)}"]]
+
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.game.create_box(menu_content, 'single'))
