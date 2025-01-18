@@ -7640,7 +7640,7 @@ class StoryManager:
                 "title": "Strange Signals",
                 "description": "Investigate mysterious deep space transmissions",
                 "requirements": {
-                    "plot_points": 100
+                    "plot_points": 150
     #                "research_points": 200,
     #                "locations_discovered": 5
                 },
@@ -7659,7 +7659,7 @@ class StoryManager:
                 "title": "Research & Discovery",
                 "description": "Study ancient alien technology",
                 "requirements": {
-                    "plot_points": 200
+                    "plot_points": 300
     #                "research_points": 400,
     #                "artifacts_found": 3
                 },
@@ -7678,7 +7678,7 @@ class StoryManager:
                 "title": "Galactic Crisis",
                 "description": "Face an awakening ancient threat",
                 "requirements": {
-                    "plot_points": 400
+                    "plot_points": 700
     #                "controlled_stations": 3,
     #                "research_complete": True
                 },
@@ -7697,7 +7697,7 @@ class StoryManager:
                 "title": "Final Chapter",
                 "description": "Journey into the unknown and beyond",
                 "requirements": {
-                    "plot_points": 700
+                    "plot_points": 1500
     #                "controlled_stations": 3,
     #                "research_complete": True
                 },
