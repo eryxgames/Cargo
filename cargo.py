@@ -4533,6 +4533,8 @@ class ContractManager:
             elif action in ['status', 's']:
                 self.show_detailed_status()
 
+            self.game.clear_screen()    
+
     def show_available_contracts(self):
         """Show available contracts for acceptance"""
         if not self.available_contracts:
@@ -5903,6 +5905,7 @@ class Port:
                 
             elif action in ['unload', 'u']:
                 self.handle_passenger_unloading()
+                time.sleep(2)
             
             elif action in ['contracts', 'c']:
                 self.game.handle_contract_menu()
@@ -6139,7 +6142,7 @@ class Port:
                 print(self.game.create_box(content, 'double'))
             else:
                 self.game.display_simple_message("No passengers to unload here!")
-                self.game.clear_screen()
+#                self.game.clear_screen()
 
     def get_bonus_type(self, passenger):
         """Get bonus type based on passenger classification"""
