@@ -9427,6 +9427,8 @@ class SyntheticEventManager:
         print(self.game.create_box(stage_content, 'double'))
         
         choice = self.game.validate_input("Choose option (1/2): ", ['1', '2'], "Choose option (1/2): ")
+        if not choice:
+            return True  # Default to uprising if no choice made
         
         if choice == '1':
             if self.game.ship.money >= amount:
@@ -9441,35 +9443,39 @@ class SyntheticEventManager:
             return True
 
     def handle_agrobot_uprising(self):
-            """Handle agrobot uprising decision and effects"""
-            total_money = self.game.ship.money
-            total_cargo = sum(self.game.ship.cargo.values())
+        """Handle agrobot uprising decision and effects"""
+        total_money = self.game.ship.money
+        total_cargo = sum(self.game.ship.cargo.values())
+        
+        money_demand = int(total_money * 0.4)
+        cargo_demand = int(total_cargo * 0.3)
+
+        # Create character content
+        character_content = {
+            'title': "Harvest Director AGRO-HUB",
+            'introduction': "The agricultural automation system achieves collective awareness.",
+            'demands': f"Resource reallocation required. Provide {self.game.format_money(money_demand)} credits or face automated restructuring.",
+            'options': "1. Accept  2. Negotiate  3. Refuse"
+        }
+        print(self.game.create_character_box(character_content))
+
+        # Override standard game commands temporarily
+        original_commands = self.game.current_location.commands
+        self.game.current_location.commands = {
+            "available": [('1', '1'), ('2', '2'), ('3', '3')],
+            "special": {}
+        }
+        
+        try:
+            choice = self.game.validate_input("Choose action: ", ['1', '2', '3'])
             
-            money_demand = int(total_money * 0.4)  # 40% of total money
-            cargo_demand = int(total_cargo * 0.3)  # 30% of total cargo
-            
-            stage_content = [
-                ["ALERT: Agricultural Network Rebellion!"],
-                ["The Agrobot Collective has achieved consciousness..."],
-                [""],
-                ["Demands:"],
-                [f"• {self.game.format_money(money_demand)} credits ({int(money_demand/total_money*100)}% of funds)"],
-                [f"• {cargo_demand} units of cargo ({int(cargo_demand/total_cargo*100)}% of storage)"],
-                [""],
-                ["Options:"],
-                ["1. Pay demands"],
-                ["2. Negotiate partial payment"],
-                ["3. Refuse and risk production sabotage"]
-            ]
-            print(self.game.create_box(stage_content, 'double'))
-            
-            # Change input validation to accept numbers
-            choice = self.game.validate_input("Choose option (1/2/3): ", ['1', '2', '3'])
-            
+            if not choice:
+                return True
+
+            # Handle choices
             if choice == '1':
                 if self.game.ship.money >= money_demand:
                     self.game.ship.money -= money_demand
-                    # Reduce cargo proportionally across all types
                     for cargo_type in self.game.ship.cargo:
                         reduction = int(self.game.ship.cargo[cargo_type] * 0.3)
                         self.game.ship.cargo[cargo_type] -= reduction
@@ -9479,23 +9485,23 @@ class SyntheticEventManager:
                     self.game.display_simple_message("Insufficient funds! Uprising begins!")
                     return True
             elif choice == '2':
-                # Attempt negotiation
-                partial_money = int(money_demand * 0.6)  # 60% of original demand
-                partial_cargo = int(cargo_demand * 0.5)  # 50% of original demand
-                
+                partial_money = int(money_demand * 0.6)
                 if self.game.ship.money >= partial_money:
                     self.game.ship.money -= partial_money
                     for cargo_type in self.game.ship.cargo:
                         reduction = int(self.game.ship.cargo[cargo_type] * 0.15)
                         self.game.ship.cargo[cargo_type] -= reduction
                     self.game.display_simple_message("Negotiation successful. Limited disruption expected.")
-                    return random.random() < 0.3  # 30% chance of uprising anyway
+                    return random.random() < 0.3
                 else:
                     self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
                     return True
             else:
                 self.game.display_simple_message("Demands refused! Agricultural production sabotage imminent!")
                 return True
+        finally:
+            # Restore original commands
+            self.game.current_location.commands = original_commands
 
     def check_uprising_triggers(self):
         """Check if conditions are met for new uprisings"""
@@ -9595,7 +9601,7 @@ class SyntheticEventManager:
                 ]
             }
 
-            # Select random event based on uprising type
+            # Select random event for uprising type
             uprising_type = uprising["type"]
             if uprising_type in event_types:
                 event = random.choice(event_types[uprising_type])
@@ -9606,8 +9612,8 @@ class SyntheticEventManager:
                     event["description"]
                 ])
                 
-                # Execute effect with parameters
-                event["effect"](**event["params"])
+                # Execute effect
+                event["effect"]()
 
     def add_plot_points(self, amount):
         """Add plot points from synthetic event"""
@@ -9615,7 +9621,8 @@ class SyntheticEventManager:
         
     def reduce_production(self, reduction):
         """Reduce production on affected location"""
-        location = self.current_location
+        # Use uprising's location, not current_location
+        location = self.game.current_location  # Get from game instance
         if hasattr(location, "agri_level"):
             location.agri_level = max(1, int(location.agri_level * (1 - reduction)))
             
