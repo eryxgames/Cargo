@@ -193,13 +193,13 @@ class Planet:
         base_tax = 0.05  # 5% base tax
         rank_multiplier = {
             "Explorer": 1,
-            "Pilot": 1.2,
-            "Captain": 1.4,
-            "Commander": 1.6,
-            "Star Commander": 1.8,
-            "Space Admiral": 2.0,
-            "Stellar Hero": 2.2,
-            "Galactic Legend": 2.5
+            "Pilot": 2,
+            "Captain": 3,
+            "Commander": 4,
+            "Star Commander": 6,
+            "Space Admiral": 8,
+            "Stellar Hero": 10,
+            "Galactic Legend": 15
         }
         
         # Reduce tax based on number of buildings
