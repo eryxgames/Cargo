@@ -2768,7 +2768,7 @@ class Game:
         # Apply modifiers based on game progress
         if quest:
             # Scale rewards based on current chapter
-            chapter_multiplier = 1 + (self.story_manager.current_chapter * 0.2)
+            chapter_multiplier = 1 + (int(''.join(filter(str.isdigit, self.story_manager.current_chapter))) * 0.2)
             quest.reward_money = int(quest.reward_money * chapter_multiplier)
             quest.reward_rp = int(quest.reward_rp * chapter_multiplier)
             
@@ -5068,7 +5068,7 @@ class SpecialCharacterGenerator:
 
 class Quest:
     def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
-                 requirements=None, on_complete=None):
+                 requirements=None, on_complete=None, milestone=None):
         self.name = name
         self.description = description
         self.reward_money = reward_money
@@ -5076,6 +5076,7 @@ class Quest:
         self.quest_type = quest_type
         self.requirements = requirements or {}
         self.on_complete = on_complete
+        self.milestone = milestone  # New attribute
         self.progress = 0
         self.completed = False
         self.target_progress = self.requirements.get('target_progress', 1)
