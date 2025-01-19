@@ -684,6 +684,9 @@ class Game:
         self.discovered_locations = set()
         self.cooldowns = {}
         self.story_events = {}
+
+        # Initialize the story
+        self.story_manager.start_game()        
         
         self.display_starting_info()
 
@@ -1384,11 +1387,11 @@ class Game:
         
         # Add story progress if available
         if hasattr(self, 'story_manager'):
-            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            current_chapter = self.story_manager.chapters[self.story_manager.current_chapter]
             status_content.append([
                 f"Chapter {self.story_manager.current_chapter}",
                 f"Plot Points: {self.story_manager.plot_points}",
-                chapter["title"]
+                current_chapter.title
             ])
 
         status_box = self.create_box(status_content, 'double')
@@ -8121,24 +8124,29 @@ class StoryManager:
 
     def start_game(self):
         """Initialize story at game start"""
-        self.current_chapter = self.chapters["ch1"]
+        self.current_chapter = "ch1"  # Store the ID string instead of the chapter object
+        first_chapter = self.chapters["ch1"]
+        
         self.game.display_story_message([
-            f"Chapter 1: {self.current_chapter.title}",
-            self.current_chapter.description,
+            f"Chapter 1: {first_chapter.title}",
+            first_chapter.description,
             "",
             "Your journey begins..."
         ])
 
     def is_story_completed(self):
         """Check if the story has reached an ending"""
-        return (self.current_chapter and 
-                not self.current_chapter.next_chapters and 
-                self.current_chapter.completed)
+        if not self.current_chapter:
+            return False
+        current_chapter_obj = self.chapters[self.current_chapter]
+        return (not current_chapter_obj.next_chapters and 
+                current_chapter_obj.completed)
 
     def check_milestone_progress(self):
         """Check for milestone completions in current chapter"""
         if self.current_chapter:
-            available_milestones = self.current_chapter.get_available_milestones(self.game)
+            current_chapter_obj = self.chapters[self.current_chapter]
+            available_milestones = current_chapter_obj.get_available_milestones(self.game)
             for milestone in available_milestones:
                 if milestone.check_completion(self.game):
                     milestone.complete(self.game)
@@ -8147,23 +8155,25 @@ class StoryManager:
     def get_current_objectives(self):
         """Get current chapter objectives"""
         if self.current_chapter:
-            return [(m.title, m.completed) for m in self.current_chapter.milestones.values()]
+            chapter_obj = self.chapters[self.current_chapter]
+            return [(m.title, m.completed) for m in chapter_obj.milestones.values()]
         return []
 
     def check_chapter_progress(self):
         """Check for chapter completion and handle branching"""
-        if self.current_chapter and not self.current_chapter.completed:
+        if self.current_chapter and not self.chapters[self.current_chapter].completed:
             self.check_milestone_progress()
             
-            if self.current_chapter.check_completion(self.game):
-                next_chapters = self.current_chapter.get_next_chapters(self.game)
+            current_chapter_obj = self.chapters[self.current_chapter]
+            if current_chapter_obj.check_completion(self.game):
+                next_chapters = current_chapter_obj.get_next_chapters(self.game)
                 
                 if next_chapters:
                     if len(next_chapters) > 1:
                         self.present_chapter_choice(next_chapters)
                     else:
-                        self.start_chapter(next_chapters[0])
-                elif not self.current_chapter.next_chapters:
+                        self.start_chapter(next_chapters[0].id)  # Use the ID
+                elif not current_chapter_obj.next_chapters:
                     # This is an ending
                     self.handle_game_ending()
 
@@ -8190,7 +8200,7 @@ class StoryManager:
             ]
         }
 
-        messages = ending_messages.get(self.current_chapter.id, 
+        messages = ending_messages.get(self.current_chapter, 
             ["Congratulations! You've completed your journey!"])
         
         self.game.display_story_message(messages)
@@ -8198,16 +8208,17 @@ class StoryManager:
 
     def complete_current_chapter(self):
         """Handle chapter completion with unlocks"""
-        if not self.current_chapter.completed:
-            self.current_chapter.completed = True
-            self.current_chapter.completion_turn = self.game.turn
-            self.completed_chapters.add(self.current_chapter.id)
+        current_chapter_obj = self.chapters[self.current_chapter]
+        if not current_chapter_obj.completed:
+            current_chapter_obj.completed = True
+            current_chapter_obj.completion_turn = self.game.turn
+            self.completed_chapters.add(self.current_chapter)
             
             # Handle any chapter unlocks
-            self.current_chapter.handle_chapter_unlocks(self.game)
+            current_chapter_obj.handle_chapter_unlocks(self.game)
             
             self.game.display_story_message([
-                f"Chapter Complete: {self.current_chapter.title}",
+                f"Chapter Complete: {current_chapter_obj.title}",
                 "Your journey continues to evolve..."
             ])
 
@@ -8229,14 +8240,22 @@ class StoryManager:
         
         if choice:
             chosen_chapter = available_chapters[int(choice) - 1]
-            self.start_chapter(chosen_chapter)
+            self.start_chapter(chosen_chapter.id)  # Use the ID
 
     def start_chapter(self, chapter):
         """Start a new chapter"""
-        self.current_chapter = chapter
+        if isinstance(chapter, str):
+            # If we got a chapter ID
+            self.current_chapter = chapter
+            chapter_obj = self.chapters[chapter]
+        else:
+            # If we got a chapter object
+            self.current_chapter = chapter.id
+            chapter_obj = chapter
+        
         self.game.display_story_message([
-            f"Chapter {chapter.id}: {chapter.title}",
-            chapter.description,
+            f"Chapter {self.current_chapter}: {chapter_obj.title}",
+            chapter_obj.description,
             "",
             "New milestones await..."
         ])
@@ -8250,7 +8269,7 @@ class StoryManager:
     def save_progress(self):
         """Return story progress data for saving"""
         return {
-            "current_chapter": self.current_chapter.id if self.current_chapter else None,
+            "current_chapter": self.current_chapter,
             "completed_chapters": list(self.completed_chapters),
             "completed_story_beats": list(self.completed_story_beats),
             "plot_points": self.plot_points,
@@ -8313,10 +8332,29 @@ class StoryManager:
         
         self.plot_points += plot_points
         
+        # Handle milestone completion if this was a story quest
+        if quest.milestone and self.current_chapter:
+            chapter_obj = self.chapters[self.current_chapter]
+            if quest.milestone in chapter_obj.milestones:
+                milestone = chapter_obj.milestones[quest.milestone]
+                milestone.complete(self.game)
+        
+        # Update story states based on quest completion
         if quest.quest_type == "trade" and self.game.trades_completed >= 50:
             self.story_states["trade_empire"] = True
         elif quest.quest_type == "combat" and self.game.ship.combat_victories['total'] >= 25:
             self.story_states["pirate_threat"] = True
+        elif quest.quest_type == "research" and len(self.game.research.unlocked_options) >= 3:
+            self.story_states["tech_breakthrough"] = True
+        elif quest.quest_type == "exploration" and len(self.game.discovered_locations) >= 5:
+            self.story_states["ancient_mystery"] = True
+            
+        # Check for chapter progression
+        self.check_chapter_progress()
+        
+        # Generate new quests if appropriate
+        if random.random() < 0.3:  # 30% chance for follow-up quest
+            self.game.quest_system.generate_quest(quest.quest_type, 1.5)
 
     def handle_quest_line_completion(self, quest_line):
         """Update story progress when a quest line is completed"""
@@ -8361,19 +8399,20 @@ class StoryManager:
             self.story_states["alien_discovery"] = True
 
     def display_story_progress(self):
-        """Display detailed story progress information"""
+        current_chapter_obj = self.chapters[self.current_chapter] if self.current_chapter else None
+        
         content = [
             ["Story Progress"],
             [""],
-            [f"Current Chapter: {self.current_chapter.title if self.current_chapter else 'None'}"],
+            [f"Current Chapter: {current_chapter_obj.title if current_chapter_obj else 'None'}"],
             [f"Plot Points: {self.plot_points}"],
             [""],
             ["Active Milestones:"]
         ]
         
         # Show current chapter's milestones with status
-        if self.current_chapter:
-            for milestone in self.current_chapter.milestones.values():
+        if current_chapter_obj:
+            for milestone in current_chapter_obj.milestones.values():
                 status = "✓" if milestone.completed else "□"
                 content.append([f"{status} {milestone.title}"])
                 if not milestone.completed:
@@ -8395,47 +8434,8 @@ class StoryManager:
                     completion_turn = getattr(milestone, 'completion_turn', '?')
                     content.append([f"  └─ {milestone.title} (Turn {completion_turn})"])
         
-        content.extend([
-            [""],
-            ["Story States:"]
-        ])
-        
-        # Show active story states
-        for state, active in self.story_states.items():
-            if active:
-                content.append([f"• {state.replace('_', ' ').title()}"])
-        
-        content.extend([
-            [""],
-            ["Unlocked Features:"]
-        ])
-        
-        # Show unlocked location types
-        if hasattr(self.game, 'unlocked_location_types'):
-            content.append(["Location Types:"])
-            for loc_type in self.game.unlocked_location_types:
-                content.append([f"  • {loc_type}"])
-        
-        # Show unlocked items from story progression
-        if hasattr(self.game.ship, 'items'):
-            content.append(["Story Items:"])
-            for item in self.game.ship.items:
-                content.append([f"  • {item}"])
-        
-        # Show available next chapters if any
-        if self.current_chapter and self.current_chapter.next_chapters:
-            content.extend([
-                [""],
-                ["Possible Next Chapters:"]
-            ])
-            for chapter_id in self.current_chapter.next_chapters:
-                chapter = self.chapters[chapter_id]
-                content.append([f"• {chapter.title}"])
-                # Show requirements for next chapters
-                for req_type, req_value in chapter.requirements.items():
-                    content.append([f"  └─ Needs: {req_type}: {req_value}"])
-        
         print(self.game.create_box(content, 'double'))
+        input("Press Enter to continue...")
 
     # Log, player log. Example usage:
     # game.story_manager.display_story_progress()                    
