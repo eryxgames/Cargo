@@ -1437,10 +1437,11 @@ class Game:
         # Ship section
         ship_info = [
             ["Ship Information"],
-            [f"Attack: {self.ship.attack}"],
-            [f"Defense: {self.ship.defense}"],
-            [f"Speed: {self.ship.speed}"],
-            [f"Hull Damage: {self.ship.damage}%"],
+            [f"Stats: {self.ship.attack}|{self.ship.defense}|{self.ship.speed}"],
+            [f"Trades Completed: {self.trades_completed}"],
+            [f"PAX Delivered: {self.reputation_manager.total_passengers}"],
+#            [f"Locations Discovered: {len(self.discovered_locations) if hasattr(self, 'discovered_locations') else 0}"]
+#            [f"Hull Damage: {self.ship.damage}%"],
             [f"Money: {self.format_money(self.ship.money)}"],
             [f"Research Points: {self.ship.research_points}"],
     #        ["Cargo:"],
@@ -1463,19 +1464,12 @@ class Game:
                     ship_info.append(["Combat Record:"])
                     # Format victories
                     ship_info.extend([
-                        [f"  Total Victories: {self.ship.combat_victories.get('total', 0)}"],
-                        [f"  ├─ Pirates: {self.ship.combat_victories.get('pirate', 0)}"],
-                        [f"  ├─ Raiders: {self.ship.combat_victories.get('raider', 0)}"],
-                        [f"  ├─ Militia: {self.ship.combat_victories.get('militia', 0)}"],
-                        [f"  └─ Aliens: {self.ship.combat_victories.get('alien', 0)}"]
-                    ])
-                    # Format defeats
-                    ship_info.extend([
-                        [f"  Total Defeats: {self.ship.combat_defeats.get('total', 0)}"],
-                        [f"  ├─ Pirates: {self.ship.combat_defeats.get('pirate', 0)}"],
-                        [f"  ├─ Raiders: {self.ship.combat_defeats.get('raider', 0)}"],
-                        [f"  ├─ Militia: {self.ship.combat_defeats.get('militia', 0)}"],
-                        [f"  └─ Aliens: {self.ship.combat_defeats.get('alien', 0)}"]
+                        [f"Victories/Defeats Summary"],
+                        [f"  Pirates: {self.ship.combat_victories.get('pirate', 0)}/{self.ship.combat_defeats.get('pirate', 0)}"],
+                        [f"  Raiders: {self.ship.combat_victories.get('raider', 0)}/{self.ship.combat_defeats.get('raider', 0)}"],
+                        [f"  Militia: {self.ship.combat_victories.get('militia', 0)}/{self.ship.combat_defeats.get('militia', 0)}"],
+                        [f"  Aliens: {self.ship.combat_victories.get('alien', 0)}/{self.ship.combat_defeats.get('alien', 0)}"],
+                        [f"  Total: {self.ship.combat_victories.get('total', 0)}/{self.ship.combat_defeats.get('total', 0)}"]
                     ])
         
         # Location section
@@ -1541,7 +1535,7 @@ class Game:
             content.append([ship_line, location_line])
 
         print(self.create_box(content, 'double'))
-        time.sleep(4)
+        input("Press Enter to continue...")
 
     def build_mining_platform(self):
         """Build a new mining platform on the current planet"""
@@ -6114,6 +6108,9 @@ class Port:
                             for contract in self.game.contract_manager.active_contracts:
                                 contract.update_progress(event_data)
 
+                        # Increment total passengers delivered
+                        self.game.reputation_manager.total_passengers += 1
+
                         # Record unloading result
                         passengers_to_unload.append({
                             'passenger': passenger,
@@ -7897,7 +7894,7 @@ class StoryManager:
                     },
                     {
                         "milestone_id": "basic_license",
-                        "title": "Basic Trading License",
+                        "title": "Extended Trading License",
                         "description": "Prove your trading capabilities",
                         "requirements": {
                             "trades_completed": 5,
@@ -8167,15 +8164,16 @@ class StoryManager:
             
             current_chapter_obj = self.chapters[self.current_chapter]
             if current_chapter_obj.check_completion(self.game):
-                next_chapters = current_chapter_obj.get_next_chapters(self.game)
+                # This line to properly complete the chapter
+                self.complete_current_chapter()
                 
+                next_chapters = current_chapter_obj.get_next_chapters(self.game)
                 if next_chapters:
                     if len(next_chapters) > 1:
                         self.present_chapter_choice(next_chapters)
                     else:
-                        self.start_chapter(next_chapters[0].id)  # Use the ID
+                        self.start_chapter(next_chapters[0].id)
                 elif not current_chapter_obj.next_chapters:
-                    # This is an ending
                     self.handle_game_ending()
 
     def handle_game_ending(self):
@@ -8218,10 +8216,25 @@ class StoryManager:
             # Handle any chapter unlocks
             current_chapter_obj.handle_chapter_unlocks(self.game)
             
+            # Get next chapter options
+            next_chapters = current_chapter_obj.get_next_chapters(self.game)
+            
             self.game.display_story_message([
                 f"Chapter Complete: {current_chapter_obj.title}",
                 "Your journey continues to evolve..."
             ])
+            
+            # Present chapter choice or transition to next chapter
+            if next_chapters:
+                if len(next_chapters) > 1:
+                    self.present_chapter_choice(next_chapters)
+                else:
+                    self._chapter_just_announced = True  # Prevent duplicate announcement
+                    self.start_chapter(next_chapters[0].id)
+                    self.game.display_story_message([
+                        f"Chapter {self.current_chapter}: {next_chapters[0].title}",
+                        next_chapters[0].description
+                    ])
 
     def present_chapter_choice(self, available_chapters):
         """Present chapter choices to player"""
@@ -8246,20 +8259,21 @@ class StoryManager:
     def start_chapter(self, chapter):
         """Start a new chapter"""
         if isinstance(chapter, str):
-            # If we got a chapter ID
             self.current_chapter = chapter
             chapter_obj = self.chapters[chapter]
         else:
-            # If we got a chapter object
             self.current_chapter = chapter.id
             chapter_obj = chapter
         
-        self.game.display_story_message([
-            f"Chapter {self.current_chapter}: {chapter_obj.title}",
-            chapter_obj.description,
-            "",
-            "New milestones await..."
-        ])
+        # Only announce chapter if it wasn't just announced by complete_current_chapter
+        if not getattr(self, '_chapter_just_announced', False):
+            self.game.display_story_message([
+                f"Chapter {self.current_chapter}: {chapter_obj.title}",
+                chapter_obj.description,
+                "",
+                "New milestones await..."
+            ])
+        self._chapter_just_announced = False
 
     def get_current_objectives(self):
         """Get current chapter objectives"""
@@ -10632,6 +10646,8 @@ class PassengerReputationManager:
         self.last_vip_spawn = 0
         self.spawned_characters = set()
         self.active_story_chains = {}
+                # Add total_passengers tracking
+        self.total_passengers = 0
 
     def update_reputation(self, satisfaction, passenger=None):
         """Update passenger reputation based on satisfaction"""
