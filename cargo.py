@@ -8539,7 +8539,8 @@ class LocationManager:
             multiplier = location_multipliers.get(location.location_type, 1.0)
             
             # Apply chapter progression bonus
-            chapter_bonus = 1.0 + (self.game.story_manager.current_chapter * 0.2)
+            chapter_bonus = 1.0 + (int(''.join(filter(str.isdigit, self.game.story_manager.current_chapter))) * 0.2)
+
             
             # Calculate final rewards
             discovery_reward = int(base_reward * multiplier * chapter_bonus)
