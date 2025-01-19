@@ -1420,7 +1420,7 @@ class Game:
 
         # Display commands including port
         commands = [
-            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, info/i..."],
+            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i..."],
         
         ]
     #    print(self.create_box(commands, 'round'))
