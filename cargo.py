@@ -8667,8 +8667,8 @@ class DynamicCharacterSystem:
         self.active_characters = {}
         self.character_generators = {
             "human": SpecialCharacterGenerator(game),
-            "synthetic": SyntheticCharacterGenerator(),
-            "alien": AlienCharacterGenerator(),
+            "synthetic": SyntheticCharacterGenerator(game),
+            "alien": AlienCharacterGenerator(game),
             "special": SpecialCharacterGenerator(game)  # Use SpecialCharacterGenerator for VIPs
 
         }
@@ -9068,7 +9068,8 @@ class DynamicCharacterSystem:
 class SyntheticCharacterGenerator:
     """Generator for synthetic characters like Neurodroids and Agrobots"""
     
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.synthetic_types = {
             "Neurodroid": {
                 "titles": ["Neurodroid Leader", "Synthetic Overseer", "Neural Nexus"],
