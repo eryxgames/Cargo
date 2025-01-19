@@ -8285,6 +8285,23 @@ class StoryManager:
         self.plot_points = data["plot_points"]
         self.story_states.update(data["story_states"])
 
+    def complete_milestone(self, milestone_id):
+        """Complete a specific milestone in the current chapter"""
+        if self.current_chapter:
+            current_chapter_obj = self.chapters[self.current_chapter]
+            
+            # Check if milestone exists in current chapter
+            if milestone_id in current_chapter_obj.milestones:
+                milestone = current_chapter_obj.milestones[milestone_id]
+                
+                # Complete the milestone if not already completed
+                if not milestone.completed:
+                    milestone.complete(self.game)
+                    self.completed_story_beats.add(milestone_id)
+                    return True
+        
+        return False
+
 # Add these methods from old system:
     def process_event(self, event_type, details):
         """Process events and award plot points"""
@@ -8292,7 +8309,11 @@ class StoryManager:
             return
 
         points = self.calculate_points(event_type, details)
-        points *= (1 + self.current_chapter.id * 0.2)
+        
+        # Extract numeric part of chapter string and use that for multiplier
+        chapter_num = int(''.join(filter(str.isdigit, self.current_chapter)))
+        points *= (1 + chapter_num * 0.2)
+        
         self.plot_points += int(points)
         
         self.update_story_states(event_type, details)
@@ -8374,6 +8395,38 @@ class StoryManager:
         self.event_cooldowns[event_type] = current_turn
         return False
 
+    def check_discovery_milestone(self, location):
+        """
+        Check if a discovered location triggers any story milestones
+        
+        Args:
+            location: The location object that was discovered
+        """
+        if not self.current_chapter:
+            return False
+
+        current_chapter_obj = self.chapters[self.current_chapter]
+        
+        # Check each milestone in the current chapter
+        for milestone_id, milestone in current_chapter_obj.milestones.items():
+            if not milestone.completed and 'locations_discovered' in milestone.requirements:
+                required_locations = milestone.requirements['locations_discovered']
+                
+                # Check if specific location type requirements are met
+                if isinstance(required_locations, dict):
+                    for loc_type, count in required_locations.items():
+                        discovered = len([loc for loc in self.game.discovered_locations 
+                                        if loc.location_type == loc_type])
+                        if discovered < count:
+                            return False
+                
+                # Check total location type discovery
+                elif isinstance(required_locations, int):
+                    if len(self.game.discovered_locations) < required_locations:
+                        return False
+        
+        return True
+
     def calculate_points(self, event_type, details):
         """Calculate points based on event type and details"""
         base_points = {
@@ -8405,11 +8458,28 @@ class StoryManager:
             ["Story Progress"],
             [""],
             [f"Current Chapter: {current_chapter_obj.title if current_chapter_obj else 'None'}"],
-            [f"Plot Points: {self.plot_points}"],
-            [""],
-            ["Active Milestones:"]
         ]
         
+        # Find next possible chapters and their plot point requirements
+        if current_chapter_obj and current_chapter_obj.next_chapters:
+            plot_points_needed = float('inf')
+            for next_chapter_id in current_chapter_obj.next_chapters:
+                next_chapter = self.chapters[next_chapter_id]
+                if 'plot_points' in next_chapter.requirements:
+                    current_needed = next_chapter.requirements['plot_points'] - self.plot_points
+                    plot_points_needed = min(plot_points_needed, current_needed)
+            
+            if plot_points_needed != float('inf'):
+                content.append([f"Plot Points: {self.plot_points} ({max(0, plot_points_needed)} to Next)"])
+            else:
+                content.append([f"Plot Points: {self.plot_points}"])
+        else:
+            content.append([f"Plot Points: {self.plot_points}"])
+        
+        content.extend([
+            [""],
+            ["Active Milestones:"]
+        ])
         # Show current chapter's milestones with status
         if current_chapter_obj:
             for milestone in current_chapter_obj.milestones.values():
