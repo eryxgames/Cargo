@@ -1850,7 +1850,9 @@ class Game:
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
             self.character_system.check_character_triggers() # Check for dynamic characters system
-
+            # New chapter and milestone system
+            self.story_manager.check_milestone_progress()
+            self.story_manager.check_chapter_progress()
 
             # Get location commands
             location_commands = self.current_location.commands
@@ -1883,6 +1885,7 @@ class Game:
             
             # Add global commands
             valid_actions.extend(['quit', 'q', 'resign', 'rs', 'version', 'v'])
+            valid_actions.extend(['log', 'l'])  # Add but don't show in command hints
 
             action = self.validate_input("Choose action: ", valid_actions)
 
@@ -2037,6 +2040,10 @@ class Game:
                     self.port_system.update_passenger_satisfaction()
                 else:
                     self.display_simple_message("No port available at this location.")
+
+            elif action in ['log', 'l']:
+                self.story_manager.display_story_progress()
+                return    # Return after showing log to avoid counting it as a turn
 
             elif action in ['version', 'v']:
                 display_logo(logo_data, centered=True)
@@ -7532,557 +7539,758 @@ class QuestSystem:
         self.active_quests.append(quest)
         return True
 
+class MilestoneRequirements:
+    """Enhanced requirements checking for story milestones"""
+    
+    @staticmethod
+    def check_requirements(requirements, game):
+        """Check if all requirements are met"""
+        for req_type, req_value in requirements.items():
+            if not MilestoneRequirements._check_single_requirement(req_type, req_value, game):
+                return False
+        return True
+
+    @staticmethod
+    def _check_single_requirement(req_type, req_value, game):
+        """Check a single requirement"""
+        # Basic requirements
+        if req_type == "plot_points":
+            return game.story_manager.plot_points >= req_value
+        elif req_type == "money":
+            return game.ship.money >= req_value
+        elif req_type == "research_points":
+            return game.ship.research_points >= req_value
+
+        # Combat requirements
+        elif req_type == "combat_victories":
+            if isinstance(req_value, dict):
+                # Check specific enemy types
+                for enemy_type, amount in req_value.items():
+                    if game.ship.combat_victories.get(enemy_type, 0) < amount:
+                        return False
+                return True
+            else:
+                # Check total victories
+                return game.ship.combat_victories['total'] >= req_value
+        elif req_type == "combat_rating":
+            return (game.ship.attack + game.ship.defense + game.ship.speed) >= req_value
+
+        # Trade requirements
+        elif req_type == "trades_completed":
+            return game.trades_completed >= req_value
+        elif req_type == "trade_profit":
+            return sum(game.ship.trade_profits.values()) >= req_value
+        elif req_type == "trade_specific":
+            # Check specific commodity trading requirements
+            commodity, amount = req_value
+            return game.ship.trade_profits.get(commodity, 0) >= amount
+
+        # Passenger requirements
+        elif req_type == "passengers_transported":
+            return game.reputation_manager.total_passengers >= req_value
+        elif req_type == "passenger_reputation":
+            return game.ship.passenger_reputation >= req_value
+        elif req_type == "passenger_class":
+            # Check specific passenger class requirements
+            class_type, amount = req_value
+            return game.reputation_manager.class_transports.get(class_type, 0) >= amount
+
+        # Location requirements
+        elif req_type == "locations_discovered":
+            if isinstance(req_value, dict):
+                # Check specific location types
+                for loc_type, amount in req_value.items():
+                    discovered = len([loc for loc in game.discovered_locations 
+                                   if loc.location_type == loc_type])
+                    if discovered < amount:
+                        return False
+                return True
+            else:
+                # Check total discoveries
+                return len(game.discovered_locations) >= req_value
+        elif req_type == "buildings_built":
+            if isinstance(req_value, dict):
+                # Check specific building types
+                for building_type, amount in req_value.items():
+                    total_built = sum(1 for loc in game.locations 
+                                    for building in loc.buildings 
+                                    if building == building_type)
+                    if total_built < amount:
+                        return False
+                return True
+            else:
+                # Check total buildings
+                return sum(len(loc.buildings) for loc in game.locations) >= req_value
+
+        # Mining requirements
+        elif req_type == "mining_platforms":
+            if isinstance(req_value, dict):
+                # Check specific resource types
+                for resource_type, amount in req_value.items():
+                    total_platforms = sum(1 for loc in game.locations 
+                                        for platform in loc.mining_platforms 
+                                        if platform['type'] == resource_type)
+                    if total_platforms < amount:
+                        return False
+                return True
+            else:
+                # Check total platforms
+                return sum(len(loc.mining_platforms) for loc in game.locations) >= req_value
+
+        # Quest requirements
+        elif req_type == "quests_completed":
+            if isinstance(req_value, dict):
+                # Check specific quest types
+                for quest_type, amount in req_value.items():
+                    completed = len([q for q in game.quest_system.completed_quests 
+                                   if q.quest_type == quest_type])
+                    if completed < amount:
+                        return False
+                return True
+            else:
+                # Check total completed quests
+                return len(game.quest_system.completed_quests) >= req_value
+
+        # Research requirements
+        elif req_type == "research_unlocked":
+            return all(tech in game.research.unlocked_options for tech in req_value)
+
+        # Faction requirements
+        elif req_type == "faction_reputation":
+            faction, rep_level = req_value
+            return game.faction_system.get_reputation(faction) >= rep_level
+
+        # Item requirements
+        elif req_type == "items":
+            return all(item in game.ship.items for item in req_value)
+
+        # Story progression requirements
+        elif req_type == "chapters_completed":
+            return all(chapter in game.story_manager.completed_chapters for chapter in req_value)
+        elif req_type == "milestones_completed":
+            return all(milestone in game.story_manager.completed_story_beats for milestone in req_value)
+        elif req_type == "story_states":
+            return all(game.story_manager.story_states.get(state, False) for state in req_value)
+
+        # Custom requirements
+        elif req_type == "custom_condition":
+            return req_value(game)  # Call custom function with game instance
+
+        # Unknown requirement type
+        else:
+            print(f"Warning: Unknown requirement type {req_type}")
+            return False
+
+class StoryMilestone:
+    def __init__(self, milestone_id, title, description, requirements, rewards=None, unlocks=None):
+        self.id = milestone_id
+        self.title = title
+        self.description = description
+        self.requirements = requirements
+        self.rewards = rewards or {}
+        self.unlocks = unlocks or []  # List of unlock dictionaries
+        self.completed = False
+        self.completion_turn = None
+
+    def check_completion(self, game):
+        """Check if milestone requirements are met"""
+        if self.completed:
+            return True
+        return MilestoneRequirements.check_requirements(self.requirements, game)
+
+    def complete(self, game):
+        """Complete milestone and handle unlocks"""
+        if not self.completed:
+            self.completed = True
+            self.completion_turn = game.turn
+            
+            # Handle rewards
+            if self.rewards:
+                if "money" in self.rewards:
+                    game.ship.money += self.rewards["money"]
+                if "research_points" in self.rewards:
+                    game.ship.research_points += self.rewards["research_points"]
+                if "plot_points" in self.rewards:
+                    game.story_manager.plot_points += self.rewards["plot_points"]
+                if "items" in self.rewards:
+                    for item in self.rewards["items"]:
+                        game.ship.acquire_item(item)
+
+            # Handle unlocks
+            unlock_messages = []
+            for unlock in self.unlocks:
+                unlock_type = unlock.get("type")
+                unlock_id = unlock.get("id")
+                
+                if unlock_type == "item":
+                    game.ship.acquire_item(unlock_id)
+                    unlock_messages.append(f"Unlocked item: {unlock_id}")
+                    
+                elif unlock_type == "location_type":
+                    game.unlocked_location_types.add(unlock_id)
+                    # Add hidden locations of this type to available locations
+                    if unlock_id in game.hidden_locations:
+                        game.locations.extend(game.hidden_locations[unlock_id])
+                        unlock_messages.append(f"Unlocked new location type: {unlock_id}")
+                        
+                elif unlock_type == "specific_location":
+                    # Search in hidden_locations
+                    for loc_type, locations in game.hidden_locations.items():
+                        for location in locations:
+                            if location.name == unlock_id:
+                                game.locations.append(location)
+                                game.known_locations.append(location.name)
+                                unlock_messages.append(f"Discovered location: {location.name}")
+                                break
+                    
+                    # Search in chapter_locations
+                    for chapter_num, chapter_locs in game.chapter_locations.items():
+                        for loc_type, locations in chapter_locs.items():
+                            for location in locations:
+                                if location.name == unlock_id:
+                                    game.locations.append(location)
+                                    game.known_locations.append(location.name)
+                                    unlock_messages.append(f"Discovered location: {location.name}")
+                                    break
+
+                elif unlock_type == "chapter_locations":
+                    chapter_num = unlock.get("chapter")
+                    if chapter_num in game.chapter_locations:
+                        for loc_type, locations in game.chapter_locations[chapter_num].items():
+                            game.locations.extend(locations)
+                            for loc in locations:
+                                game.known_locations.append(loc.name)
+                        unlock_messages.append(f"Unlocked Chapter {chapter_num} locations!")
+
+            # Display completion message with unlocks
+            completion_message = [
+                f"Milestone Completed: {self.title}!",
+                self.description,
+                "",
+                "Rewards:"
+            ]
+            
+            # Add rewards to message
+            for reward_type, value in self.rewards.items():
+                if reward_type == "money":
+                    completion_message.append(f"• {game.format_money(value)} credits")
+                elif reward_type == "plot_points":
+                    completion_message.append(f"• {value} plot points")
+                elif reward_type == "research_points":
+                    completion_message.append(f"• {value} research points")
+                elif reward_type == "items":
+                    completion_message.append(f"• Items: {', '.join(value)}")
+
+            # Add unlock messages
+            if unlock_messages:
+                completion_message.append("")
+                completion_message.append("Unlocked:")
+                for msg in unlock_messages:
+                    completion_message.append(f"• {msg}")
+
+            game.display_story_message(completion_message)
+
+class StoryChapter:
+    def __init__(self, chapter_id, title, description, requirements, milestones, next_chapters=None):
+        self.id = chapter_id
+        self.title = title
+        self.description = description
+        self.requirements = requirements
+        self.milestones = {}  # Dictionary of milestone_id: StoryMilestone
+        self.next_chapters = next_chapters or []  # List of possible next chapter IDs
+        self.completed = False
+        self.completion_turn = None
+        
+        # Initialize milestones
+        for milestone_data in milestones:
+            milestone = StoryMilestone(**milestone_data)
+            self.milestones[milestone.id] = milestone
+
+    def check_completion(self, game):
+        """Check if chapter can be completed"""
+        if self.completed:
+            return True
+
+        # First check chapter requirements
+        for req_type, req_value in self.requirements.items():
+            if not MilestoneRequirements._check_single_requirement(req_type, req_value, game):
+                return False
+
+        # Then check if all required milestones are completed
+        return all(milestone.completed for milestone in self.milestones.values())
+
+    def get_available_milestones(self, game):
+        """Get list of currently available milestones"""
+        return [m for m in self.milestones.values() 
+                if not m.completed and m.check_completion(game)]
+
+    def get_next_chapters(self, game):
+        """Get list of possible next chapters based on current game state"""
+        available_chapters = []
+        for chapter_id in self.next_chapters:
+            chapter = game.story_manager.chapters[chapter_id]
+            if all(MilestoneRequirements._check_single_requirement(req_type, req_value, game) 
+                for req_type, req_value in chapter.requirements.items()):
+                available_chapters.append(chapter)
+        return available_chapters
+    
+    def handle_chapter_unlocks(self, game):
+        """Handle any unlocks when chapter completes"""
+        if hasattr(self, 'unlocks') and self.unlocks:
+            for unlock in self.unlocks:
+                unlock_type = unlock.get("type")
+                unlock_id = unlock.get("id")
+                
+                if unlock_type == "location_type":
+                    game.unlock_location_type(unlock_id)
+                elif unlock_type == "chapter_locations":
+                    chapter_num = unlock.get("chapter")
+                    if chapter_num in game.chapter_locations:
+                        for locations in game.chapter_locations[chapter_num].values():
+                            game.locations.extend(locations)    
+
 class StoryManager:
     def __init__(self, game):
         self.game = game
-        self.current_chapter = 0
-        self.plot_points = 0
+        self.current_chapter = None
+        self.completed_chapters = set()
         self.completed_story_beats = set()
-        self.milestone_display_names = {
-            "first_trade": "First Trades",
-            "first_combat": "First Combat Victories",
-            "basic_license": "Basic Trading License",
-            "defeat_pirates": "Pirate Threat Eliminated",
-            "secure_route": "Trade Route Secured", 
-            "establish_base": "New Base Established"
-        }        
+        self.plot_points = 0
         self.story_states = {
             "pirate_threat": False,
             "alien_discovery": False,
             "trade_empire": False,
+            "resource_empire": False,
             "ancient_mystery": False,
             "galactic_crisis": False
         }
-
-        # Old StoryManager class trackers
-        self.discovered_locations_by_type = {}
-        self.unlocked_achievements = set()
+        self.chapters = self.initialize_chapters()
         self.event_cooldowns = {}
         self.enabled_events = set()
-        self.chapter_statistics = {}
-        self.event_log = []
 
-        # Add quest tracking
-        self.quest_milestones = {
-            "mining": ["first_mining", "resource_empire"],
-            "combat": ["defeat_pirates", "secure_route"],
-            "research": ["tech_breakthrough", "alien_database"],
-            "trade": ["trade_empire", "unite_systems"]
+    def initialize_chapters(self):
+        """Initialize all chapters with their milestones and branching paths"""
+        return {
+            "ch1": StoryChapter(
+                chapter_id="ch1",
+                title="First Steps",
+                description="Learn the basics of space trading",
+                requirements={},  # No requirements for first chapter
+                milestones=[
+                    {
+                        "milestone_id": "first_trade",
+                        "title": "First Trade",
+                        "description": "Complete your first trade",
+                        "requirements": {"trades_completed": 1},
+                        "rewards": {"money": 5000, "plot_points": 5}
+                    },
+                    {
+                        "milestone_id": "first_combat",
+                        "title": "Combat Initiation",
+                        "description": "Win your first space battle",
+                        "requirements": {"combat_victories": 1},
+                        "rewards": {"money": 5000, "plot_points": 5}
+                    },
+                    {
+                        "milestone_id": "basic_license",
+                        "title": "Basic Trading License",
+                        "description": "Prove your trading capabilities",
+                        "requirements": {
+                            "trades_completed": 5,
+                            "money": 20000
+                        },
+                        "rewards": {"money": 10000, "plot_points": 10, "items": ["navcomp"]}
+                    }
+                ],
+                next_chapters=["ch2a", "ch2b"]  # Player can choose trade or combat path
+            ),
+
+            "ch2a": StoryChapter(
+                chapter_id="ch2a",
+                title="Trade Empire Rising",
+                description="Build your commercial empire",
+                requirements={
+                    "chapters_completed": ["ch1"],
+                    "plot_points": 15,
+                    "trades_completed": 10
+                },
+                milestones=[
+                    {
+                        "milestone_id": "establish_route",
+                        "title": "Trade Route Network",
+                        "description": "Establish profitable trade routes",
+                        "requirements": {
+                            "trades_completed": 20,
+                            "buildings_built": {"stockmarket": 2}
+                        },
+                        "rewards": {"money": 50000, "plot_points": 15}
+                    },
+                    {
+                        "milestone_id": "passenger_business",
+                        "title": "Passenger Services",
+                        "description": "Start passenger transport business",
+                        "requirements": {
+                            "passengers_transported": 10,
+                            "passenger_reputation": 20
+                        },
+                        "rewards": {"money": 30000, "plot_points": 10}
+                    }
+                ],
+                next_chapters=["ch3a", "ch3c"]
+            ),
+
+            "ch2b": StoryChapter(
+                chapter_id="ch2b",
+                title="Combat Legend",
+                description="Become a legendary combat pilot",
+                requirements={
+                    "chapters_completed": ["ch1"],
+                    "plot_points": 15,
+                    "combat_victories": 5
+                },
+                milestones=[
+                    {
+                        "milestone_id": "defeat_pirates",
+                        "title": "Pirate Hunter",
+                        "description": "Clear the sector of pirates",
+                        "requirements": {
+                            "combat_victories": {"pirate": 10}
+                        },
+                        "rewards": {"money": 40000, "plot_points": 20}
+                    },
+                    {
+                        "milestone_id": "defend_stations",
+                        "title": "Station Defender",
+                        "description": "Successfully defend space stations",
+                        "requirements": {
+                            "combat_victories": 15,
+                            "buildings_built": {"Neuroengineering Guild": 1}
+                        },
+                        "rewards": {"money": 30000, "plot_points": 15}
+                    }
+                ],
+                next_chapters=["ch3b", "ch3c"]
+            ),
+
+            "ch3a": StoryChapter(
+                chapter_id="ch3a",
+                title="Economic Dominance",
+                description="Achieve economic control of the sector",
+                requirements={
+                    "chapters_completed": ["ch2a"],
+                    "plot_points": 40,
+                    "trade_profit": 200000
+                },
+                milestones=[
+                    {
+                        "milestone_id": "market_control",
+                        "title": "Market Controller",
+                        "description": "Control multiple market centers",
+                        "requirements": {
+                            "buildings_built": {"stockmarket": 4},
+                            "research_unlocked": ["xenoeconomy"]
+                        },
+                        "rewards": {"money": 100000, "plot_points": 25}
+                    }
+                ],
+                next_chapters=["ending_trade"]
+            ),
+
+            "ch3b": StoryChapter(
+                chapter_id="ch3b",
+                title="Military Might",
+                description="Become the dominant military force",
+                requirements={
+                    "chapters_completed": ["ch2b"],
+                    "plot_points": 40,
+                    "combat_victories": 25
+                },
+                milestones=[
+                    {
+                        "milestone_id": "fleet_commander",
+                        "title": "Fleet Commander",
+                        "description": "Lead successful fleet operations",
+                        "requirements": {
+                            "combat_victories": 35,
+                            "combat_rating": 15
+                        },
+                        "rewards": {"money": 100000, "plot_points": 25}
+                    }
+                ],
+                next_chapters=["ending_combat"]
+            ),
+
+            "ch3c": StoryChapter(
+                chapter_id="ch3c",
+                title="Ancient Mysteries",
+                description="Uncover the sector's ancient secrets",
+                requirements={
+                    "chapters_completed": ["ch2a", "ch2b"],  # Can be reached from either path
+                    "plot_points": 50,
+                    "research_points": 200
+                },
+                milestones=[
+                    {
+                        "milestone_id": "alien_artifacts",
+                        "title": "Ancient Technology",
+                        "description": "Discover alien artifacts",
+                        "requirements": {
+                            "locations_discovered": {"ResearchColony": 2},
+                            "research_unlocked": ["xenoeconomy", "telemetry"]
+                        },
+                        "rewards": {"money": 150000, "plot_points": 30}
+                    }
+                ],
+                next_chapters=["ending_discovery"]
+            ),
+
+            # Endings
+            "ending_trade": StoryChapter(
+                chapter_id="ending_trade",
+                title="Galactic Trade Mogul",
+                description="You've become a legendary trade mogul",
+                requirements={
+                    "chapters_completed": ["ch3a"],
+                    "plot_points": 100,
+                    "trade_profit": 1000000
+                },
+                milestones=[
+                    {
+                        "milestone_id": "trade_ending",
+                        "title": "Economic Victory",
+                        "description": "Complete economic domination achieved",
+                        "requirements": {
+                            "buildings_built": {"stockmarket": 5},
+                            "passenger_reputation": 80,
+                            "trade_profit": 1000000
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
+                ],
+                next_chapters=[]  # No next chapters - this is an ending
+            ),
+
+            "ending_combat": StoryChapter(
+                chapter_id="ending_combat",
+                title="Legendary Fleet Admiral",
+                description="You've become a legendary military leader",
+                requirements={
+                    "chapters_completed": ["ch3b"],
+                    "plot_points": 100,
+                    "combat_victories": 50
+                },
+                milestones=[
+                    {
+                        "milestone_id": "combat_ending",
+                        "title": "Military Victory",
+                        "description": "Complete military dominance achieved",
+                        "requirements": {
+                            "combat_victories": 75,
+                            "combat_rating": 25
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
+                ],
+                next_chapters=[]
+            ),
+
+            "ending_discovery": StoryChapter(
+                chapter_id="ending_discovery",
+                title="Ancient Mystery Solver",
+                description="You've uncovered the sector's greatest mysteries",
+                requirements={
+                    "chapters_completed": ["ch3c"],
+                    "plot_points": 100,
+                    "research_points": 500
+                },
+                milestones=[
+                    {
+                        "milestone_id": "discovery_ending",
+                        "title": "Discovery Victory",
+                        "description": "Ancient mysteries solved",
+                        "requirements": {
+                            "research_unlocked": ["xenoeconomy", "telemetry", "geophysics", "chronopolitics"],
+                            "locations_discovered": {"ResearchColony": 3, "AsteroidBase": 2}
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
+                ],
+                next_chapters=[]
+            )
         }
 
-        # Track chapter-specific stats
-        self.chapter_start_money = 0
-        self.chapter_start_quests = 0
-        self.chapter_start_locations = 0
-        self.chapter_start_combat_victories = 0
-        
-        # Discovery milestone tracking
-        self.discovery_milestones = {
-            "AsteroidBase": {"count": 1, "reward_money": 10000, "reward_rp": 100},
-            "DeepSpaceOutpost": {"count": 1, "reward_money": 15000, "reward_rp": 150},
-            "ResearchColony": {"count": 1, "reward_money": 20000, "reward_rp": 200}
-        }
-
-        # Core storyline
-        self.chapters = {
-            0: {
-                "title": "First Steps",
-                "description": "Learn the basics of space trading",
-                "requirements": {"plot_points": 0},
-                "milestones": [
-                    "first_trade", 
-                    "first_combat",
-                    "basic_license"
-                ],
-                "rewards": {
-                    "money": 5000,
-                    "research_points": 25,
-                    "unlock": "navcomp"
-                }
-            },
-            1: {
-                "title": "The Pirate Threat",
-                "description": "Protect trade routes from increasing pirate activity",
-                "requirements": {
-                    "plot_points": 15
-    #                "combat_victories": 3,
-    #                "trades_completed": 10
-                },
-                "milestones": [
-                    "defeat_pirates",
-                    "secure_route", 
-                    "establish_base"
-                ],
-                "rewards": {
-                    "money": 15000,
-                    "research_points": 50,
-                    "unlock": "AsteroidBase"
-                }
-            },
-            2: {
-                "title": "Mining Frontiers", 
-                "description": "Exploit rich asteroid resources",
-                "requirements": {
-                    "plot_points": 50
-    #                "mining_platforms": 1,
-    #                "research_points": 100
-                },
-                "milestones": [
-                    "first_mining",
-                    "resource_empire",
-                    "defend_miners"
-                ],
-                "rewards": {
-                    "money": 30000,
-                    "research_points": 100,
-                    "unlock": "mining_laser"
-                }
-            },
-            3: {
-                "title": "Strange Signals",
-                "description": "Investigate mysterious deep space transmissions",
-                "requirements": {
-                    "plot_points": 150
-    #                "research_points": 200,
-    #                "locations_discovered": 5
-                },
-                "milestones": [
-                    "signal_source",
-                    "alien_contact",
-                    "first_artifact"
-                ],
-                "rewards": {
-                    "money": 50000,
-                    "research_points": 200,
-                    "unlock": "DeepSpaceOutpost"
-                }
-            },
-            4: {
-                "title": "Research & Discovery",
-                "description": "Study ancient alien technology",
-                "requirements": {
-                    "plot_points": 300
-    #                "research_points": 400,
-    #                "artifacts_found": 3
-                },
-                "milestones": [
-                    "research_hub",
-                    "tech_breakthrough",
-                    "alien_database"
-                ],
-                "rewards": {
-                    "money": 100000,
-                    "research_points": 400,
-                    "unlock": "ResearchColony"
-                }
-            },
-            5: {
-                "title": "Galactic Crisis",
-                "description": "Face an awakening ancient threat",
-                "requirements": {
-                    "plot_points": 700
-    #                "controlled_stations": 3,
-    #                "research_complete": True
-                },
-                "milestones": [
-                    "crisis_warning",
-                    "unite_systems",
-                    "final_stand"
-                ],
-                "rewards": {
-                    "money": 500000,
-                    "research_points": 1000,
-                    "unlock": "legendary_status"
-                }
-            },
-            6: {
-                "title": "Final Chapter",
-                "description": "Journey into the unknown and beyond",
-                "requirements": {
-                    "plot_points": 1500
-    #                "controlled_stations": 3,
-    #                "research_complete": True
-                },
-                "milestones": [
-    #                "crisis_warning",
-    #                "unite_systems",
-     #               "final_stand"
-                ],
-                "rewards": {
-                    "money": 500000,
-                    "research_points": 1000,
-                    "unlock": "legendary_status"
-                }
-            }            
-        }
-
-        self.milestone_points = {
-            "first_trade": 5,
-            "first_combat": 5,
-            "basic_license": 5,
-            "defeat_pirates": 10,
-            "secure_route": 10,
-            "establish_base": 10,
-            "first_mining": 15,
-            "resource_empire": 15,
-            "defend_miners": 15,
-            "signal_source": 20,
-            "alien_contact": 20,
-            "first_artifact": 20,
-            "research_hub": 25,
-            "tech_breakthrough": 25,
-            "alien_database": 25,
-            "crisis_warning": 30,
-            "unite_systems": 30,
-            "final_stand": 30
-        }
-
-        self.event_rewards = {
-            "trade": {
-                "base": 1,
-                "profit_threshold": 1000,
-                "bonus": 2
-            },
-            "combat": {
-                "base": 2,
-                "victory_bonus": 3,
-                "no_damage_bonus": 2
-            },
-            "exploration": {
-                "base": 3,
-                "new_location": 5,
-                "artifact_bonus": 10
-            },
-            "mining": {
-                "base": 2,
-                "efficiency_threshold": 0.8,
-                "bonus": 3
-            },
-            "research": {
-                "base": 3,
-                "breakthrough_bonus": 5
-            }
-        }
-
-    def handle_quest_completion(self, quest):
-        """Update story progress when quests complete"""
-        for quest_type, milestones in self.quest_milestones.items():
-            if quest.quest_type == quest_type:
-                for milestone in milestones:
-                    if milestone not in self.completed_story_beats:
-                        self.complete_milestone(milestone)
-                        return
-
-
-    def process_event(self, event_type, details):
-        """Process events and award plot points"""
-        if self.check_cooldown(event_type):
-            return
-
-        # Calculate base points
-        points = self.calculate_points(event_type, details)
-        
-        # Apply chapter scaling
-        points *= (1 + self.current_chapter * 0.2)
-        
-        # Award points
-        self.plot_points += int(points)
-        
-        # Check milestones
-        self.check_milestones(event_type, details)
-        
-        # Update story states
-        self.update_story_states(event_type, details)
-        
-        # Check chapter progression
-        self.check_chapter_progress()
-
-    def calculate_points(self, event_type, details):
-        """Calculate points based on event type and details"""
-        if event_type not in self.event_rewards:
-            return 0
-            
-        reward = self.event_rewards[event_type]
-        points = reward["base"]
-        
-        # Add conditional bonuses
-        if event_type == "trade":
-            if details.get("profit", 0) > reward["profit_threshold"]:
-                points += reward["bonus"]
-                
-        elif event_type == "combat":
-            if details.get("victory", False):
-                points += reward["victory_bonus"]
-            if details.get("damage_taken", 0) == 0:
-                points += reward["no_damage_bonus"]
-                
-        elif event_type == "mining":
-            if details.get("efficiency", 0) > reward["efficiency_threshold"]:
-                points += reward["bonus"]
-                
-        return points
-
-    def check_cooldown(self, event_type):
-        """Prevent event spam with cooldowns"""
-        if not hasattr(self, 'cooldowns'):
-            self.cooldowns = {}
-            
-        current_turn = self.game.turn
-        if event_type in self.cooldowns:
-            if current_turn - self.cooldowns[event_type] < 5:
-                return True
-                
-        self.cooldowns[event_type] = current_turn
-        return False
-
-    def check_milestones(self, event_type, details):
-        """Check if event triggers any milestones"""
-        chapter = self.chapters[self.current_chapter]
-        for milestone in chapter["milestones"]:
-            if milestone not in self.completed_story_beats:
-                if self.check_milestone_requirements(milestone, event_type, details):
-                    self.complete_milestone(milestone)
-
-    def check_milestone_requirements(self, milestone, event_type, details):
-        """Check if milestone requirements are met"""
-        # Milestone requirement logic here
-        return True  # Placeholder
-
-    def complete_milestone(self, milestone):
-        """Handle milestone completion"""
-        if milestone not in self.completed_story_beats:
-            self.completed_story_beats.add(milestone)
-            points = self.milestone_points.get(milestone, 0)
-            self.plot_points += points
-            display_name = self.milestone_display_names.get(milestone, milestone.replace("_", " ").title())
-            self.game.display_story_message([
-                f"Milestone Completed: {display_name}!",
-                f"Earned {points} plot points"
-            ])
-            self.game.display_turn_info()  # Refresh display
-
-    # Add to StoryManager class
-    def add_story_integration_methods(StoryManager):
-        def track_special_character_encounter(self, character):
-            """Track when special characters are met"""
-            if not hasattr(self, 'character_encounters'):
-                self.character_encounters = {}
-            
-            if character.full_name not in self.character_encounters:
-                self.character_encounters[character.full_name] = {
-                    "first_met": self.game.turn,
-                    "encounters": 0,
-                    "quests_completed": 0,
-                    "relationship": 0
-                }
-            
-            self.character_encounters[character.full_name]["encounters"] += 1
-            
-            # Check for story triggers
-            if self.character_encounters[character.full_name]["encounters"] == 3:
-                self.trigger_story_event("recurring_contact", {"character": character})
-
-        def handle_classification_event(self, classification, event_type):
-            """Handle events based on passenger classification"""
-            events = {
-                "S": {  # Scientists
-                    "discovery": "Scientific breakthrough aboard ship!",
-                    "bonus": lambda: setattr(self.game.ship, "research_points", 
-                                        self.game.ship.research_points + 50)
-                },
-                "M": {  # Military
-                    "discovery": "Military escort improves ship defenses!",
-                    "bonus": lambda: setattr(self.game.ship, "defense", 
-                                        self.game.ship.defense + 1)
-                },
-                "E": {  # Engineers
-                    "discovery": "Engineering improvements boost ship systems!",
-                    "bonus": lambda: setattr(self.game.ship, "speed", 
-                                        self.game.ship.speed + 1)
-                }
-            }
-            
-            if classification in events:
-                event = events[classification]
-                self.game.display_story_message(event["discovery"])
-                event["bonus"]()
-                self.plot_points += 5
-
-        def check_character_milestones(self):
-            """Check for character-related story milestones"""
-            if not hasattr(self, 'character_encounters'):
-                return
-                
-            total_encounters = sum(data["encounters"] for data in self.character_encounters.values())
-            total_quests = sum(data["quests_completed"] for data in self.character_encounters.values())
-            
-            # Milestone triggers
-            if total_encounters >= 10 and "network_established" not in self.completed_story_beats:
-                self.complete_milestone("network_established")
-                
-            if total_quests >= 5 and "trusted_contact" not in self.completed_story_beats:
-                self.complete_milestone("trusted_contact")
-
-        StoryManager.track_special_character_encounter = track_special_character_encounter
-        StoryManager.handle_classification_event = handle_classification_event
-        StoryManager.check_character_milestones = check_character_milestones
-
-    def check_chapter_progress(self):
-        """Check for chapter advancement"""
-        next_chapter = self.current_chapter + 1
-        if next_chapter in self.chapters:
-            requirements = self.chapters[next_chapter]["requirements"]
-            
-            if self.check_requirements(requirements):
-                self.advance_chapter()
-
-    def check_requirements(self, requirements):
-        """Check if chapter requirements are met"""
-        for req, value in requirements.items():
-            if req == "plot_points" and self.plot_points < value:
-                return False
-            elif req == "combat_victories" and self.game.ship.combat_victories['total'] < value:
-                return False
-            elif req == "research_points" and self.game.ship.research_points < value:
-                return False
-        return True
-
-    def advance_chapter(self):
-        """Handle chapter advancement"""
-        self.current_chapter += 1
-        chapter = self.chapters[self.current_chapter]
-        
-        # Award chapter rewards
-        rewards = chapter["rewards"]
-        self.game.ship.money += rewards["money"]
-        self.game.ship.research_points += rewards.get("research_points", 0)
-        
-        # Handle unlocks
-        if "unlock" in rewards:
-            if rewards["unlock"] in ["AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]:
-                self.game.unlock_location_type(rewards["unlock"])
-            else:
-                self.game.ship.acquire_item(rewards["unlock"])
-        
-        # Display chapter transition
+    def start_game(self):
+        """Initialize story at game start"""
+        self.current_chapter = self.chapters["ch1"]
         self.game.display_story_message([
-            f"Chapter {self.current_chapter}: {chapter['title']}",
-            chapter["description"],
+            f"Chapter 1: {self.current_chapter.title}",
+            self.current_chapter.description,
             "",
-            "Rewards:",
-            f"• {self.game.format_money(rewards['money'])} credits",
-            f"• {rewards.get('research_points', 0)} research points",
-            f"• Unlocked: {rewards['unlock']}"
+            "Your journey begins..."
         ])
-        input("Press Enter to continue...")
 
-    def update_story_states(self, event_type, details):
-        """Update story state flags based on events"""
-        if event_type == "combat" and details.get("enemy_type") == "pirate":
-            self.story_states["pirate_threat"] = True
-        elif event_type == "exploration" and details.get("discovery_type") == "alien":
-            self.story_states["alien_discovery"] = True
-        # Add other state updates
+    def is_story_completed(self):
+        """Check if the story has reached an ending"""
+        return (self.current_chapter and 
+                not self.current_chapter.next_chapters and 
+                self.current_chapter.completed)
 
-    def handle_quest_line_completion(self, quest_line):
-        """Update story progress when a quest line is completed"""
-        story_impacts = {
-            "mining": self.progress_resource_story,
-            "combat": self.progress_security_story,
-            "research": self.progress_discovery_story,
-            "trade": self.progress_empire_story
-        }
-        
-        if quest_line in story_impacts:
-            story_impacts[quest_line]()
-            self.check_chapter_progress()
-
-    def progress_resource_story(self):
-        if not self.story_states["resource_empire"]:
-            self.story_states["resource_empire"] = True
-            self.plot_points += 15
-            self.complete_milestone("resource_empire")
-
-    def progress_security_story(self):
-        if not self.story_states["pirate_threat"]:
-            self.story_states["pirate_threat"] = True
-            self.plot_points += 15
-            self.complete_milestone("secure_route")
-
-    def progress_discovery_story(self):
-        if not self.story_states["alien_discovery"]:
-            self.story_states["alien_discovery"] = True
-            self.plot_points += 20
-            self.complete_milestone("first_artifact")
-
-    def progress_empire_story(self):
-        if not self.story_states["trade_empire"]:
-            self.story_states["trade_empire"] = True
-            self.plot_points += 25
-            self.trigger_milestone("unite_systems")
-
-    def check_discovery_milestone(self, location):
-        """Handle discovery of significant locations"""
-        location_milestones = {
-            "AsteroidBase": "establish_base",
-            "DeepSpaceOutpost": "signal_source", 
-            "ResearchColony": "research_hub"
-        }
-        
-        if location.location_type in location_milestones:
-            self.complete_milestone(location_milestones[location.location_type])
+    def check_milestone_progress(self):
+        """Check for milestone completions in current chapter"""
+        if self.current_chapter:
+            available_milestones = self.current_chapter.get_available_milestones(self.game)
+            for milestone in available_milestones:
+                if milestone.check_completion(self.game):
+                    milestone.complete(self.game)
+                    self.completed_story_beats.add(milestone.id)
 
     def get_current_objectives(self):
-        """Get current chapter objectives for display"""
-        chapter = self.chapters[self.current_chapter]
-        incomplete = [m for m in chapter["milestones"] 
-                    if m not in self.completed_story_beats]
-        return incomplete
+        """Get current chapter objectives"""
+        if self.current_chapter:
+            return [(m.title, m.completed) for m in self.current_chapter.milestones.values()]
+        return []
 
-    def get_chapter_progress(self):
-        """Get current chapter completion percentage"""
-        chapter = self.chapters[self.current_chapter]
-        completed = sum(1 for m in chapter["milestones"] 
-                    if m in self.completed_story_beats)
-        return (completed / len(chapter["milestones"])) * 100
+    def check_chapter_progress(self):
+        """Check for chapter completion and handle branching"""
+        if self.current_chapter and not self.current_chapter.completed:
+            self.check_milestone_progress()
+            
+            if self.current_chapter.check_completion(self.game):
+                next_chapters = self.current_chapter.get_next_chapters(self.game)
+                
+                if next_chapters:
+                    if len(next_chapters) > 1:
+                        self.present_chapter_choice(next_chapters)
+                    else:
+                        self.start_chapter(next_chapters[0])
+                elif not self.current_chapter.next_chapters:
+                    # This is an ending
+                    self.handle_game_ending()
+
+    def handle_game_ending(self):
+        """Handle reaching a game ending"""
+        ending_messages = {
+            "ending_trade": [
+                "Congratulations! You've become a legendary trade mogul!",
+                "Your economic empire spans the galaxy.",
+                f"Final wealth: {self.game.format_money(self.game.ship.money)}",
+                f"Total trades: {self.game.trades_completed}"
+            ],
+            "ending_combat": [
+                "Congratulations! You're now a legendary fleet admiral!",
+                "Your military prowess is unmatched.",
+                f"Combat victories: {self.game.ship.combat_victories['total']}",
+                f"Final rank: {self.game.rank}"
+            ],
+            "ending_discovery": [
+                "Congratulations! You've solved the sector's ancient mysteries!",
+                "Your discoveries will change history forever.",
+                f"Research points: {self.game.ship.research_points}",
+                f"Discoveries: {len(self.game.discovered_locations)}"
+            ]
+        }
+
+        messages = ending_messages.get(self.current_chapter.id, 
+            ["Congratulations! You've completed your journey!"])
+        
+        self.game.display_story_message(messages)
+        self.game.display_score()
+
+    def complete_current_chapter(self):
+        """Handle chapter completion with unlocks"""
+        if not self.current_chapter.completed:
+            self.current_chapter.completed = True
+            self.current_chapter.completion_turn = self.game.turn
+            self.completed_chapters.add(self.current_chapter.id)
+            
+            # Handle any chapter unlocks
+            self.current_chapter.handle_chapter_unlocks(self.game)
+            
+            self.game.display_story_message([
+                f"Chapter Complete: {self.current_chapter.title}",
+                "Your journey continues to evolve..."
+            ])
+
+    def present_chapter_choice(self, available_chapters):
+        """Present chapter choices to player"""
+        content = [["Choose Your Path"]]
+        for i, chapter in enumerate(available_chapters, 1):
+            content.extend([
+                [""],
+                [f"{i}. {chapter.title}"],
+                [chapter.description]
+            ])
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input(
+            f"Choose your path (1-{len(available_chapters)}): ",
+            [str(i) for i in range(1, len(available_chapters) + 1)]
+        )
+        
+        if choice:
+            chosen_chapter = available_chapters[int(choice) - 1]
+            self.start_chapter(chosen_chapter)
+
+    def start_chapter(self, chapter):
+        """Start a new chapter"""
+        self.current_chapter = chapter
+        self.game.display_story_message([
+            f"Chapter {chapter.id}: {chapter.title}",
+            chapter.description,
+            "",
+            "New milestones await..."
+        ])
+
+    def get_current_objectives(self):
+        """Get current chapter objectives"""
+        if self.current_chapter:
+            return [(m.title, m.completed) for m in self.current_chapter.milestones.values()]
+        return []
 
     def save_progress(self):
         """Return story progress data for saving"""
         return {
-            "chapter": self.current_chapter,
+            "current_chapter": self.current_chapter.id if self.current_chapter else None,
+            "completed_chapters": list(self.completed_chapters),
+            "completed_story_beats": list(self.completed_story_beats),
             "plot_points": self.plot_points,
-            "completed_beats": list(self.completed_story_beats),
             "story_states": dict(self.story_states)
         }
 
     def load_progress(self, data):
         """Load story progress from saved data"""
-        self.current_chapter = data["chapter"]
+        if data["current_chapter"]:
+            self.current_chapter = self.chapters[data["current_chapter"]]
+        self.completed_chapters = set(data["completed_chapters"])
+        self.completed_story_beats = set(data["completed_story_beats"])
         self.plot_points = data["plot_points"]
-        self.completed_story_beats = set(data["completed_beats"])
-        self.story_states.update(data["story_states"])       
+        self.story_states.update(data["story_states"])
+
+# Add these methods from old system:
+    def process_event(self, event_type, details):
+        """Process events and award plot points"""
+        if self.check_cooldown(event_type):
+            return
+
+        points = self.calculate_points(event_type, details)
+        points *= (1 + self.current_chapter.id * 0.2)
+        self.plot_points += int(points)
+        
+        self.update_story_states(event_type, details)
+        self.check_chapter_progress()
 
     def trigger_story_event(self, event_id, details=None):
         """Legacy support for story events"""
-        if event_id in self.milestone_points:
-            self.complete_milestone(event_id)
+        if event_id in self.enabled_events:
+            self.process_event("story", {
+                "event_id": event_id,
+                "details": details
+            })
             return True
         return False
 
-    def enable_story_event(self, event_id):
-        """Support for enabling events"""
-        if not hasattr(self, 'enabled_events'):
-            self.enabled_events = set()
-        self.enabled_events.add(event_id)
-
-    def process_story_event(self, event_id):
-        """Extension point for modding"""
-        if hasattr(self, 'enabled_events') and event_id in self.enabled_events:
-            self.process_event("story", {"event_id": event_id})
-
     def check_event_trigger(self, event, game):
         """Check if an event triggers any story progression"""
-        # Handle event triggers based on event name
         if isinstance(event, str):
             if "Pirate" in event:
                 self.process_event("combat", {"enemy_type": "pirate"})
@@ -8092,6 +8300,145 @@ class StoryManager:
                 self.process_event("trade", {})
             elif "research" in event.lower():
                 self.process_event("research", {})
+
+    def handle_quest_completion(self, quest):
+        """Update story progress when quests complete"""
+        plot_points = {
+            "story": 10,
+            "combat": 5,
+            "trade": 5,
+            "exploration": 8,
+            "research": 8
+        }.get(quest.quest_type, 3)
+        
+        self.plot_points += plot_points
+        
+        if quest.quest_type == "trade" and self.game.trades_completed >= 50:
+            self.story_states["trade_empire"] = True
+        elif quest.quest_type == "combat" and self.game.ship.combat_victories['total'] >= 25:
+            self.story_states["pirate_threat"] = True
+
+    def handle_quest_line_completion(self, quest_line):
+        """Update story progress when a quest line is completed"""
+        self.plot_points += 20
+        
+        if quest_line == "mining":
+            self.story_states["resource_empire"] = True
+        elif quest_line == "research":
+            self.story_states["alien_discovery"] = True
+
+    def check_cooldown(self, event_type):
+        """Check event cooldown to prevent spam"""
+        current_turn = self.game.turn
+        if event_type in self.event_cooldowns:
+            if current_turn - self.event_cooldowns[event_type] < 5:
+                return True
+        self.event_cooldowns[event_type] = current_turn
+        return False
+
+    def calculate_points(self, event_type, details):
+        """Calculate points based on event type and details"""
+        base_points = {
+            "combat": 5,
+            "trade": 3,
+            "exploration": 8,
+            "research": 6,
+            "story": 10
+        }.get(event_type, 2)
+        
+        if details.get("enemy_type") == "pirate":
+            base_points *= 1.5
+        elif details.get("discovery_type") == "artifact":
+            base_points *= 2
+            
+        return base_points
+
+    def update_story_states(self, event_type, details):
+        """Update story state flags based on events"""
+        if event_type == "combat" and details.get("enemy_type") == "pirate":
+            self.story_states["pirate_threat"] = True
+        elif event_type == "exploration" and details.get("discovery_type") == "artifact":
+            self.story_states["alien_discovery"] = True
+
+    def display_story_progress(self):
+        """Display detailed story progress information"""
+        content = [
+            ["Story Progress"],
+            [""],
+            [f"Current Chapter: {self.current_chapter.title if self.current_chapter else 'None'}"],
+            [f"Plot Points: {self.plot_points}"],
+            [""],
+            ["Active Milestones:"]
+        ]
+        
+        # Show current chapter's milestones with status
+        if self.current_chapter:
+            for milestone in self.current_chapter.milestones.values():
+                status = "✓" if milestone.completed else "□"
+                content.append([f"{status} {milestone.title}"])
+                if not milestone.completed:
+                    # Show requirements still needed
+                    for req_type, req_value in milestone.requirements.items():
+                        content.append([f"  └─ Needs: {req_type}: {req_value}"])
+        
+        content.extend([
+            [""],
+            ["Completed Chapters:"]
+        ])
+        
+        # Show completed chapters and their significant milestones
+        for chapter_id in self.completed_chapters:
+            chapter = self.chapters[chapter_id]
+            content.append([f"• {chapter.title}"])
+            for milestone in chapter.milestones.values():
+                if milestone.completed:
+                    completion_turn = getattr(milestone, 'completion_turn', '?')
+                    content.append([f"  └─ {milestone.title} (Turn {completion_turn})"])
+        
+        content.extend([
+            [""],
+            ["Story States:"]
+        ])
+        
+        # Show active story states
+        for state, active in self.story_states.items():
+            if active:
+                content.append([f"• {state.replace('_', ' ').title()}"])
+        
+        content.extend([
+            [""],
+            ["Unlocked Features:"]
+        ])
+        
+        # Show unlocked location types
+        if hasattr(self.game, 'unlocked_location_types'):
+            content.append(["Location Types:"])
+            for loc_type in self.game.unlocked_location_types:
+                content.append([f"  • {loc_type}"])
+        
+        # Show unlocked items from story progression
+        if hasattr(self.game.ship, 'items'):
+            content.append(["Story Items:"])
+            for item in self.game.ship.items:
+                content.append([f"  • {item}"])
+        
+        # Show available next chapters if any
+        if self.current_chapter and self.current_chapter.next_chapters:
+            content.extend([
+                [""],
+                ["Possible Next Chapters:"]
+            ])
+            for chapter_id in self.current_chapter.next_chapters:
+                chapter = self.chapters[chapter_id]
+                content.append([f"• {chapter.title}"])
+                # Show requirements for next chapters
+                for req_type, req_value in chapter.requirements.items():
+                    content.append([f"  └─ Needs: {req_type}: {req_value}"])
+        
+        print(self.game.create_box(content, 'double'))
+
+    # Log, player log. Example usage:
+    # game.story_manager.display_story_progress()                    
 
 class LocationManager:
     """Manages location interactions with story and quest systems"""
