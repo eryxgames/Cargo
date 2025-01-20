@@ -4969,13 +4969,31 @@ class SpecialCharacterGenerator:
         self.known_characters = {}  # Track generated characters
         self.add_vip_templates()
 
-    def generate_character(self, char_type):
-        """Generate a character based on type"""
-        if char_type == "VIPPassenger":
-            # Use existing VIP templates
+    def generate_character(self, char_type=None, title=None, specialization=None):
+        """Generate a character with optional title and specialization"""
+        if title and specialization:
+            # Handle direct title/specialization generation
+            name = random.choice(self.surnames)
+            character = SpecialCharacter(
+                title=title,
+                name=name,
+                role=specialization,
+                specialization=specialization
+            )
+            # Add VIP-specific attributes if it's a VIP
+            if specialization == "VIP":
+                character.rewards = {
+                    "base_money": 25000,
+                    "reputation": 15
+                }
+                character.special_abilities = ["trade_bonus"]
+                reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+                character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+            return character
+            
+        elif char_type == "VIPPassenger":
             vip_type = random.choice(list(self.vip_templates.keys()))
             template = self.vip_templates[vip_type]
-            
             title = random.choice(template["titles"])
             name = random.choice(self.surnames)
             role = random.choice(template["roles"])
@@ -4987,16 +5005,12 @@ class SpecialCharacterGenerator:
                 specialization="VIP"
             )
             
-            # Add VIP-specific attributes
             character.rewards = dict(template["rewards"])
             character.special_abilities = list(template["special_abilities"])
-            
-            # Scale rewards based on reputation (from original code)
             reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
             character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
-            
             return character
-        
+            
         elif char_type == "PirateCaptain":
             title = "Rogue Captain"
             name = f"Captain {random.choice(self.surnames)}"
@@ -5008,7 +5022,7 @@ class SpecialCharacterGenerator:
             }
             return character
             
-        elif char_type == "Neurodroid" or char_type == "Agrobot":
+        elif char_type in ["Neurodroid", "Agrobot"]:
             title = f"{char_type} Leader"
             name = f"Unit-{random.randint(1000,9999)}"
             character = SpecialCharacter(title, name, "synthetic", char_type.lower())
@@ -5016,8 +5030,7 @@ class SpecialCharacterGenerator:
             character.uprising_chance = 0.3
             return character
 
-        # Return None if character type not recognized
-        return None     
+        return None
 
     # Added to SpecialCharacterGenerator class for vip passengers
     def add_vip_templates(self):
