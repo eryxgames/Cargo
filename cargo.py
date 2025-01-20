@@ -673,6 +673,12 @@ class Game:
         self.trade_bonus = 0
         self.repair_discount = 0
         self.combat_bonus = 0
+        # Initialize character generators
+        self.character_generators = {
+            "human": SpecialCharacterGenerator(self),
+            "synthetic": SyntheticCharacterGenerator(self),
+            "alien": AlienCharacterGenerator(self)
+        }        
         # Add systems
         self.port_system = Port(self)
         self.contract_manager = ContractManager(self)
