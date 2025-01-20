@@ -10805,7 +10805,10 @@ class PassengerReputationManager:
     def check_story_triggers(self):
         """Check if any story characters should be triggered"""
         reputation = self.game.ship.passenger_reputation
-        current_chapter = self.game.story_manager.current_chapter
+        
+        # Extract numeric chapter number
+        current_chapter_str = self.game.story_manager.current_chapter
+        current_chapter = int(''.join(filter(str.isdigit, current_chapter_str)))
         
         for char_type, data in self.story_characters.items():
             if (reputation >= data["rep_required"] and
