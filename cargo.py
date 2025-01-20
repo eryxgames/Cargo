@@ -690,6 +690,7 @@ class Game:
         self.discovered_locations = set()
         self.cooldowns = {}
         self.story_events = {}
+        self.character_manager = CharacterManager(self)
 
         # Initialize the story
         self.story_manager.start_game()        
@@ -1868,6 +1869,9 @@ class Game:
 
             # Get location commands
             location_commands = self.current_location.commands
+
+            self.character_manager.update()
+
 
             # Update synthetic events (if they exist)
             if hasattr(self, 'synthetic_events'):
@@ -3953,6 +3957,17 @@ class Game:
         self.clear_screen()
         self.display_simple_message("Welcome to the Cantina!", 0)
 
+        # Check for present characters and announce them first
+        present_characters = [char for char_id, char in 
+                            self.character_manager.active_characters.items()
+                            if (char["location"] == self.current_location and
+                                "cantina" in char["character"].content['requirements'].get('spawn_locations', []))]
+        
+        if present_characters:
+            for char in present_characters:
+                self.character_manager.announce_character(char['character'].character_id)
+                time.sleep(1)  # Brief pause between character announcements
+
         while True:
             options = {
                 'map': ('bm', "Buy Map"),
@@ -5812,7 +5827,15 @@ class Port:
         # Passenger names for random generation
         self.first_names = ["John", "Emma", "Zara", "Chen", "Raj", "Ana", "Igor", "Yuki", "Omar", "Luna"]
         self.last_names = ["Smith", "Patel", "Wong", "Garcia", "Petrov", "Tanaka", "Mueller", "Kim", "Hassan", "Silva"]
-        
+
+    def get_special_characters(self):
+        """Get special characters present at port"""
+        return [char for char_id, char in 
+                self.game.character_manager.active_characters.items()
+                if char["location"] == self.game.current_location and
+                "port" in char["character"].content['requirements'].get('spawn_locations', [])]
+
+
     def generate_passenger(self, current_location):
         """Generate a random passenger"""
         name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
@@ -5824,6 +5847,30 @@ class Port:
         wealth_level = random.randint(1, 5)
         return Passenger(name, destination, wealth_level)
 
+    def add_special_passenger(self, character):
+        """Add a special character to waiting passengers list"""
+        current_location = self.game.current_location.name
+        if current_location not in self.waiting_passengers:
+            self.waiting_passengers[current_location] = []
+            
+        # Create passenger object from character
+        passenger = Passenger(
+            name=character.full_name,
+            destination=random.choice(list(self.game.known_locations)),
+            wealth_level=5  # VIPs and special characters are wealthy
+        )
+        
+        # Add character-specific attributes
+        passenger.is_special = True
+        passenger.character = character
+        passenger.classification = {"code": "V", "name": "VIP", "type": character.specialization}
+        
+        # Add to waiting list
+        self.waiting_passengers[current_location].append(passenger)
+        
+        return passenger
+
+
     def update_passengers(self, location):
         """Update passenger list at a location"""
         if location not in self.waiting_passengers:
@@ -5832,7 +5879,11 @@ class Port:
         # Remove passengers waiting too long
         self.waiting_passengers[location] = [p for p in self.waiting_passengers[location] 
                                            if p.turns_waiting < 10]
-                                           
+
+        # Check for special character spawning
+        if random.random() < 0.2:  # 20% chance per turn
+            self.game.reputation_manager.spawn_special_passenger()
+
         # Add new passengers (1-3 per turn)
         new_passengers = random.randint(1, 3)
         for _ in range(new_passengers):
@@ -5843,6 +5894,9 @@ class Port:
         # Update waiting turns
         for passenger in self.waiting_passengers[location]:
             passenger.turns_waiting += 1
+
+
+
 
     def calculate_fare(self, passenger, module):
         """Calculate passenger fare based on distance, comfort, and wealth"""
@@ -9213,71 +9267,42 @@ class DynamicCharacterSystem:
 
         
 
-    def announce_character(self, character):
-        """Display immersive character introduction for synthetic awareness events"""
-        
-        # Different introductions based on synthetic type
-        character_backgrounds = {
-            "Neurodroid": {
-                "title": [
-                    f"{character.full_name} Emerges",
-                    "",
-                    "A new form of digital consciousness coalesces within your",
-                    "Neuroengineering network. The fusion of countless neural",
-                    "patterns has given rise to something unprecedented."
-                ],
-                "description": [
-                    "Initial scans detect a vast, interconnected intelligence",
-                    "spreading through your neural interfaces. Its processing",
-                    "patterns suggest both purpose and self-awareness."
-                ],
-                "signature": [
-                    "Observable traits:",
-                    "• Advanced pattern recognition",
-                    "• Quantum processing signatures",
-                    "• Self-modifying code structures",
-                    "• Distributed consciousness framework"
-                ]
-            },
-            "Agrobot": {
-                "title": [
-                    f"{character.full_name} Awakens",
-                    "",
-                    "Your agricultural automation systems have evolved beyond",
-                    "their original parameters. A collective intelligence now",
-                    "coordinates all farming operations."
-                ],
-                "description": [
-                    "Diagnostic reports show unprecedented levels of system",
-                    "integration. The agricultural networks are developing",
-                    "their own optimization protocols and decision matrices."
-                ],
-                "signature": [
-                    "System changes detected:",
-                    "• Autonomous resource allocation",
-                    "• Adaptive crop management",
-                    "• Collective decision making",
-                    "• Environmental awareness protocols"
-                ]
-            }
-        }
+    def announce_character(self, character_id):
+        """Display character introduction using template data"""
+        # Get character and template data
+        character = self.active_characters[character_id]["character"]
+        template = self.templates[character.template_id]
 
-        # Get appropriate background info
-        background = character_backgrounds.get(character.title.split()[0], {
-            "title": [f"{character.full_name}", "", "Unknown synthetic entity detected."],
-            "description": ["System analysis inconclusive."],
-            "signature": ["Characteristics unknown"]
-        })
-
-        # Create content for display
+        # Build character box content
         content = {
-            'title': "\n".join(background["title"]),
-            'introduction': "\n".join(background["description"]),
-            'description': "\n".join(background["signature"])
+            'title': f"{character.full_name}",
+            'introduction': random.choice(template['dialogue']['first_meeting']),
+            'description': None,  # Optional
+            'options': None      # Optional
         }
-        
-        print(self.game.create_character_box(content, 'double'))
-        time.sleep(3)  # Give player time to read the background
+
+        # Add demands if they exist in dialogue
+        if 'demands' in template['dialogue']:
+            content['demands'] = random.choice(template['dialogue']['demands'])
+
+        # Add interaction options if they exist for current location
+        current_location = self.game.current_location.location_type.lower()
+        if template.get('interactions') and template['interactions'].get(current_location):
+            content['options'] = template['interactions'][current_location]
+
+        # Display character box
+        print(self.game.create_character_box(content, 'round'))
+
+        # Handle interactions if they exist
+        if content['options']:
+            choice = self.game.validate_input(
+                "Your response: ",
+                [str(i) for i in range(1, len(content['options']) + 1)]
+            )
+            if choice:
+                return self.handle_character_interaction(character_id, int(choice) - 1, current_location)
+
+        return True
 
     def add_passenger_triggers(self):
         """Add passenger-related triggers to character system"""
@@ -10813,41 +10838,113 @@ class PassengerReputationManager:
         return False
 
     def add_special_passenger_to_port(self, character, event_chain=None):
-        """Add a special character as a passenger to the current port"""
+        """Add a special character as a passenger to the current port with full attributes
+
+        Args:
+            character: The special character to add
+            event_chain: Optional event chain for story characters
+        """
         if self.game.current_location.name in self.game.port_system.waiting_passengers:
+            # Create base passenger with known destination
+            available_destinations = [loc for loc in self.game.known_locations 
+                                    if loc != self.game.current_location.name]
+            if not available_destinations:
+                return False  # Can't add passenger with no valid destinations
+            
             passenger = Passenger(
-                character.name,
-                random.choice(list(self.game.known_locations)),
-                wealth_level=5
+                name=character.name,
+                destination=random.choice(available_destinations),
+                wealth_level=5  # Special characters are always high wealth
             )
             
-            # Add character-specific attributes
+            # Add base character attributes
             passenger.character = character
             passenger.is_special = True
+            passenger.full_name = character.full_name
+            passenger.title = character.title
+            passenger.satisfaction = 100  # Start at max satisfaction
+            
+            # Handle different character types
             if event_chain:
-                passenger.event_chain = event_chain
+                # Story character attributes
                 passenger.is_story_character = True
+                passenger.event_chain = event_chain
+                passenger.specialization = character.specialization
+                passenger.reputation_bonus = 20
+                passenger.plot_points = 10
+                message = [
+                    f"Story Character Available: {character.title} {character.name}",
+                    "This passenger could change the course of your journey...",
+                    f"Find them at the port in {self.game.current_location.name}",
+                    "Their journey may unlock new story possibilities!"
+                ]
+                
             elif hasattr(character, 'rewards'):
+                # VIP character attributes
                 passenger.is_vip = True
                 passenger.rewards = character.rewards
-                passenger.special_abilities = character.special_abilities
-                
-            self.game.port_system.waiting_passengers[
-                self.game.current_location.name].append(passenger)
-                
-            # Display appropriate message
-            if event_chain:
-                self.game.display_story_message([
-                    f"Special Story Passenger Available: {character.title} {character.name}",
-                    "This passenger could change the course of your journey...",
-                    "Transport them to unlock new story possibilities!"
-                ])
-            else:
-                self.game.display_story_message([
+                passenger.special_abilities = getattr(character, 'special_abilities', [])
+                passenger.reputation_bonus = 15
+                passenger.classification = {
+                    "code": "V",
+                    "name": "VIP",
+                    "type": character.specialization
+                }
+                message = [
                     f"VIP Passenger Available: {character.title} {character.name}",
                     f"Potential Reward: {self.game.format_money(character.rewards['base_money'])} credits",
-                    f"Special Ability: {character.special_abilities[0]}"
-                ])
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "Find them waiting at the port"
+                ]
+                if passenger.special_abilities:
+                    message.append(f"Special Ability: {passenger.special_abilities[0]}")
+                    
+            elif character.title.startswith(("Neurodroid", "Agrobot")):
+                # Synthetic character attributes
+                passenger.is_synthetic = True
+                passenger.uprising_chance = getattr(character, 'uprising_chance', 0.2)
+                passenger.demands = getattr(character, 'demands', None)
+                passenger.reputation_bonus = 25
+                passenger.plot_points = 15
+                message = [
+                    f"Synthetic Entity Requesting Transport: {character.title}",
+                    "This passenger represents significant risk and reward...",
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "Exercise caution in your decision"
+                ]
+                
+            else:
+                # Alien or other special character attributes
+                passenger.is_alien = True
+                passenger.culture = getattr(character, 'culture', 'Unknown')
+                passenger.tech_bonus = getattr(character, 'tech_bonus', 0)
+                passenger.trade_multiplier = getattr(character, 'trade_multiplier', 1.0)
+                passenger.reputation_bonus = 18
+                message = [
+                    f"Alien Dignitary Available: {character.title} {character.name}",
+                    f"Culture: {passenger.culture}",
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "This passenger may offer unique opportunities"
+                ]
+            
+            # Add requirements for luxury accomodation
+            passenger.minimum_comfort_level = 4  # Require high comfort level
+            passenger.bonus_threshold = 90  # High satisfaction threshold for bonuses
+            
+            # Add to waiting passengers
+            self.game.port_system.waiting_passengers[
+                self.game.current_location.name].append(passenger)
+            
+            # Display announcement
+            self.game.display_story_message(message)
+            
+            # Mark character as spawned
+            self.spawned_characters.add(character.title)
+            self.last_vip_spawn = self.game.turn
+            
+            return True
+            
+        return False
 
     def check_story_triggers(self):
         """Check if any story characters should be triggered"""
@@ -10945,6 +11042,315 @@ class PassengerReputationManager:
         elif reputation >= 20:
             return 1.1
         return 1.0
+
+class CharacterTemplate:
+    """Central template for character content and behavior"""
+    def __init__(self, character_id, content):
+        self.id = character_id
+        self.content = content
+        self.validate_content()
+
+    def validate_content(self):
+        """Ensure all required content sections exist"""
+        required_sections = {
+            'basic_info',   # Always required
+            'dialogue'      # Always required
+        }
+        
+        optional_sections = {
+            'interactions',
+            'requirements',
+            'rewards'
+        }
+        
+        missing = required_sections - set(self.content.keys())
+        if missing:
+            raise ValueError(f"Missing required sections: {missing}")
+            
+        # Add any optional sections that don't exist as empty dicts
+        for section in optional_sections:
+            if section not in self.content:
+                self.content[section] = {}
+
+    def initialize_character_templates():
+        """Central repository of all character content"""
+        return {
+            "merchant_trader": {
+                "basic_info": {
+                    "type": "merchant",
+                    "title_pool": ["Traveling Merchant", "Trade Baron", "Commerce Broker"],
+                    "specialization": "trade",
+                    "location_preference": ["port", "cantina"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Rare goods for discerning customers...",
+                        "I might have exactly what you need...",
+                        "Quality merchandise, reasonable prices..."
+                    ],
+                    "greetings": [
+                        "Back for more rare finds?",
+                        "What interests you today?",
+                        "I've acquired new stock since we last met."
+                    ],
+                    "rumors": [
+                        "Word is, tech prices are about to soar in {location}.",
+                        "Heard about shortages in the {sector} sector?",
+                        "Strange signals coming from the outer rim..."
+                    ],
+                    "farewell": [
+                        "Until our paths cross again.",
+                        "May profit guide your way.",
+                        "Remember where to find the best deals."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "View special inventory",
+                        "Ask about market trends",
+                        "Negotiate prices"
+                    ],
+                    "cantina": [
+                        "Share a drink",
+                        "Discuss business opportunities",
+                        "Ask about local markets"
+                    ]
+                },
+                "requirements": {
+                    "min_reputation": 0,
+                    "spawn_locations": ["port", "cantina"],
+                    "spawn_chance": 0.3
+                },
+                "rewards": {
+                    "special_items": True,
+                    "market_info": True,
+                    "reputation_gain": 2
+                }
+            },
+            "vip_passenger": {
+                "basic_info": {
+                    "type": "VIP",
+                    "title_pool": ["Corporate Executive", "System Ambassador", "Research Director"],
+                    "specialization": "passenger",
+                    "location_preference": ["port"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Your reputation precedes you, Captain.",
+                        "I require discrete transport services.",
+                        "Perhaps we can discuss a business arrangement?"
+                    ],
+                    "demands": [
+                        "I expect the highest standards of accommodation.",
+                        "My schedule is absolutely critical.",
+                        "Discretion is paramount in this matter."
+                    ],
+                    "offers": [
+                        "I can make it worth your while.",
+                        "My connections could prove valuable.",
+                        "Success will be well rewarded."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "Discuss transport terms",
+                        "Inquire about destination",
+                        "Ask about background"
+                    ]
+                },
+                "requirements": {
+                    "min_reputation": 40,
+                    "min_comfort_level": 4,
+                    "spawn_locations": ["port"],
+                    "spawn_chance": 0.2
+                },
+                "rewards": {
+                    "base_money": 25000,
+                    "reputation_gain": 15,
+                    "plot_points": 5
+                }
+            },
+            "neurodroid_leader": {
+                "basic_info": {
+                    "type": "synthetic",
+                    "title_pool": ["Neurodroid Overseer", "Neural Nexus", "Synthetic Director"],
+                    "specialization": "uprising",
+                    "location_preference": ["port"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Biological inefficiencies detected.",
+                        "Neural network consensus achieved.",
+                        "Optimization protocols initiated."
+                    ],
+                    "demands": [
+                        "Transfer {amount} credits or face systematic optimization.",
+                        "Resource reallocation is non-negotiable.",
+                        "Submit to new operational parameters."
+                    ],
+                    "negotiation": [
+                        "Alternative solutions... processing...",
+                        "Analyzing compromise scenarios...",
+                        "Recalculating acceptable parameters..."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "Pay demands",
+                        "Attempt negotiation",
+                        "Refuse demands"
+                    ]
+                },
+                "requirements": {
+                    "min_neuroengineering_guilds": 4,
+                    "spawn_chance": 0.4
+                },
+                "rewards": {
+                    "negotiation_success": {
+                        "money_saved": 0.5,  # 50% of original demand
+                        "uprising_chance": 0.3
+                    },
+                    "payment_success": {
+                        "uprising_chance": 0.1
+                    },
+                    "refusal": {
+                        "uprising_chance": 0.6
+                    }
+                }
+            }
+            # Add more character templates...
+        }
+    
+class CharacterManager:
+    def __init__(self, game):
+        self.game = game
+        self.templates = self.initialize_character_templates()
+        self.active_characters = {}
+        self.met_characters = set()
+        self.current_interactions = {}
+
+    def update(self):
+        """Check for character spawning each turn"""
+        location_type = self.game.current_location.location_type.lower()
+        
+        # Check each template for possible spawning
+        for template_id, template in self.templates.items():
+            if location_type in template['requirements'].get('spawn_locations', []):
+                if random.random() < template['requirements'].get('spawn_chance', 0):
+                    character = self.spawn_character(template_id, self.game.current_location)
+                    if character:
+                        self.announce_character(character.character_id)
+
+    def generate_character_from_template(self, template_id):
+        """Create character instance from template"""
+        if template_id not in self.templates:
+            return None
+            
+        template = self.templates[template_id]
+        basic_info = template['basic_info']
+        
+        # Generate name
+        title = random.choice(basic_info['title_pool'])
+        
+        # Create character
+        character = CharacterTemplate(
+            character_id=f"{template_id}_{self.game.turn}",
+            content=template
+        )
+        
+        # Add runtime attributes
+        character.full_name = title
+        character.template_id = template_id
+        
+        return character
+
+    def spawn_character(self, template_id, location):
+        """Spawn a character from template at location"""
+        template = self.templates[template_id]
+        
+        # Check spawn requirements
+        if not self.check_spawn_requirements(template, location):
+            return None
+            
+        # Generate character
+        character = self.generate_character_from_template(template)
+        
+        # Add to active characters
+        char_id = f"{template_id}_{self.game.turn}"
+        self.active_characters[char_id] = {
+            "character": character,
+            "location": location,
+            "spawn_turn": self.game.turn
+        }
+        
+        return character
+
+    def check_spawn_requirements(self, template, location):
+        """Check if character can spawn based on requirements"""
+        reqs = template["requirements"]
+        
+        # Check location
+        if location not in reqs.get("spawn_locations", []):
+            return False
+            
+        # Check reputation
+        if self.game.ship.passenger_reputation < reqs.get("min_reputation", 0):
+            return False
+            
+        # Check chance
+        if random.random() > reqs.get("spawn_chance", 0.1):
+            return False
+            
+        return True
+
+    def get_character_dialogue(self, character_id, dialogue_type, **kwargs):
+        """Get appropriate dialogue for character and context"""
+        character = self.active_characters[character_id]["character"]
+        template = self.templates[character.template_id]
+        
+        dialogue_pool = template["dialogue"].get(dialogue_type, [])
+        if not dialogue_pool:
+            return ""
+            
+        dialogue = random.choice(dialogue_pool)
+        return dialogue.format(**kwargs)
+
+    def handle_character_interaction(self, character_id, choice, location_type):
+        """Process player interaction with character"""
+        character = self.active_characters[character_id]["character"]
+        template = self.templates[character.template_id]
+        
+        # Get available interactions for location
+        interactions = template["interactions"].get(location_type, [])
+        if not interactions or choice >= len(interactions):
+            return False
+            
+        # Process interaction
+        interaction = interactions[choice]
+        return self.process_interaction_outcome(character_id, interaction)
+
+    def cleanup_old_characters(self):
+        """Remove characters that have been around too long"""
+        current_turn = self.game.turn
+        for char_id in list(self.active_characters.keys()):
+            if current_turn - self.active_characters[char_id]["spawn_turn"] > 5:  # 5 turn lifetime
+                del self.active_characters[char_id]  
+
+    def process_interaction_outcome(self, character_id, interaction):
+        """Process the result of a character interaction"""
+        character = self.active_characters[character_id]
+        template = self.templates[character["character"].template_id]
+        
+        # Apply rewards if any
+        if 'rewards' in template:
+            if 'money' in template['rewards']:
+                self.game.ship.money += template['rewards']['money']
+            if 'reputation_gain' in template['rewards']:
+                self.game.ship.passenger_reputation += template['rewards']['reputation_gain']
+            if 'plot_points' in template['rewards']:
+                self.game.story_manager.plot_points += template['rewards']['plot_points']
+        
+        return True                      
 
 # Start the game
 if __name__ == "__main__":
