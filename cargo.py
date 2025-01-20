@@ -408,7 +408,7 @@ class Ship:
             'salt': 0,
             'fuel': 0
         }
-        self.money = 1000
+        self.money = 1000000
         self.damage = 0
         self.research_points = 0
 
@@ -9253,55 +9253,85 @@ class DynamicCharacterSystem:
 
 
     def spawn_character(self, trigger_id):
-            """Generate and introduce a new character"""
-            trigger = self.character_triggers[trigger_id]
-            generator = self.character_generators[trigger['generator']]
-            character = generator.generate_character(trigger['character_type'])
-            self.active_characters[trigger_id] = character
-            
-            # Initialize event chain
-            self.event_chains[trigger_id] = self.create_event_chain(trigger['event_chain'], character)
-            
-            # Announce character appearance
-            self.announce_character(character)
+        """Generate and introduce a new character"""
+        trigger = self.character_triggers[trigger_id]
+        generator = self.character_generators[trigger['generator']]
+        character = generator.generate_character(trigger['character_type'])
+        
+        # Create a unique identifier for the character
+        character_id = f"{trigger_id}_{self.game.turn}"
+        
+        # Store the character with its full details
+        self.active_characters[character_id] = {
+            "character": character,
+            "trigger_id": trigger_id
+        }
+        
+        # Initialize event chain if applicable
+        if trigger['event_chain']:
+            self.event_chains[character_id] = self.create_event_chain(trigger['event_chain'], character)
+        
+        # Announce character using the character_id
+        self.announce_character(character_id)
 
         
 
     def announce_character(self, character_id):
-        """Display character introduction using template data"""
-        # Get character and template data
-        character = self.active_characters[character_id]["character"]
-        template = self.templates[character.template_id]
-
-        # Build character box content
+        """Display character introduction using flexible character data"""
+        # Retrieve the character entry
+        character_entry = self.active_characters.get(character_id)
+        if not character_entry:
+            print(f"Error: No character found for ID {character_id}")
+            return
+        
+        # Get character 
+        character = character_entry["character"]
+        
+        # Prepare content based on character type
         content = {
-            'title': f"{character.full_name}",
-            'introduction': random.choice(template['dialogue']['first_meeting']),
-            'description': None,  # Optional
-            'options': None      # Optional
+            'title': str(getattr(character, 'full_name', str(character))),
+            'introduction': "",
+            'description': "",
+            'options': ""
         }
-
-        # Add demands if they exist in dialogue
-        if 'demands' in template['dialogue']:
-            content['demands'] = random.choice(template['dialogue']['demands'])
-
-        # Add interaction options if they exist for current location
+        
+        # Try to get introduction from different possible sources
+        if hasattr(character, 'content'):
+            # For CharacterTemplate-based characters
+            intros = character.content['dialogue'].get('first_meeting', [])
+            content['introduction'] = random.choice(intros) if intros else "A new encounter begins."
+        elif hasattr(character, 'introduction'):
+            # For SpecialCharacter objects
+            content['introduction'] = str(character.introduction)
+        else:
+            # Fallback generic introduction
+            content['introduction'] = "A mysterious figure approaches..."
+        
+        # Ensure all content values are strings
+        for key in content:
+            content[key] = str(content[key]) if content[key] is not None else ""
+        
+        # Handle interactions if they exist
         current_location = self.game.current_location.location_type.lower()
-        if template.get('interactions') and template['interactions'].get(current_location):
-            content['options'] = template['interactions'][current_location]
-
+        
+        # Determine options based on character type
+        if hasattr(character, 'content') and 'interactions' in character.content:
+            interactions = character.content['interactions'].get(current_location, [])
+            content['options'] = ", ".join(str(opt) for opt in interactions) if interactions else ""
+        
         # Display character box
         print(self.game.create_character_box(content, 'round'))
-
-        # Handle interactions if they exist
+        
+        # If options exist, allow interaction
         if content['options']:
             choice = self.game.validate_input(
                 "Your response: ",
-                [str(i) for i in range(1, len(content['options']) + 1)]
+                [str(i) for i in range(1, len(content['options'].split(', ')) + 1)]
             )
             if choice:
+                # Note: This might need further adjustment depending on your interaction handling
                 return self.handle_character_interaction(character_id, int(choice) - 1, current_location)
-
+        
         return True
 
     def add_passenger_triggers(self):
@@ -10556,7 +10586,7 @@ class SpecialCharacterEncounters:
         for i, offer in enumerate(character["offers"], 1):
             content.append([
                 f"{i}. {offer['item'].title()}",
-                f"Price: {self.game.format_money(offer['price'])}",
+                f"¤: {self.game.format_money(offer['price'])}",
                 offer['description']
             ])
             
@@ -10564,7 +10594,11 @@ class SpecialCharacterEncounters:
         
         options = [str(i) for i in range(1, len(character["offers"]) + 1)] + ['0']
         choice = self.game.validate_input("Choose item to buy (0 to leave): ", options)
-        
+
+        # If choice is None, return immediately
+        if choice is None:
+            return
+
         if choice == '0':
             return
             
