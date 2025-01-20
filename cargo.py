@@ -11224,7 +11224,7 @@ class CharacterTemplate:
 class CharacterManager:
     def __init__(self, game):
         self.game = game
-        self.templates = self.initialize_character_templates()
+        self.templates = CharacterTemplate.initialize_character_templates()
         self.active_characters = {}
         self.met_characters = set()
         self.current_interactions = {}
