@@ -1435,9 +1435,15 @@ class Game:
 
     def display_location_info(self):
         # Ship section
+        # Get total locations
+        total_locations = len(self.locations) if hasattr(self, 'locations') else 0
+        # Add 1 to discovered count for starting location if not already included
+        discovered = (len(self.discovered_locations) if hasattr(self, 'discovered_locations') else 0)
+
         ship_info = [
             ["Ship Information"],
             [f"Stats: {self.ship.attack}|{self.ship.defense}|{self.ship.speed}"],
+            [f"Locations Discovered: {discovered + 1}/{total_locations}"],
             [f"Trades Completed: {self.trades_completed}"],
             [f"PAX Delivered: {self.reputation_manager.total_passengers}"],
 #            [f"Locations Discovered: {len(self.discovered_locations) if hasattr(self, 'discovered_locations') else 0}"]
@@ -1451,7 +1457,9 @@ class Game:
     #        [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
             ["Items:"]
         ]
-        
+
+      
+                
         # Add items if any exist
         if self.ship.items:
             for item, count in self.ship.items.items():
@@ -2239,6 +2247,12 @@ class Game:
         if found_location:
             old_location = self.current_location
             self.current_location = found_location
+
+            # Initialize and update discovered locations
+            if not hasattr(self, 'discovered_locations'):
+                self.discovered_locations = set([old_location.name])
+            self.discovered_locations.add(found_location.name)
+
             self.display_simple_message(f"Traveled to {found_location.name}.")
             
             # Calculate research exchange based on location differences
@@ -7869,6 +7883,19 @@ class StoryManager:
         self.event_cooldowns = {}
         self.enabled_events = set()
 
+    def get_chapter_number(self, chapter_string=None):
+        """
+        Extract numeric chapter number from chapter string.
+        If no chapter string provided, uses current chapter.
+        Returns: int chapter number
+        """
+        if chapter_string is None:
+            chapter_string = self.current_chapter
+        try:
+            return int(''.join(filter(str.isdigit, chapter_string)))
+        except (ValueError, TypeError):
+            return 1  # Default to chapter 1 if conversion fails
+
     def initialize_chapters(self):
         """Initialize all chapters with their milestones and branching paths"""
         return {
@@ -9238,7 +9265,7 @@ class DynamicCharacterSystem:
             "galactic_alliance": {
                 "condition": lambda game: (
                     game.ship.passenger_reputation >= 60 and 
-                    game.story_manager.current_chapter >= 2
+                    game.story_manager.get_chapter_number() >= 2
                 ),
                 "generator": "human",
                 "character_type": "DiplomaticEnvoy",
