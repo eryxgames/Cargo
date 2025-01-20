@@ -408,7 +408,7 @@ class Ship:
             'salt': 0,
             'fuel': 0
         }
-        self.money = 1000000
+        self.money = 1000
         self.damage = 0
         self.research_points = 0
 
@@ -1424,7 +1424,7 @@ class Game:
         
         ]
     #    print(self.create_box(commands, 'round'))
-        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, info/i...", 1)
+        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i...", 1)
 
         # Display active effects
         if self.research.unlocked_options:
@@ -1585,7 +1585,8 @@ class Game:
         self.clear_screen()
         display_logo(logo_data, centered=False)
         difficulty_info = [
-            ["DIFFICULTY SELECTION"],
+#            ["DIFFICULTY SELECTION"],
+            [""],
             ["  1. EASY"],
             ["  2. NORMAL"],
             ["  3. EXPERT"],
@@ -7910,14 +7911,14 @@ class StoryManager:
                         "title": "First Trade",
                         "description": "Complete your first trade",
                         "requirements": {"trades_completed": 1},
-                        "rewards": {"money": 5000, "plot_points": 5}
+                        "rewards": {"money": 500, "plot_points": 5}
                     },
                     {
                         "milestone_id": "first_combat",
                         "title": "Combat Initiation",
                         "description": "Win your first space battle",
                         "requirements": {"combat_victories": 1},
-                        "rewards": {"money": 5000, "plot_points": 5}
+                        "rewards": {"money": 1000, "plot_points": 5}
                     },
                     {
                         "milestone_id": "basic_license",
@@ -8055,7 +8056,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch2a", "ch2b"],  # Can be reached from either path
                     "plot_points": 50,
-                    "research_points": 200
+                    "research_points": 300
                 },
                 milestones=[
                     {
@@ -8129,7 +8130,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch3c"],
                     "plot_points": 100,
-                    "research_points": 500
+                    "research_points": 1500
                 },
                 milestones=[
                     {
@@ -8497,7 +8498,7 @@ class StoryManager:
         current_chapter_obj = self.chapters[self.current_chapter] if self.current_chapter else None
         
         content = [
-            ["Story Progress"],
+            ["Captain's Log: Story Progress"],
             [""],
             [f"Current Chapter: {current_chapter_obj.title if current_chapter_obj else 'None'}"],
         ]
