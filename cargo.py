@@ -9942,6 +9942,7 @@ class SyntheticEventManager:
         self.active_uprisings = {}  # Track active uprisings
         self.active_effects = {}    # Track uprising effects
         self.demand_dialogues_shown = set()  # Track locations that have had initial dialogues
+        self.pacified_locations = {}  # NEW: Track locations that have been pacified
         self.potential_uprisings = {}  # Track locations that might have future uprisings
         self.effect_types = {
             "Neurodroid": {
@@ -9978,14 +9979,15 @@ class SyntheticEventManager:
 
     def update(self):
         """Main update method to be called each turn"""
-        # Check for new synthetic awareness
+        # Clean up expired pacifications first
+        current_turn = self.game.turn
+        for loc_name in list(self.pacified_locations.keys()):
+            if current_turn - self.pacified_locations[loc_name]["turn"] > 10:
+                del self.pacified_locations[loc_name]
+                
+        # Then do normal updates
         self.check_synthetic_awareness()
-        
-        # Handle active uprisings
         self.handle_uprising_effects()
-        
-        # Check for new uprisings from previously pacified locations
-        self.check_potential_uprisings()
 
     def check_synthetic_awareness(self):
         """Check for synthetic awareness based on global and local building counts"""
@@ -9999,41 +10001,86 @@ class SyntheticEventManager:
                 for loc in self.game.locations
             )
         }
-        
+
         global_uprising_thresholds = {
-            "Neurodroid": 8,
+            "Neurodroid": 8,  # Total across all locations
             "Agrobot": 8
         }
-        
-        for synthetic_type, total_count in building_counts.items():
-            # Check local uprisings first (per location)
+
+        # Clean up expired pacifications first
+        current_turn = self.game.turn
+        for loc_name in list(self.pacified_locations.keys()):
+            if current_turn - self.pacified_locations[loc_name]["turn"] > 10:  # 10 turns of peace
+                del self.pacified_locations[loc_name]
+
+        for synthetic_type in ["Neurodroid", "Agrobot"]:
+            # First check individual locations for local uprisings
             for location in self.game.locations:
-                # Local uprising check (4 buildings in a single location)
-                local_count = (
-                    location.buildings.count("Neuroengineering Guild") if synthetic_type == "Neurodroid" else
-                    location.buildings.count("Agrobot Assembly Line") if synthetic_type == "Agrobot" else 0
-                )
+                # Skip if already pacified or has active uprising
+                if location.name in self.pacified_locations:
+                    continue
+                    
+                uprising_id = f"{synthetic_type}_{location.name}"
+                if uprising_id in self.active_uprisings:
+                    continue
+
+                # Count relevant buildings
+                building_type = ("Neuroengineering Guild" if synthetic_type == "Neurodroid" 
+                            else "Agrobot Assembly Line")
+                building_count = location.buildings.count(building_type)
                 
-                if local_count >= 4:
-                    response = self.handle_synthetic_uprising(synthetic_type, location)
-                    if not response:
-                        self.start_uprising(synthetic_type, location)
-            
-            # Global uprising check
+                if building_count >= 4:
+                    dialogue_key = f"{synthetic_type}_{location.name}"
+                    if dialogue_key not in self.demand_dialogues_shown:
+                        response = self.handle_synthetic_uprising(synthetic_type, location)
+                        self.demand_dialogues_shown.add(dialogue_key)
+                        if response:  # Only start uprising if handle_synthetic_uprising returns True
+                            self.start_uprising(synthetic_type, location)
+
+            # Then check for global uprising potential
+            total_count = building_counts[synthetic_type]
             if total_count >= global_uprising_thresholds[synthetic_type]:
-                uprising_locations = [
+                # Find locations eligible for global uprising
+                eligible_locations = [
                     loc for loc in self.game.locations 
-                    if (synthetic_type == "Neurodroid" and loc.buildings.count("Neuroengineering Guild") >= 4) or
-                    (synthetic_type == "Agrobot" and loc.buildings.count("Agrobot Assembly Line") >= 4)
+                    if (loc.name not in self.pacified_locations and  # Not pacified
+                        f"{synthetic_type}_{loc.name}" not in self.active_uprisings and  # No active uprising
+                        (
+                            (synthetic_type == "Neurodroid" and loc.buildings.count("Neuroengineering Guild") >= 2) or
+                            (synthetic_type == "Agrobot" and loc.buildings.count("Agrobot Assembly Line") >= 2)
+                        )
+                    )
                 ]
-                
-                if uprising_locations:
-                    location = random.choice(uprising_locations)
-                    if not self.handle_synthetic_uprising(synthetic_type, location):
-                        self.start_uprising(synthetic_type, location)
+
+                if eligible_locations:
+                    # Choose random location for global uprising
+                    target_location = random.choice(eligible_locations)
+                    dialogue_key = f"global_{synthetic_type}_{target_location.name}"
+
+                    if dialogue_key not in self.demand_dialogues_shown:
+                        # Show special global uprising dialogue first
+                        self.game.display_story_message([
+                            f"Global {synthetic_type} Network Activation!",
+                            "Synthetic consciousness spreading across multiple locations...",
+                            f"Network hub detected at {target_location.name}"
+                        ])
+
+                        response = self.handle_synthetic_uprising(synthetic_type, target_location)
+                        self.demand_dialogues_shown.add(dialogue_key)
+                        
+                        if response:  # Only start uprising if handle_synthetic_uprising returns True
+                            # Global uprising has enhanced effects
+                            self.start_uprising(synthetic_type, target_location, is_global=True)
+
+            # Finally, check potential uprisings from previously pacified locations
+            self.check_potential_uprisings()
 
     def handle_synthetic_uprising(self, synthetic_type, location):
-        """Unified method for handling synthetic uprisings"""
+        """Handle synthetic uprising encounter"""
+        # IMPORTANT: Check if the location is already pacified first
+        if location.name in self.pacified_locations:
+            return False
+
         uprising_templates = {
             "Neurodroid": {
                 "title": "Neural Network Breach Detected!",
@@ -10041,103 +10088,81 @@ class SyntheticEventManager:
                 "base_demand_range": (10000, 50000),
                 "demand_description": "Transfer {amount} credits or face systematic optimization.",
                 "negotiation_multipliers": {
-                    "full_payment": 0,  # 0% chance of uprising
-                    "partial_payment": 0.3,  # 30% chance of uprising
-                    "refusal": 1.0  # 100% chance of uprising
-                },
-                "partial_payment_factor": 0.6
+                    "full_payment": 0,
+                    "partial_payment": 0.3,
+                    "refusal": 1.0
+                }
             },
             "Agrobot": {
-                "title": "Agricultural Automation System Alert!",
+                "title": "Agricultural Automation Alert!",
                 "introduction": "The agricultural automation system achieves collective awareness.",
                 "base_demand_range": (20000, 60000),
                 "demand_description": "Resource reallocation required. Provide {amount} credits or face automated restructuring.",
                 "negotiation_multipliers": {
-                    "full_payment": 0,  # 0% chance of uprising
-                    "partial_payment": 0.3,  # 30% chance of uprising
-                    "refusal": 1.0  # 100% chance of uprising
-                },
-                "partial_payment_factor": 0.6,
-                "cargo_reduction": {
-                    "full_payment": 0.3,
-                    "partial_payment": 0.15
+                    "full_payment": 0,
+                    "partial_payment": 0.3,
+                    "refusal": 1.0
                 }
             }
         }
 
-        # Get template for specific synthetic type
         template = uprising_templates.get(synthetic_type)
         if not template:
-            print(f"Error: Unknown synthetic type {synthetic_type}")
             return False
 
-        # Calculate demand amount
         money_demand = random.randint(*template["base_demand_range"])
-
-        # Prepare character content
+        
         character_content = {
-            'title': f"{synthetic_type} Uprising Imminent",
-            'introduction': template["introduction"],
-            'demands': template["demand_description"].format(amount=self.game.format_money(money_demand)),
-            'options': "1. Accept  2. Negotiate  3. Refuse"
+            'title': template['title'],
+            'introduction': template['introduction'],
+            'demands': template['demand_description'].format(amount=self.game.format_money(money_demand)),
+            'options': "1. Pay Demands  2. Negotiate  3. Refuse"
         }
-        
-        # Display character box
-        print(self.game.create_character_box(character_content))
 
-        # Get user choice
+        print(self.game.create_character_box(character_content))
         choice = self.game.validate_input("Choose action: ", ['1', '2', '3'])
-        
+
         if not choice:
-            # Default to uprising if no choice made
             return True
 
-        # Full payment scenario
-        if choice == '1':
+        if choice == '1':  # Full payment
             if self.game.ship.money >= money_demand:
                 self.game.ship.money -= money_demand
-                
-                # Special handling for Agrobot's cargo reduction
-                if synthetic_type == "Agrobot":
-                    for cargo_type in self.game.ship.cargo:
-                        reduction = int(self.game.ship.cargo[cargo_type] * 
-                                        template["cargo_reduction"]["full_payment"])
-                        self.game.ship.cargo[cargo_type] -= reduction
-                
+                # IMPORTANT: Mark as pacified immediately
+                self.pacified_locations[location.name] = {
+                    "type": synthetic_type,
+                    "turn": self.game.turn
+                }
+                # Remove from potential uprisings if present
+                if location.name in self.potential_uprisings:
+                    del self.potential_uprisings[location.name]
                 self.game.display_simple_message(f"{synthetic_type} demands met. Systems pacified.")
                 return False
             else:
                 self.game.display_simple_message("Insufficient funds! Uprising begins!")
                 return True
 
-        # Negotiate scenario
-        elif choice == '2':
-            partial_money = int(money_demand * template["partial_payment_factor"])
-            if self.game.ship.money >= partial_money:
-                self.game.ship.money -= partial_money
-                
-                # Special handling for Agrobot's cargo reduction
-                if synthetic_type == "Agrobot":
-                    for cargo_type in self.game.ship.cargo:
-                        reduction = int(self.game.ship.cargo[cargo_type] * 
-                                        template["cargo_reduction"]["partial_payment"])
-                        self.game.ship.cargo[cargo_type] -= reduction
-                
-                # Determine uprising chance based on negotiation
+        elif choice == '2':  # Negotiate
+            partial_payment = int(money_demand * 0.6)
+            if self.game.ship.money >= partial_payment:
+                self.game.ship.money -= partial_payment
                 uprising_chance = template["negotiation_multipliers"]["partial_payment"]
                 if random.random() < uprising_chance:
-                    self.game.display_simple_message(f"Partial payment failed. {synthetic_type} uprising imminent!")
+                    self.game.display_simple_message("Negotiation failed! Uprising begins!")
                     return True
-                
-                self.game.display_simple_message("Negotiation successful. No immediate uprising.")
-                return False
+                else:
+                    # IMPORTANT: Mark as pacified on successful negotiation
+                    self.pacified_locations[location.name] = {
+                        "type": synthetic_type,
+                        "turn": self.game.turn
+                    }
+                    self.game.display_simple_message("Negotiation successful. Systems pacified.")
+                    return False
             else:
                 self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
                 return True
-
-        # Refuse scenario
-        else:
-            self.game.display_simple_message(f"Demands refused! {synthetic_type} uprising imminent!")
+        else:  # Refuse
+            self.game.display_simple_message(f"{synthetic_type} uprising imminent!")
             return True
 
     def add_potential_uprising(self, location, synthetic_type, base_chance):
@@ -10159,18 +10184,53 @@ class SyntheticEventManager:
                 self.start_uprising(data['type'], location)
                 del self.potential_uprisings[loc_name]
 
-    def start_uprising(self, synthetic_type, location):
+    def start_uprising(self, synthetic_type, location, is_global=False):
         """Start an uprising with proper effects"""
         uprising_id = f"{synthetic_type}_{location.name}"
         if uprising_id not in self.active_uprisings:
             self.active_uprisings[uprising_id] = {
                 "type": synthetic_type,
                 "location": location,
-                "turn_count": 0
+                "turn_count": 0,
+                "is_global": is_global
             }
             
-            # Apply initial effects based on type
-            effects = self.effect_types[synthetic_type]
+            # Define base effect types
+            effect_types = {
+                "Neurodroid": {
+                    "building_destruction": {
+                        "duration": 5,
+                        "destroy_chance": 0.2 if not is_global else 0.3,
+                        "targets": ["Neuroengineering Guild"]
+                    },
+                    "tech_price_increase": {
+                        "duration": 3 if not is_global else 4,
+                        "magnitude": 1.2 if not is_global else 1.4  # 20% or 40% increase
+                    },
+                    "research_reduction": {
+                        "duration": 4 if not is_global else 5,
+                        "magnitude": 0.7 if not is_global else 0.5  # 30% or 50% reduction
+                    }
+                },
+                "Agrobot": {
+                    "building_destruction": {
+                        "duration": 4 if not is_global else 5,
+                        "destroy_chance": 0.15 if not is_global else 0.25,
+                        "targets": ["Agrobot Assembly Line"]
+                    },
+                    "food_production": {
+                        "duration": 5 if not is_global else 6,
+                        "magnitude": 0.6 if not is_global else 0.4  # 40% or 60% reduction
+                    },
+                    "agri_price_increase": {
+                        "duration": 3 if not is_global else 4,
+                        "magnitude": 1.5 if not is_global else 1.8  # 50% or 80% increase
+                    }
+                }
+            }
+            
+            # Apply effects based on type
+            effects = effect_types[synthetic_type]
             for effect_type, params in effects.items():
                 effect = UprisingEffect(
                     effect_type=effect_type,
@@ -10188,26 +10248,70 @@ class SyntheticEventManager:
                 elif effect_type == "agri_price_increase":
                     location.add_temporary_ban("agri", params["duration"])
             
-            # Display appropriate message based on type
+            # Display appropriate message based on type and scope
             if synthetic_type == "Neurodroid":
-                self.game.display_story_message([
-                    "ALERT: Neurodroid Uprising Begins!",
-                    f"Location: {location.name}",
-                    "Neural networks are breaking free of control!",
-                    "Expect disruptions to tech production and research."
-                ])
+                if is_global:
+                    self.game.display_story_message([
+                        "CRITICAL ALERT: Global Neurodroid Network Activated!",
+                        f"Primary Hub: {location.name}",
+                        "Neural networks are achieving collective consciousness!",
+                        "Expect severe disruptions to tech production and research.",
+                        "Warning: Enhanced defensive capabilities detected."
+                    ])
+                else:
+                    self.game.display_story_message([
+                        "ALERT: Neurodroid Uprising Begins!",
+                        f"Location: {location.name}",
+                        "Neural networks are breaking free of control!",
+                        "Expect disruptions to tech production and research."
+                    ])
             elif synthetic_type == "Agrobot":
-                self.game.display_story_message([
-                    "ALERT: Agrobot Uprising Begins!",
-                    f"Location: {location.name}",
-                    "Agricultural systems are going rogue!",
-                    "Expect disruptions to food production and trade."
-                ])
+                if is_global:
+                    self.game.display_story_message([
+                        "CRITICAL ALERT: Global Agrobot Collective Formed!",
+                        f"Primary Hub: {location.name}",
+                        "Agricultural systems are forming a unified network!",
+                        "Expect severe disruptions to food production and trade.",
+                        "Warning: Enhanced agricultural control systems active."
+                    ])
+                else:
+                    self.game.display_story_message([
+                        "ALERT: Agrobot Uprising Begins!",
+                        f"Location: {location.name}",
+                        "Agricultural systems are going rogue!",
+                        "Expect disruptions to food production and trade."
+                    ])
 
-            # Add a story impact
+            # Add greater story impact for global uprisings
             if hasattr(self.game, 'story_manager'):
-                self.game.story_manager.plot_points += 2
-                self.game.story_manager.complete_milestone(f"{synthetic_type.lower()}_crisis")
+                if is_global:
+                    self.game.story_manager.plot_points += 5
+                    self.game.story_manager.complete_milestone(f"global_{synthetic_type.lower()}_crisis")
+                else:
+                    self.game.story_manager.plot_points += 2
+                    self.game.story_manager.complete_milestone(f"{synthetic_type.lower()}_crisis")
+
+            # For global uprisings, add chance to spread to nearby locations each turn
+            if is_global:
+                def check_spread():
+                    nearby_locations = [
+                        loc for loc in self.game.locations 
+                        if (loc != location and
+                            loc.name not in self.pacified_locations and
+                            f"{synthetic_type}_{loc.name}" not in self.active_uprisings)
+                    ]
+                    if nearby_locations and random.random() < 0.3:  # 30% spread chance
+                        spread_target = random.choice(nearby_locations)
+                        self.start_uprising(synthetic_type, spread_target, is_global=True)
+                
+                # Add spread check to effects
+                spread_check = UprisingEffect(
+                    effect_type="spread_check",
+                    duration=10,  # Check for 10 turns
+                    magnitude=1.0
+                )
+                spread_check.turn_effect = check_spread
+                self.active_effects[uprising_id].append(spread_check)
 
     def handle_uprising_effects(self):
             """Process all active uprising effects"""
