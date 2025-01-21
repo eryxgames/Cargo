@@ -3115,32 +3115,72 @@ class Game:
             ], color='31')
 
     # Add trade tracking to buy/sell methods
-    def handle_trade(self, action_type, commodity=None, quantity=None):
+    def handle_trade(self, action_type, commodity=None, quantity=None, price=None):
         """Handle trade completion and contract/quest updates"""
         self.trades_completed += 1
         
+        # Build complete trade event data
         trade_data = {
             "action": action_type,
             "location": self.current_location.name,
+            "turn": self.turn,
             "trade_completed": True,
         }
 
+        # Add commodity-specific data for sell actions
         if action_type == 'sell' and commodity and quantity:
             trade_data.update({
                 "commodity": commodity,
-                "amount": quantity
+                "amount": quantity,
+                "price": price
             })
             
-            # Update contracts
+            # Update contracts with complete trade data
             if hasattr(self, 'contract_manager'):
-                for contract in self.contract_manager.active_contracts:
-                    contract.update_progress(trade_data)
+                self.contract_manager.update_contract_progress(trade_data)
         
+        # Update quests
         if hasattr(self, 'quest_system'):
-            for quest in self.quest_system.active_quests:
-                if quest.quest_type == "cantina":
-                    quest.update_cantina_progress(trade_data)
+            self.quest_system.update_from_trade(trade_data)
 
+    def handle_passenger_delivery(self, passenger, module):
+        """Handle passenger delivery completion"""
+        if not passenger.destination == self.current_location.name:
+            return False
+            
+        # Build passenger delivery event data
+        delivery_data = {
+            "action": "passenger_delivery",
+            "location": self.current_location.name,
+            "turn": self.turn,
+            "passenger_data": {
+                "class": passenger.classification["code"],
+                "satisfaction": passenger.satisfaction,
+                "destination": passenger.destination
+            }
+        }
+        
+        # Update contracts
+        if hasattr(self, 'contract_manager'):
+            self.contract_manager.update_contract_progress(delivery_data)
+            
+        # Remove passenger from module
+        module.passengers.remove(passenger)
+        
+        # Update reputation
+        if hasattr(self, 'reputation_manager'):
+            rep_change = self.reputation_manager.update_reputation(
+                passenger.satisfaction,
+                passenger
+            )
+            
+            # Handle VIP/special passengers
+            if hasattr(passenger, 'is_vip'):
+                self.reputation_manager.handle_vip_delivery(passenger)
+            elif hasattr(passenger, 'is_story_character'):
+                self.reputation_manager.handle_story_character_delivery(passenger)
+        
+        return True
 
     def handle_trade_event(self, event):
         """Handle trade disruption events with full market impact"""
@@ -4520,41 +4560,28 @@ class ContractManager:
         self.completed_contracts = []
         self.max_active_contracts = 3
         self.contract_refresh_turns = 0
+        self.special_contracts_unlocked = False
+
+    def unlock_special_contracts(self):
+        """Unlock special contract types"""
+        self.special_contracts_unlocked = True
+        self.game.display_simple_message([
+            "Special Contracts Unlocked!",
+            "New high-value contracts now available:",
+            "• High-Value Cargo Transport",
+            "• Bulk Resource Movement",
+            "• Diplomatic Missions"
+        ])
 
     def handle_contract_menu(self):
-        """Improved contract management menu"""
-        # Refresh contracts if needed
-        self.refresh_available_contracts()
+        """Handle port menu options"""
+        self.game.clear_screen()
+        self.game.display_simple_message("Contract Management Terminal", 0)
 
         while True:
-            # First show active contracts with their status
-            active_content = [["Active Contracts"]]
-            if self.active_contracts:
-                for i, contract in enumerate(self.active_contracts, 1):
-                    # Fix turns remaining calculation
-                    turns_left = max(0, contract.duration - contract.turns_active)
-                    status = "READY TO CLAIM" if contract.completed and not contract.rewards_claimed else \
-                            "FAILED" if contract.failed else \
-                            f"{turns_left} turns left"
-                    
-                    # Fix progress display
-                    if contract.contract_type == "cargo":
-                        progress = f"{contract.progress['amount']}/{contract.requirements.get('min_amount', 0)}"
-                    else:  # passenger contract
-                        required = contract.requirements.get('count', 
-                                contract.requirements.get('passenger_count', 0))
-                        progress = f"{contract.progress['passengers_delivered']}/{required}"
-                    
-                    active_content.append([
-                        f"{i}. {contract.description}",
-                        f"Progress: {progress}",
-                        status
-                    ])
-            else:
-                active_content.append(["No active contracts"])
-            print(self.game.create_box(active_content, 'double'))
+            # Refresh contracts if needed
+            self.refresh_available_contracts()
 
-            # Show available commands
             options = {
                 'view': ('v', "View new contracts"),
                 'claim': ('c', "Claim completed contract rewards"),
@@ -4562,17 +4589,16 @@ class ContractManager:
                 'back': ('', "Return to previous menu")
             }
 
+            # Show menu
             menu_content = [["Contract Management"]]
             for cmd, (shortcut, desc) in options.items():
-                menu_content.append([f"{cmd}/{shortcut}" if shortcut else cmd, desc])
+                menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.game.create_box(menu_content, 'single'))
 
-            action = self.game.validate_input(
-                "Choose action: ",
-                list(options.keys()) + [s[0] for s in options.values() if s[0]] + ['']
-            )
+            valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
+            action = self.game.validate_input("Choose action: ", valid_inputs)
 
-            if not action:  # Empty Enter returns to previous menu
+            if action in ['back', None]:
                 break
 
             elif action in ['view', 'v']:
@@ -4584,7 +4610,7 @@ class ContractManager:
             elif action in ['status', 's']:
                 self.show_detailed_status()
 
-            self.game.clear_screen()    
+            self.game.clear_screen()
 
     def show_available_contracts(self):
         """Show available contracts for acceptance"""
@@ -4598,17 +4624,17 @@ class ContractManager:
             contract_content.append([f"Contract #{i}"])
             for info_line in self.get_contract_display_info(contract):
                 contract_content.append([info_line])
-        
+
         print(self.game.create_box(contract_content, 'double'))
-        
+
         choice = self.game.validate_input(
             f"Accept contract (1-{len(self.available_contracts)}) or Enter to cancel: ",
             [str(i) for i in range(1, len(self.available_contracts) + 1)] + ['']
         )
-        
+
         if not choice:  # Empty Enter cancels
             return
-        
+
         success, message = self.accept_contract(int(choice) - 1)
         self.game.display_simple_message(message)
 
@@ -4631,9 +4657,10 @@ class ContractManager:
         print(self.game.create_box(content, 'double'))
 
         # Get contract choice
-        self.game.display_simple_message("Enter contract number to claim (Enter to cancel):", 0)
-        valid_inputs = [str(i) for i in range(1, len(completed) + 1)] + ['']
-        choice = self.game.validate_input(">>> ", valid_inputs)
+        choice = self.game.validate_input(
+            "Enter contract number to claim (or Enter to cancel): ",
+            [str(i) for i in range(1, len(completed) + 1)] + ['']
+        )
 
         if not choice:  # Empty Enter cancels
             return
@@ -4650,18 +4677,16 @@ class ContractManager:
 
         for contract in self.active_contracts:
             content = [[f"Contract: {contract.description}"]]
-            
+
             # Add requirements based on contract type
             if contract.contract_type == "passenger":
                 delivered = contract.progress['passengers_delivered']
                 required = (contract.requirements.get('count') or 
                         contract.requirements.get('passenger_count', 0))
-                
                 content.append([
                     f"Required: {required} passengers",
                     f"Delivered: {delivered}"
                 ])
-                
                 if 'passenger_class' in contract.requirements:
                     content.append([
                         f"Class: {contract.requirements['passenger_class']}"
@@ -4688,76 +4713,6 @@ class ContractManager:
 
         input("Press Enter to continue...")
 
-    def update_contract_progress(self, event_data):
-        """Automatic contract progress update"""
-        for contract in self.active_contracts[:]:  # Create copy to allow removal
-            status = contract.update_progress(event_data)
-            
-            # If contract is completed, handle it immediately
-            if status["status"] == "completed" and not contract.rewards_claimed:
-                self.game.display_simple_message([
-                    "Contract Completed!",
-                    contract.description,
-                    "Use 'claim' command to collect rewards."
-                ])
-            elif status["status"] == "failed":
-                self.handle_contract_failure(contract)
-
-    def handle_contract_completion(self, contract):
-        """Handle completed contract and reward claiming"""
-        if contract not in self.active_contracts:
-            return
-
-        if contract.rewards_claimed:
-            return
-
-        # Calculate and award final rewards
-        rewards = contract.calculate_final_reward()
-        self.game.ship.money += rewards["money"]
-        self.game.reputation += rewards["reputation"]
-        self.game.story_manager.plot_points += rewards["plot_points"]
-
-        # Mark contract as claimed
-        contract.rewards_claimed = True
-        self.active_contracts.remove(contract)
-        self.completed_contracts.append(contract)
-
-        # Display completion message
-        self.game.display_simple_message([
-            "Contract Rewards Claimed!",
-            f"Earned {self.game.format_money(rewards['money'])} credits",
-            f"Reputation +{rewards['reputation']}",
-            f"Plot Points +{rewards['plot_points']}"
-        ])
-
-    def check_contract_requirements(self, contract_type, location):
-        """Check if location meets contract requirements"""
-        if contract_type == "passenger":
-            return hasattr(self.game.ship, 'passenger_modules') and \
-                   any(len(m.passengers) < m.capacity for m in self.game.ship.passenger_modules)
-        elif contract_type == "cargo":
-            return any(cargo > 0 for cargo in self.game.ship.cargo.values())
-        return False
-
-    def get_contract_requirements(self, contract):
-        """Get formatted requirements for a contract"""
-        reqs = []
-        if contract.contract_type == "passenger":
-            if "passenger_class" in contract.requirements:
-                reqs.append(f"- {contract.requirements['count']} {contract.requirements['passenger_class']}-class passengers")
-            if "min_satisfaction" in contract.requirements:
-                reqs.append(f"- Minimum satisfaction: {contract.requirements['min_satisfaction']}%")
-        else:  # cargo contract
-            if "cargo_type" in contract.requirements:
-                reqs.append(f"- {contract.requirements['min_amount']} units of {contract.requirements['cargo_type']}")
-        
-        # Add route requirements
-        source = contract.requirements.get('source', 'Any')
-        dest = contract.requirements.get('destination', 'Any')
-        reqs.append(f"- Route: {source} → {dest}")
-        
-        return reqs
-
     def refresh_available_contracts(self):
         """Refresh available contracts every 5 turns"""
         if self.game.turn - self.contract_refresh_turns >= 5:
@@ -4766,6 +4721,14 @@ class ContractManager:
             # Generate 2-4 new contracts using known locations
             num_contracts = random.randint(2, 4)
             for _ in range(num_contracts):
+                # If special contracts are unlocked, 30% chance for special contract
+                if self.special_contracts_unlocked and random.random() < 0.3:
+                    contract = self.generate_special_contract()
+                    if contract:
+                        self.available_contracts.append(contract)
+                        continue
+                
+                # Regular contract generation
                 if random.random() < 0.6:  # 60% chance for cargo contract
                     contract = self.generate_cargo_contract()
                 else:
@@ -4778,7 +4741,7 @@ class ContractManager:
         if len(self.game.known_locations) < 2:
             return None
 
-        # Pick source and destination from known locations
+        # Pick source and destination
         source = random.choice(self.game.known_locations)
         destinations = [loc for loc in self.game.known_locations if loc != source]
         destination = random.choice(destinations)
@@ -4807,7 +4770,7 @@ class ContractManager:
                 "base_reward": 30000
             }
         ]
-        
+
         contract_type = random.choice(contract_types)
         return Contract(
             contract_type="cargo",
@@ -4825,7 +4788,7 @@ class ContractManager:
         if len(self.game.known_locations) < 2:
             return None
 
-        # Pick source and destination from known locations
+        # Pick source and destination
         source = random.choice(self.game.known_locations)
         destinations = [loc for loc in self.game.known_locations if loc != source]
         destination = random.choice(destinations)
@@ -4855,7 +4818,7 @@ class ContractManager:
                 "base_reward": 35000
             }
         ]
-        
+
         contract_type = random.choice(contract_types)
         return Contract(
             contract_type="passenger",
@@ -4868,52 +4831,129 @@ class ContractManager:
             }
         )
 
-    def display_contract_status(self):
-        """Get formatted status display for active contracts"""
-        if not self.active_contracts:
-            return [["No active contracts"]]
-            
-        status = [["Active Contracts"]]
-        status.append(["Type", "Progress", "Time Left", "Route"])
+    def generate_special_contract(self):
+        """Generate a special high-value contract"""
+        if len(self.game.known_locations) < 2:
+            return None
+
+        # Pick source and destination
+        source = random.choice(self.game.known_locations)
+        destinations = [loc for loc in self.game.known_locations if loc != source]
+        destination = random.choice(destinations)
+
+        contract_types = [
+            {
+                "desc_template": "High-Value Transport",
+                "requirements": {
+                    "cargo_type": random.choice(["tech", "agri"]),
+                    "min_amount": random.randint(400, 600),
+                    "source": source,
+                    "destination": destination,
+                    "reputation_required": 40
+                },
+                "duration": 10,
+                "base_reward": 50000
+            },
+            {
+                "desc_template": "Bulk Resource Movement",
+                "requirements": {
+                    "cargo_type": random.choice(["salt", "fuel"]),
+                    "min_amount": random.randint(800, 1200),
+                    "source": source,
+                    "destination": destination,
+                    "reputation_required": 50
+                },
+                "duration": 15,
+                "base_reward": 75000
+            },
+            {
+                "desc_template": "Diplomatic Mission",
+                "requirements": {
+                    "passenger_class": "D",  # Diplomat class
+                    "count": random.randint(2, 4),
+                    "source": source,
+                    "destination": destination,
+                    "min_satisfaction": 90,
+                    "reputation_required": 60
+                },
+                "duration": 8,
+                "base_reward": 60000
+            }
+        ]
+
+        # Filter contracts based on reputation requirements
+        available_contracts = [
+            contract for contract in contract_types
+            if self.game.ship.passenger_reputation >= contract["requirements"]["reputation_required"]
+        ]
+
+        if not available_contracts:
+            return None
+
+        contract_type = random.choice(available_contracts)
         
-        for contract in self.active_contracts:
-            # Format progress based on contract type
-            if contract.contract_type == "passenger":
-                delivered = contract.progress['passengers_delivered']
-                required = contract.requirements.get('count', 0)
-                progress = f"{delivered}/{required} passengers"
-            else:  # cargo contract
-                delivered = contract.progress['amount']
-                required = contract.requirements.get('min_amount', 0)
-                progress = f"{delivered}/{required} units"
+        # Create contract with type appropriate to the mission
+        if "passenger_class" in contract_type["requirements"]:
+            contract_category = "passenger"
+        else:
+            contract_category = "cargo"
 
-            # Format route
-            source = contract.requirements.get('source', 'Any')
-            dest = contract.requirements.get('destination', 'Any')
-            route = f"{source} → {dest}"
+        return Contract(
+            contract_type=contract_category,
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 30,
+                "plot_points": 8
+            }
+        )
 
-            # Add status line
-            time_left = contract.duration - contract.turns_active
-            status.append([
-                contract.contract_type.capitalize(),
-                progress,
-                f"{time_left} turns",
-                route
-            ])
-            
-            # Add destinations visited
-            if contract.progress['destinations_visited']:
-                visited = ", ".join(contract.progress['destinations_visited'])
-                status.append(["└─ Visited:", visited])
+    def accept_contract(self, contract_index):
+        """Accept a contract from available contracts"""
+        if contract_index >= len(self.available_contracts):
+            return False, "Invalid contract selection."
 
-        return status
+        if len(self.active_contracts) >= self.max_active_contracts:
+            return False, "Maximum number of active contracts reached."
+
+        contract = self.available_contracts.pop(contract_index)
+        self.active_contracts.append(contract)
+        return True, f"Contract accepted: {contract.description}"
+
+    def handle_contract_completion(self, contract):
+        """Handle completed contract and reward claiming"""
+        if contract not in self.active_contracts:
+            return
+
+        if contract.rewards_claimed:
+            return
+
+        # Calculate and award final rewards
+        rewards = contract.calculate_final_reward()
+        self.game.ship.money += rewards["money"]
+        self.game.reputation += rewards["reputation"]
+        self.game.story_manager.plot_points += rewards["plot_points"]
+
+        # Mark contract as claimed
+        contract.rewards_claimed = True
+        self.active_contracts.remove(contract)
+        self.completed_contracts.append(contract)
+
+        # Display completion message
+        self.game.display_simple_message([
+            "Contract Rewards Claimed!",
+            f"Earned {self.game.format_money(rewards['money'])} credits",
+            f"Reputation +{rewards['reputation']}",
+            f"Plot Points +{rewards['plot_points']}"
+        ])
 
     def get_contract_display_info(self, contract):
         """Get formatted display info for a contract"""
         info = []
         info.append(f"Type: {contract.contract_type.title()}")
         info.append(f"Duration: {contract.duration} turns")
-        
+
         # Requirements
         if contract.contract_type == "passenger":
             if "passenger_class" in contract.requirements:
@@ -4929,32 +4969,68 @@ class ContractManager:
                 info.append(f"Cargo: {contract.requirements['cargo_type']}")
                 if "min_amount" in contract.requirements:
                     info.append(f"Amount: {contract.requirements['min_amount']} units")
-        
+
         # Route information
         source = contract.requirements.get('source', 'Any')
         dest = contract.requirements.get('destination', 'Any')
         info.append(f"Route: {source} → {dest}")
-        
+
         # Rewards
         info.append(f"Reward: {self.game.format_money(contract.rewards['money'])} credits")
         info.append(f"Reputation: +{contract.rewards['reputation']}")
         if contract.rewards['plot_points'] > 0:
             info.append(f"Plot Points: +{contract.rewards['plot_points']}")
-            
+
         return info
 
-    def accept_contract(self, contract_index):
-        """Accept a contract from available contracts"""
-        if contract_index >= len(self.available_contracts):
-            return False, "Invalid contract selection."
+    def update_contract_progress(self, event_data):
+        """Automatic contract progress update"""
+        for contract in self.active_contracts[:]:  # Create copy to allow removal
+            status = contract.update_progress(event_data)
             
-        if len(self.active_contracts) >= self.max_active_contracts:
-            return False, "Maximum number of active contracts reached."
+            # If contract is completed
+            if status["status"] == "completed" and not contract.rewards_claimed:
+                self.game.display_simple_message([
+                    "Contract Completed!",
+                    contract.description,
+                    "Use 'claim' command to collect rewards."
+                ])
             
-        contract = self.available_contracts.pop(contract_index)
-        self.active_contracts.append(contract)
-        return True, f"Contract accepted: {contract.description}"
+            # Handle failed contracts
+            elif status["status"] == "failed":
+                self.handle_contract_failure(contract)
+            
+            # Handle progress updates
+            elif "trade_recorded" in status and status["trade_recorded"]:
+                self.game.display_simple_message(
+                    f"Contract progress updated: {contract.get_progress_description()}"
+                )
 
+    def handle_contract_failure(self, contract):
+        """Handle failed contract cleanup"""
+        message = [
+            "Contract Failed!",
+            contract.description
+        ]
+        
+        # Add failure reason
+        if hasattr(contract, 'failure_reason'):
+            message.append(f"Reason: {contract.failure_reason}")
+        else:
+            message.append("Reason: Time expired")
+            
+        # Add progress info
+        if contract.contract_type == "cargo":
+            message.append(
+                f"Progress: {contract.progress['amount']}/{contract.requirements.get('min_amount', 0)} units"
+            )
+        else:  # passenger contract
+            message.append(
+                f"Progress: {contract.progress['passengers_delivered']}/{contract.requirements.get('count', 0)} passengers"
+            )
+            
+        self.game.display_simple_message(message)
+        self.active_contracts.remove(contract)
 
 
 class SpecialCharacter:
@@ -5282,90 +5358,122 @@ class Contract:
         self.progress = {
             'amount': 0,
             'destinations_visited': set(),
-            'passengers_delivered': 0
+            'passengers_delivered': 0,
+            'required_destinations': set([requirements.get('source', ''), requirements.get('destination', '')])
         }
         self.completed = False
+        self.rewards_claimed = False
         self.failed = False
         self.turns_active = 0
         self.description = self._generate_description()
-        self.start_turn = None  # Turn when contract was accepted
-        self.completion_turn = None  # Turn when contract was completed
-        self.bonus_rewards = {}  # Additional rewards for exceptional performance
-        self._satisfaction_scores = []  # Initialize empty list for satisfaction scores
-        self.failure_reason = ""
+        self.last_update_turn = None
+        self.trade_history = []  # Track individual trades
 
+    def update_progress(self, event_data):
+        """Enhanced progress update with better trade tracking"""
+        self.turns_active += 1
+        if self.turns_active > self.duration:
+            return {"status": "failed", "reason": "time_expired"}
 
-    def accept(self, current_turn):
-        """Initialize contract when accepted"""
-        self.start_turn = current_turn
-        self.turns_active = 0
-        return True
+        current_location = event_data.get("location")
+        action = event_data.get("action", "")
+        
+        # Record location visit
+        if current_location:
+            self.progress['destinations_visited'].add(current_location)
 
-    def fail(self, reason="time_expired"):
-        """Mark contract as failed with reason"""
-        self.failed = True
-        self.failure_reason = reason
-        return {"status": "failed", "reason": reason}
-
-    def _generate_description(self):
-        """Generate detailed contract description"""
-        source = self.requirements.get('source', 'Any')
-        destination = self.requirements.get('destination', 'Any')
-        route = f"{source} → {destination}"
-
-        if self.contract_type == "passenger":
-            if "passenger_class" in self.requirements:
-                desc = f"Transport {self.requirements['count']} {self.requirements['passenger_class']}-class passengers"
-            elif "passenger_count" in self.requirements:
-                desc = f"Transport {self.requirements['passenger_count']} passengers"
-            else:
-                desc = "Passenger transport"
-            return f"{desc} ({route})"
-
-        elif self.contract_type == "cargo":
-            if "cargo_type" in self.requirements:
-                desc = f"Transport {self.requirements['min_amount']} units of {self.requirements['cargo_type']}"
-            else:
-                desc = "Cargo transport"
-            return f"{desc} ({route})"
-
-        return "Generic contract"
-
-    # Add to Contract class for completion of contracts
-    def check_trade_completion(self, location, trade_data):
-        """Check if a trade completes contract requirements"""
-        if not self.completed and self.contract_type == "cargo":
-            if (location == self.requirements["destination"] and 
-                trade_data["commodity"] == self.requirements["cargo_type"]):
-                self.progress["amount"] += trade_data["amount"]
-                self.progress["destinations_visited"].add(location)
+        if self.contract_type == "cargo":
+            # Handle sell actions for cargo contracts
+            if action == "sell" or event_data.get("trade_completed"):
+                # Get trade details
+                commodity = event_data.get("cargo_type") or event_data.get("commodity")
+                amount = event_data.get("amount", 0)
                 
-                if (self.progress["amount"] >= self.requirements["min_amount"] and 
-                    self.requirements["destination"] in self.progress["destinations_visited"]):
-                    self.completed = True
-                    return True
-        return False
+                # Check if trade matches contract requirements
+                if (commodity == self.requirements.get("cargo_type") and 
+                    current_location == self.requirements.get("destination")):
+                    
+                    # Record trade
+                    trade = {
+                        "turn": event_data.get("turn"),
+                        "amount": amount,
+                        "location": current_location
+                    }
+                    self.trade_history.append(trade)
+                    
+                    # Update progress
+                    self.progress['amount'] += amount
+                    self.last_update_turn = event_data.get("turn")
+                    
+                    return {
+                        "status": "updated",
+                        "trade_recorded": True,
+                        "new_amount": self.progress['amount']
+                    }
 
-    def check_passenger_completion(self, location, passenger_data):
-        """Check if passenger delivery completes contract requirements"""
-        if not self.completed and self.contract_type == "passenger":
-            if location == self.requirements["destination"]:
-                if "passenger_class" in self.requirements:
-                    if passenger_data["class"] == self.requirements["passenger_class"]:
-                        self.progress["passengers_delivered"] += 1
-                else:
-                    self.progress["passengers_delivered"] += 1
-                
-                self.progress["destinations_visited"].add(location)
-                
-                if (self.progress["passengers_delivered"] >= self.requirements.get("count", 0) and
-                    self.requirements["destination"] in self.progress["destinations_visited"]):
-                    self.completed = True
-                    return True
-        return False
+        elif self.contract_type == "passenger":
+            # Handle passenger delivery
+            if current_location == self.requirements.get("destination"):
+                passenger_data = event_data.get("passenger_data")
+                if passenger_data:
+                    if "passenger_class" in self.requirements:
+                        if passenger_data["class"] == self.requirements["passenger_class"]:
+                            self.progress['passengers_delivered'] += 1
+                    else:
+                        self.progress['passengers_delivered'] += 1
+
+        return self._check_completion()
+
+    def _check_completion(self):
+        """Enhanced completion check with detailed status"""
+        if self.completed or self.failed:
+            return {
+                "status": "completed" if self.completed else "failed",
+                "reason": "already_processed"
+            }
+
+        status = {"status": "in_progress"}
+
+        if self.contract_type == "cargo":
+            # Check cargo requirements
+            required_amount = self.requirements.get('min_amount', 0)
+            target_destination = self.requirements.get('destination')
+            
+            status.update({
+                "amount_delivered": self.progress['amount'],
+                "amount_required": required_amount,
+                "destination_reached": target_destination in self.progress['destinations_visited'],
+                "destination_required": target_destination
+            })
+            
+            # Check completion
+            if (self.progress['amount'] >= required_amount and 
+                target_destination in self.progress['destinations_visited']):
+                self.completed = True
+                status["status"] = "completed"
+
+        elif self.contract_type == "passenger":
+            # Check passenger requirements
+            required_count = self.requirements.get('count', 
+                           self.requirements.get('passenger_count', 0))
+            target_destination = self.requirements.get('destination')
+            
+            status.update({
+                "passengers_delivered": self.progress['passengers_delivered'],
+                "passengers_required": required_count,
+                "destination_reached": target_destination in self.progress['destinations_visited']
+            })
+            
+            # Check completion
+            if (self.progress['passengers_delivered'] >= required_count and
+                target_destination in self.progress['destinations_visited']):
+                self.completed = True
+                status["status"] = "completed"
+
+        return status
 
     def calculate_final_reward(self):
-        """Calculate final reward including bonuses"""
+        """Calculate final reward with bonuses"""
         if not self.completed:
             return None
 
@@ -5376,270 +5484,21 @@ class Contract:
             total_reward["money"] = int(total_reward["money"] * 1.5)
             total_reward["reputation"] = int(total_reward["reputation"] * 1.2)
 
-        # Perfect satisfaction bonus for passenger contracts
-        if self.contract_type == "passenger" and self.get_average_satisfaction() >= 95:
-            total_reward["money"] = int(total_reward["money"] * 1.3)
-            total_reward["reputation"] += 10
-
-        # Add any bonus rewards
-        for reward_type, amount in self.bonus_rewards.items():
-            if reward_type in total_reward:
-                total_reward[reward_type] += amount
-            else:
-                total_reward[reward_type] = amount
+        # Overdelivery bonus for cargo contracts
+        if self.contract_type == "cargo":
+            required_amount = self.requirements.get('min_amount', 0)
+            if self.progress['amount'] > required_amount * 1.5:  # 50% more than required
+                total_reward["money"] = int(total_reward["money"] * 1.2)
 
         return total_reward
 
-    def get_average_satisfaction(self):
-        """Calculate average passenger satisfaction"""
-        if not self._satisfaction_scores:
-            return 0
-        return sum(self._satisfaction_scores) / len(self._satisfaction_scores)
-
-    def get_progress_report(self):
-        """Get detailed progress report"""
-        report = {
-            "type": self.contract_type,
-            "duration": {
-                "total": self.duration,
-                "remaining": max(0, self.duration - self.turns_active),
-                "elapsed": self.turns_active
-            },
-            "progress": {
-                "destinations": {
-                    "visited": list(self.progress['destinations_visited']),
-                    "required": list(self.progress['required_destinations']),
-                    "remaining": list(self.progress['required_destinations'] - 
-                                   self.progress['destinations_visited'])
-                }
-            }
-        }
-
-        if self.contract_type == "passenger":
-            report["progress"].update({
-                "passengers": {
-                    "delivered": self.progress['passengers_delivered'],
-                    "required": self.requirements.get('count', 0),
-                    "remaining": max(0, self.requirements.get('count', 0) - 
-                                  self.progress['passengers_delivered'])
-                },
-                "satisfaction": self.get_average_satisfaction()
-            })
-        elif self.contract_type == "cargo":
-            report["progress"].update({
-                "cargo": {
-                    "delivered": self.progress['amount'],
-                    "required": self.requirements.get('min_amount', 0),
-                    "remaining": max(0, self.requirements.get('min_amount', 0) - 
-                                  self.progress['amount'])
-                }
-            })
-
-        return report
-
-    def update_progress(self, event_data):
-        """Update contract progress based on events"""
-        self.turns_active += 1
-        if self.turns_active > self.duration:
-            return {"status": "failed", "reason": "time_expired"}
-
-        current_location = event_data.get("location")
-        target_destination = self.requirements.get('destination')
-        source_location = self.requirements.get('source')
-
-        # Skip if not at correct source/destination
-        if self.contract_type == "cargo":
-            if source_location and current_location != source_location and current_location != target_destination:
-                return {"status": "in_progress"}
-
-        if self.contract_type == "passenger":
-            if current_location == target_destination and event_data.get("passenger_data"):
-                passenger_data = event_data["passenger_data"]
-                if "passenger_class" in self.requirements:
-                    if passenger_data["class"] == self.requirements["passenger_class"]:
-                        self.progress['passengers_delivered'] += 1
-                        self.progress['destinations_visited'].add(current_location)
-                else:
-                    self.progress['passengers_delivered'] += 1
-                    self.progress['destinations_visited'].add(current_location)
-                print(f"Contract {self.description} progress: {self.progress['passengers_delivered']}/{self.requirements.get('count', 0)} passengers")
-
-        elif self.contract_type == "cargo":
-            is_trade = event_data.get("trade_completed", False) or event_data.get("action") == "sell"
-            if is_trade and current_location == target_destination:
-                cargo_type = event_data.get("cargo_type") or event_data.get("commodity")
-                amount = event_data.get("amount", 0)
-                
-                if cargo_type == self.requirements.get("cargo_type"):
-                    self.progress['amount'] += amount
-                    self.progress['destinations_visited'].add(current_location)
-                    print(f"Contract {self.description} progress: {self.progress['amount']}/{self.requirements.get('min_amount', 0)} {cargo_type}")
-
-        return self._check_completion()
-
-    def _check_completion(self):
-        """Check if contract requirements are met"""
-        if self.failed:
-            return {"status": "failed", "reason": self.failure_reason}
-
-        status = {"status": "in_progress"}
-        target_destination = self.requirements.get('destination')
-
-        if self.contract_type == "passenger":
-            delivered = self.progress['passengers_delivered']
-            required = self.requirements.get('count', self.requirements.get('passenger_count', 0))
-            reached_destination = target_destination in self.progress['destinations_visited']
-
-            status.update({
-                "delivered": delivered,
-                "required": required,
-                "destination_reached": reached_destination
-            })
-
-            if delivered >= required and reached_destination:
-                self.completed = True
-                self.rewards_claimed = False  # Initialize rewards flag
-                status["status"] = "completed"
-
-        elif self.contract_type == "cargo":
-            amount_delivered = self.progress['amount']
-            amount_required = self.requirements.get('min_amount', 0)
-            reached_destination = target_destination in self.progress['destinations_visited']
-
-            status.update({
-                "delivered": amount_delivered,
-                "required": amount_required,
-                "destination_reached": reached_destination
-            })
-
-            if amount_delivered >= amount_required and reached_destination:
-                self.completed = True
-                self.rewards_claimed = False  # Initialize rewards flag
-                status["status"] = "completed"
-
-        return status
-    
     def get_progress_description(self):
         """Get human-readable progress description"""
-        if self.contract_type == "passenger":
-            delivered = self.progress['passengers_delivered']
-            required = self.requirements.get('count', self.requirements.get('passenger_count', 0))
-            return f"{delivered}/{required} passengers delivered"
-        else:
-            delivered = self.progress['amount']
-            required = self.requirements.get('min_amount', 0)
-            return f"{delivered}/{required} units delivered"    
+        if self.contract_type == "cargo":
+            return f"{self.progress['amount']}/{self.requirements.get('min_amount', 0)} units delivered"
+        else:  # passenger contract
+            return f"{self.progress['passengers_delivered']}/{self.requirements.get('count', 0)} passengers delivered"
 
-    def add_bonus_reward(self, reward_type, amount):
-        """Add bonus reward for exceptional performance"""
-        if reward_type not in self.bonus_rewards:
-            self.bonus_rewards[reward_type] = 0
-        self.bonus_rewards[reward_type] += amount
-
-    def get_remaining_requirements(self):
-        """Get list of remaining requirements to complete contract"""
-        remaining = []
-        
-        if self.contract_type == "passenger":
-            passengers_remaining = self.requirements.get('count', 0) - self.progress['passengers_delivered']
-            if passengers_remaining > 0:
-                remaining.append(f"Deliver {passengers_remaining} more {self.requirements['passenger_class']}-class passengers")
-                
-        elif self.contract_type == "cargo":
-            cargo_remaining = self.requirements.get('min_amount', 0) - self.progress['amount']
-            if cargo_remaining > 0:
-                remaining.append(f"Deliver {cargo_remaining} more units of {self.requirements['cargo_type']}")
-
-        # Check destinations for both types
-        remaining_destinations = self.progress['required_destinations'] - self.progress['destinations_visited']
-        if remaining_destinations:
-            remaining.append(f"Visit: {', '.join(remaining_destinations)}")
-
-        return remaining
-
-    @staticmethod
-    def generate_passenger_contract():
-        """Generate a passenger transport contract"""
-        contract_types = [
-            {
-                "desc_template": "VIP Transport",
-                "requirements": {
-                    "passenger_class": random.choice(["S", "M", "E"]),
-                    "count": random.randint(3, 8),
-                    "destinations": [random.choice(["Alpha", "Beta", "Gamma"])],
-                    "min_satisfaction": 80
-                },
-                "duration": 10,
-                "base_reward": 25000
-            },
-            {
-                "desc_template": "Group Transport",
-                "requirements": {
-                    "passenger_count": random.randint(10, 20),
-                    "destinations": [random.choice(["Delta", "Epsilon", "Zeta"])],
-                    "min_satisfaction": 70
-                },
-                "duration": 15,
-                "base_reward": 35000
-            }
-        ]
-        
-        contract_type = random.choice(contract_types)
-        return Contract(
-            contract_type="passenger",
-            duration=contract_type["duration"],
-            requirements=contract_type["requirements"],
-            rewards={
-                "money": contract_type["base_reward"],
-                "reputation": 25,
-                "plot_points": 5
-            }
-        )
-
-    @staticmethod
-    def generate_cargo_contract():
-        """Generate a cargo transport contract"""
-        contract_types = [
-            {
-                "desc_template": "Exclusive Trading",
-                "requirements": {
-                    "cargo_type": random.choice(["tech", "agri"]),
-                    "min_amount": random.randint(100, 300),
-                    "destinations": [random.choice(["Alpha", "Beta", "Gamma"])],
-                    "restricted_routes": []
-                },
-                "duration": 8,
-                "base_reward": 20000
-            },
-            {
-                "desc_template": "Resource Distribution",
-                "requirements": {
-                    "cargo_types": ["tech", "agri", "salt", "fuel"],
-                    "min_trades": random.randint(5, 10),
-                    "destinations": [random.choice(["Delta", "Epsilon", "Zeta"])]
-                },
-                "duration": 12,
-                "base_reward": 30000
-            }
-        ]
-        
-        contract_type = random.choice(contract_types)
-        return Contract(
-            contract_type="cargo",
-            duration=contract_type["duration"],
-            requirements=contract_type["requirements"],
-            rewards={
-                "money": contract_type["base_reward"],
-                "reputation": 20,
-                "plot_points": 3
-            }
-        )
-
-    def __str__(self):
-        """String representation of contract"""
-        status = "Completed" if self.completed else "Failed" if self.failed else "Active"
-        return f"{self.description} [{status}] ({self.turns_active}/{self.duration} turns)"
-    
 class StoryContract(Contract):
     """Extended contract class for story-related missions"""
     def __init__(self, contract_type, duration, requirements, rewards, story_data):
@@ -6014,7 +5873,7 @@ class Port:
                 time.sleep(2)
             
             elif action in ['contracts', 'c']:
-                self.game.handle_contract_menu()
+                self.game.contract_manager.handle_contract_menu()
             
             elif action in ['travel', 't']:
                 if self.game.handle_travel():
@@ -8512,6 +8371,22 @@ class StoryManager:
             self.story_states["resource_empire"] = True
         elif quest_line == "research":
             self.story_states["alien_discovery"] = True
+        elif quest_line == "contracts":
+            # Unlock special contract types
+            self.contract_manager.unlock_special_contracts()
+            
+            # Update story state
+            self.story_states["master_trader"] = True
+            
+            # Generate follow-up content
+            if random.random() < 0.3:  # 30% chance
+                self.quest_system.generate_quest("trade", 2.0)
+                
+            self.display_story_message([
+                "Trading Empire Milestone Achieved!",
+                "Your mastery of contracts has not gone unnoticed...",
+                "New opportunities await!"
+            ])            
 
     def check_cooldown(self, event_type):
         """Check event cooldown to prevent spam"""
