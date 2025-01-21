@@ -4747,8 +4747,19 @@ class ContractManager:
                     self.available_contracts.append(contract)
 
     def generate_cargo_contract(self):
-        source = random.choice(self.game.known_locations)
-        destinations = [loc for loc in self.game.known_locations if loc != source]
+        """Generate a cargo transport contract"""
+        if len(self.game.known_locations) < 2:
+            return None
+
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
         destination = random.choice(destinations)
 
         contract_types = [
@@ -4792,11 +4803,19 @@ class ContractManager:
         )
 
     def generate_passenger_contract(self):
+        """Generate a passenger transport contract"""
         if len(self.game.known_locations) < 2:
             return None
 
-        source = random.choice(self.game.known_locations)
-        destinations = [loc for loc in self.game.known_locations if loc != source]
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
         destination = random.choice(destinations)
 
         contract_types = [
@@ -4841,11 +4860,19 @@ class ContractManager:
         )
 
     def generate_special_contract(self):
+        """Generate a special contract with higher rewards and requirements"""
         if len(self.game.known_locations) < 2:
             return None
 
-        source = random.choice(self.game.known_locations)
-        destinations = [loc for loc in self.game.known_locations if loc != source]
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
         destination = random.choice(destinations)
 
         contract_types = [
@@ -5358,11 +5385,12 @@ class Quest:
         return False
 
 class Contract:
-    def __init__(self, contract_type, duration, requirements, rewards):
+    def __init__(self, contract_type, duration, requirements, rewards, description):
         self.contract_type = contract_type
         self.duration = duration
         self.requirements = requirements
         self.rewards = rewards
+        self.description = description
         self.progress = {
             'amount': 0,
             'destinations_visited': set(),
