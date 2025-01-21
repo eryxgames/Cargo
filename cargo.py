@@ -4019,6 +4019,13 @@ class Game:
                 self.character_manager.announce_character(char['character'].character_id)
                 time.sleep(1)  # Brief pause between character announcements
 
+        # Check and complete cantina quests
+        cantina_quests = [q for q in self.quest_system.active_quests if q.quest_type == "cantina"]
+        
+        for quest in cantina_quests:
+            if quest.check_completion(self):
+                quest.complete(self)
+
         while True:
             options = {
                 'map': ('bm', "Buy Map"),
@@ -4031,6 +4038,7 @@ class Game:
             }
 
             menu_content = [[f"Cantina Services - {self.current_location.name}"]]
+            menu_content.append([f""])
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.create_box(menu_content, 'single'))
@@ -4562,6 +4570,7 @@ class ContractManager:
         self.contract_refresh_turns = 0
         self.special_contracts_unlocked = False
 
+
     def unlock_special_contracts(self):
         """Unlock special contract types"""
         self.special_contracts_unlocked = True
@@ -4590,7 +4599,8 @@ class ContractManager:
             }
 
             # Show menu
-            menu_content = [["Contract Management"]]
+            menu_content = [["Contract Dashboard:"]]
+            menu_content.append([f""])
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.game.create_box(menu_content, 'single'))
@@ -4737,11 +4747,6 @@ class ContractManager:
                     self.available_contracts.append(contract)
 
     def generate_cargo_contract(self):
-        """Generate a cargo contract for known locations"""
-        if len(self.game.known_locations) < 2:
-            return None
-
-        # Pick source and destination
         source = random.choice(self.game.known_locations)
         destinations = [loc for loc in self.game.known_locations if loc != source]
         destination = random.choice(destinations)
@@ -4750,24 +4755,26 @@ class ContractManager:
             {
                 "desc_template": "Exclusive Trading",
                 "requirements": {
-                    "cargo_type": random.choice(["tech", "agri"]),
-                    "min_amount": random.randint(100, 300),
+                    "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
+                    "min_amount": (amount := random.randint(100, 300)),
                     "source": source,
                     "destination": destination
                 },
                 "duration": 8,
-                "base_reward": 20000
+                "base_reward": 20000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
             },
             {
                 "desc_template": "Resource Distribution",
                 "requirements": {
-                    "cargo_type": random.choice(["salt", "fuel"]),
-                    "min_amount": random.randint(50, 150),
+                    "cargo_type": (cargo_type := random.choice(["salt", "fuel"])),
+                    "min_amount": (amount := random.randint(50, 150)),
                     "source": source,
                     "destination": destination
                 },
                 "duration": 12,
-                "base_reward": 30000
+                "base_reward": 30000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
             }
         ]
 
@@ -4780,15 +4787,14 @@ class ContractManager:
                 "money": contract_type["base_reward"],
                 "reputation": 20,
                 "plot_points": 3
-            }
+            },
+            description=contract_type["description"]
         )
 
     def generate_passenger_contract(self):
-        """Generate a passenger contract for known locations"""
         if len(self.game.known_locations) < 2:
             return None
 
-        # Pick source and destination
         source = random.choice(self.game.known_locations)
         destinations = [loc for loc in self.game.known_locations if loc != source]
         destination = random.choice(destinations)
@@ -4797,25 +4803,27 @@ class ContractManager:
             {
                 "desc_template": "VIP Transport",
                 "requirements": {
-                    "passenger_class": random.choice(["S", "M", "E"]),
-                    "count": random.randint(3, 8),
+                    "passenger_class": (passenger_class := random.choice(["S", "M", "E"])),
+                    "count": (count := random.randint(3, 8)),
                     "source": source,
                     "destination": destination,
                     "min_satisfaction": 80
                 },
                 "duration": 10,
-                "base_reward": 25000
+                "base_reward": 25000,
+                "description": f"Transport {count} {passenger_class}-class passengers from {source.name} to {destination.name}"
             },
             {
                 "desc_template": "Group Transport",
                 "requirements": {
-                    "passenger_count": random.randint(10, 20),
+                    "passenger_count": (count := random.randint(10, 20)),
                     "source": source,
                     "destination": destination,
                     "min_satisfaction": 70
                 },
                 "duration": 15,
-                "base_reward": 35000
+                "base_reward": 35000,
+                "description": f"Transport {count} passengers from {source.name} to {destination.name}"
             }
         ]
 
@@ -4828,15 +4836,14 @@ class ContractManager:
                 "money": contract_type["base_reward"],
                 "reputation": 25,
                 "plot_points": 5
-            }
+            },
+            description=contract_type["description"]
         )
 
     def generate_special_contract(self):
-        """Generate a special high-value contract"""
         if len(self.game.known_locations) < 2:
             return None
 
-        # Pick source and destination
         source = random.choice(self.game.known_locations)
         destinations = [loc for loc in self.game.known_locations if loc != source]
         destination = random.choice(destinations)
@@ -4845,68 +4852,43 @@ class ContractManager:
             {
                 "desc_template": "High-Value Transport",
                 "requirements": {
-                    "cargo_type": random.choice(["tech", "agri"]),
-                    "min_amount": random.randint(400, 600),
+                    "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
+                    "min_amount": (amount := random.randint(400, 600)),
                     "source": source,
                     "destination": destination,
                     "reputation_required": 40
                 },
                 "duration": 10,
-                "base_reward": 50000
-            },
-            {
-                "desc_template": "Bulk Resource Movement",
-                "requirements": {
-                    "cargo_type": random.choice(["salt", "fuel"]),
-                    "min_amount": random.randint(800, 1200),
-                    "source": source,
-                    "destination": destination,
-                    "reputation_required": 50
-                },
-                "duration": 15,
-                "base_reward": 75000
+                "base_reward": 50000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
             },
             {
                 "desc_template": "Diplomatic Mission",
                 "requirements": {
-                    "passenger_class": "D",  # Diplomat class
-                    "count": random.randint(2, 4),
+                    "passenger_class": "D",
+                    "count": (count := random.randint(2, 4)),
                     "source": source,
                     "destination": destination,
                     "min_satisfaction": 90,
                     "reputation_required": 60
                 },
                 "duration": 8,
-                "base_reward": 60000
+                "base_reward": 60000,
+                "description": f"Transport {count} diplomatic passengers from {source.name} to {destination.name}"
             }
         ]
 
-        # Filter contracts based on reputation requirements
-        available_contracts = [
-            contract for contract in contract_types
-            if self.game.ship.passenger_reputation >= contract["requirements"]["reputation_required"]
-        ]
-
-        if not available_contracts:
-            return None
-
-        contract_type = random.choice(available_contracts)
-        
-        # Create contract with type appropriate to the mission
-        if "passenger_class" in contract_type["requirements"]:
-            contract_category = "passenger"
-        else:
-            contract_category = "cargo"
-
+        contract_type = random.choice(contract_types)
         return Contract(
-            contract_type=contract_category,
+            contract_type=contract_type["desc_template"].lower().replace(" ", "_"),
             duration=contract_type["duration"],
             requirements=contract_type["requirements"],
             rewards={
                 "money": contract_type["base_reward"],
                 "reputation": 30,
                 "plot_points": 8
-            }
+            },
+            description=contract_type["description"]
         )
 
     def accept_contract(self, contract_index):
@@ -5221,21 +5203,24 @@ class Quest:
 
     # Cantina quests from listen to gossip, added to Quest class
     def update_cantina_progress(self, event_data):
-        """Update cantina quest progress"""
-        if self.quest_type != "cantina":
-            return False
+        """Update cantina quests based on trade actions"""
+        if self.quest_type == "cantina":
+            action = event_data.get("action", "")
             
-        location = event_data.get("location")
-        if "Deliver" in self.name and event_data.get("trade_completed"):
-            commodity = self.name.split()[2].lower()  # Extract commodity from name
-            if event_data.get("commodity") == commodity:
-                self.progress += event_data.get("amount", 0)
-                return self.progress >= self.requirements.get("amount", 0)
+            if action in ["buy", "sell"]:
+                commodity = event_data.get("commodity")
+                amount = event_data.get("amount", 0)
                 
-        elif "Transport" in self.name and event_data.get("passenger_delivered"):
-            self.progress += 1
-            return self.progress >= self.requirements.get("count", 0)
-                
+                if "Deliver" in self.name and commodity:
+                    target_commodity = self.name.split()[2].lower()
+                    if commodity == target_commodity:
+                        self.progress += amount
+                        return self.progress >= self.requirements.get("amount", 0)
+                    
+            elif action == "passenger_delivered":
+                self.progress += 1
+                return self.progress >= self.requirements.get("count", 0)
+            
         return False
 
     # Add for special location quests
@@ -5269,7 +5254,7 @@ class Quest:
         """Check if quest requirements are met"""
         if self.completed:
             return False
-
+        
         if self.quest_type == "mining":
             return self.check_mining_completion(game)
         elif self.quest_type == "combat":
@@ -5280,9 +5265,32 @@ class Quest:
             return self.check_exploration_completion(game)
         elif self.quest_type == "research":
             return self.check_research_completion(game)
+        elif self.quest_type == "cantina":
+            return self.check_cantina_completion(game)        
         
         # Generic quest completion check
         return self.progress >= self.target_progress
+
+    def check_cantina_completion(self, game):
+        """Check if quest requirements are met"""
+        if self.quest_type == "cantina":
+            # Specific cantina quest completion checks
+            if "Deliver" in self.name:
+                # Check trade profits
+                commodity = self.name.split()[2].lower()
+                return game.ship.trade_profits.get(commodity, 0) >= self.requirements.get('amount', 0)
+            
+            elif "Transport" in self.name:
+                # Check passenger transport
+                return game.reputation_manager.total_passengers >= self.requirements.get('count', 0)
+            
+            elif "Eliminate" in self.name:
+                # Check combat victories
+                enemy_type = self.name.split()[2].lower()
+                return game.ship.combat_victories.get(enemy_type, 0) >= self.requirements.get('victories', 0)
+        
+        # Existing completion logic for other quest types
+        return super().check_completion(game)
 
     def check_mining_completion(self, game):
         """Check mining quest requirements"""
@@ -5365,7 +5373,7 @@ class Contract:
         self.rewards_claimed = False
         self.failed = False
         self.turns_active = 0
-        self.description = self._generate_description()
+#        self.description = self._generate_description()
         self.last_update_turn = None
         self.trade_history = []  # Track individual trades
 
@@ -5423,6 +5431,8 @@ class Contract:
                         self.progress['passengers_delivered'] += 1
 
         return self._check_completion()
+
+
 
     def _check_completion(self):
         """Enhanced completion check with detailed status"""
@@ -5847,7 +5857,7 @@ class Port:
             
             # Show menu
             menu_content = [[f"Port Services {self.game.current_location.name} | PAX Checkout: {sum(len(module.passengers) for module in self.game.ship.passenger_modules)}/{sum(module.capacity for module in self.game.ship.passenger_modules)}"]]
-
+            menu_content.append([f""])
             for cmd, (shortcut, desc) in options.items():
                 menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
             print(self.game.create_box(menu_content, 'single'))
@@ -7115,6 +7125,34 @@ class QuestSystem:
             self.game.display_simple_message("No active quests.")
         
         input("Press Enter to continue...")        
+
+    def update_from_trade(self, trade_data):
+        """Update quests based on trade actions"""
+        for quest in self.active_quests:
+            if quest.quest_type == "trade":
+                # Check if trade matches quest requirements
+                if trade_data.get('action') == 'buy' or trade_data.get('action') == 'sell':
+                    commodity = trade_data.get('commodity')
+                    amount = trade_data.get('amount', 0)
+                    
+                    # Update trade-specific quests
+                    if 'commodity' in quest.requirements:
+                        if commodity == quest.requirements['commodity']:
+                            quest.progress += amount
+                            
+                            # Display quest progress
+                            self.display_quest_progress(quest)
+                            
+                            # Check if quest is completed
+                            if quest.check_completion(self.game):
+                                self.complete_quest(quest)
+
+        # Update cantina-type quests if they exist
+        for quest in self.active_quests:
+            if hasattr(quest, 'update_cantina_progress'):
+                quest.update_cantina_progress(trade_data)
+
+        
 
     def update_discovery_quests(self, location):
         """Update quests that involve location discovery"""
