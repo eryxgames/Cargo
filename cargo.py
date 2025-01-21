@@ -4757,8 +4757,8 @@ class ContractManager:
                 "requirements": {
                     "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
                     "min_amount": (amount := random.randint(100, 300)),
-                    "source": source,
-                    "destination": destination
+                    "source": source.name,
+                    "destination": destination.name
                 },
                 "duration": 8,
                 "base_reward": 20000,
@@ -4769,8 +4769,8 @@ class ContractManager:
                 "requirements": {
                     "cargo_type": (cargo_type := random.choice(["salt", "fuel"])),
                     "min_amount": (amount := random.randint(50, 150)),
-                    "source": source,
-                    "destination": destination
+                    "source": source.name,
+                    "destination": destination.name
                 },
                 "duration": 12,
                 "base_reward": 30000,
@@ -4805,8 +4805,8 @@ class ContractManager:
                 "requirements": {
                     "passenger_class": (passenger_class := random.choice(["S", "M", "E"])),
                     "count": (count := random.randint(3, 8)),
-                    "source": source,
-                    "destination": destination,
+                    "source": source.name,
+                    "destination": destination.name,
                     "min_satisfaction": 80
                 },
                 "duration": 10,
@@ -4817,8 +4817,8 @@ class ContractManager:
                 "desc_template": "Group Transport",
                 "requirements": {
                     "passenger_count": (count := random.randint(10, 20)),
-                    "source": source,
-                    "destination": destination,
+                    "source": source.name,
+                    "destination": destination.name,
                     "min_satisfaction": 70
                 },
                 "duration": 15,
@@ -4854,8 +4854,8 @@ class ContractManager:
                 "requirements": {
                     "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
                     "min_amount": (amount := random.randint(400, 600)),
-                    "source": source,
-                    "destination": destination,
+                    "source": source.name,
+                    "destination": destination.name,
                     "reputation_required": 40
                 },
                 "duration": 10,
@@ -4867,8 +4867,8 @@ class ContractManager:
                 "requirements": {
                     "passenger_class": "D",
                     "count": (count := random.randint(2, 4)),
-                    "source": source,
-                    "destination": destination,
+                    "source": source.name,
+                    "destination": destination.name,
                     "min_satisfaction": 90,
                     "reputation_required": 60
                 },
