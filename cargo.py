@@ -400,7 +400,8 @@ class Action:
         
 # Define the Ship class
 class Ship:
-    def __init__(self):
+    def __init__(self, game=None):
+        self.game = game
         # Basic cargo and resources
         self.cargo = {
             'tech': 0,
@@ -483,7 +484,6 @@ class Ship:
                 self.combat_defeats[enemy_type] += 1
 
     def buy(self, item, quantity, price, planet, player_rank):
-        # Quest-related information can be tracked here and passed to QuestSystem
         if not planet.can_trade(item):
             return False
 
@@ -501,6 +501,18 @@ class Ship:
             if self.money >= total_cost:
                 self.money -= total_cost
                 self.cargo[item] += quantity
+                
+                # Add contract progress tracking for buy events
+                if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
+                    event_data = {
+                        "action": "buy",
+                        "commodity": item,
+                        "amount": quantity,
+                        "location": planet.name,
+                        "turn": self.game.turn
+                    }
+                    self.game.contract_manager.update_contract_progress(event_data)
+                
                 return True
             return False
         return False
@@ -527,6 +539,17 @@ class Ship:
             if item not in self.trade_profits:
                 self.trade_profits[item] = 0
             self.trade_profits[item] += net_revenue
+            
+            # Add contract progress tracking for sell events
+            if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
+                event_data = {
+                    "action": "sell",
+                    "commodity": item,
+                    "amount": quantity,
+                    "location": planet.name,
+                    "turn": self.game.turn
+                }
+                self.game.contract_manager.update_contract_progress(event_data)
             
             return True
         return False
@@ -645,6 +668,7 @@ class Game:
         self.current_location = random.choice([loc for loc in self.locations if isinstance(loc, Planet)])  # Start at a planet
         self.shop = Shop()  # Initialize the shop system
         self.ship = Ship()
+        self.ship.game = self  # connect ship to game
         self.turn = 0
         self.known_locations = [self.current_location.name]  
         self.event_log = []
@@ -4993,27 +5017,32 @@ class ContractManager:
         return info
 
     def update_contract_progress(self, event_data):
-        """Automatic contract progress update"""
-        for contract in self.active_contracts[:]:  # Create copy to allow removal
-            status = contract.update_progress(event_data)
+        """Update progress for all active contracts"""
+        messages = []
+        for contract in self.active_contracts[:]:  # Create copy to allow safe removal
+            if contract.completed or contract.failed:
+                continue
+                
+            result = contract.update_progress(event_data)
             
-            # If contract is completed
-            if status["status"] == "completed" and not contract.rewards_claimed:
-                self.game.display_simple_message([
-                    "Contract Completed!",
-                    contract.description,
-                    "Use 'claim' command to collect rewards."
-                ])
-            
-            # Handle failed contracts
-            elif status["status"] == "failed":
-                self.handle_contract_failure(contract)
-            
-            # Handle progress updates
-            elif "trade_recorded" in status and status["trade_recorded"]:
-                self.game.display_simple_message(
-                    f"Contract progress updated: {contract.get_progress_description()}"
-                )
+            if result["status"] == "completed":
+                messages.append(result["message"])
+                if contract.contract_type == "cargo":
+                    self.game.display_simple_message(
+                        f"Contract completed: Delivered {contract.progress['amount']} {contract.requirements['cargo_type']} " +
+                        f"from {contract.requirements['source']} to {contract.requirements['destination']}"
+                    )
+                elif contract.contract_type == "passenger":
+                    self.game.display_simple_message(
+                        f"Contract completed: Transported {contract.progress['passengers_delivered']} passengers " +
+                        f"from {contract.requirements['source']} to {contract.requirements['destination']}"
+                    )
+            elif result["status"] == "updated" and "message" in result:
+                messages.append(result["message"])
+                
+        if messages:
+            for msg in messages:
+                self.game.display_simple_message(msg)
 
     def handle_contract_failure(self, contract):
         """Handle failed contract cleanup"""
@@ -5406,59 +5435,64 @@ class Contract:
         self.trade_history = []  # Track individual trades
 
     def update_progress(self, event_data):
-        """Enhanced progress update with better trade tracking"""
+        """Enhanced progress update with debug logging"""
         self.turns_active += 1
         if self.turns_active > self.duration:
+            print(f"DEBUG: Contract failed - exceeded duration {self.duration}")
             return {"status": "failed", "reason": "time_expired"}
 
         current_location = event_data.get("location")
         action = event_data.get("action", "")
+        commodity = event_data.get("commodity")
         
+        print(f"DEBUG: Contract Update - Location: {current_location}, Action: {action}, Commodity: {commodity}")
+        print(f"DEBUG: Contract Requirements - Source: {self.requirements.get('source')}, Dest: {self.requirements.get('destination')}, Amount: {self.requirements.get('min_amount')}")
+        print(f"DEBUG: Current Progress - Amount: {self.progress['amount']}, Visited: {self.progress['destinations_visited']}")
+
         # Record location visit
         if current_location:
             self.progress['destinations_visited'].add(current_location)
 
         if self.contract_type == "cargo":
+            # Track source visit through buy action
+            if action == "buy" and current_location == self.requirements.get("source"):
+                print("DEBUG: Source visit recorded through buy action")
+                self.progress["source_visited"] = True
+            
             # Handle sell actions for cargo contracts
-            if action == "sell" or event_data.get("trade_completed"):
-                # Get trade details
-                commodity = event_data.get("cargo_type") or event_data.get("commodity")
+            elif action == "sell" and commodity == self.requirements.get("cargo_type"):
                 amount = event_data.get("amount", 0)
                 
-                # Check if trade matches contract requirements
-                if (commodity == self.requirements.get("cargo_type") and 
-                    current_location == self.requirements.get("destination")):
-                    
-                    # Record trade
-                    trade = {
-                        "turn": event_data.get("turn"),
-                        "amount": amount,
-                        "location": current_location
-                    }
-                    self.trade_history.append(trade)
-                    
+                # Check completion conditions
+                source_visited = getattr(self.progress, "source_visited", False)
+                at_destination = current_location == self.requirements.get("destination")
+                correct_commodity = commodity == self.requirements.get("cargo_type")
+                sufficient_amount = (self.progress['amount'] + amount) >= self.requirements.get('min_amount', 0)
+                
+                print(f"DEBUG: Completion Checks - Source visited: {source_visited}, At destination: {at_destination}")
+                print(f"DEBUG: Commodity match: {correct_commodity}, Amount sufficient: {sufficient_amount}")
+                
+                if at_destination and source_visited:
                     # Update progress
                     self.progress['amount'] += amount
-                    self.last_update_turn = event_data.get("turn")
+                    
+                    # Check completion
+                    if self.progress['amount'] >= self.requirements.get('min_amount', 0):
+                        print("DEBUG: Contract completed!")
+                        self.completed = True
+                        return {
+                            "status": "completed",
+                            "message": f"Contract completed! Visit Contract Management to claim rewards."
+                        }
                     
                     return {
                         "status": "updated",
                         "trade_recorded": True,
-                        "new_amount": self.progress['amount']
+                        "new_amount": self.progress['amount'],
+                        "message": f"Contract Progress: {self.progress['amount']}/{self.requirements.get('min_amount', 0)}"
                     }
 
-        elif self.contract_type == "passenger":
-            # Handle passenger delivery
-            if current_location == self.requirements.get("destination"):
-                passenger_data = event_data.get("passenger_data")
-                if passenger_data:
-                    if "passenger_class" in self.requirements:
-                        if passenger_data["class"] == self.requirements["passenger_class"]:
-                            self.progress['passengers_delivered'] += 1
-                    else:
-                        self.progress['passengers_delivered'] += 1
-
-        return self._check_completion()
+        return {"status": "in_progress"}
 
 
 
