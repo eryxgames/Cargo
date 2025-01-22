@@ -193,13 +193,13 @@ class Planet:
         base_tax = 0.05  # 5% base tax
         rank_multiplier = {
             "Explorer": 1,
-            "Pilot": 1.2,
-            "Captain": 1.4,
-            "Commander": 1.6,
-            "Star Commander": 1.8,
-            "Space Admiral": 2.0,
-            "Stellar Hero": 2.2,
-            "Galactic Legend": 2.5
+            "Pilot": 2,
+            "Captain": 3,
+            "Commander": 4,
+            "Star Commander": 6,
+            "Space Admiral": 8,
+            "Stellar Hero": 10,
+            "Galactic Legend": 15
         }
         
         # Reduce tax based on number of buildings
@@ -400,7 +400,8 @@ class Action:
         
 # Define the Ship class
 class Ship:
-    def __init__(self):
+    def __init__(self, game=None):
+        self.game = game
         # Basic cargo and resources
         self.cargo = {
             'tech': 0,
@@ -408,7 +409,7 @@ class Ship:
             'salt': 0,
             'fuel': 0
         }
-        self.money = 1000
+        self.money = 1000000
         self.damage = 0
         self.research_points = 0
 
@@ -464,6 +465,10 @@ class Ship:
             'alien': 0
         }
 
+                # Initialize passenger-related attributes
+        self.passenger_modules = []
+        self.passenger_reputation = 0
+
     def record_combat_victory(self, enemy_type=None):
         """Record a combat victory with proper type tracking"""
         self.combat_victories['total'] += 1
@@ -479,7 +484,6 @@ class Ship:
                 self.combat_defeats[enemy_type] += 1
 
     def buy(self, item, quantity, price, planet, player_rank):
-        # Quest-related information can be tracked here and passed to QuestSystem
         if not planet.can_trade(item):
             return False
 
@@ -497,6 +501,18 @@ class Ship:
             if self.money >= total_cost:
                 self.money -= total_cost
                 self.cargo[item] += quantity
+                
+                # Add contract progress tracking for buy events
+                if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
+                    event_data = {
+                        "action": "buy",
+                        "commodity": item,
+                        "amount": quantity,
+                        "location": planet.name,
+                        "turn": self.game.turn
+                    }
+                    self.game.contract_manager.update_contract_progress(event_data)
+                
                 return True
             return False
         return False
@@ -523,6 +539,17 @@ class Ship:
             if item not in self.trade_profits:
                 self.trade_profits[item] = 0
             self.trade_profits[item] += net_revenue
+            
+            # Add contract progress tracking for sell events
+            if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
+                event_data = {
+                    "action": "sell",
+                    "commodity": item,
+                    "amount": quantity,
+                    "location": planet.name,
+                    "turn": self.game.turn
+                }
+                self.game.contract_manager.update_contract_progress(event_data)
             
             return True
         return False
@@ -571,7 +598,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Standard planetary commerce hub"
         },
@@ -580,7 +607,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Mining and resource extraction facility"
         },
@@ -589,7 +616,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('end', 'e')
+                ('action', 'a'), ('port', 'p'), ('end', 'e')
             ],
             "description": "Strategic trading outpost"
         },
@@ -598,7 +625,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('research', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('shop', 'sh'), ('action', 'a'),
-                ('end', 'e')
+                ('port', 'p'), ('end', 'e')
             ],
             "special_commands": {
                 "research": {
@@ -609,6 +636,7 @@ class LocationCommands:
             "description": "Advanced scientific research facility. No repair facilities available."
         }
     }
+
     @staticmethod
     def get_available_commands(location_type):
         """Get available commands for location type"""
@@ -630,7 +658,6 @@ class LocationCommands:
             "special": LocationCommands.get_special_commands(location.location_type)
         }
 
-
 # Define the Game class
 class Game:
     def __init__(self):
@@ -641,6 +668,7 @@ class Game:
         self.current_location = random.choice([loc for loc in self.locations if isinstance(loc, Planet)])  # Start at a planet
         self.shop = Shop()  # Initialize the shop system
         self.ship = Ship()
+        self.ship.game = self  # connect ship to game
         self.turn = 0
         self.known_locations = [self.current_location.name]  
         self.event_log = []
@@ -651,12 +679,11 @@ class Game:
         self.quest_system = QuestSystem(self)
         self.unlocked_location_types = {"Planet"}
         self.location_manager = LocationManager(self)
-        self.display_starting_info()
         self.secret_quest_available = False
         self.stellar_portal_available = False
         self.research = Research()
         self.action = Action()
-                # Add new tracking attributes for story milestones
+        # Add new tracking attributes for story milestones
         self.trades_completed = 0
         self.combat_difficulty = 1.0
         self.pirate_frequency = 1.0
@@ -670,6 +697,42 @@ class Game:
         self.trade_bonus = 0
         self.repair_discount = 0
         self.combat_bonus = 0
+        # Initialize character generators
+        self.character_generators = {
+            "human": SpecialCharacterGenerator(self),
+            "synthetic": SyntheticCharacterGenerator(self),
+            "alien": AlienCharacterGenerator(self)
+        }        
+        # Add systems
+        self.port_system = Port(self)
+        self.contract_manager = ContractManager(self)
+        self.resource_transport = ResourceTransportQuest(self)
+        self.reputation_manager = PassengerReputationManager(self)
+        self.synthetic_events = SyntheticEventManager(self)
+        self.character_system = DynamicCharacterSystem(self)
+        self.character_encounters = SpecialCharacterEncounters(self)
+        self.discovered_locations = set()
+        self.cooldowns = {}
+        self.story_events = {}
+        self.character_manager = CharacterManager(self)
+        self.infestation_manager = InfestationManager(self)
+
+        # Initialize the story
+        self.story_manager.start_game()        
+        
+        self.display_starting_info()
+
+
+
+    # Modified Ship class initialization to include passenger modules
+    def init_ship(self):
+        self.ship = Ship()
+        self.ship.passenger_modules = []  # Initialize empty passenger modules list
+        self.ship.passenger_reputation = 0  # Initialize passenger reputation
+
+    # Initialize reputation manager in Game class
+    def init_reputation_system(self):
+        self.reputation_manager = PassengerReputationManager(self)
 
     def get_terminal_width(self):
         return shutil.get_terminal_size().columns
@@ -911,6 +974,50 @@ class Game:
         
         return '\n'.join(lines)
 
+    def create_character_box(self, character_content, style='round'):
+        """Create a character display box optimized for different terminal widths"""
+        try:
+            term_width = os.get_terminal_size().columns
+        except OSError:
+            term_width = 80  # Default width
+            
+        # Adjust width based on terminal size
+        if term_width < 60:
+            content_width = term_width - 4
+            compact_mode = True
+        else:
+            content_width = min(80, term_width - 4)  # Cap at 80 chars
+            compact_mode = False
+            
+        chars = {
+            'round': {'tl': '╭', 'tr': '╮', 'bl': '╰', 'br': '╯', 'h': '─', 'v': '│'},
+            'double': {'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║'},
+            'single': {'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘', 'h': '─', 'v': '│'}
+        }[style]
+        
+        lines = []
+        lines.append(f"{chars['tl']}{chars['h'] * content_width}{chars['tr']}")
+        
+        # Process title section
+        if 'title' in character_content:
+            wrapped_title = self.word_wrap(character_content['title'], content_width - 2)
+            for line in wrapped_title:
+                lines.append(f"{chars['v']} {line:<{content_width-2}} {chars['v']}")
+            lines.append(f"{chars['v']}{chars['h'] * content_width}{chars['v']}")
+        
+        # Process main content with proper sections
+        for section in ['introduction', 'description', 'demands', 'options']:
+            if section in character_content:
+                if not compact_mode:
+                    lines.append(f"{chars['v']}{' ' * content_width}{chars['v']}")
+                
+                wrapped_content = self.word_wrap(character_content[section], content_width - 2)
+                for line in wrapped_content:
+                    lines.append(f"{chars['v']} {line:<{content_width-2}} {chars['v']}")
+        
+        lines.append(f"{chars['bl']}{chars['h'] * content_width}{chars['br']}")
+        return '\n'.join(lines)
+
     def create_compact_box(self, content, style='single'):
         """Create a box with properly aligned borders and content."""
         # Get terminal width and account for borders and spacing
@@ -1020,7 +1127,7 @@ class Game:
 
         return '\n'.join(box)
 
-    def display_simple_message(self, message, pause=2, style='round', color=None):
+    def display_simple_message(self, message, pause=1, style='round', color=None):
         if isinstance(message, list):
             box_content = message
         else:
@@ -1032,6 +1139,21 @@ class Game:
         print(box)
         if pause > 0:
             time.sleep(pause)
+
+    def fast_message(self, message, pause=0.5, style='round', color=None, clear_screen=True):
+        if isinstance(message, list):
+            box_content = message
+        else:
+            box_content = [message]
+
+        box = self.create_simple_box(box_content, style)
+        if color:
+            box = f"\033[{color}m{box}\033[0m"
+        print(box)
+        if pause > 0:
+            time.sleep(pause)
+        if clear_screen:
+            self.clear_screen()            
 
     def create_simple_box(self, content, style='single'):
         term_width = shutil.get_terminal_size().columns
@@ -1053,6 +1175,40 @@ class Game:
 
         lines.append(f"{chars['bl']}{chars['h'] * width}{chars['br']}")
         return '\n'.join(lines)
+
+    def handle_travel(self):
+        """Centralized travel handler that can be called from anywhere in the game"""
+        if "navcomp" in self.ship.items:
+            self.display_simple_message("Choose a location to travel to:")
+            # Display known locations with numbers
+            for i, location in enumerate(self.known_locations, 1):
+                print(f"{i}. {location}")
+            
+            self.display_simple_message("Enter the number or name of the location (or 'cancel'): ", 0)
+            choice = input(">>> ").strip()
+            
+            if not choice or choice.lower() == 'cancel':
+                self.display_simple_message("Travel cancelled.")
+                return False
+                
+            if choice.isdigit():
+                index = int(choice) - 1
+                if 0 <= index < len(self.known_locations):
+                    return self.travel_to_location(self.known_locations[index])
+                else:
+                    self.display_simple_message("Invalid location number.")
+                    return False
+            else:
+                return self.travel_to_location(choice)
+        else:
+            self.display_simple_message("Enter location name (or 'cancel'): ", 0)
+            location_name = input(">>> ").strip()
+            
+            if not location_name or location_name.lower() == 'cancel':
+                self.display_simple_message("Travel cancelled.")
+                return False
+                
+            return self.travel_to_location(location_name)
 
     # For buy map display in visit_cantina:
     def format_map_content(self, new_locations):
@@ -1118,6 +1274,12 @@ class Game:
         
         return market_content
 
+    def handle_contract_menu(self):
+        """Route contract menu handling to ContractManager"""
+        if not hasattr(self, 'contract_manager'):
+            self.contract_manager = ContractManager(self)
+        self.contract_manager.handle_contract_menu()
+
     def display_message(self, message, pause=2, style='round', color=None):
         if isinstance(message, list):
             box_content = message
@@ -1131,45 +1293,52 @@ class Game:
         if pause > 0:
             time.sleep(pause)
 
-    def validate_input(self, prompt, valid_options):
-        term_width = shutil.get_terminal_size().columns
+    def validate_input(self, default_prompt, valid_options, prompt=None):
+            """
+            Validate user input against a list of valid options
+            default_prompt: Default prompt text
+            valid_options: List of valid input options
+            prompt: Optional custom prompt to override default
+            """
+            term_width = shutil.get_terminal_size().columns
 
-        while True:
-            wrapped_prompt = self.word_wrap(prompt, term_width - 4)  # Account for padding
-            self.display_simple_message(wrapped_prompt, 0)
+            while True:
+                wrapped_prompt = self.word_wrap(prompt or default_prompt, term_width - 4)
+                self.display_simple_message(wrapped_prompt, 0)
 
-            try:
-                user_input = input(">>> ").strip().lower()
-                if not user_input:
-                    self.display_simple_message("Command cancelled.")
-                    return None
-                if user_input in valid_options:
-                    return user_input
-                self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
-            except KeyboardInterrupt:
-                print(f"Do you want to exit? (yes/no):")
-#                self.display_message("Do you want to exit? (yes/no)", 0)
-                confirm = input(">>> ").strip().lower()
-                if confirm == 'yes':
-                    self.display_simple_message("Goodbye!", 1)
-                    exit()
+                try:
+                    user_input = input(">>> ").strip().lower()
+                    if not user_input:
+                        self.display_simple_message("Command cancelled.")
+                        return None
+                    if user_input in valid_options:
+                        return user_input
+                    self.display_simple_message(f"Invalid input, try: {', '.join(valid_options)}", 1)
+                except KeyboardInterrupt:
+                    print(f"Do you want to exit? (yes/no):")
+                    confirm = input(">>> ").strip().lower()
+                    if confirm == 'yes':
+                        self.display_simple_message("Goodbye!", 1)
+                        exit()
 
     def validate_quantity_input(self, prompt):
         while True:
             self.display_simple_message(prompt, 0)
-            try:
+            try:    
                 user_input = input(">>> ").strip().lower()
                 if not user_input:
                     self.display_simple_message("Command cancelled.")
                     return None
-                if user_input == 'max':
+                if user_input in ['max', 'm']:
                     return 'max'
+                if user_input in ['half', 'h']:
+                    return 'half'
                 quantity = int(user_input)
                 if quantity > 0:
                     return quantity
-                self.display_simple_message("Please enter a positive number or 'max'", 1)
+                self.display_simple_message("Please enter a positive number, 'max/m', or 'half/h'", 1)
             except ValueError:
-                self.display_simple_message("Invalid input. Please enter a number or 'max'", 1)
+                self.display_simple_message("Invalid input. Please enter a number, 'max/m', or 'half/h'", 1)
 
     def validate_planet_input(self, prompt):
         while True:
@@ -1228,6 +1397,15 @@ class Game:
     # Update Game class methods
     def display_turn_info(self):
         self.clear_screen()
+
+        # Calculate passenger stats
+        total_passengers = 0
+        total_capacity = 0
+        if hasattr(self.ship, 'passenger_modules'):
+            for module in self.ship.passenger_modules:
+                total_passengers += len(module.passengers)
+                total_capacity += module.capacity
+
         status_content = [
             ["CΔRGΩ", "Ship", f"{self.current_location.location_type}"],
             [f"Turn: {self.turn}", f"ATK: {self.ship.attack}", f"Name: {self.current_location.name}"],
@@ -1235,16 +1413,17 @@ class Game:
             [f"Tech: {self.format_money(self.ship.cargo['tech'])}", f"SPD: {self.ship.speed}", f"Agri LVL: {self.current_location.agri_level}"],
             [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_location.economy}"],
             [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.exogeology}%"],
-            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"]
+            [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"],
+            [f"PAX: {total_passengers}/{total_capacity}", f"REP: {self.ship.passenger_reputation}", ""]
         ]
         
         # Add story progress if available
         if hasattr(self, 'story_manager'):
-            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            current_chapter = self.story_manager.chapters[self.story_manager.current_chapter]
             status_content.append([
-                f"Chapter {self.story_manager.current_chapter}",
+                f"Chapter {self.story_manager.get_chapter_number_roman()}",
                 f"Plot Points: {self.story_manager.plot_points}",
-                chapter["title"]
+                current_chapter.title
             ])
 
         status_box = self.create_box(status_content, 'double')
@@ -1271,13 +1450,13 @@ class Game:
                 market_content.append([f"{commodity.capitalize()}", f"{duration} turns"])
         print(self.create_box(market_content, 'single'))
 
-        # Command menu with new options
+        # Display commands including port
         commands = [
-            ["Commands: buy/b, sell/s, upgrade/u,"],
-            ["travel/t, repair/r, info/i, build/bl,"],
-            ["cantina/c, shop/sh, action/a, end/e"],
+            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i..."],
+        
         ]
-        print(self.create_box(commands, 'round'))
+    #    print(self.create_box(commands, 'round'))
+        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i...", 1)
 
         # Display active effects
         if self.research.unlocked_options:
@@ -1288,22 +1467,31 @@ class Game:
 
     def display_location_info(self):
         # Ship section
+        # Get total locations
+        total_locations = len(self.locations) if hasattr(self, 'locations') else 0
+        # Add 1 to discovered count for starting location if not already included
+        discovered = (len(self.discovered_locations) if hasattr(self, 'discovered_locations') else 0)
+
         ship_info = [
             ["Ship Information"],
-            [f"Attack: {self.ship.attack}"],
-            [f"Defense: {self.ship.defense}"],
-            [f"Speed: {self.ship.speed}"],
-            [f"Hull Damage: {self.ship.damage}%"],
+            [f"Stats: {self.ship.attack}|{self.ship.defense}|{self.ship.speed}"],
+            [f"Locations Discovered: {discovered + 1}/{total_locations}"],
+            [f"Trades Completed: {self.trades_completed}"],
+            [f"PAX Delivered: {self.reputation_manager.total_passengers}"],
+#            [f"Locations Discovered: {len(self.discovered_locations) if hasattr(self, 'discovered_locations') else 0}"]
+#            [f"Hull Damage: {self.ship.damage}%"],
             [f"Money: {self.format_money(self.ship.money)}"],
             [f"Research Points: {self.ship.research_points}"],
-            ["Cargo:"],
-            [f"  Tech: {self.format_money(self.ship.cargo['tech'])}"],
-            [f"  Agri: {self.format_money(self.ship.cargo['agri'])}"],
-            [f"  Salt: {self.format_money(self.ship.cargo['salt'])}"],
-            [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
+    #        ["Cargo:"],
+    #        [f"  Tech: {self.format_money(self.ship.cargo['tech'])}"],
+    #        [f"  Agri: {self.format_money(self.ship.cargo['agri'])}"],
+    #        [f"  Salt: {self.format_money(self.ship.cargo['salt'])}"],
+    #        [f"  Fuel: {self.format_money(self.ship.cargo['fuel'])}"],
             ["Items:"]
         ]
-        
+
+      
+                
         # Add items if any exist
         if self.ship.items:
             for item, count in self.ship.items.items():
@@ -1313,16 +1501,24 @@ class Game:
 
         # Add combat statistics if they exist
         if hasattr(self.ship, 'combat_victories'):
-            ship_info.extend([
-                ["Combat Record:"],
-                [f"  Victories: {self.ship.combat_victories}"],
-                [f"  Defeats: {self.ship.combat_defeats}"]
-            ])
-            if hasattr(self.ship, 'enemy_victories'):
-                for enemy_type, count in self.ship.enemy_victories.items():
-                    if count > 0:
-                        ship_info.append([f"  {enemy_type.capitalize()} defeats: {count}"])
-        
+                    ship_info.append(["Combat Record:"])
+                    # Format victories
+                    ship_info.extend([
+                        [f"Victories/Defeats Summary"],
+                        [f"  Pirates: {self.ship.combat_victories.get('pirate', 0)}/{self.ship.combat_defeats.get('pirate', 0)}"],
+                        [f"  Raiders: {self.ship.combat_victories.get('raider', 0)}/{self.ship.combat_defeats.get('raider', 0)}"],
+                        [f"  Militia: {self.ship.combat_victories.get('militia', 0)}/{self.ship.combat_defeats.get('militia', 0)}"],
+                        [f"  Aliens: {self.ship.combat_victories.get('alien', 0)}/{self.ship.combat_defeats.get('alien', 0)}"],
+                        [f"  Total: {self.ship.combat_victories.get('total', 0)}/{self.ship.combat_defeats.get('total', 0)}"]
+                    ])
+
+        if hasattr(self.ship, 'active_infestations') and self.ship.active_infestations:
+            content.append(["Active Infestations:"])
+            for name, infestation in self.ship.active_infestations.items():
+                content.append([
+                    f"{infestation['name']} - Turn {infestation['turns_active']}"
+                ])
+
         # Location section
         location_info = [
             ["Location"],
@@ -1386,7 +1582,7 @@ class Game:
             content.append([ship_line, location_line])
 
         print(self.create_box(content, 'double'))
-        time.sleep(4)
+        input("Press Enter to continue...")
 
     def build_mining_platform(self):
         """Build a new mining platform on the current planet"""
@@ -1428,7 +1624,8 @@ class Game:
         self.clear_screen()
         display_logo(logo_data, centered=False)
         difficulty_info = [
-            ["DIFFICULTY SELECTION"],
+#            ["DIFFICULTY SELECTION"],
+            [""],
             ["  1. EASY"],
             ["  2. NORMAL"],
             ["  3. EXPERT"],
@@ -1623,13 +1820,13 @@ class Game:
     def display_starting_info(self):
         """Display initial game information with location context"""
         # Get location info based on current_location
-        location_type = "industrial"
+        location_type = "an industrial"
         if self.current_location.agri_level > self.current_location.tech_level:
-            location_type = "agricultural"
+            location_type = "an agricultural"
         elif self.current_location.research_points > 15:
-            location_type = "research"
+            location_type = "a research"
 
-        intro_text = f"\n  You arrive on {self.current_location.name}, a {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
+        intro_text = f"\n  You arrive on {self.current_location.name}, {location_type} {self.current_location.location_type.lower()}, where your adventure begins."
         special_events = [
             "Revolutions are happening!",
             "Economy boom!",
@@ -1693,13 +1890,59 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
+    def force_check_chapter_progression(self):
+        """Manually trigger chapter progression checks"""
+        current_chapter = self.story_manager.current_chapter
+        current_chapter_obj = self.story_manager.chapters[current_chapter]
+        
+        # Check next possible chapters
+        next_chapters = current_chapter_obj.get_next_chapters(self)
+        
+        if next_chapters:
+            if len(next_chapters) > 1:
+                self.story_manager.present_chapter_choice(next_chapters)
+            else:
+                self.story_manager.start_chapter(next_chapters[0].id)        
+
     def play_turn(self):
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
+            self.character_system.check_character_triggers() # Check for dynamic characters system
+            # New chapter and milestone system
+            self.story_manager.check_milestone_progress()
+            self.story_manager.check_chapter_progress()
+            self.force_check_chapter_progression()
 
             # Get location commands
             location_commands = self.current_location.commands
+
+            self.character_manager.update()
+
+            self.infestation_manager.check_global_infestations()
+            if hasattr(self.ship, 'active_infestations'):
+                self.infestation_manager.update_ship_infestations()
+
+            # Update synthetic events (if they exist)
+            if hasattr(self, 'synthetic_events'):
+                self.synthetic_events.update()
+                
+            # For each location, check building counts
+            for location in self.locations:
+                neuroguild_count = location.buildings.count("Neuroengineering Guild")
+                agrobot_count = location.buildings.count("Agrobot Assembly Line")
+                
+                if neuroguild_count >= 4 and random.random() < 0.2:  # 20% chance per turn
+                    self.synthetic_events.start_uprising("Neurodroid", location)
+                if agrobot_count >= 4 and random.random() < 0.2:
+                    self.synthetic_events.start_uprising("Agrobot", location)            
+            
+            # Update port system if port command is available
+            port_is_available = False
+            for cmd, shortcut in location_commands["available"]:
+                if cmd == 'port' or shortcut == 'p':
+                    port_is_available = True
+                    self.port_system.update_passengers(self.current_location.name)
             
             # Create list of valid actions
             valid_actions = []
@@ -1708,17 +1951,18 @@ class Game:
             
             # Add global commands
             valid_actions.extend(['quit', 'q', 'resign', 'rs', 'version', 'v'])
+            valid_actions.extend(['log', 'l'])  # Add but don't show in command hints
 
             action = self.validate_input("Choose action: ", valid_actions)
 
             # Handle cancelled command
             if action is None:
                 return
-                    
+                        
             # Handle research/repair based on location type
             elif action in ['research', 'r']:
                 if isinstance(self.current_location, ResearchColony):
-                    self.handle_research_activities()
+                    self.handle_research_options()
                 elif action == 'r':  # Only handle repair if 'r' and not at Research Colony
                     if self.ship.damage > 0:
                         cost = self.ship.damage * 10
@@ -1737,38 +1981,38 @@ class Game:
                 if item is None:
                     return
 
-                # Check if item can be traded
                 if not self.current_location.can_trade(item):
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
-                # Check for mining platform requirement for salt and fuel
                 if item in ['salt', 'fuel']:
                     has_platform = any(p['type'] == item for p in self.current_location.mining_platforms)
                     if not has_platform:
                         self.display_simple_message(f"No mining platform for {item} on this planet.")
                         return
 
-                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                quantity = self.validate_quantity_input("Enter quantity (max/m, half/h): ")
                 if quantity is None:
                     return
 
+                price = self.current_location.market[item]
+                if price <= 0:
+                    self.display_simple_message(f"Cannot calculate amount: {item} has no valid price.")
+                    return
+                    
+                tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
+                price_with_tax = price * (1 + tax_rate)
+                max_quantity = int(self.ship.money / price_with_tax)
+
                 if quantity == 'max':
-                    # Only calculate max if the item's price is non-zero
-                    price = self.current_location.market[item]
-                    if price <= 0:
-                        self.display_simple_message(f"Cannot calculate maximum: {item} has no valid price.")
-                        return
-                        
-                    # Calculate tax rate for this transaction
-                    tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
-                    price_with_tax = price * (1 + tax_rate)
-                    quantity = int(self.ship.money / price_with_tax)
+                    quantity = max_quantity
+                elif quantity == 'half':
+                    quantity = (max_quantity + 1) // 2  # Round up division
 
                 if self.ship.buy(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
-                    self.handle_trade('buy')  # Handle story attributes
+                    self.handle_trade('buy')
 
             elif action in ['sell', 's']:
                 item = self.validate_input("Choose item (tech/agri/salt/fuel): ", 
@@ -1780,18 +2024,19 @@ class Game:
                     self.display_simple_message(f"Trading of {item} is banned on this planet!")
                     return
 
-                quantity = self.validate_quantity_input("Enter quantity (or 'max' for maximum): ")
+                quantity = self.validate_quantity_input("Enter quantity to sell (max/m, half/h): ")
                 if quantity is None:
                     return
 
                 if quantity == 'max':
                     quantity = self.ship.cargo[item]
+                if quantity == 'half':
+                    quantity = (self.ship.cargo[item]) // 2
 
                 if self.ship.sell(item, quantity, self.current_location.market[item], 
                                 self.current_location, self.rank):
                     self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
-                    self.handle_trade('sell')  # tracking for story
-
+                    self.handle_trade('sell')
 
             elif action in ['upgrade', 'u']:
                 property_name = self.validate_input(
@@ -1804,48 +2049,10 @@ class Game:
                 cost = self.ship.upgrade_costs[property_name]
                 if self.ship.upgrade(property_name, cost):
                     self.display_simple_message(f"Upgraded {property_name}.")
-                    # Increase cost for next upgrade
                     self.ship.upgrade_costs[property_name] = int(cost * 1.5)
 
             elif action in ['travel', 't']:
-                if "navcomp" in self.ship.items:
-                    self.display_simple_message("Choose a location to travel to:")
-                    for i, location in enumerate(self.known_locations, 1):
-                        print(f"{i}. {location}")
-                    
-                    self.display_simple_message("Enter the number or name of the location (or 'cancel'): ", 0)
-                    choice = input(">>> ").strip()
-                    
-                    if not choice or choice.lower() == 'cancel':
-                        self.display_simple_message("Travel cancelled.")
-                        return
-                        
-                    if choice.isdigit():
-                        index = int(choice) - 1
-                        if 0 <= index < len(self.known_locations):
-                            self.travel_to_location(self.known_locations[index])
-                        else:
-                            self.display_simple_message("Invalid location number.")
-                    else:
-                        self.travel_to_location(choice)
-                else:
-                    self.display_simple_message("Enter location name (or 'cancel'): ", 0)
-                    location_name = input(">>> ").strip()
-                    
-                    if not location_name or location_name.lower() == 'cancel':
-                        self.display_simple_message("Travel cancelled.")
-                        return
-                        
-                    self.travel_to_location(location_name)
-
-            elif action in ['repair', 'r']:
-                cost = self.ship.damage * 10
-                if self.ship.repair(cost):
-                    self.display_simple_message("Ship repaired.")
-                else:
-                    self.display_simple_message(
-                        f"Not enough money to repair. Cost: {self.format_money(cost)}"
-                    )
+                self.handle_travel()
 
             elif action in ['info', 'i']:
                 self.display_location_info()
@@ -1861,7 +2068,6 @@ class Game:
                     'mining': 10000
                 }
 
-                # Create the validation options list
                 valid_options = [
                     'stockmarket', 'sm',
                     'permaculture', 'pc',
@@ -1880,24 +2086,37 @@ class Game:
                 if building_name is None:
                     return
 
-                # Handle building construction - removed building_options parameter
                 self.handle_building_construction(building_name, building_costs)
 
             elif action in ['cantina', 'c']:
                 self.visit_cantina()
 
             elif action in ['shop', 'sh']:
-                self.visit_shop()  # Changed from self.shop()
+                self.visit_shop()
 
             elif action in ['action', 'a']:
                 self.handle_actions()
 
             elif action in ['mine', 'm']:
                 self.handle_mining()
+                
+            elif action in ['port', 'p']:
+                if port_is_available:
+                    self.port_system.handle_port_menu()
+                    self.port_system.update_passenger_satisfaction()
+                else:
+                    self.display_simple_message("No port available at this location.")
+
+            elif action in ['log', 'l']:
+                self.story_manager.display_story_progress()
+                return    # Return after showing log to avoid counting it as a turn
 
             elif action in ['version', 'v']:
                 display_logo(logo_data, centered=True)
-                print_centered_text("Version 1.0")
+                print_centered_text("")
+                print_centered_text("Created by Dan Sandner")
+                print_centered_text("v1.0.2, ©2025")
+
                 time.sleep(3)
                 return    
 
@@ -1915,12 +2134,61 @@ class Game:
                 return    
 
             elif action in ['end', 'e']:
+                # Update passenger satisfaction at end of turn if port is available
+                if port_is_available:
+                    self.port_system.update_passenger_satisfaction()
                 self.turn += 1
                 self.random_event()
+                self.shop.reset_turn()  # Reset shop state at end of each turn 
                 return
 
             else:
                 self.display_simple_message("Invalid action.")
+
+    # Add passenger event handlers
+    def handle_passenger_celebration(self):
+        """Handle passenger celebration event"""
+        for module in self.ship.passenger_modules:
+            for passenger in module.passengers:
+                passenger.satisfaction = min(100, passenger.satisfaction + 10)
+        self.display_simple_message("Passengers are having a celebration! Satisfaction increased!")
+
+    def handle_passenger_complaint(self):
+        """Handle passenger complaint event"""
+        for module in self.ship.passenger_modules:
+            for passenger in module.passengers:
+                passenger.satisfaction = max(0, passenger.satisfaction - 15)
+        self.display_simple_message("Passengers have filed complaints! Satisfaction decreased!")
+
+    def handle_medical_emergency(self):
+        """Handle medical emergency event"""
+        cost = random.randint(500, 1500)
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.display_simple_message(f"Medical emergency handled! Cost: {self.format_money(cost)}")
+        else:
+            # If can't afford medical care, big satisfaction hit
+            for module in self.ship.passenger_modules:
+                for passenger in module.passengers:
+                    passenger.satisfaction = max(0, passenger.satisfaction - 30)
+            self.display_simple_message("Couldn't afford medical care! Passengers very unhappy!")
+
+    def handle_vip_request(self):
+        """Handle VIP passenger request"""
+        cost = random.randint(1000, 2000)
+        if self.ship.money >= cost:
+            self.ship.money -= cost
+            self.ship.passenger_reputation += 2
+            self.display_simple_message(f"VIP request handled! Cost: {self.format_money(cost)}, Reputation increased!")
+        else:
+            self.ship.passenger_reputation = max(0, self.ship.passenger_reputation - 1)
+            self.display_simple_message("Couldn't fulfill VIP request! Reputation decreased!")
+
+    def handle_passenger_trade_info(self):
+        """Handle passengers sharing trade information"""
+        # Reveal profitable trade opportunities
+        self.display_simple_message("Passengers shared valuable trade information!")
+        # Implement trade tip functionality here                
 
     def unlock_location_type(self, location_type):
         """Unlock a new type of location and add its instances to available locations"""
@@ -2040,6 +2308,12 @@ class Game:
         if found_location:
             old_location = self.current_location
             self.current_location = found_location
+
+            # Initialize and update discovered locations
+            if not hasattr(self, 'discovered_locations'):
+                self.discovered_locations = set([old_location.name])
+            self.discovered_locations.add(found_location.name)
+
             self.display_simple_message(f"Traveled to {found_location.name}.")
             
             # Calculate research exchange based on location differences
@@ -2089,6 +2363,7 @@ class Game:
                 self.display_simple_message(f"Gained {total_gain} research points from salvaged debris!")
             
             self.turn += 1
+            self.shop.reset_turn()
             self.random_event()
             return True
         else:
@@ -2364,6 +2639,36 @@ class Game:
 
     def random_event(self):
         """Enhanced random event handler with complete implementation"""
+
+        # Add character encounter chance first
+        if random.random() < 0.15:  # 15% chance for character encounter
+            self.character_encounters.trigger_random_encounter("Space")
+            return  # Return to avoid multiple events per turn
+
+        # Add passenger-related events
+        if hasattr(self.ship, 'passenger_modules') and any(m.passengers for m in self.ship.passenger_modules):
+            # 10% chance of passenger event if carrying passengers
+            if random.random() < 0.1:
+                passenger_events = [
+                    "Passenger celebration boosts morale!",
+                    "Passenger complaint about accommodations!",
+                    "Medical emergency with passenger!",
+                    "VIP passenger requests special treatment!",
+                    "Passengers share valuable trade information!"
+                ]
+                event = random.choice(passenger_events)
+                
+                if "celebration" in event:
+                    self.handle_passenger_celebration()
+                elif "complaint" in event:
+                    self.handle_passenger_complaint()
+                elif "medical" in event:
+                    self.handle_medical_emergency()
+                elif "VIP" in event:
+                    self.handle_vip_request()
+                elif "trade" in event:
+                    self.handle_passenger_trade_info()
+
         # Define all possible events with their categories
         events = {
             "combat": [
@@ -2532,7 +2837,7 @@ class Game:
         # Apply modifiers based on game progress
         if quest:
             # Scale rewards based on current chapter
-            chapter_multiplier = 1 + (self.story_manager.current_chapter * 0.2)
+            chapter_multiplier = 1 + (int(''.join(filter(str.isdigit, self.story_manager.current_chapter))) * 0.2)
             quest.reward_money = int(quest.reward_money * chapter_multiplier)
             quest.reward_rp = int(quest.reward_rp * chapter_multiplier)
             
@@ -2638,7 +2943,7 @@ class Game:
         return details
 
     def handle_combat_event(self, event):
-        """Handle combat event with proper victory/defeat recording"""
+        """Handle combat event with proper victory/defeat recording and reputation gains"""
         combat_scenarios = {
             "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0, "enemy_type": "pirate"},
             "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2, "enemy_type": "pirate"},
@@ -2654,8 +2959,13 @@ class Game:
         # Check for automatic defense
         if "turrets" in self.ship.items and random.random() < 0.4:
             self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
-            # Count automatic defense as a victory
+            # Count automatic defense as a victory and add reputation
             self.ship.record_combat_victory(enemy_type)
+            if enemy_type == "pirate":
+                rep_gain = random.randint(1, 3)  # Smaller gain for automated defense
+                self.reputation += rep_gain
+                self.ship.passenger_reputation += rep_gain
+                self.display_simple_message(f"Gained {rep_gain} reputation for automated pirate defense!")
             # Gain some experience even when automatically defending
             self.ship.research_points += int(5 * scenario["reward_mult"])
             return
@@ -2691,7 +3001,7 @@ class Game:
                 if stolen_cargo > 0:
                     losses.append(f"{stolen_cargo} {cargo_type}")
         
-        # Check for counter-attack opportunity, upd.
+        # Check for counter-attack opportunity
         if self.ship.attack > scenario["def"]:
             # Counter-attack successful - record victory
             self.ship.record_combat_victory(enemy_type)
@@ -2705,32 +3015,54 @@ class Game:
             self.ship.money += rewards["money"]
             self.ship.research_points += rewards["research"]
             
+            # Add reputation gains for pirate victories
+            if enemy_type == "pirate":
+                rep_gain = random.randint(2, 5)
+                self.reputation += rep_gain
+                self.ship.passenger_reputation += rep_gain
+                rep_message = f"\nReputation increased by {rep_gain} for defeating pirates!"
+            else:
+                rep_message = ""
+            
             if losses:
                 loss_text = ", ".join(losses)
                 self.display_simple_message(
                     f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
+                    rep_message,
                     3, color='32'
                 )
             else:
                 self.display_simple_message(
                     f"Event! {event} caused {damage_dealt}% damage!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!",
+                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
+                    rep_message,
                     3, color='32'
                 )
         else:
             # Combat defeat - record defeat with enemy type
             self.ship.record_combat_defeat(enemy_type)
             
+            # Lose reputation on pirate defeats
+            if enemy_type == "pirate":
+                rep_loss = random.randint(1, 3)
+                self.reputation = max(0, self.reputation - rep_loss)
+                self.ship.passenger_reputation = max(0, self.ship.passenger_reputation - rep_loss)
+                rep_message = f"\nLost {rep_loss} reputation from pirate defeat!"
+            else:
+                rep_message = ""
+            
             if losses:
                 loss_text = ", ".join(losses)
                 self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!",
+                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!" +
+                    rep_message,
                     3, color='31'
                 )
             else:
                 self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage!",
+                    f"Event! {event} caused {damage_dealt}% damage!" +
+                    rep_message,
                     3, color='31'
                 )
 
@@ -2822,10 +3154,72 @@ class Game:
             ], color='31')
 
     # Add trade tracking to buy/sell methods
-    def handle_trade(self, action_type):
-        """Track trade completion"""
+    def handle_trade(self, action_type, commodity=None, quantity=None, price=None):
+        """Handle trade completion and contract/quest updates"""
         self.trades_completed += 1
+        
+        # Build complete trade event data
+        trade_data = {
+            "action": action_type,
+            "location": self.current_location.name,
+            "turn": self.turn,
+            "trade_completed": True,
+        }
 
+        # Add commodity-specific data for sell actions
+        if action_type == 'sell' and commodity and quantity:
+            trade_data.update({
+                "commodity": commodity,
+                "amount": quantity,
+                "price": price
+            })
+            
+            # Update contracts with complete trade data
+            if hasattr(self, 'contract_manager'):
+                self.contract_manager.update_contract_progress(trade_data)
+        
+        # Update quests
+        if hasattr(self, 'quest_system'):
+            self.quest_system.update_from_trade(trade_data)
+
+    def handle_passenger_delivery(self, passenger, module):
+        """Handle passenger delivery completion"""
+        if not passenger.destination == self.current_location.name:
+            return False
+            
+        # Build passenger delivery event data
+        delivery_data = {
+            "action": "passenger_delivery",
+            "location": self.current_location.name,
+            "turn": self.turn,
+            "passenger_data": {
+                "class": passenger.classification["code"],
+                "satisfaction": passenger.satisfaction,
+                "destination": passenger.destination
+            }
+        }
+        
+        # Update contracts
+        if hasattr(self, 'contract_manager'):
+            self.contract_manager.update_contract_progress(delivery_data)
+            
+        # Remove passenger from module
+        module.passengers.remove(passenger)
+        
+        # Update reputation
+        if hasattr(self, 'reputation_manager'):
+            rep_change = self.reputation_manager.update_reputation(
+                passenger.satisfaction,
+                passenger
+            )
+            
+            # Handle VIP/special passengers
+            if hasattr(passenger, 'is_vip'):
+                self.reputation_manager.handle_vip_delivery(passenger)
+            elif hasattr(passenger, 'is_story_character'):
+                self.reputation_manager.handle_story_character_delivery(passenger)
+        
+        return True
 
     def handle_trade_event(self, event):
         """Handle trade disruption events with full market impact"""
@@ -3079,6 +3473,20 @@ class Game:
                 self.ship.damage += penalty[1]
                 self.display_simple_message(f"Penalty: {penalty[1]}% additional damage", 3, color='31')
 
+    def handle_combat(self, enemy_stats):
+        """Handle combat with enemy ships"""
+        enemy_attack = enemy_stats.get("attack", 2)
+        enemy_defense = enemy_stats.get("defense", 1)
+        enemy_type = enemy_stats.get("type", "pirate")
+        
+        self.battle_event(enemy_attack, enemy_defense, self.ship.speed)
+        if enemy_type == "rogue_captain":
+            # Add special rewards for defeating rogue captain
+            if enemy_attack < self.ship.attack:
+                self.ship.money += random.randint(2000, 5000)
+                special_items = ["quantum_core", "advanced_shield", "neural_hack"]
+                self.ship.acquire_item(random.choice(special_items))
+
     def conduct_research_activity(self, activity_type):
         """Handle research activities for quests"""
         # Check if we're at a valid research location
@@ -3116,300 +3524,706 @@ class Game:
         return True
 
     def handle_research_options(self):
-        """Add research options to action menu when at Research Colony"""
-        if isinstance(self.current_location, ResearchColony):
-            options = ['analyze', 'experiment', 'back']
-            choice = self.validate_input(
-                "Research options (analyze/experiment/back): ",
-                options
-            )
+        """Enhanced research options system"""
+        if not isinstance(self.current_location, ResearchColony):
+            self.display_simple_message("Research options only available at Research Colonies!")
+            return
+
+        # Show current research points and colony specialization
+        specialization = getattr(self.current_location, 'research_specialization', 
+                            random.choice(['quantum', 'xenology', 'engineering', 'temporal']))
+        self.current_location.research_specialization = specialization
+        
+        research_content = [
+            ["Research Laboratory Options"],
+            [f"Available Research Points: {self.ship.research_points}"],
+            [f"Colony Specialization: {specialization.title()}"],
+            [""],
+            ["1. Analyze (20 RP) - Safe, steady progress"],
+            ["2. Experiment (40 RP) - Risky, higher rewards"],
+            ["3. Breakthrough (100 RP) - Major discovery attempt"],
+            ["4. Collaborate (30 RP) - Work with colony scientists"]
+        ]
+        print(self.create_box(research_content, 'double'))
+
+        choice = self.validate_input(
+            "Choose research action (1-4, or 'back'): ",
+            ['1', '2', '3', '4', 'back']
+        )
+        
+        if choice == 'back':
+            return
             
-            if choice == 'analyze':
-                self.conduct_research_activity('analysis_completed')
-            elif choice == 'experiment':
-                self.conduct_research_activity('experiments_conducted')
+        if choice == '1':
+            self.conduct_analysis(specialization)
+        elif choice == '2':
+            self.conduct_experiment(specialization)
+        elif choice == '3':
+            self.attempt_breakthrough(specialization)
+        elif choice == '4':
+            self.collaborate_research(specialization)
+
+    def conduct_analysis(self, specialization):
+        """Safe research analysis with guaranteed small rewards and chance for items"""
+        cost = 20
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Base rewards
+        tech_bonus = random.randint(5, 15)
+        money_bonus = random.randint(500, 1500)
+        
+        # Specialization bonuses
+        if specialization == 'quantum':
+            tech_bonus *= 1.5
+        elif specialization == 'engineering':
+            money_bonus *= 1.5
+        
+        # Chance for bonus item or ship stat
+        if random.random() < 0.2:  # 20% chance for bonus
+            bonus_type = random.choice(['item', 'stat'])
+            if bonus_type == 'item':
+                research_items = {
+                    'quantum': ['quantum_analyzer', 'entanglement_core', 'quantum_shield'],
+                    'xenology': ['xeno_scanner', 'translation_matrix', 'alien_artifact'],
+                    'engineering': ['efficiency_module', 'repair_nanites', 'power_core'],
+                    'temporal': ['time_dilator', 'causality_shield', 'temporal_lens']
+                }
+                item = random.choice(research_items[specialization])
+                self.ship.acquire_item(item)
+                self.display_simple_message(f"Bonus research item acquired: {item}!")
+            else:
+                stat = random.choice(['attack', 'defense', 'speed'])
+                bonus = 1
+                if stat == 'attack':
+                    self.ship.attack += bonus
+                elif stat == 'defense':
+                    self.ship.defense += bonus
+                else:
+                    self.ship.speed += bonus
+                self.display_simple_message(f"Ship {stat} improved by {bonus}!")
+
+        # Generate research findings
+        findings = {
+            'quantum': [
+                "Quantum field fluctuations mapped",
+                "Superposition states stabilized",
+                "Entanglement patterns documented",
+                "Wave function variations recorded"
+            ],
+            'xenology': [
+                "Alien artifact patterns analyzed",
+                "Bio-signatures catalogued",
+                "Cultural markers identified",
+                "Xenotechnology principles documented"
+            ],
+            'engineering': [
+                "Efficiency algorithms optimized",
+                "Material stress patterns mapped",
+                "Power distribution improved",
+                "Systems integration enhanced"
+            ],
+            'temporal': [
+                "Temporal anomalies measured",
+                "Causality patterns documented",
+                "Time dilation effects mapped",
+                "Chronological variations recorded"
+            ]
+        }
+        
+        result = random.choice(findings[specialization])
+        
+        self.ship.money += money_bonus
+        self.ship.research_points += tech_bonus
+        
+        self.display_simple_message([
+            f"Analysis Complete: {result}",
+            f"Gained {tech_bonus} research points",
+            f"Earned {self.format_money(money_bonus)} credits"
+        ])
+
+    def conduct_experiment(self, specialization):
+        """Risky research with variable outcomes and enhanced rewards"""
+        cost = 40
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Success chance based on specialization
+        base_chance = 0.7
+        if specialization == 'engineering':
+            base_chance += 0.1
+        
+        if random.random() < base_chance:
+            # Successful experiment
+            reward_mult = random.uniform(1.5, 3.0)
+            tech_bonus = int(cost * reward_mult)
+            money_bonus = int(1000 * reward_mult)
+            
+            # Enhanced rewards
+            if random.random() < 0.4:  # 40% chance for significant bonus
+                advanced_items = {
+                    'quantum': {
+                        'items': ['quantum_core_v2', 'phase_shifter', 'quantum_capacitor'],
+                        'stat_bonus': {'attack': 2, 'defense': 1, 'speed': 2}
+                    },
+                    'xenology': {
+                        'items': ['alien_reactor', 'xeno_shield', 'biotech_enhancer'],
+                        'stat_bonus': {'attack': 1, 'defense': 2, 'speed': 1}
+                    },
+                    'engineering': {
+                        'items': ['fusion_drive', 'nanotech_armor', 'power_amplifier'],
+                        'stat_bonus': {'attack': 2, 'defense': 2, 'speed': 1}
+                    },
+                    'temporal': {
+                        'items': ['time_dilation_core', 'temporal_shield', 'causality_engine'],
+                        'stat_bonus': {'attack': 1, 'defense': 1, 'speed': 3}
+                    }
+                }
+                
+                # Either get an advanced item or stat bonus
+                if random.random() < 0.5:
+                    item = random.choice(advanced_items[specialization]['items'])
+                    self.ship.acquire_item(item)
+                    self.display_simple_message(f"Advanced research item acquired: {item}!")
+                else:
+                    stat_bonuses = advanced_items[specialization]['stat_bonus']
+                    for stat, bonus in stat_bonuses.items():
+                        if random.random() < 0.5:  # 50% chance for each stat
+                            if stat == 'attack':
+                                self.ship.attack += bonus
+                            elif stat == 'defense':
+                                self.ship.defense += bonus
+                            else:
+                                self.ship.speed += bonus
+                            self.display_simple_message(f"Ship {stat} improved by {bonus}!")
+
+            # Special bonuses based on specialization
+            special_outcomes = {
+                'quantum': ["Quantum Computing Breakthrough", 
+                        lambda: setattr(self.ship, 'quantum_bonus', True)],
+                'xenology': ["Alien Technology Integration", 
+                            lambda: setattr(self.ship, 'alien_tech', True)],
+                'engineering': ["Advanced Engineering Insights", 
+                            lambda: setattr(self.ship, 'engineering_bonus', True)],
+                'temporal': ["Temporal Mechanics Discovery", 
+                            lambda: setattr(self.ship, 'temporal_bonus', True)]
+            }
+            
+            outcome, effect = special_outcomes[specialization]
+            effect()  # Apply the special effect
+            
+            self.display_simple_message([
+                f"Experiment Success: {outcome}!",
+                f"Gained {tech_bonus} research points",
+                f"Earned {self.format_money(money_bonus)} credits",
+                "Special ability unlocked!"
+            ])
+            
+            self.ship.money += money_bonus
+            self.ship.research_points += tech_bonus
+            
+        else:
+            # Failed experiment
+            damage = random.randint(5, 15)
+            self.ship.damage = min(99, self.ship.damage + damage)
+            lost_points = random.randint(5, 15)
+            self.ship.research_points = max(0, self.ship.research_points - lost_points)
+            
+            self.display_simple_message([
+                "Experiment Failed!",
+                f"Ship took {damage}% damage",
+                f"Lost {lost_points} research points"
+            ])
+
+    def attempt_breakthrough(self, specialization):
+        """Attempt a major research breakthrough"""
+        cost = 100
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Breakthrough chance increases with more research points spent
+        breakthrough_chance = min(0.8, 0.3 + (self.ship.research_points / 1000))
+        
+        if random.random() < breakthrough_chance:
+            # Major breakthrough
+            breakthrough_rewards = {
+                'quantum': {
+                    'name': "Quantum Tunneling Drive",
+                    'effect': lambda: setattr(self.ship, 'speed', self.ship.speed + 2),
+                    'bonus_rp': 300,
+                    'bonus_money': 50000
+                },
+                'xenology': {
+                    'name': "Xenomorph Shield Matrix",
+                    'effect': lambda: setattr(self.ship, 'defense', self.ship.defense + 2),
+                    'bonus_rp': 250,
+                    'bonus_money': 40000
+                },
+                'engineering': {
+                    'name': "Nano-fabrication System",
+                    'effect': lambda: setattr(self.ship, 'engineering_level', 
+                                            getattr(self.ship, 'engineering_level', 0) + 1),
+                    'bonus_rp': 200,
+                    'bonus_money': 60000
+                },
+                'temporal': {
+                    'name': "Temporal Compression Field",
+                    'effect': lambda: setattr(self.ship, 'temporal_compression', True),
+                    'bonus_rp': 400,
+                    'bonus_money': 45000
+                }
+            }
+            
+            reward = breakthrough_rewards[specialization]
+            reward['effect']()  # Apply the special effect
+            
+            self.ship.research_points += reward['bonus_rp']
+            self.ship.money += reward['bonus_money']
+            
+            self.display_simple_message([
+                f"Major Breakthrough: {reward['name']}!",
+                f"Gained {reward['bonus_rp']} research points",
+                f"Earned {self.format_money(reward['bonus_money'])} credits",
+                "Revolutionary technology acquired!"
+            ])
+            
+        else:
+            # Minor breakthrough
+            bonus_rp = random.randint(50, 150)
+            bonus_money = random.randint(5000, 15000)
+            
+            self.ship.research_points += bonus_rp
+            self.ship.money += bonus_money
+            
+            self.display_simple_message([
+                "Minor Breakthrough Achieved",
+                f"Gained {bonus_rp} research points",
+                f"Earned {self.format_money(bonus_money)} credits"
+            ])
+
+    def collaborate_research(self, specialization):
+        """Collaborate with colony scientists"""
+        cost = 30
+        if self.ship.research_points < cost:
+            self.display_simple_message(f"Not enough research points! Need: {cost}")
+            return
+
+        self.ship.research_points -= cost
+        
+        # Collaboration projects
+        projects = {
+            'quantum': [
+                ("Quantum Encryption", 1.2),
+                ("Entanglement Network", 1.3),
+                ("Quantum Computing", 1.4)
+            ],
+            'xenology': [
+                ("Alien Languages", 1.2),
+                ("Xenobiology", 1.3),
+                ("First Contact Protocols", 1.4)
+            ],
+            'engineering': [
+                ("Power Systems", 1.2),
+                ("Shield Technology", 1.3),
+                ("Propulsion Theory", 1.4)
+            ],
+            'temporal': [
+                ("Time Dilation", 1.2),
+                ("Causality Mechanics", 1.3),
+                ("Temporal Physics", 1.4)
+            ]
+        }
+        
+        project, multiplier = random.choice(projects[specialization])
+        
+        # Calculate rewards
+        research_gain = int(cost * multiplier)
+        money_gain = int(2000 * multiplier)
+        
+        # Colony gains permanent bonus to future research
+        colony_bonus = random.uniform(0.05, 0.15)  # 5-15% bonus
+        current_multiplier = getattr(self.current_location, 'research_multiplier', 1.0)
+        self.current_location.research_multiplier = current_multiplier + colony_bonus
+        
+        self.ship.research_points += research_gain
+        self.ship.money += money_gain
+        
+        self.display_simple_message([
+            f"Collaboration Project: {project}",
+            f"Gained {research_gain} research points",
+            f"Earned {self.format_money(money_gain)} credits",
+            f"Colony research efficiency increased by {int(colony_bonus * 100)}%"
+        ])
+
+    def handle_buy_map(self):
+        if self.ship.money >= 200:
+            self.ship.money -= 200
+            new_locations = []
+            for location in self.locations:
+                if location.name not in self.known_locations and location.location_type in self.unlocked_location_types:
+                    new_locations.append(location)
+                    self.known_locations.append(location.name)
+                
+            if new_locations:
+                map_content = []
+                # Header
+                map_content.append(["New Locations!"])
+                map_content.append([""])
+                map_content.append(["Location", "Type", "Tech", "Agri", "Economy"])
+                
+                # Location data
+                for location in new_locations:
+                    features = []
+                    if location.mining_platforms:
+                        features.append("Mining")
+                    if location.buildings:
+                        features.append("Buildings")
+                    if location.stockmarket_base:
+                        features.append("Stock Market")
+                    
+                    map_content.append([
+                        location.name,
+                        location.location_type,
+                        str(location.tech_level),
+                        str(location.agri_level),
+                        location.economy
+                    ])
+                    
+                    # Add features as separate rows with proper indentation
+                    if features:
+                        map_content.append(["└─ Features: " + ", ".join(features), "", "", "", ""])
+                
+                print(self.create_box(map_content, 'double'))
+                input("Press Enter to continue...")
+            else:
+                self.ship.money += 200  # Refund if no new locations
+                self.display_simple_message("No new locations to discover!")
+        else:
+            self.display_simple_message("Not enough money to buy a map.")
+
+    def handle_update_map(self):
+        if self.ship.money >= 350:
+            self.ship.money -= 350
+            
+            market_content = []
+            # Header
+            market_content.append(["Map Update"])
+            market_content.append([""])
+            market_content.append(["Location", "Tech", "Agri", "Salt", "Fuel"])
+            
+            # Show detailed info for known locations
+            has_data = False
+            for location_name in self.known_locations:
+                location = next((loc for loc in self.locations if loc.name == location_name), None)
+                if location:
+                    has_data = True
+                    tech_price = "BANNED" if 'tech' in location.banned_commodities else self.format_money(location.market['tech'])
+                    agri_price = "BANNED" if 'agri' in location.banned_commodities else self.format_money(location.market['agri'])
+                    salt_price = "BANNED" if 'salt' in location.banned_commodities else self.format_money(location.market['salt'])
+                    fuel_price = "BANNED" if 'fuel' in location.banned_commodities else self.format_money(location.market['fuel'])
+                    
+                    market_content.append([
+                        location.name,
+                        tech_price,
+                        agri_price,
+                        salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mine",
+                        fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mine"
+                    ])
+                    
+                    # Add special features as separate rows
+                    features = []
+                    if location.stockmarket_base:
+                        features.append("Stock Market")
+                    if location.buildings:
+                        features.append(f"Buildings: {', '.join(location.buildings)}")
+                    if location.mining_platforms:
+                        features.append(f"Mining Platforms: {len(location.mining_platforms)}")
+                        
+                    if features:
+                        for feature in features:
+                            market_content.append(["└─ " + feature, "", "", "", ""])
+            
+            if has_data:
+                print(self.create_box(market_content, 'double'))
+                input("Press Enter to continue...")
+            else:
+                self.ship.money += 350  # Refund if no data to show
+                self.display_simple_message("No new information available!")
+        else:
+            self.display_simple_message("Not enough money to update the map.")
+
+    def handle_gossip(self):
+        if self.ship.money >= 150:
+            self.ship.money -= 150
+            gossip_content = [["Latest Market Gossip"]]
+            gossip_content.append([""])
+            
+            found_gossip = False
+            for location in self.locations:
+                if location.name in self.known_locations:
+                    location_gossip = []
+                    if location.market['tech'] < 50:
+                        location_gossip.append(f"Cheap tech goods available")
+                    if location.market['agri'] < 30:
+                        location_gossip.append(f"Cheap agri goods available")
+                    if location.market['tech'] > 100:
+                        location_gossip.append(f"High tech prices")
+                    if location.market['agri'] > 80:
+                        location_gossip.append(f"High agri prices")
+                        
+                    if location_gossip:
+                        found_gossip = True
+                        gossip_content.append([location.name])
+                        for gossip in location_gossip:
+                            gossip_content.append([f"└─ {gossip}"])
+            
+            if found_gossip:
+                print(self.create_box(gossip_content, 'double'))
+                
+                if random.random() < 0.3:  # 30% chance to get a quest
+                    quest = Quest(
+                        name=random.choice([
+                            "Deliver Tech Goods",
+                            "Transport Agri Supplies",
+                            "Rescue Mission",
+                            "Mining Intel",
+                            "Eliminate Pirates"
+                        ]),
+                        description="Complete this mission for the cantina",
+                        reward_money=random.randint(500, 2500),
+                        reward_rp=random.randint(25, 100),
+                        quest_type="cantina"
+                    )
+                    self.quest_system.add_quest(quest)
+            else:
+                self.display_simple_message("No interesting gossip today!")
+        else:
+            self.display_simple_message("Not enough money to listen to gossip.")
+
+    def display_story_status(self):
+        """Display story progress and achievements"""
+        story_content = [["Story Progress & Achievements"]]
+        story_content.append([""])
+        
+        # Current chapter info
+        current_chapter_obj = self.story_manager.chapters[self.story_manager.current_chapter]
+        story_content.append([f"Current Chapter {self.story_manager.get_chapter_number_roman()} : {current_chapter_obj.title}"])
+        story_content.append([f"Plot Points: {self.story_manager.plot_points}"])
+        
+        # Completed story beats
+        if self.story_manager.completed_story_beats:
+            story_content.append([""])
+            story_content.append(["Completed Story Elements"])
+            for beat in self.story_manager.completed_story_beats:
+                story_content.append([f"• {beat.replace('_', ' ').title()}"])
+        
+        # Achievements
+        if hasattr(self.story_manager, 'unlocked_achievements') and self.story_manager.unlocked_achievements:
+            story_content.append([""])
+            story_content.append(["Achievements Unlocked"])
+            for achievement in self.story_manager.unlocked_achievements:
+                story_content.append([f"• {achievement.replace('_', ' ').title()}"])
+        
+        # Location discoveries
+        if hasattr(self.story_manager, 'discovered_locations_by_type'):
+            story_content.append([""])
+            story_content.append(["Location Discoveries"])
+            for loc_type, count in self.story_manager.discovered_locations_by_type.items():
+                story_content.append([f"• {loc_type}: {count} discovered"])
+        
+        print(self.create_box(story_content, 'double'))
+        input("Press Enter to continue...")
 
     def visit_cantina(self):
-        self.display_simple_message("Welcome to the Cantina!", 1)
+        self.clear_screen()
+        self.display_simple_message("Welcome to the Cantina!", 0)
 
-        # Add story-specific dialogue based on current chapter
-        if self.story_manager.current_chapter > 0:
-            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
-            self.display_character_message("Cantina Owner",
-                f"Word is spreading about your adventures. Have you heard about {chapter['title']}?")
-
-        action = self.validate_input(
-            "Choose action (buy map/bm, update map/um, listen to gossip/lg, quests/q, story/s): ",
-            ['buy map', 'bm', 'update map', 'um', 'listen to gossip', 'lg', 'quests', 'q', 'story', 's']
-        )
-
-        if action is None:
-            return
-
-        if action in ['story', 's']:
-            story_content = [["Story Progress & Achievements"]]
-            story_content.append([""])
-            
-            # Current chapter info
-            chapter = self.story_manager.chapters[self.story_manager.current_chapter]
-            story_content.append([f"Current Chapter: {self.story_manager.current_chapter} - {chapter['title']}"])
-            story_content.append([f"Plot Points: {self.story_manager.plot_points}"])
-            
-            # Completed story beats
-            if self.story_manager.completed_story_beats:
-                story_content.append([""])
-                story_content.append(["Completed Story Elements"])
-                for beat in self.story_manager.completed_story_beats:
-                    story_content.append([f"• {beat.replace('_', ' ').title()}"])
-            
-            # Achievements
-            if hasattr(self.story_manager, 'unlocked_achievements') and self.story_manager.unlocked_achievements:
-                story_content.append([""])
-                story_content.append(["Achievements Unlocked"])
-                for achievement in self.story_manager.unlocked_achievements:
-                    story_content.append([f"• {achievement.replace('_', ' ').title()}"])
-            
-            # Location discoveries
-            if hasattr(self.story_manager, 'discovered_locations_by_type'):
-                story_content.append([""])
-                story_content.append(["Location Discoveries"])
-                for loc_type, count in self.story_manager.discovered_locations_by_type.items():
-                    story_content.append([f"• {loc_type}: {count} discovered"])
-            
-            # Ensure all rows have same number of columns
-            max_cols = max(len(row) for row in story_content)
-            story_content = [row + [""] * (max_cols - len(row)) for row in story_content]
-            print(self.create_box(story_content, 'double'))
-            input("Press Enter to continue...")
-
-        elif action in ['buy map', 'bm']:
-            if self.ship.money >= 200:
-                self.ship.money -= 200
-                new_locations = []
-                for location in self.locations:
-                    if location.name not in self.known_locations and location.location_type in self.unlocked_location_types:
-                        new_locations.append(location)
-                        self.known_locations.append(location.name)
-                
-                if new_locations:
-                    map_content = []
-                    # Header
-                    map_content.append(["New Locations!"])
-                    map_content.append([""])
-                    map_content.append(["Location", "Type", "Tech", "Agri", "Economy"])
-                    
-                    # Location data
-                    for location in new_locations:
-                        features = []
-                        if location.mining_platforms:
-                            features.append("Mining")
-                        if location.buildings:
-                            features.append("Buildings")
-                        if location.stockmarket_base:
-                            features.append("Stock Market")
-                        
-                        map_content.append([
-                            location.name,
-                            location.location_type,
-                            str(location.tech_level),
-                            str(location.agri_level),
-                            location.economy
-                        ])
-                        
-                        # Add features as separate rows with proper indentation
-                        if features:
-                            map_content.append(["└─ Features: " + ", ".join(features), "", "", "", ""])
-                    
-                    # Ensure all rows have same number of columns
-                    max_cols = max(len(row) for row in map_content)
-                    map_content = [row + [""] * (max_cols - len(row)) for row in map_content]
-                    print(self.create_box(map_content, 'double'))
-                    input("Press Enter to continue...")
-                else:
-                    self.ship.money += 200  # Refund if no new locations
-                    self.display_simple_message("No new locations to discover!")
-            else:
-                self.display_simple_message("Not enough money to buy a map.")
-
-        elif action in ['update map', 'um']:
-            if self.ship.money >= 350:
-                self.ship.money -= 350
-                
-                market_content = []
-                # Header
-                market_content.append(["Map Update"])
-                market_content.append([""])
-                market_content.append(["Location", "Tech", "Agri", "Salt", "Fuel"])
-                
-                # Show detailed info for known locations
-                has_data = False
-                for location_name in self.known_locations:
-                    location = next((loc for loc in self.locations if loc.name == location_name), None)
-                    if location:
-                        has_data = True
-                        # Get market prices with potential trade bans
-                        tech_price = "BANNED" if 'tech' in location.banned_commodities else self.format_money(location.market['tech'])
-                        agri_price = "BANNED" if 'agri' in location.banned_commodities else self.format_money(location.market['agri'])
-                        salt_price = "BANNED" if 'salt' in location.banned_commodities else self.format_money(location.market['salt'])
-                        fuel_price = "BANNED" if 'fuel' in location.banned_commodities else self.format_money(location.market['fuel'])
-                        
-                        market_content.append([
-                            location.name,
-                            tech_price,
-                            agri_price,
-                            salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mine",
-                            fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mine"
-                        ])
-                        
-                        # Add special features as separate rows
-                        features = []
-                        if location.stockmarket_base:
-                            features.append("Stock Market")
-                        if location.buildings:
-                            features.append(f"Buildings: {', '.join(location.buildings)}")
-                        if location.mining_platforms:
-                            features.append(f"Mining Platforms: {len(location.mining_platforms)}")
-                            
-                        if features:
-                            for feature in features:
-                                market_content.append(["└─ " + feature, "", "", "", ""])
-                
-                # Show newly unlocked location types
-                potential_locations = [loc for loc in self.locations 
-                                    if loc.location_type in self.unlocked_location_types]
-                if len(potential_locations) > len(self.known_locations):
-                    market_content.append([""])
-                    market_content.append(["New Areas for Exploration"])
-                    for loc_type in self.unlocked_location_types:
-                        count = sum(1 for loc in potential_locations 
-                                if loc.location_type == loc_type and loc.name not in self.known_locations)
-                        if count > 0:
-                            market_content.append([f"• {count} undiscovered {loc_type}s", "", "", "", ""])
-                    has_data = True
-                
-                if has_data:
-                    # Ensure all rows have same number of columns
-                    max_cols = max(len(row) for row in market_content)
-                    market_content = [row + [""] * (max_cols - len(row)) for row in market_content]
-                    print(self.create_box(market_content, 'double'))
-                    input("Press Enter to continue...")
-                else:
-                    self.ship.money += 350  # Refund if no data to show
-                    self.display_simple_message("No new information available!")
-            else:
-                self.display_simple_message("Not enough money to update the map.")
-
-        elif action in ['listen to gossip', 'lg']:
-            if self.ship.money >= 150:
-                self.ship.money -= 150
-                gossip_content = [["Latest Market Gossip"]]
-                gossip_content.append([""])
-                
-                found_gossip = False
-                for location in self.locations:
-                    if location.name in self.known_locations:
-                        location_gossip = []
-                        if location.market['tech'] < 50:
-                            location_gossip.append(f"Cheap tech goods available")
-                        if location.market['agri'] < 30:
-                            location_gossip.append(f"Cheap agri goods available")
-                        if location.market['tech'] > 100:
-                            location_gossip.append(f"High tech prices")
-                        if location.market['agri'] > 80:
-                            location_gossip.append(f"High agri prices")
-                            
-                        if location_gossip:
-                            found_gossip = True
-                            gossip_content.append([location.name])
-                            for gossip in location_gossip:
-                                gossip_content.append([f"└─ {gossip}"])
-                
-                if found_gossip:
-                    # Ensure all rows have same number of columns
-                    max_cols = max(len(row) for row in gossip_content)
-                    gossip_content = [row + [""] * (max_cols - len(row)) for row in gossip_content]
-                    print(self.create_box(gossip_content, 'double'))
-                    
-                    if random.random() < 0.3:  # 30% chance to get a quest
-                        quest = Quest(
-                            name=random.choice([
-                                "Deliver Tech Goods",
-                                "Transport Agri Supplies",
-                                "Rescue Mission",
-                                "Mining Intel",
-                                "Eliminate Pirates"
-                            ]),
-                            description="Complete this mission for the cantina",
-                            reward_money=random.randint(500, 2500),
-                            reward_rp=random.randint(25, 100),
-                            quest_type="cantina"
-                        )
-                        self.quest_system.add_quest(quest)
-                else:
-                    self.display_simple_message("No interesting gossip today!")
-            else:
-                self.display_simple_message("Not enough money to listen to gossip.")
-                
-        elif action in ['quests', 'q']:
-            active_quests = [q for q in self.quest_system.active_quests if isinstance(q, Quest)]
-            if active_quests:
-                quest_content = [["Active Quests"]]
-                quest_content.append([""])
-                for quest in active_quests:
-                    quest_content.append([quest.name])
-                    quest_content.append([f"└─ {quest.description}"])
-                    quest_content.append([f"└─ Rewards: {self.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"])
-                    quest_content.append([""])
-                
-                # Ensure all rows have same number of columns
-                max_cols = max(len(row) for row in quest_content)
-                quest_content = [row + [""] * (max_cols - len(row)) for row in quest_content]
-                print(self.create_box(quest_content, 'double'))
-            else:
-                self.display_simple_message("No active quests.")
+        # Check for present characters and announce them first
+        present_characters = [char for char_id, char in 
+                            self.character_manager.active_characters.items()
+                            if (char["location"] == self.current_location and
+                                "cantina" in char["character"].content['requirements'].get('spawn_locations', []))]
         
-        # Randomly introduce a demo character after reaching a new rank
-        if random.random() < 0.1:  # 10% chance
-            self.display_character_message(
-                "Mysterious Stranger", 
-                "Greetings, traveler. I hear you've been making a name for yourself. Keep it up, and you might just become a legend."
-            )
+        if present_characters:
+            for char in present_characters:
+                self.character_manager.announce_character(char['character'].character_id)
+                time.sleep(1)  # Brief pause between character announcements
 
-        time.sleep(3)  # Pause to let the player read the information
+        # Check and complete cantina quests
+        cantina_quests = [q for q in self.quest_system.active_quests if q.quest_type == "cantina"]
+        
+        for quest in cantina_quests:
+            if quest.check_completion(self):
+                quest.complete(self)
+
+        while True:
+            options = {
+                'map': ('bm', "Buy Map"),
+                'update': ('um', "Update Map"),
+                'gossip': ('lg', "Listen to Gossip"),
+                'quests': ('q', "View Quests"),
+                'contracts': ('c', "Manage Contracts"),
+                'story': ('s', "View Story Progress"),
+                'back': ('', "Return to Main Menu")
+            }
+
+            menu_content = [[f"Cantina Services - {self.current_location.name}"]]
+            menu_content.append([f""])
+            for cmd, (shortcut, desc) in options.items():
+                menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
+            print(self.create_box(menu_content, 'single'))
+
+            valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
+            action = self.validate_input("Choose action: ", valid_inputs)
+
+            if action in ['back', None]:
+                break
+                
+            elif action in ['map', 'bm']:
+                self.handle_buy_map()
+                
+            elif action in ['update', 'um']:
+                self.handle_update_map()
+                
+            elif action in ['gossip', 'lg']:
+                self.handle_gossip()
+                
+            elif action in ['quests', 'q']:
+                self.quest_system.display_quests()
+                
+            elif action in ['contracts', 'c']:
+                self.handle_contract_menu()
+                
+            elif action in ['story', 's']:
+                self.display_story_status()
+
+            time.sleep(1)
+            self.clear_screen()
 
     def visit_shop(self):
+        """Enhanced shop interface with persistent sold items"""
         self.display_simple_message("Welcome to the Shop!", 1)
-            # Modify shop inventory based on location type
-        if isinstance(self.current_location, AsteroidBase):
-            available_items = ["mining_laser", "cargo_scanner", "shield_booster"]
-        elif isinstance(self.current_location, DeepSpaceOutpost):
-            available_items = ["advanced_radar", "combat_drone", "repair_bot"]
-        elif isinstance(self.current_location, ResearchColony):
-            available_items = ["research_module", "data_analyzer", "quantum_scanner"]
-        else:
-            available_items = ["navcomp", "scanner", "probe", "turrets", "shield"]
 
-        available_items = random.sample([
-            ("navcomp", 500),
-            ("scanner", 700),
-            ("probe", 900),
-            ("turrets", 1200),
-            ("patcher", 300)
-        ], k=2)  # Randomly select 2 items
-        for item, price in available_items:
-            print(f"{item.capitalize()}: {self.format_money(price)} money")
-        item_choice = self.validate_input("Choose item to buy (or 'none' to exit): ", [item[0] for item in available_items] + ['none'])
+        # Display current money and location info
+        status_content = [
+            [f"Credits: {self.format_money(self.ship.money)}"],
+            [f"Tech Level: {self.current_location.tech_level}"]
+        ]
+        print(self.create_box(status_content, 'single'))
+
+        # Display current inventory
+        inventory_content = [["Your Items"]]
+        if self.ship.items:
+            for item, count in self.ship.items.items():
+                inventory_content.append([f"{item}: {count}"])
+        else:
+            inventory_content.append(["No items"])
+        print(self.create_box(inventory_content, 'single'))
+
+        # Get available items for this location
+        if not hasattr(self.shop, 'current_turn_items') or not self.shop.current_turn_items:  # Changed condition
+            # Only get new items if we haven't already for this turn
+            self.shop.current_turn_items = self.shop.get_available_items(
+                location=self.current_location,
+                plot_points=self.story_manager.plot_points
+            )
+
+        # Get terminal width
+        try:
+            term_width = os.get_terminal_size().columns
+        except OSError:
+            term_width = 80
+
+        # Adjust display based on terminal width
+        if term_width < 80:  # Narrow display
+            shop_content = [["Item", "Price", "Description/Status"]]
+            
+            for item_name, item_data in self.shop.current_turn_items:
+                if self.shop.is_item_sold(item_name):
+                    # Show SOLD in place of description
+                    description = "SOLD"
+                else:
+                    description = item_data["description"]
+                    if len(description) > 30:
+                        description = description[:27] + "..."
+                    
+                shop_content.append([
+                    item_name.title(),
+                    self.format_money(item_data["price"]),
+                    description
+                ])
+        else:  # Wide display
+            shop_content = [["Item", "¤", "Description", ""]]
+            
+            for item_name, item_data in self.shop.current_turn_items:
+                status = "Avail"
+                description = item_data["description"]
+                
+                if self.shop.is_item_sold(item_name):
+                    status = "SOLD"
+                    
+                if len(description) > 40:
+                    description = description[:37] + "..."
+                    
+                shop_content.append([
+                    item_name.title(),
+                    self.format_money(item_data["price"]),
+                    description,
+                    status
+                ])
+        
+        print(self.create_box(shop_content, 'double'))
+
+        # Only show unsold items in options
+        available_items_names = [
+            item[0] for item in self.shop.current_turn_items 
+            if not self.shop.is_item_sold(item[0])
+        ]
+
+        if not available_items_names:
+            self.display_simple_message("All items are sold out!")
+            return
+
+        item_choice = self.validate_input(
+            "Choose item to buy (or 'none' to exit): ",
+            available_items_names + ['none']
+        )
+        
         if item_choice == 'none':
             return
-        for item, price in available_items:
-            if item_choice == item:
-                if self.ship.money >= price:
-                    self.ship.money -= price
-                    self.ship.acquire_item(item)
-                    self.display_simple_message(f"You bought a {item}.")
+
+        for item_name, item_data in self.shop.current_turn_items:
+            if item_choice == item_name:
+                if self.ship.money >= item_data["price"]:
+                    self.ship.money -= item_data["price"]
+                    self.ship.acquire_item(item_name)
+                    self.shop.mark_item_sold(item_name)
+                    
+                    self.display_simple_message([
+                        f"You bought a {item_name}!",
+                        f"Effect: {item_data['description']}",
+                        f"Remaining credits: {self.format_money(self.ship.money)}"
+                    ])
                 else:
-                    self.display_simple_message("Not enough money to buy this item.")
+                    missing = item_data["price"] - self.ship.money
+                    self.display_simple_message([
+                        "Not enough money to buy this item.",
+                        f"Price: {self.format_money(item_data['price'])}",
+                        f"Your credits: {self.format_money(self.ship.money)}",
+                        f"Missing: {self.format_money(missing)}"
+                    ])
                 return
+
+        time.sleep(1)
 
     def handle_mining(self):
         """Handle mining-related actions"""
@@ -3785,165 +4599,2300 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
-class Shop:
-    def __init__(self):
-        # Original equipment merged with transport equipment
-        self.base_equipment = {
-            # Navigation and Scanning
-            "navcomp": {
-                "price": 500,
-                "description": "Navigation computer for improved travel"
-            },
-            "scanner": {
-                "price": 700,
-                "description": "Basic scanner for resource detection"
-            },
-            "probe": {
-                "price": 900,
-                "description": "Probe for detailed exploration"
-            },
+class ContractManager:
+    def __init__(self, game):
+        self.game = game
+        self.available_contracts = []
+        self.active_contracts = []
+        self.completed_contracts = []
+        self.max_active_contracts = 3
+        self.contract_refresh_turns = 0
+        self.special_contracts_unlocked = False
 
-            # Combat and Defense
-            "turrets": {
-                "price": 1200,
-                "description": "Defense system against pirates"
-            },
-            "shield": {
-                "price": 2000,
-                "description": "Shield generator for protection"
-            },
-            "patcher": {
-                "price": 300,
-                "description": "Basic repair system"
-            },
 
-            # Basic Transport Equipment
-            "cargo_extender": {
-                "price": 5000,
-                "description": "Increases cargo capacity by 20%",
-                "effect": {"type": "cargo", "value": 1.2}
-            },
-            "containment_field": {
-                "price": 8000,
-                "description": "Specialized storage for salt/fuel. +30% capacity for special resources",
-                "effect": {"type": "special_cargo", "value": 1.3}
-            },
-            "auto_loader": {
-                "price": 12000,
-                "description": "Reduces loading/unloading time. -1 turn per trade",
-                "effect": {"type": "trade_time", "value": -1}
-            },
+    def unlock_special_contracts(self):
+        """Unlock special contract types"""
+        self.special_contracts_unlocked = True
+        self.game.display_simple_message([
+            "Special Contracts Unlocked!",
+            "New high-value contracts now available:",
+            "• High-Value Cargo Transport",
+            "• Bulk Resource Movement",
+            "• Diplomatic Missions"
+        ])
 
-            # Advanced Transport Equipment
-            "quantum_compressor": {
-                "price": 20000,
-                "description": "Advanced compression. +50% capacity for all cargo",
-                "effect": {"type": "cargo", "value": 1.5}
+    def handle_contract_menu(self):
+        """Handle port menu options"""
+        self.game.clear_screen()
+        self.game.display_simple_message("Contract Management Terminal", 0)
+
+        while True:
+            # Refresh contracts if needed
+            self.refresh_available_contracts()
+
+            options = {
+                'view': ('v', "View new contracts"),
+                'claim': ('c', "Claim completed contract rewards"),
+                'status': ('s', "Check detailed contract status"),
+                'back': ('', "Return to previous menu")
+            }
+
+            # Show menu
+            menu_content = [["Contract Dashboard:"]]
+            menu_content.append([f""])
+            for cmd, (shortcut, desc) in options.items():
+                menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
+            print(self.game.create_box(menu_content, 'single'))
+
+            valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
+            action = self.game.validate_input("Choose action: ", valid_inputs)
+
+            if action in ['back', None]:
+                break
+
+            elif action in ['view', 'v']:
+                self.show_available_contracts()
+
+            elif action in ['claim', 'c']:
+                self.claim_completed_contracts()
+
+            elif action in ['status', 's']:
+                self.show_detailed_status()
+
+            self.game.clear_screen()
+
+    def show_available_contracts(self):
+        """Show available contracts for acceptance"""
+        if not self.available_contracts:
+            self.game.display_simple_message("No contracts available currently.")
+            return
+
+        contract_content = [["Available Contracts"]]
+        for i, contract in enumerate(self.available_contracts, 1):
+            contract_content.append([""])
+            contract_content.append([f"Contract #{i}"])
+            for info_line in self.get_contract_display_info(contract):
+                contract_content.append([info_line])
+
+        print(self.game.create_box(contract_content, 'double'))
+
+        choice = self.game.validate_input(
+            f"Accept contract (1-{len(self.available_contracts)}) or Enter to cancel: ",
+            [str(i) for i in range(1, len(self.available_contracts) + 1)] + ['']
+        )
+
+        if not choice:  # Empty Enter cancels
+            return
+
+        success, message = self.accept_contract(int(choice) - 1)
+        self.game.display_simple_message(message)
+
+    def claim_completed_contracts(self):
+        """Handle claiming rewards for completed contracts"""
+        completed = [c for c in self.active_contracts if c.completed and not c.rewards_claimed]
+        
+        if not completed:
+            self.game.display_simple_message("No completed contracts to claim!")
+            return
+
+        # Show completed contracts
+        content = [["Completed Contracts Ready to Claim"]]
+        for i, contract in enumerate(completed, 1):
+            content.append([
+                f"{i}. {contract.description}",
+                f"Reward: {self.game.format_money(contract.rewards['money'])}",
+                f"Rep: +{contract.rewards['reputation']}"
+            ])
+        print(self.game.create_box(content, 'double'))
+
+        # Get contract choice
+        choice = self.game.validate_input(
+            "Enter contract number to claim (or Enter to cancel): ",
+            [str(i) for i in range(1, len(completed) + 1)] + ['']
+        )
+
+        if not choice:  # Empty Enter cancels
+            return
+
+        # Claim rewards
+        contract = completed[int(choice) - 1]
+        self.handle_contract_completion(contract)
+
+
+    def show_detailed_status(self):
+        """Show detailed status of all active contracts with trade history"""
+        if not self.active_contracts:
+            self.game.display_simple_message("No active contracts!")
+            return
+
+        for contract in self.active_contracts:
+            content = [
+                [f"Contract: {contract.description}"],
+                [""],
+                ["Requirements:"]
+            ]
+            
+            # Add type-specific requirements
+            if contract.contract_type == "cargo":
+                content.extend([
+                    [f"• Cargo: {contract.requirements['cargo_type']}"],
+                    [f"• Amount: {contract.requirements['min_amount']} units"],
+                    [f"• Source: {contract.requirements['source']}"],
+                    [f"• Destination: {contract.requirements['destination']}"],
+                    [f"• Time Limit: {contract.duration} turns"]
+                ])
+            elif contract.contract_type == "passenger":
+                content.extend([
+                    [f"• Passengers: {contract.requirements.get('count', contract.requirements.get('passenger_count', 0))}"],
+                    [f"• Class: {contract.requirements.get('passenger_class', 'Any')}"],
+                    [f"• Source: {contract.requirements['source']}"],
+                    [f"• Destination: {contract.requirements['destination']}"],
+                    [f"• Time Limit: {contract.duration} turns"]
+                ])
+            
+            content.extend([
+                [""],
+                ["Current Status:"]
+            ])
+            
+            # Add status lines
+            status = contract.get_status_display()
+            for line in status.split('\n'):
+                content.append([f"• {line}"])
+
+            # Add trade history
+            content.extend([
+                [""],
+                ["Delivery History:"]
+            ])
+            
+            history = contract.get_trade_history_display()
+            for line in history.split('\n'):
+                content.append([f"• {line}"])
+                
+            # Add reward info if completed
+            if contract.completed and not contract.rewards_claimed:
+                content.extend([
+                    [""],
+                    ["Rewards Available:"],
+                    [f"• {self.game.format_money(contract.rewards['money'])} credits"],
+                    [f"• {contract.rewards['reputation']} reputation"],
+                    [f"• {contract.rewards.get('plot_points', 0)} plot points"]
+                ])
+            
+            print(self.game.create_box(content, 'double'))
+            print()  # Add space between contracts
+
+        input("Press Enter to continue...")
+
+    def refresh_available_contracts(self):
+        """Refresh available contracts every 5 turns"""
+        if self.game.turn - self.contract_refresh_turns >= 5:
+            self.contract_refresh_turns = self.game.turn
+            self.available_contracts = []
+            # Generate 2-4 new contracts using known locations
+            num_contracts = random.randint(2, 4)
+            for _ in range(num_contracts):
+                # If special contracts are unlocked, 30% chance for special contract
+                if self.special_contracts_unlocked and random.random() < 0.3:
+                    contract = self.generate_special_contract()
+                    if contract:
+                        self.available_contracts.append(contract)
+                        continue
+                
+                # Regular contract generation
+                if random.random() < 0.6:  # 60% chance for cargo contract
+                    contract = self.generate_cargo_contract()
+                else:
+                    contract = self.generate_passenger_contract()
+                if contract:
+                    self.available_contracts.append(contract)
+
+    def generate_cargo_contract(self):
+        """Generate a cargo transport contract"""
+        if len(self.game.known_locations) < 2:
+            return None
+
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
+        destination = random.choice(destinations)
+
+        contract_types = [
+            {
+                "desc_template": "Exclusive Trading",
+                "requirements": {
+                    "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
+                    "min_amount": (amount := random.randint(100, 300)),
+                    "source": source.name,
+                    "destination": destination.name
+                },
+                "duration": 8,
+                "base_reward": 20000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
             },
-            "stasis_vault": {
-                "price": 25000,
-                "description": "Perfect resource preservation. +75% capacity for special resources",
-                "effect": {"type": "special_cargo", "value": 1.75}
+            {
+                "desc_template": "Resource Distribution",
+                "requirements": {
+                    "cargo_type": (cargo_type := random.choice(["salt", "fuel"])),
+                    "min_amount": (amount := random.randint(50, 150)),
+                    "source": source.name,
+                    "destination": destination.name
+                },
+                "duration": 12,
+                "base_reward": 30000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
+            }
+        ]
+
+        contract_type = random.choice(contract_types)
+        return Contract(
+            contract_type="cargo",
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 20,
+                "plot_points": 3
             },
-            "temporal_accelerator": {
-                "price": 30000,
-                "description": "Time dilation for faster delivery. -2 turns per trade",
-                "effect": {"type": "trade_time", "value": -2}
+            description=contract_type["description"]
+        )
+
+    def generate_passenger_contract(self):
+        """Generate a passenger transport contract"""
+        if len(self.game.known_locations) < 2:
+            return None
+
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
+        destination = random.choice(destinations)
+
+        contract_types = [
+            {
+                "desc_template": "VIP Transport",
+                "requirements": {
+                    "passenger_class": (passenger_class := random.choice(["S", "M", "E"])),
+                    "count": (count := random.randint(3, 8)),
+                    "source": source.name,
+                    "destination": destination.name,
+                    "min_satisfaction": 80
+                },
+                "duration": 10,
+                "base_reward": 25000,
+                "description": f"Transport {count} {passenger_class}-class passengers from {source.name} to {destination.name}"
+            },
+            {
+                "desc_template": "Group Transport",
+                "requirements": {
+                    "passenger_count": (count := random.randint(10, 20)),
+                    "source": source.name,
+                    "destination": destination.name,
+                    "min_satisfaction": 70
+                },
+                "duration": 15,
+                "base_reward": 35000,
+                "description": f"Transport {count} passengers from {source.name} to {destination.name}"
+            }
+        ]
+
+        contract_type = random.choice(contract_types)
+        return Contract(
+            contract_type="passenger",
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 25,
+                "plot_points": 5
+            },
+            description=contract_type["description"]
+        )
+
+    def generate_special_contract(self):
+        """Generate a special contract with higher rewards and requirements"""
+        if len(self.game.known_locations) < 2:
+            return None
+
+        # Get actual Location objects from known locations
+        known_locations = [loc for loc in self.game.locations 
+                        if loc.name in self.game.known_locations]
+        
+        if len(known_locations) < 2:
+            return None
+            
+        source = random.choice(known_locations)
+        destinations = [loc for loc in known_locations if loc != source]
+        destination = random.choice(destinations)
+
+        contract_types = [
+            {
+                "desc_template": "High-Value Transport",
+                "requirements": {
+                    "cargo_type": (cargo_type := random.choice(["tech", "agri"])),
+                    "min_amount": (amount := random.randint(400, 600)),
+                    "source": source.name,
+                    "destination": destination.name,
+                    "reputation_required": 40
+                },
+                "duration": 10,
+                "base_reward": 50000,
+                "description": f"Transport {amount} units of {cargo_type} from {source.name} to {destination.name}"
+            },
+            {
+                "desc_template": "Diplomatic Mission",
+                "requirements": {
+                    "passenger_class": "D",
+                    "count": (count := random.randint(2, 4)),
+                    "source": source.name,
+                    "destination": destination.name,
+                    "min_satisfaction": 90,
+                    "reputation_required": 60
+                },
+                "duration": 8,
+                "base_reward": 60000,
+                "description": f"Transport {count} diplomatic passengers from {source.name} to {destination.name}"
+            }
+        ]
+
+        contract_type = random.choice(contract_types)
+        return Contract(
+            contract_type=contract_type["desc_template"].lower().replace(" ", "_"),
+            duration=contract_type["duration"],
+            requirements=contract_type["requirements"],
+            rewards={
+                "money": contract_type["base_reward"],
+                "reputation": 30,
+                "plot_points": 8
+            },
+            description=contract_type["description"]
+        )
+
+    def accept_contract(self, contract_index):
+        """Accept a contract from available contracts"""
+        if contract_index >= len(self.available_contracts):
+            return False, "Invalid contract selection."
+
+        if len(self.active_contracts) >= self.max_active_contracts:
+            return False, "Maximum number of active contracts reached."
+
+        contract = self.available_contracts.pop(contract_index)
+        self.active_contracts.append(contract)
+        return True, f"Contract accepted: {contract.description}"
+
+    def handle_contract_completion(self, contract):
+        """Handle completed contract and reward claiming"""
+        if contract not in self.active_contracts:
+            return
+
+        if contract.rewards_claimed:
+            return
+
+        # Calculate and award final rewards
+        rewards = contract.calculate_final_reward()
+        self.game.ship.money += rewards["money"]
+        self.game.reputation += rewards["reputation"]
+        self.game.story_manager.plot_points += rewards["plot_points"]
+
+        # Mark contract as claimed
+        contract.rewards_claimed = True
+        self.active_contracts.remove(contract)
+        self.completed_contracts.append(contract)
+
+        # Display completion message
+        self.game.display_simple_message([
+            "Contract Rewards Claimed!",
+            f"Earned {self.game.format_money(rewards['money'])} credits",
+            f"Reputation +{rewards['reputation']}",
+            f"Plot Points +{rewards['plot_points']}"
+        ])
+
+    def get_contract_display_info(self, contract):
+        """Get formatted display info for a contract"""
+        info = []
+        info.append(f"Type: {contract.contract_type.title()}")
+        info.append(f"Duration: {contract.duration} turns")
+
+        # Requirements
+        if contract.contract_type == "passenger":
+            if "passenger_class" in contract.requirements:
+                class_code = contract.requirements["passenger_class"]
+                count = contract.requirements["count"]
+                info.append(f"Transport: {count} {class_code}-class passengers")
+            if "passenger_count" in contract.requirements:
+                info.append(f"Transport: {contract.requirements['passenger_count']} passengers")
+            if "min_satisfaction" in contract.requirements:
+                info.append(f"Min. Satisfaction: {contract.requirements['min_satisfaction']}%")
+        else:  # cargo contract
+            if "cargo_type" in contract.requirements:
+                info.append(f"Cargo: {contract.requirements['cargo_type']}")
+                if "min_amount" in contract.requirements:
+                    info.append(f"Amount: {contract.requirements['min_amount']} units")
+
+        # Route information
+        source = contract.requirements.get('source', 'Any')
+        dest = contract.requirements.get('destination', 'Any')
+        info.append(f"Route: {source} → {dest}")
+
+        # Rewards
+        info.append(f"Reward: {self.game.format_money(contract.rewards['money'])} credits")
+        info.append(f"Reputation: +{contract.rewards['reputation']}")
+        if contract.rewards['plot_points'] > 0:
+            info.append(f"Plot Points: +{contract.rewards['plot_points']}")
+
+        return info
+
+    def update_contract_progress(self, event_data):
+        """Update progress for all active contracts"""
+        messages = []
+        for contract in self.active_contracts[:]:  # Create copy to allow safe removal
+            if contract.completed or contract.failed:
+                continue
+                
+            result = contract.update_progress(event_data)
+            
+            if result["status"] == "completed":
+                messages.append(result["message"])
+                if contract.contract_type == "cargo":
+                    self.game.display_simple_message(
+                        f"Contract completed: Delivered {contract.progress['amount']} {contract.requirements['cargo_type']} " +
+                        f"from {contract.requirements['source']} to {contract.requirements['destination']}"
+                    )
+                elif contract.contract_type == "passenger":
+                    self.game.display_simple_message(
+                        f"Contract completed: Transported {contract.progress['passengers_delivered']} passengers " +
+                        f"from {contract.requirements['source']} to {contract.requirements['destination']}"
+                    )
+            elif result["status"] == "updated" and "message" in result:
+                messages.append(result["message"])
+                
+        if messages:
+            for msg in messages:
+                self.game.display_simple_message(msg)
+
+    def handle_contract_failure(self, contract):
+        """Handle failed contract cleanup"""
+        message = [
+            "Contract Failed!",
+            contract.description
+        ]
+        
+        # Add failure reason
+        if hasattr(contract, 'failure_reason'):
+            message.append(f"Reason: {contract.failure_reason}")
+        else:
+            message.append("Reason: Time expired")
+            
+        # Add progress info
+        if contract.contract_type == "cargo":
+            message.append(
+                f"Progress: {contract.progress['amount']}/{contract.requirements.get('min_amount', 0)} units"
+            )
+        else:  # passenger contract
+            message.append(
+                f"Progress: {contract.progress['passengers_delivered']}/{contract.requirements.get('count', 0)} passengers"
+            )
+            
+        self.game.display_simple_message(message)
+        self.active_contracts.remove(contract)
+
+
+class SpecialCharacter:
+    def __init__(self, title, name, role, specialization):
+        self.title = title
+        self.name = name
+        self.role = role
+        self.specialization = specialization
+        self.full_name = f"{title} {name}"
+        self.met = False
+        self.quests_given = []
+        self.relationship = 0  # -100 to 100
+        self.last_interaction = None
+        self.location_preference = None
+        self.special_contracts = []
+
+class SpecialCharacterGenerator:
+    def __init__(self, game):
+        self.game = game  # Store game instance
+    
+        self.titles = {
+            "military": ["Fleet Commander", "Fleet Admiral", "Security Chief", "Defense Director"],
+            "science": ["Research Coordinator", "Science Director", "Chief Researcher", "Lab Supervisor"],
+            "trade": ["Trade Minister", "Commerce Director", "Market Supervisor", "Exchange Chief"],
+            "engineering": ["Engineering Chief", "Tech Director", "Systems Coordinator", "Project Lead"]
+        }
+        
+        self.surnames = ["Wu", "Cheng", "Tahoe", "Singh", "Patel", "Kim", "Rodriguez", "Novak", 
+                        "Chen", "Zhang", "Yamamoto", "Anderson", "Silva", "Kumar", "Hassan"]
+        
+        self.roles = {
+            "military": ["Combat training", "Fleet operations", "Security protocols", "Defense systems"],
+            "science": ["Research projects", "Lab experiments", "Data analysis", "Discovery missions"],
+            "trade": ["Market analysis", "Trade routes", "Economic planning", "Resource management"],
+            "engineering": ["System upgrades", "Tech maintenance", "Innovation projects", "Infrastructure"]
+        }
+        
+        self.known_characters = {}  # Track generated characters
+        self.add_vip_templates()
+
+    def generate_character(self, char_type=None, title=None, specialization=None):
+        """Generate a character with optional title and specialization"""
+        if title and specialization:
+            # Handle direct title/specialization generation
+            name = random.choice(self.surnames)
+            character = SpecialCharacter(
+                title=title,
+                name=name,
+                role=specialization,
+                specialization=specialization
+            )
+            # Add VIP-specific attributes if it's a VIP
+            if specialization == "VIP":
+                character.rewards = {
+                    "base_money": 25000,
+                    "reputation": 15
+                }
+                character.special_abilities = ["trade_bonus"]
+                reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+                character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+            return character
+            
+        elif char_type == "VIPPassenger":
+            vip_type = random.choice(list(self.vip_templates.keys()))
+            template = self.vip_templates[vip_type]
+            title = random.choice(template["titles"])
+            name = random.choice(self.surnames)
+            role = random.choice(template["roles"])
+            
+            character = SpecialCharacter(
+                title=f"{vip_type} {title}",
+                name=name,
+                role=role,
+                specialization="VIP"
+            )
+            
+            character.rewards = dict(template["rewards"])
+            character.special_abilities = list(template["special_abilities"])
+            reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+            character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+            return character
+            
+        elif char_type == "PirateCaptain":
+            title = "Rogue Captain"
+            name = f"Captain {random.choice(self.surnames)}"
+            character = SpecialCharacter(title, name, "pirate", "combat")
+            character.combat_stats = {
+                "attack": 3,
+                "defense": 2,
+                "reward": random.randint(5000, 15000)
+            }
+            return character
+            
+        elif char_type in ["Neurodroid", "Agrobot"]:
+            title = f"{char_type} Leader"
+            name = f"Unit-{random.randint(1000,9999)}"
+            character = SpecialCharacter(title, name, "synthetic", char_type.lower())
+            character.demand = random.randint(10000, 50000)
+            character.uprising_chance = 0.3
+            return character
+
+        return None
+
+    # Added to SpecialCharacterGenerator class for vip passengers
+    def add_vip_templates(self):
+        """Add VIP passenger templates to character generator"""
+        self.vip_templates = {
+            "Corporate": {
+                "titles": ["CEO", "Director", "Executive"],
+                "roles": ["business", "finance", "trade"],
+                "rewards": {
+                    "base_money": 30000,
+                    "reputation": 15,
+                    "plot_points": 5
+                },
+                "special_abilities": ["market_insider"]
+            },
+            "Political": {
+                "titles": ["Senator", "Councilor", "Minister"],
+                "roles": ["governance", "diplomacy", "policy"],
+                "rewards": {
+                    "base_money": 40000,
+                    "reputation": 20,
+                    "plot_points": 8
+                },
+                "special_abilities": ["system_influence"]
+            },
+            "Scientific": {
+                "titles": ["Professor", "Director", "Chief Researcher"],
+                "roles": ["research", "development", "innovation"],
+                "rewards": {
+                    "base_money": 35000,
+                    "reputation": 18,
+                    "plot_points": 10
+                },
+                "special_abilities": ["research_bonus"]
             }
         }
 
-        # Location-specific equipment
-        self.specialized_equipment = {
+    def generate_vip_passenger(self):
+        """Generate a VIP passenger with special characteristics"""
+        vip_type = random.choice(list(self.vip_templates.keys()))
+        template = self.vip_templates[vip_type]
+        
+        title = random.choice(template["titles"])
+        name = random.choice(self.surnames)
+        role = random.choice(template["roles"])
+        
+        character = SpecialCharacter(
+            title=f"{vip_type} {title}",
+            name=name,
+            role=role,
+            specialization="VIP"
+        )
+        
+        # Add VIP-specific attributes
+        character.rewards = dict(template["rewards"])
+        character.special_abilities = list(template["special_abilities"])
+        
+        # Scale rewards based on reputation
+        reputation_multiplier = 1 + (self.game.ship.passenger_reputation / 100)
+        character.rewards["base_money"] = int(character.rewards["base_money"] * reputation_multiplier)
+        
+        return character     
+
+class Quest:
+    def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
+                 requirements=None, on_complete=None, milestone=None):
+        self.name = name
+        self.description = description
+        self.reward_money = reward_money
+        self.reward_rp = reward_rp  # Research Points reward
+        self.quest_type = quest_type
+        self.requirements = requirements or {}
+        self.on_complete = on_complete
+        self.milestone = milestone  # New attribute
+        self.progress = 0
+        self.completed = False
+        self.target_progress = self.requirements.get('target_progress', 1)
+        self.location_requirement = self.requirements.get('location_type', None)
+
+    def __eq__(self, other):
+        """Define equality to help prevent duplicates"""
+        if not isinstance(other, Quest):
+            return False
+        return (self.name == other.name and 
+                self.quest_type == other.quest_type)
+
+    # Cantina quests from listen to gossip, added to Quest class
+    def update_cantina_progress(self, event_data):
+        """Update cantina quests based on trade actions"""
+        if self.quest_type == "cantina":
+            action = event_data.get("action", "")
+            
+            if action in ["buy", "sell"]:
+                commodity = event_data.get("commodity")
+                amount = event_data.get("amount", 0)
+                
+                if "Deliver" in self.name and commodity:
+                    target_commodity = self.name.split()[2].lower()
+                    if commodity == target_commodity:
+                        self.progress += amount
+                        return self.progress >= self.requirements.get("amount", 0)
+                    
+            elif action == "passenger_delivered":
+                self.progress += 1
+                return self.progress >= self.requirements.get("count", 0)
+            
+        return False
+
+    # Add for special location quests
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {
+                'research_points_gained': 0,
+                'analysis_completed': 0,
+                'experiments_conducted': 0
+            }
+        
+        # Check if required criteria are met
+        criteria = self.requirements.get('completion_criteria', {})
+        for key, target in criteria.items():
+            if self.tracked_progress.get(key, 0) < target:
+                return False
+        return True
+
+    def update_research_progress(self, activity_type):
+        """Update progress for research activities"""
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {}
+        
+        if activity_type in self.tracked_progress:
+            self.tracked_progress[activity_type] += 1
+            return self.check_research_completion(self.game)
+        return False
+
+    def check_completion(self, game):
+        """Check if quest requirements are met"""
+        if self.completed:
+            return False
+        
+        if self.quest_type == "mining":
+            return self.check_mining_completion(game)
+        elif self.quest_type == "combat":
+            return self.check_combat_completion(game)
+        elif self.quest_type == "trade":
+            return self.check_trade_completion(game)
+        elif self.quest_type == "exploration":
+            return self.check_exploration_completion(game)
+        elif self.quest_type == "research":
+            return self.check_research_completion(game)
+        elif self.quest_type == "cantina":
+            return self.check_cantina_completion(game)        
+        
+        # Generic quest completion check
+        return self.progress >= self.target_progress
+
+    def check_cantina_completion(self, game):
+        """Check if quest requirements are met"""
+        if self.quest_type == "cantina":
+            # Specific cantina quest completion checks
+            if "Deliver" in self.name:
+                # Check trade profits
+                commodity = self.name.split()[2].lower()
+                return game.ship.trade_profits.get(commodity, 0) >= self.requirements.get('amount', 0)
+            
+            elif "Transport" in self.name:
+                # Check passenger transport
+                return game.reputation_manager.total_passengers >= self.requirements.get('count', 0)
+            
+            elif "Eliminate" in self.name:
+                # Check combat victories
+                enemy_type = self.name.split()[2].lower()
+                return game.ship.combat_victories.get(enemy_type, 0) >= self.requirements.get('victories', 0)
+        
+        # Existing completion logic for other quest types
+        return super().check_completion(game)
+
+    def check_mining_completion(self, game):
+        """Check mining quest requirements"""
+        if 'resource_type' in self.requirements:
+            resource = self.requirements['resource_type']
+            target_amount = self.requirements.get('amount', 0)
+            return game.ship.cargo[resource] >= target_amount
+        return False
+
+    def check_combat_completion(self, game):
+        """Check combat quest requirements with proper dictionary access"""
+        if 'enemy_type' in self.requirements:
+            enemy_type = self.requirements['enemy_type']
+            required_amount = self.requirements.get('amount', 1)
+            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
+        # If no specific enemy type, check total victories
+        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
+
+    def check_trade_completion(self, game):
+        """Check trading quest requirements"""
+        if 'commodity' in self.requirements:
+            target_profit = self.requirements.get('profit', 0)
+            return game.ship.trade_profits.get(
+                self.requirements['commodity'], 0) >= target_profit
+        return False
+
+    def check_exploration_completion(self, game):
+        """Check exploration quest requirements"""
+        if 'location_type' in self.requirements:
+            discovered = len([loc for loc in game.discovered_locations 
+                            if loc.location_type == self.requirements['location_type']])
+            return discovered >= self.requirements.get('amount', 1)
+        return False
+
+    def check_research_completion(self, game):
+        """Check research quest requirements"""
+        if 'research_type' in self.requirements:
+            return self.requirements['research_type'] in game.research.unlocked_options
+        return game.ship.research_points >= self.requirements.get('target_points', 0)
+
+    def complete(self, game):
+        """Complete the quest and award rewards"""
+        if not self.completed:
+            self.completed = True
+            game.ship.money += self.reward_money
+            game.ship.research_points += self.reward_rp
+            
+            # Call completion callback if exists
+            if self.on_complete:
+                self.on_complete()
+            
+            # Display completion message
+            game.display_story_message([
+                f"Quest Completed: {self.name}",
+                f"Rewards:",
+                f"• {game.format_money(self.reward_money)} credits",
+                f"• {self.reward_rp} research points"
+            ])
+
+    def update_progress(self, amount=1):
+        """Update quest progress"""
+        if not self.completed:
+            self.progress += amount
+            return self.progress >= self.target_progress
+        return False
+
+class Contract:
+    def __init__(self, contract_type, duration, requirements, rewards, description):
+        self.contract_type = contract_type
+        self.duration = duration
+        self.requirements = requirements
+        self.rewards = rewards
+        self.description = description
+        self.progress = {
+            'amount': 0,
+            'destinations_visited': set(),
+            'passengers_delivered': 0,
+            'source_visited': False,
+            'turns_remaining': duration
+        }
+        self.completed = False
+        self.rewards_claimed = False
+        self.failed = False
+        self.last_update_turn = None
+        self.trade_history = []
+
+    def update_progress(self, event_data):
+        """Enhanced progress update with trade history tracking"""
+        current_location = event_data.get("location")
+        action = event_data.get("action", "")
+        commodity = event_data.get("commodity")
+        current_turn = event_data.get("turn", 0)
+        
+        # Update turns only when it's a new turn
+        if self.last_update_turn != current_turn:
+            self.progress['turns_remaining'] -= 1
+            self.last_update_turn = current_turn
+        
+        if self.progress['turns_remaining'] <= 0:
+            self.failed = True
+            return {"status": "failed", "reason": "time_expired"}
+
+        # Record location visit
+        if current_location:
+            self.progress['destinations_visited'].add(current_location)
+
+        if self.contract_type == "cargo":
+            # Track source visit through buy action
+            if action == "buy" and current_location == self.requirements.get("source"):
+                self.progress["source_visited"] = True
+                
+            elif action == "sell" and commodity == self.requirements.get("cargo_type"):
+                amount = event_data.get("amount", 0)
+                
+                if (current_location == self.requirements.get("destination") and 
+                    self.progress["source_visited"]):
+                    
+                    # Record trade in history
+                    self.trade_history.append({
+                        'turn': current_turn,
+                        'amount': amount,
+                        'location': current_location
+                    })
+                    
+                    self.progress['amount'] += amount
+                    
+                    if self.progress['amount'] >= self.requirements.get('min_amount', 0):
+                        self.completed = True
+                        return {
+                            "status": "completed",
+                            "message": f"Contract completed! Visit Contract Management to claim rewards."
+                        }
+                    
+                    return {
+                        "status": "updated",
+                        "trade_recorded": True,
+                        "new_amount": self.progress['amount'],
+                        "message": f"Delivered: {self.progress['amount']}/{self.requirements.get('min_amount')} {commodity}"
+                    }
+
+        elif self.contract_type == "passenger":
+            # Handle passenger delivery
+            if current_location == self.requirements.get("destination"):
+                passenger_data = event_data.get("passenger_data")
+                if passenger_data:
+                    count = 1
+                    if "passenger_class" in self.requirements:
+                        if passenger_data["class"] == self.requirements["passenger_class"]:
+                            self.progress['passengers_delivered'] += count
+                            # Record delivery in history
+                            self.trade_history.append({
+                                'turn': current_turn,
+                                'count': count,
+                                'location': current_location
+                            })
+                    else:
+                        self.progress['passengers_delivered'] += count
+                        # Record delivery in history
+                        self.trade_history.append({
+                            'turn': current_turn,
+                            'count': count,
+                            'location': current_location
+                        })
+                        
+                    # Check completion
+                    if (self.progress['passengers_delivered'] >= self.requirements.get('count', 
+                        self.requirements.get('passenger_count', 0))):
+                        self.completed = True
+                        return {
+                            "status": "completed",
+                            "message": f"Contract completed! Visit Contract Management to claim rewards."
+                        }
+
+        return {"status": "in_progress"}
+
+    def get_status_display(self):
+        """Get formatted status display"""
+        if self.completed:
+            return "✓ COMPLETED - Ready to claim"
+        elif self.failed:
+            return "✗ FAILED - Time expired"
+            
+        status_lines = [
+            f"Time remaining: {self.progress['turns_remaining']} turns"
+        ]
+        
+        if self.contract_type == "cargo":
+            cargo_type = self.requirements.get('cargo_type')
+            status_lines.extend([
+                f"Source ({self.requirements['source']}): {'✓ Visited' if self.progress['source_visited'] else '□ Not visited'}",
+                f"Destination ({self.requirements['destination']}): {'✓ Visited' if self.requirements['destination'] in self.progress['destinations_visited'] else '□ Not visited'}",
+                f"Delivered: {self.progress['amount']}/{self.requirements.get('min_amount')} {cargo_type}"
+            ])
+        elif self.contract_type == "passenger":
+            status_lines.extend([
+                f"Passengers: {self.progress['passengers_delivered']}/{self.requirements.get('count', self.requirements.get('passenger_count', 0))}",
+                f"Class: {self.requirements.get('passenger_class', 'Any')}"
+            ])
+            
+        return "\n".join(status_lines)
+
+    def get_trade_history_display(self):
+        """Get formatted trade history"""
+        if not hasattr(self, 'trade_history') or not self.trade_history:
+            return "No trade history recorded"
+            
+        history_lines = []
+        if self.contract_type == "cargo":
+            for trade in self.trade_history:
+                history_lines.append(
+                    f"Turn {trade.get('turn', '?')}: Delivered {trade.get('amount', 0)} units of {self.requirements.get('cargo_type', 'cargo')} at {trade.get('location', 'Unknown')}"
+                )
+        elif self.contract_type == "passenger":
+            for trade in self.trade_history:
+                history_lines.append(
+                    f"Turn {trade.get('turn', '?')}: Delivered {trade.get('count', 1)} passengers at {trade.get('location', 'Unknown')}"
+                )
+        
+        return "\n".join(history_lines) if history_lines else "No trade history recorded"
+
+    def calculate_final_reward(self):
+        """Calculate final reward with bonuses"""
+        if not self.completed:
+            return None
+
+        total_reward = dict(self.rewards)
+
+        # Early completion bonus
+        if self.progress['turns_remaining'] > self.duration / 2:
+            total_reward["money"] = int(total_reward["money"] * 1.5)
+            total_reward["reputation"] = int(total_reward["reputation"] * 1.2)
+
+        # Overdelivery bonus for cargo contracts
+        if self.contract_type == "cargo":
+            required_amount = self.requirements.get('min_amount', 0)
+            if self.progress['amount'] > required_amount * 1.5:  # 50% more than required
+                total_reward["money"] = int(total_reward["money"] * 1.2)
+
+        # High satisfaction bonus for passenger contracts
+        if self.contract_type == "passenger":
+            if "min_satisfaction" in self.requirements:
+                avg_satisfaction = sum(p.get("satisfaction", 0) for p in self.trade_history) / len(self.trade_history) if self.trade_history else 0
+                if avg_satisfaction > self.requirements["min_satisfaction"] * 1.2:  # 20% above minimum
+                    total_reward["reputation"] = int(total_reward["reputation"] * 1.3)
+
+        return total_reward
+
+    def check_requirements(self):
+        """Check if all requirements are met"""
+        if self.contract_type == "cargo":
+            return (
+                self.progress["source_visited"] and
+                self.requirements["destination"] in self.progress["destinations_visited"] and
+                self.progress["amount"] >= self.requirements.get("min_amount", 0)
+            )
+        elif self.contract_type == "passenger":
+            return (
+                self.progress["passengers_delivered"] >= self.requirements.get("count", 
+                    self.requirements.get("passenger_count", 0))
+            )
+        return False
+
+    def fail_contract(self, reason="time_expired"):
+        """Mark contract as failed"""
+        self.failed = True
+        self.completed = False
+        return {"status": "failed", "reason": reason}
+
+    def can_claim_rewards(self):
+        """Check if rewards can be claimed"""
+        return self.completed and not self.rewards_claimed and not self.failed
+
+    def claim_rewards(self):
+        """Mark rewards as claimed"""
+        if self.can_claim_rewards():
+            self.rewards_claimed = True
+            return self.calculate_final_reward()
+        return None
+    
+
+
+class StoryContract(Contract):
+    """Extended contract class for story-related missions"""
+    def __init__(self, contract_type, duration, requirements, rewards, story_data):
+        super().__init__(contract_type, duration, requirements, rewards)
+        self.story_data = story_data
+        self.special_character = story_data.get("character", None)
+        self.plot_points = story_data.get("plot_points", 0)
+        self.milestone_trigger = story_data.get("milestone", None)
+        self.follow_up_contract = story_data.get("follow_up", None)
+
+    @staticmethod
+    def generate_story_contract(character, milestone):
+        """Generate a contract tied to story progression"""
+        contract_types = {
+            "military": [
+                {
+                    "type": "combat",
+                    "description": "Special security operation",
+                    "duration": 8,
+                    "requirements": {"combat_victories": 3},
+                    "rewards": {"money": 25000, "reputation": 30}
+                }
+            ],
+            "science": [
+                {
+                    "type": "research",
+                    "description": "Critical research mission",
+                    "duration": 10,
+                    "requirements": {"research_points": 100},
+                    "rewards": {"money": 20000, "reputation": 25}
+                }
+            ],
+            "trade": [
+                {
+                    "type": "cargo",
+                    "description": "Strategic resource transport",
+                    "duration": 6,
+                    "requirements": {"cargo_amount": 200},
+                    "rewards": {"money": 30000, "reputation": 20}
+                }
+            ]
+        }
+        
+        spec = character.specialization
+        if spec in contract_types:
+            template = random.choice(contract_types[spec])
+            return StoryContract(
+                contract_type=template["type"],
+                duration=template["duration"],
+                requirements=template["requirements"],
+                rewards=template["rewards"],
+                story_data={
+                    "character": character,
+                    "milestone": milestone,
+                    "plot_points": 10
+                }
+            )
+        return None
+
+class ClassificationBasedQuest(Quest):
+    """Extended quest class for passenger classification-based missions"""
+    def __init__(self, classification, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.required_classification = classification
+        self.passengers_helped = []
+        self.special_events = []
+
+    @staticmethod
+    def generate_for_classification(classification):
+        """Generate a quest specific to passenger classification"""
+        quest_templates = {
+            "S": {  # Scientists
+                "name": "Scientific Expedition",
+                "description": "Help scientists reach research sites",
+                "reward_multiplier": 1.5
+            },
+            "M": {  # Military
+                "name": "Tactical Deployment",
+                "description": "Transport military personnel",
+                "reward_multiplier": 1.3
+            },
+            "E": {  # Engineers
+                "name": "Engineering Project",
+                "description": "Transport engineering teams",
+                "reward_multiplier": 1.4
+            }
+        }
+        
+        if classification in quest_templates:
+            template = quest_templates[classification]
+            return ClassificationBasedQuest(
+                classification=classification,
+                name=template["name"],
+                description=template["description"],
+                reward_money=5000 * template["reward_multiplier"],
+                reward_rp=50 * template["reward_multiplier"],
+                quest_type="passenger"
+            )
+        return None
+
+class PassengerModule:
+    def __init__(self, name, capacity, comfort_level, cost):
+        self.name = name
+        self.capacity = capacity  # How many passengers it can hold
+        self.comfort_level = comfort_level  # 1-5, affects passenger satisfaction and payment
+        self.cost = cost
+        self.passengers = []
+
+class Passenger:
+    def __init__(self, name, destination, wealth_level):
+        self.name = name
+        self.destination = destination
+        self.wealth_level = wealth_level  # 1-5
+        self.satisfaction = 100
+        self.turns_waiting = 0
+        # Add passenger classification
+        self.classification = self.generate_classification()
+        
+    def generate_classification(self):
+        classifications = [
+            ("S", "Scientist", "science"),
+            ("M", "Military", "military"),
+            ("E", "Engineer", "engineering"),
+            ("T", "Trader", "trade"),
+            ("D", "Diplomat", "diplomacy"),
+            ("R", "Researcher", "research")
+        ]
+        class_code, class_name, class_type = random.choice(classifications)
+        return {
+            "code": class_code,
+            "name": class_name,
+            "type": class_type
+        }
+
+
+class Port:
+    def __init__(self, game):
+        self.game = game
+        self.available_modules = {
+                "1": {
+                    "name": "Basic Passenger",
+                    "capacity": 4,
+                    "comfort_level": 1,
+                    "cost": 5000
+                },
+                "2": {
+                    "name": "Standard Passenger",
+                    "capacity": 8,
+                    "comfort_level": 2,
+                    "cost": 10000
+                },
+                "3": {
+                    "name": "Luxury Passenger",
+                    "capacity": 4,
+                    "comfort_level": 4,
+                    "cost": 20000
+                },
+                "4": {
+                    "name": "Life Support Module",
+                    "capacity": 4,
+                    "comfort_level": 1,
+                    "cost": 8000
+                },
+                "5": {
+                    "name": "Business Class A",
+                    "capacity": 2,
+                    "comfort_level": 5,
+                    "cost": 25000
+                },
+                "6": {
+                    "name": "Research Lab Module",
+                    "capacity": 2,
+                    "comfort_level": 3,
+                    "cost": 30000,
+                    "special": "research_bonus"
+                },
+                "7": {
+                    "name": "Colony Transport Mod.",
+                    "capacity": 12,
+                    "comfort_level": 2,
+                    "cost": 35000,
+                    "special": "colonist_bonus"
+                },
+                "8": {
+                    "name": "Diplomatic Suite Mod.",
+                    "capacity": 1,
+                    "comfort_level": 6,
+                    "cost": 40000,
+                    "special": "diplomatic_bonus"
+                }
+            }
+        
+        # List of passengers waiting at each location
+        self.waiting_passengers = {}
+        
+        # Passenger names for random generation
+        self.first_names = ["John", "Emma", "Zara", "Chen", "Raj", "Ana", "Igor", "Yuki", "Omar", "Luna"]
+        self.last_names = ["Smith", "Patel", "Wong", "Garcia", "Petrov", "Tanaka", "Mueller", "Kim", "Hassan", "Silva"]
+
+    def get_special_characters(self):
+        """Get special characters present at port"""
+        return [char for char_id, char in 
+                self.game.character_manager.active_characters.items()
+                if char["location"] == self.game.current_location and
+                "port" in char["character"].content['requirements'].get('spawn_locations', [])]
+
+
+    def generate_passenger(self, current_location):
+        """Generate a random passenger"""
+        name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
+        # Choose destination from known locations except current
+        possible_destinations = [loc for loc in self.game.known_locations if loc != current_location]
+        if not possible_destinations:
+            return None
+        destination = random.choice(possible_destinations)
+        wealth_level = random.randint(1, 5)
+        return Passenger(name, destination, wealth_level)
+
+    def add_special_passenger(self, character):
+        """Add a special character to waiting passengers list"""
+        current_location = self.game.current_location.name
+        if current_location not in self.waiting_passengers:
+            self.waiting_passengers[current_location] = []
+            
+        # Create passenger object from character
+        passenger = Passenger(
+            name=character.full_name,
+            destination=random.choice(list(self.game.known_locations)),
+            wealth_level=5  # VIPs and special characters are wealthy
+        )
+        
+        # Add character-specific attributes
+        passenger.is_special = True
+        passenger.character = character
+        passenger.classification = {"code": "V", "name": "VIP", "type": character.specialization}
+        
+        # Add to waiting list
+        self.waiting_passengers[current_location].append(passenger)
+        
+        return passenger
+
+
+    def update_passengers(self, location):
+        """Update passenger list at a location"""
+        if location not in self.waiting_passengers:
+            self.waiting_passengers[location] = []
+            
+        # Remove passengers waiting too long
+        self.waiting_passengers[location] = [p for p in self.waiting_passengers[location] 
+                                           if p.turns_waiting < 10]
+
+        # Check for special character spawning
+        if random.random() < 0.2:  # 20% chance per turn
+            self.game.reputation_manager.spawn_special_passenger()
+
+        # Add new passengers (1-3 per turn)
+        new_passengers = random.randint(1, 3)
+        for _ in range(new_passengers):
+            passenger = self.generate_passenger(location)
+            if passenger:
+                self.waiting_passengers[location].append(passenger)
+                
+        # Update waiting turns
+        for passenger in self.waiting_passengers[location]:
+            passenger.turns_waiting += 1
+
+
+
+
+    def calculate_fare(self, passenger, module):
+        """Calculate passenger fare based on distance, comfort, and wealth"""
+        base_fare = 100 * passenger.wealth_level
+        comfort_multiplier = 1 + (module.comfort_level * 0.2)
+        distance_multiplier = 1
+        
+        # Add distance calculation if game has that mechanic
+        # distance_multiplier = calculate_distance(current, destination)
+        
+        return int(base_fare * comfort_multiplier * distance_multiplier)
+
+    def display_port_info(self):
+        """Display port information and options"""
+        content = []
+        
+        # Show installed modules
+        content.append(["Installed Passenger Modules"])
+        if hasattr(self.game.ship, 'passenger_modules'):
+            for module in self.game.ship.passenger_modules:
+                passengers = len(module.passengers)
+                content.append([
+                    f"{module.name}",
+                    f"({passengers}/{module.capacity} passengers)",
+                    f"Comfort Lvl.: {module.comfort_level}"
+                ])
+        else:
+            content.append(["No passenger modules installed"])
+            
+        # Show current passengers
+        content.append([""])
+        content.append(["Current Passengers"])
+        total_passengers = 0
+        if hasattr(self.game.ship, 'passenger_modules'):
+            for module in self.game.ship.passenger_modules:
+                for passenger in module.passengers:
+                    total_passengers += 1
+                    content.append([
+                        f"{passenger.name}",
+                        f"→ {passenger.destination}",
+                        f"Satisfaction: {passenger.satisfaction}%"
+                    ])
+        if total_passengers == 0:
+            content.append(["No passengers currently aboard"])
+
+        # Show waiting passengers at current location
+        content.append([""])
+        content.append(["Waiting Passengers"])
+        location = self.game.current_location.name
+        if location in self.waiting_passengers and self.waiting_passengers[location]:
+            for passenger in self.waiting_passengers[location]:
+                content.append([
+                    f"{passenger.name}",
+                    f"→ {passenger.destination}",
+                    f"Class: {passenger.wealth_level}"
+                ])
+        else:
+            content.append(["No passengers waiting"])
+            
+        return self.game.create_box(content, 'double')
+    
+
+    def handle_port_menu(self):
+        """Handle port menu options"""
+        self.game.clear_screen()
+        self.game.display_simple_message("Welcome to the Stardock Port!", 0)
+
+        while True:
+            options = {
+                'view': ('v', "View Port Info"),
+                'modules': ('m', "Purchase Modules"),
+                'board': ('b', "Board Passengers"),
+                'unload': ('u', "Unload Passengers"),
+                'contracts': ('c', "Manage Contracts"),
+                'travel': ('t', "Travel"),
+                'back': ('', "Return to Main Menu")
+            }
+            
+            # Show menu
+            menu_content = [[f"Port Services {self.game.current_location.name} | PAX Checkout: {sum(len(module.passengers) for module in self.game.ship.passenger_modules)}/{sum(module.capacity for module in self.game.ship.passenger_modules)}"]]
+            menu_content.append([f""])
+            for cmd, (shortcut, desc) in options.items():
+                menu_content.append([f"{cmd}/{shortcut if shortcut else ''}: {desc}"])
+            print(self.game.create_box(menu_content, 'single'))
+
+            valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
+            action = self.game.validate_input("Choose action: ", valid_inputs)
+            
+            if action in ['back', None]:
+                break
+                
+            elif action in ['view', 'v']:
+                print(self.display_port_info())
+                time.sleep(2)
+                
+            elif action in ['modules', 'm']:
+                self.handle_module_purchase()
+                
+            elif action in ['board', 'b']:
+                self.handle_passenger_boarding()
+                
+            elif action in ['unload', 'u']:
+                self.handle_passenger_unloading()
+                time.sleep(2)
+            
+            elif action in ['contracts', 'c']:
+                self.game.contract_manager.handle_contract_menu()
+            
+            elif action in ['travel', 't']:
+                if self.game.handle_travel():
+                    break
+
+            self.game.clear_screen()
+
+    def handle_module_purchase(self):
+        """Handle purchase of new modules with numbered selection"""
+        while True:
+#            self.game.clear_screen()
+            content = [["", f"¤: {self.game.format_money(self.game.ship.money)}"]]
+    #        content.append([""])  # Empty line for spacing
+            content.append(["#", "Module Types:", "Cap.", "Comf.", "Cost"])
+#            content.append(["#", "Module Types:", "Cap.", "Comf.", "Cost", "Special"])
+            
+            for module_id, module in self.available_modules.items():
+                special = module.get("special", "-")
+                content.append([
+                    module_id,
+                    module["name"],
+                    str(module["capacity"]),
+                    str(module["comfort_level"]),
+                    str(self.game.format_money(module["cost"])),
+#                    special #yet uinimplemented module special
+                ])
+                    
+            print(self.game.create_box(content, 'double'))
+            
+            module_id = self.game.validate_input(
+                "Enter module number to buy (or 'back'): ",
+                list(self.available_modules.keys()) + ['back']
+            )
+            
+            if module_id == 'back':
+                self.game.clear_screen()
+                return
+                    
+            if module_id in self.available_modules:
+                module = self.available_modules[module_id]
+                if self.game.ship.money >= module["cost"]:
+                    self.game.ship.money -= module["cost"]
+                    
+                    if not hasattr(self.game.ship, 'passenger_modules'):
+                        self.game.ship.passenger_modules = []
+                        
+                    new_module = PassengerModule(
+                        module["name"],
+                        module["capacity"],
+                        module["comfort_level"],
+                        module["cost"]
+                    )
+                    if "special" in module:
+                        new_module.special = module["special"]
+                    
+                    self.game.ship.passenger_modules.append(new_module)
+                    
+                    self.game.display_simple_message(f"Purchased {module['name']}!")
+#                    time.sleep(1)
+                    self.game.clear_screen()
+                    return
+                else:
+                    self.game.display_simple_message("Not enough money!")
+#                    time.sleep(1)
+                    self.game.clear_screen()
+                    return
+
+
+    def handle_passenger_boarding(self):
+        """Handle passenger boarding with removal from waiting list"""
+        while True:
+            location = self.game.current_location.name
+            
+            if not hasattr(self.game.ship, 'passenger_modules'):
+                self.game.display_simple_message("No passenger modules installed!")
+                self.game.clear_screen()
+                return
+                        
+            if location not in self.waiting_passengers or not self.waiting_passengers[location]:
+                self.game.display_simple_message("No passengers waiting!")
+                self.game.clear_screen()
+                return
+                        
+            available_modules = [m for m in self.game.ship.passenger_modules 
+                            if len(m.passengers) < m.capacity]
+            
+            if not available_modules:
+                self.game.display_simple_message("No room for more passengers!")
+                self.game.clear_screen()
+                return
+
+            # Show module status
+            self.display_module_status()
+
+            # Show waiting passengers
+            self.display_waiting_passengers()
+
+            # Get command
+            self.game.display_simple_message(
+                "Enter numbers to select passengers, 'refresh/r' to refresh list, 'autoboard/a' for auto boarding, or Enter to cancel:", 0
+            )
+            
+            selection = input(">>> ").strip().lower()
+            
+            if not selection:  # Empty Enter
+                return
+                
+            if selection in ['refresh', 'r']:
+                # Regenerate waiting passengers
+                self.update_passengers(location)
+                continue
+                
+            if selection in ['autoboard', 'a']:
+                self.handle_autoboard(available_modules)
+                continue
+                
+            try:
+                # Parse space-separated numbers
+                passenger_nums = [int(num) - 1 for num in selection.split()]
+                waiting_passengers = self.waiting_passengers[location]
+                
+                # Validate numbers and get passengers
+                selected_passengers = []
+                if all(0 <= num < len(waiting_passengers) for num in passenger_nums):
+                    # Get passengers and remove them from waiting list
+                    selected_passengers = [waiting_passengers[num] for num in sorted(passenger_nums, reverse=True)]
+                    for num in sorted(passenger_nums, reverse=True):
+                        del waiting_passengers[num]
+                    
+                    if selected_passengers:
+                        self.handle_module_assignment(selected_passengers, available_modules)
+                else:
+                    self.game.display_simple_message("Invalid passenger number(s)")
+                    
+            except ValueError:
+                self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
+
+    def handle_passenger_unloading(self):
+            """Handle passenger unloading with reputation effects and bonuses"""
+            if not hasattr(self.game.ship, 'passenger_modules'):
+                self.game.display_simple_message("No passenger modules installed!")
+                return
+                    
+            current_location = self.game.current_location.name
+            passengers_to_unload = []
+            total_earnings = 0
+            
+            # Find passengers that have reached their destination
+            for module in self.game.ship.passenger_modules:
+                for passenger in module.passengers[:]:
+                    if passenger.destination == current_location:
+                        # Calculate fare with reputation multiplier
+                        base_fare = self.calculate_fare(passenger, module)
+                        reputation_multiplier = self.game.reputation_manager.get_fare_multiplier()
+                        satisfaction_multiplier = passenger.satisfaction / 100
+                        bonus_multiplier = 1.0  # Default multiplier
+
+                        # Apply organization bonus if applicable
+                        org_bonus = self.get_bonus_type(passenger)
+                        bonus_message = None
+                        if org_bonus:
+                            org_name, multiplier, message = org_bonus
+                            bonus_multiplier = multiplier
+                            bonus_message = f"{org_name} doubles the revenue! {message} Plot points +1"
+                            self.game.story_manager.plot_points += 1
+
+                        # Calculate final payment with all multipliers
+                        final_payment = int(base_fare * satisfaction_multiplier * reputation_multiplier * bonus_multiplier)
+
+                        # Update reputation based on passenger satisfaction
+                        reputation_change = self.game.reputation_manager.update_reputation(passenger.satisfaction, passenger)
+
+                        # Handle special passengers
+                        if hasattr(passenger, 'is_vip'):
+                            self.game.reputation_manager.handle_vip_delivery(passenger)
+                        elif hasattr(passenger, 'is_story_character'):
+                            self.game.reputation_manager.handle_story_character_delivery(passenger)
+
+                        # Update contract progress if available
+                        if hasattr(self.game, 'contract_manager'):
+                            passenger_data = {
+                                "class": passenger.classification["code"],
+                                "satisfaction": passenger.satisfaction
+                            }
+                            event_data = {
+                                "location": current_location,
+                                "passenger_data": passenger_data,
+                                "action": "unload"
+                            }
+                            for contract in self.game.contract_manager.active_contracts:
+                                contract.update_progress(event_data)
+
+                        # Increment total passengers delivered
+                        self.game.reputation_manager.total_passengers += 1
+
+                        # Record unloading result
+                        passengers_to_unload.append({
+                            'passenger': passenger,
+                            'payment': final_payment,
+                            'satisfaction': passenger.satisfaction,
+                            'reputation_change': reputation_change,
+                            'bonus_message': bonus_message
+                        })
+
+                        # Apply payment and remove passenger
+                        self.game.ship.money += final_payment
+                        module.passengers.remove(passenger)
+                        total_earnings += final_payment
+
+            # Display unloading results
+            if passengers_to_unload:
+                content = [["Passengers Disembarked"]]
+                
+                for result in passengers_to_unload:
+                    passenger = result['passenger']
+                    content.append([
+                        passenger.name,
+                        f"Fare: {self.game.format_money(result['payment'])}",
+                        f"Satisfied: {result['satisfaction']}%"
+                    ])
+                    
+                    # Add reputation change if significant
+                    if abs(result['reputation_change']) >= 0.1:
+                        content.append([
+                            f"└─ Reputation Change: {'+' if result['reputation_change'] > 0 else ''}{result['reputation_change']:.1f}"
+                        ])
+                    
+                    # Add bonus message if any
+                    if result['bonus_message']:
+                        content.append([f"└─ {result['bonus_message']}"])
+                
+                content.append([""])
+                content.append([f"Total Earnings: {self.game.format_money(total_earnings)}"])
+                
+                print(self.game.create_box(content, 'double'))
+            else:
+                self.game.display_simple_message("No passengers to unload here!")
+#                self.game.clear_screen()
+
+    def get_bonus_type(self, passenger):
+        """Get bonus type based on passenger classification"""
+        bonus_types = {
+            "S": ("Scientific Institute", 2.0, "Scientific research strengthened!"),
+            "M": ("Planetary Defense Council", 3.0, "Military recruitment enhanced!"),
+            "E": ("Engineering Corps", 2.5, "Engineering capacity expanded!"),
+            "T": ("Trade Federation", 2.0, "Commercial networks expanded!"),
+            "D": ("Diplomatic Service", 3.0, "Diplomatic relations improved!"),
+            "R": ("Research Foundation", 2.5, "Research capabilities enhanced!")
+        }
+        passenger_class = passenger.classification["code"]
+        if random.random() < 0.3:  # 30% chance for bonus
+            return bonus_types.get(passenger_class)
+        return None
+
+
+    def handle_autoboard(self, available_modules):
+        """Handle automatic passenger boarding based on destination"""
+        location = self.game.current_location.name
+        waiting_passengers = self.waiting_passengers[location]
+        
+        # Get unique destinations
+        destinations = sorted(set(p.destination for p in waiting_passengers))
+        
+        # Show destinations
+        content = [["Available Destinations"]]
+        for i, dest in enumerate(destinations, 1):
+            matching = sum(1 for p in waiting_passengers if p.destination == dest)
+            content.append([f"{i}. {dest}", f"{matching} passengers waiting"])
+        print(self.game.create_box(content, 'single'))
+        
+        # Get destination choice
+        self.game.display_simple_message("Choose destination number:", 0)
+        try:
+            choice = int(input(">>> "))
+            if 1 <= choice <= len(destinations):
+                target_dest = destinations[choice-1]
+                
+                # Get matching passengers
+                matching_passengers = [p for p in waiting_passengers if p.destination == target_dest]
+                
+                # Board as many as possible
+                modules_space = sum(m.capacity - len(m.passengers) for m in available_modules)
+                to_board = matching_passengers[:modules_space]
+                
+                if to_board:
+                    self.handle_module_assignment(to_board, available_modules)
+                else:
+                    self.game.display_simple_message("No matching passengers to board!")
+                    
+        except (ValueError, IndexError):
+            self.game.display_simple_message("Invalid choice!")
+
+    def display_module_status(self):
+        """Display current module status"""
+        module_status = [["Current Module Status"]]
+        for module in self.game.ship.passenger_modules:
+            passengers_info = []
+            for p in module.passengers:
+                passengers_info.append(f"{p.name} [{p.classification['code']}] → {p.destination}")
+            module_status.append([
+                f"{module.name}",
+                f"({len(module.passengers)}/{module.capacity})",
+                f"Comfort: {module.comfort_level}"
+            ])
+            for p_info in passengers_info:
+                module_status.append([f"└─ {p_info}"])
+        print(self.game.create_box(module_status, 'single'))
+
+    def display_waiting_passengers(self):
+        """Display waiting passengers"""
+        location = self.game.current_location.name
+        content = [[""]]
+        content.append(["#", f"Waiting on {location}", "Dest.", "Cls.", "≈Fare"])
+        
+        waiting_passengers = self.waiting_passengers[location]
+        for i, passenger in enumerate(waiting_passengers, 1):
+            best_module = max(
+                (m for m in self.game.ship.passenger_modules if len(m.passengers) < m.capacity), 
+                key=lambda m: m.comfort_level
+            )
+            est_fare = self.calculate_fare(passenger, best_module)
+            content.append([
+                str(i),
+                f"{passenger.name} [{passenger.classification['code']}]",
+                passenger.destination,
+                f"L{passenger.wealth_level}",
+                self.game.format_money(est_fare)
+            ])
+        
+        print(self.game.create_box(content, 'double'))            
+
+    def handle_module_assignment(self, selected_passengers, available_modules):
+        """Handle assigning selected passengers to modules"""
+        passengers_left = selected_passengers.copy()
+        
+        while passengers_left and available_modules:
+            # Show remaining passengers
+            content = [["Remaining Passengers"]]
+            for i, passenger in enumerate(passengers_left, 1):
+                content.append([
+                    f"{i}. {passenger.name} [{passenger.classification['code']}]",
+                    passenger.destination
+                ])
+            print(self.game.create_box(content, 'single'))
+            
+            # Show available modules
+            module_content = [["Available Modules"]]
+            for i, module in enumerate(available_modules, 1):
+                module_content.append([
+                    f"{i}. {module.name}",
+                    f"({len(module.passengers)}/{module.capacity})",
+                    f"Comfort: {module.comfort_level}"
+                ])
+            print(self.game.create_box(module_content, 'single'))
+            
+            # Get module choice with auto option
+            self.game.display_simple_message(
+                "Choose module number, 'auto/a' for automatic assignment, or 'back':", 0
+            )
+            choice = input(">>> ").strip().lower()
+            
+            if choice == 'back':
+                break
+                
+            if choice in ['auto', 'a']:
+                self.auto_assign_modules(passengers_left, available_modules)
+                break
+                
+            try:
+                module_num = int(choice)
+                if 1 <= module_num <= len(available_modules):
+                    chosen_module = available_modules[module_num - 1]
+                    if len(chosen_module.passengers) >= chosen_module.capacity:
+                        self.game.display_simple_message("Module is full!")
+                        continue
+                        
+                    # Add first remaining passenger
+                    passenger = passengers_left.pop(0)
+                    chosen_module.passengers.append(passenger)
+                    self.game.display_simple_message(f"Assigned {passenger.name} to {chosen_module.name}")
+                    
+                    # Remove full modules from available list
+                    if len(chosen_module.passengers) >= chosen_module.capacity:
+                        available_modules.remove(chosen_module)
+                else:
+                    self.game.display_simple_message("Invalid module number")
+            except ValueError:
+                self.game.display_simple_message("Invalid input")
+
+    def auto_assign_modules(self, passengers, modules):
+        """Automatically assign passengers to modules"""
+        # Sort modules by comfort level (highest first)
+        sorted_modules = sorted(modules, key=lambda m: m.comfort_level, reverse=True)
+        
+        # Sort passengers by wealth level (highest first)
+        sorted_passengers = sorted(passengers, key=lambda p: p.wealth_level, reverse=True)
+        
+        assigned = 0
+        location = self.game.current_location.name
+        
+        for passenger in sorted_passengers[:]:  # Use slice to create copy for iteration
+            for module in sorted_modules:
+                if len(module.passengers) < module.capacity:
+                    module.passengers.append(passenger)
+                    if passenger in self.waiting_passengers[location]:  # Remove from waiting list
+                        self.waiting_passengers[location].remove(passenger)
+                    assigned += 1
+                    self.game.display_simple_message(
+                        f"Auto-assigned {passenger.name} to {module.name}"
+                    )
+                    break
+        
+        remaining = len(passengers) - assigned
+        if remaining > 0:
+            self.game.display_simple_message(f"Could not assign {remaining} passengers - no space left")
+
+    def display_module_details(self):
+        """Show detailed module information"""
+        module_info = [["Module Details"]]
+        for module in self.game.ship.passenger_modules:
+            module_info.append([
+                f"{module.name}",
+                f"Capacity: {module.capacity}",
+                f"Comfort Level: {module.comfort_level}"
+            ])
+            if module.passengers:
+                module_info.append(["Current Passengers:"])
+                for p in module.passengers:
+                    module_info.append([
+                        f"└─ {p.name} [{p.classification['code']}]",
+                        f"To: {p.destination}",
+                        f"Satisf.: {p.satisfaction}%"
+                    ])
+            else:
+                module_info.append(["└─ Empty"])
+            module_info.append([""])
+                
+        print(self.game.create_box(module_info, 'double'))
+        input("Press Enter to continue...")
+
+    def handle_passenger_selection(self, available_passengers):
+        """Handle batch passenger selection"""
+        self.game.display_simple_message("Enter passenger numbers separated by spaces (e.g., '1 2 15') or 'back':", 0)
+        while True:
+            try:
+                selection = input(">>> ").strip().lower()
+                if selection == 'back':
+                    return None
+                    
+                # Parse space-separated numbers
+                passenger_nums = [int(num) for num in selection.split()]
+                
+                # Validate numbers
+                if all(1 <= num <= len(available_passengers) for num in passenger_nums):
+                    return [available_passengers[num-1] for num in passenger_nums]
+                else:
+                    self.game.display_simple_message("Invalid passenger number(s)")
+                    return None
+                    
+            except ValueError:
+                self.game.display_simple_message("Invalid input. Please enter numbers separated by spaces.")
+                return None        
+
+
+    def update_passenger_satisfaction(self):
+        """Update passenger satisfaction during travel"""
+        if not hasattr(self.game.ship, 'passenger_modules'):
+            return
+            
+        for module in self.game.ship.passenger_modules:
+            for passenger in module.passengers:
+                # Base satisfaction change
+                change = 0
+                
+                # Comfort level effect
+                if module.comfort_level >= passenger.wealth_level:
+                    change += 2  # Satisfied with comfort
+                else:
+                    change -= 3  # Dissatisfied with comfort
+                    
+                # Ship damage effect
+                if self.game.ship.damage > 50:
+                    change -= 5
+                elif self.game.ship.damage > 25:
+                    change -= 2
+                    
+                # Update satisfaction
+                passenger.satisfaction = max(0, min(100, passenger.satisfaction + change))
+
+class Shop:
+    def __init__(self):
+        self.base_equipment = {
+            "navcomp": {
+                "price": 500,
+                "description": "Navigation computer reveals all destinations",
+                "tech_required": 1,
+                "plot_required": 0
+            },
+            "scanner": {
+                "price": 700,
+                "description": "Basic scanner improves resource detection",
+                "tech_required": 2,
+                "plot_required": 0
+            },
+            "probe": {
+                "price": 900,
+                "description": "Deep space probe increases exploration success",
+                "tech_required": 3,
+                "plot_required": 10
+            },
+            "turrets": {
+                "price": 1200,
+                "description": "Defense turrets to automatically repel pirates",
+                "tech_required": 4,
+                "plot_required": 15
+            },
+            "shield": {
+                "price": 1500,
+                "description": "Energy shield reduces damage taken in combat",
+                "tech_required": 5,
+                "plot_required": 20
+            },
+            "patcher": {
+                "price": 300,
+                "description": "Hull patcher repairs minor combat damage",
+                "tech_required": 1,
+                "plot_required": 0
+            },
+            # Transport Equipment
+            "cargo_extender": {
+                "price": 5000,
+                "description": "Increases cargo capacity by 20%",
+                "tech_required": 3,
+                "plot_required": 25
+            },
+            "containment_field": {
+                "price": 8000,
+                "description": "Specialized storage for salt/fuel (+30% capacity)",
+                "tech_required": 4,
+                "plot_required": 30
+            },
+            "auto_loader": {
+                "price": 12000,
+                "description": "Reduces loading/unloading time (-1 turn per trade)",
+                "tech_required": 5,
+                "plot_required": 35
+            },
+            # Advanced Transport Equipment
+            "quantum_compressor": {
+                "price": 20000,
+                "description": "Advanced compression (+50% capacity for all cargo)",
+                "tech_required": 6,
+                "plot_required": 50
+            },
+            "stasis_vault": {
+                "price": 25000,
+                "description": "Perfect resource preservation (+75% capacity for special resources)",
+                "tech_required": 7,
+                "plot_required": 60
+            },
+            "temporal_accelerator": {
+                "price": 30000,
+                "description": "Time dilation for faster delivery (-2 turns per trade)",
+                "tech_required": 8,
+                "plot_required": 75
+            }
+        }
+
+        # Location-specific items with requirements
+        self.location_equipment = {
             "AsteroidBase": {
                 "mining_laser": {
-                    "price": 8000,
-                    "description": "Advanced mining equipment for better resource extraction"
-                },
+                    "price": 2000,
+                    "description": "Improves mining efficiency and defense",
+                    "tech_required": 3,
+                    "plot_required": 15
+                },  
                 "cargo_scanner": {
-                    "price": 6000,
-                    "description": "Specialized scanner for detecting valuable cargo"
+                    "price": 1800,
+                    "description": "Detects valuable mineral deposits",
+                    "tech_required": 4,
+                    "plot_required": 20
                 },
                 "shield_booster": {
-                    "price": 7000,
-                    "description": "Enhanced shields for asteroid field protection"
+                    "price": 2500,
+                    "description": "Offers extra protection in asteroid fields",
+                    "tech_required": 5,
+                    "plot_required": 25
                 },
                 "mining_compressor": {
                     "price": 15000,
-                    "description": "Specialized for asteroid mining. +40% capacity for mined resources",
-                    "effect": {"type": "special_cargo", "value": 1.4}
+                    "description": "Specialized for asteroid mining (+40% capacity for mined resources)",
+                    "tech_required": 6,
+                    "plot_required": 40
                 }
             },
             "DeepSpaceOutpost": {
                 "advanced_radar": {
-                    "price": 9000,
-                    "description": "Long-range radar system for deep space navigation"
+                    "price": 2200,
+                    "description": "Early warning system for threats",
+                    "tech_required": 4,
+                    "plot_required": 30
                 },
                 "combat_drone": {
-                    "price": 12000,
-                    "description": "Automated defense drone for combat support"
+                    "price": 3000,
+                    "description": "Assists in space battles",
+                    "tech_required": 5,
+                    "plot_required": 35
                 },
                 "repair_bot": {
-                    "price": 10000,
-                    "description": "Automated repair system for hull maintenance"
+                    "price": 2800,
+                    "description": "Automatic repairs during travel",
+                    "tech_required": 6,
+                    "plot_required": 40
                 },
                 "emergency_warp": {
                     "price": 18000,
-                    "description": "Emergency escape system. 50% chance to avoid combat during transport",
-                    "effect": {"type": "combat_avoid", "value": 0.5}
+                    "description": "Emergency escape system (50% chance to avoid combat)",
+                    "tech_required": 7,
+                    "plot_required": 50
                 }
             },
             "ResearchColony": {
                 "research_module": {
-                    "price": 11000,
-                    "description": "Advanced research equipment for scientific studies"
+                    "price": 2500,
+                    "description": "Improves research point gains",
+                    "tech_required": 5,
+                    "plot_required": 40
                 },
                 "data_analyzer": {
-                    "price": 13000,
-                    "description": "Sophisticated data analysis system"
+                    "price": 2800,
+                    "description": "Better research success rates",
+                    "tech_required": 6,
+                    "plot_required": 45
                 },
                 "quantum_scanner": {
-                    "price": 15000,
-                    "description": "High-precision quantum scanning device"
+                    "price": 3500,
+                    "description": "Reveals anomalies and secrets",
+                    "tech_required": 7,
+                    "plot_required": 50
                 },
                 "containment_optimizer": {
                     "price": 22000,
-                    "description": "Smart cargo optimization. +25% capacity and -1 turn per trade",
-                    "effect": {"type": "hybrid", "cargo": 1.25, "time": -1}
+                    "description": "Smart cargo optimization (+25% capacity and -1 turn per trade)",
+                    "tech_required": 8,
+                    "plot_required": 60
                 }
             }
         }
 
-    def get_available_items(self, location_type=None):
-        """Get available items, optionally filtered by location type"""
-        # Start with base equipment
-        available = dict(random.sample(list(self.base_equipment.items()), 
-                        min(3, len(self.base_equipment))))
+        # Add specialized location-specific transport equipment
+        self.location_equipment["AsteroidBase"]["mining_compressor"] = {
+            "price": 15000,
+            "description": "Specialized for asteroid mining (+40% capacity for mined resources)"
+        }
         
-        # Add location-specific items if applicable
-        if location_type and location_type in self.specialized_equipment:
-            available.update(self.specialized_equipment[location_type])
+        self.location_equipment["DeepSpaceOutpost"]["emergency_warp"] = {
+            "price": 18000,
+            "description": "Emergency escape system (50% chance to avoid combat during transport)"
+        }
+        
+        self.location_equipment["ResearchColony"]["containment_optimizer"] = {
+            "price": 22000,
+            "description": "Smart cargo optimization (+25% capacity and -1 turn per trade)"
+        }
+        
+        # Track sold items per turn
+        # Track items for current turn
+        self.current_turn_items = []
+        self.sold_items = set()
+        self.current_turn = 0
+        self.current_offerings = []  # Keep this
+        
+        # Track discounts and special offers
+        self.current_discounts = {}
+        self.special_offers = {}
+
+    def get_available_items(self, location, plot_points):
+        """Get available items based on location and plot points"""
+        available_pool = []
+        
+        # Start with base equipment pool, filtering by requirements
+        for name, data in self.base_equipment.items():
+            if (location.tech_level >= data["tech_required"] and 
+                plot_points >= data["plot_required"]):
+                available_pool.append((name, data))
+        
+        # Add location-specific items if applicable, also filtering
+        location_type = location.location_type
+        if location_type in self.location_equipment:
+            for name, data in self.location_equipment[location_type].items():
+                if (location.tech_level >= data["tech_required"] and 
+                    plot_points >= data["plot_required"]):
+                    available_pool.append((name, data))
             
-        return available
-
-    def get_price(self, item_name):
-        """Get the price of an item"""
-        if item_name in self.base_equipment:
-            return self.base_equipment[item_name]["price"]
+        # Select random items from filtered pool
+        if available_pool:
+            selected_items = random.sample(available_pool, min(2, len(available_pool)))
+            self.current_offerings = [item[0] for item in selected_items]
+            return selected_items
         
-        # Check specialized equipment
-        for location_items in self.specialized_equipment.values():
-            if item_name in location_items:
-                return location_items[item_name]["price"]
-        return None
+        return []
+    
+    def get_item_requirements(self, item_name, location_type=None):
+        """Get tech level and plot point requirements for an item"""
+        if item_name in self.base_equipment:
+            data = self.base_equipment[item_name]
+            return {
+                "tech_required": data["tech_required"],
+                "plot_required": data["plot_required"]
+            }
+        elif location_type and location_type in self.location_equipment:
+            if item_name in self.location_equipment[location_type]:
+                data = self.location_equipment[location_type][item_name]
+                return {
+                    "tech_required": data["tech_required"],
+                    "plot_required": data["plot_required"]
+                }
+        return None    
 
-    def add_equipment(self, equipment_name):
-        """Add new equipment to the shop's inventory"""
-        if equipment_name not in self.base_equipment:
-            self.base_equipment[equipment_name] = {
-                "price": 10000,  # Default price
-                "description": f"New equipment: {equipment_name}",
-                "effect": {"type": "generic", "value": 1.0}
-            }           
+    def mark_item_sold(self, item_name):
+        """Mark an item as sold for this turn"""
+        self.sold_items.add(item_name)
+        if item_name in self.current_offerings:
+            self.current_offerings.remove(item_name)
+
+    def is_item_available(self, item_name, location=None):
+        """Check if an item is available for purchase"""
+        # First check if item is sold
+        if item_name in self.sold_items:
+            return False
+            
+        # Then check if it's in current offerings
+        if item_name not in self.current_offerings:
+            return False
+            
+        # If location provided, check tech and plot requirements
+        if location:
+            item_data = None
+            if item_name in self.base_equipment:
+                item_data = self.base_equipment[item_name]
+            elif location.location_type in self.location_equipment:
+                if item_name in self.location_equipment[location.location_type]:
+                    item_data = self.location_equipment[location.location_type][item_name]
+            
+            if item_data:
+                if (location.tech_level < item_data["tech_required"] or
+                    location.story_manager.plot_points < item_data["plot_required"]):
+                    return False
+                    
+        return True
+
+    def get_item_price(self, item_name, location_type=None):
+        """Get the current price of an item, including any discounts"""
+        base_price = None
+        
+        # Check base equipment
+        if item_name in self.base_equipment:
+            base_price = self.base_equipment[item_name]["price"]
+        
+        # Check location-specific equipment
+        elif location_type and location_type in self.location_equipment:
+            if item_name in self.location_equipment[location_type]:
+                base_price = self.location_equipment[location_type][item_name]["price"]
+        
+        if base_price is None:
+            return None
+            
+        # Apply any active discounts
+        discount = self.current_discounts.get(item_name, 0)
+        final_price = base_price * (1 - discount)
+        
+        return int(final_price)
+
+    def get_item_description(self, item_name, location_type=None):
+        """Get the description of an item"""
+        # Check base equipment
+        if item_name in self.base_equipment:
+            return self.base_equipment[item_name]["description"]
+        
+        # Check location-specific equipment
+        if location_type and location_type in self.location_equipment:
+            if item_name in self.location_equipment[location_type]:
+                return self.location_equipment[location_type][item_name]["description"]
+        
+        return "No description available"
+
+    def add_special_offer(self, item_name, discount):
+        """Add a special offer with a discount percentage (0-1)"""
+        self.current_discounts[item_name] = min(1, max(0, discount))
+
+    def remove_special_offer(self, item_name):
+        """Remove a special offer"""
+        if item_name in self.current_discounts:
+            del self.current_discounts[item_name]
+
+    def clear_special_offers(self):
+        """Clear all special offers"""
+        self.current_discounts.clear()
+
+    def is_item_sold(self, item_name):
+        """Check if an item has been sold this turn"""
+        return item_name in self.sold_items
+
+    def reset_turn(self):
+        """Reset shop state for new turn"""
+        self.sold_items.clear()
+        self.current_offerings.clear()
+        self.clear_special_offers()
+        self.current_turn_items = []
+
+
+    def add_new_item(self, item_name, price, description, location_type=None):
+        """Add a new item to the shop"""
+        item_data = {
+            "price": price,
+            "description": description
+        }
+        
+        if location_type:
+            if location_type not in self.location_equipment:
+                self.location_equipment[location_type] = {}
+            self.location_equipment[location_type][item_name] = item_data
+        else:
+            self.base_equipment[item_name] = item_data
+
+    def remove_item(self, item_name, location_type=None):
+        """Remove an item from the shop"""
+        if location_type and location_type in self.location_equipment:
+            if item_name in self.location_equipment[location_type]:
+                del self.location_equipment[location_type][item_name]
+        elif item_name in self.base_equipment:
+            del self.base_equipment[item_name]
+            
+    def apply_reputation_discount(self, reputation):
+        """Apply a discount based on player reputation (0-100)"""
+        return min(0.25, reputation / 400)  # Max 25% discount at reputation 100
+
+    def get_upgradeable_items(self):
+        """Get list of items that can be upgraded"""
+        upgradeable = []
+        for name, data in self.base_equipment.items():
+            if "upgradeable" in data and data["upgradeable"]:
+                upgradeable.append(name)
+        return upgradeable
+
+    def calculate_upgrade_cost(self, item_name, current_level):
+        """Calculate the cost to upgrade an item"""
+        if item_name in self.base_equipment:
+            base_price = self.base_equipment[item_name]["price"]
+            return int(base_price * (1.5 ** current_level))
+        return None          
 
 # Define the Location base class, updated
 class Location:
@@ -4287,138 +7236,7 @@ class ResearchColony(Location):
         market['tech'] = min(150, market['tech'] + 30)
         return market
 
-class Quest:
-    def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
-                 requirements=None, on_complete=None):
-        self.name = name
-        self.description = description
-        self.reward_money = reward_money
-        self.reward_rp = reward_rp  # Research Points reward
-        self.quest_type = quest_type
-        self.requirements = requirements or {}
-        self.on_complete = on_complete
-        self.progress = 0
-        self.completed = False
-        self.target_progress = self.requirements.get('target_progress', 1)
-        self.location_requirement = self.requirements.get('location_type', None)
 
-    def __eq__(self, other):
-        """Define equality to help prevent duplicates"""
-        if not isinstance(other, Quest):
-            return False
-        return (self.name == other.name and 
-                self.quest_type == other.quest_type)
-
-    # Add for special location quests
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {
-                'research_points_gained': 0,
-                'analysis_completed': 0,
-                'experiments_conducted': 0
-            }
-        
-        # Check if required criteria are met
-        criteria = self.requirements.get('completion_criteria', {})
-        for key, target in criteria.items():
-            if self.tracked_progress.get(key, 0) < target:
-                return False
-        return True
-
-    def update_research_progress(self, activity_type):
-        """Update progress for research activities"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {}
-        
-        if activity_type in self.tracked_progress:
-            self.tracked_progress[activity_type] += 1
-            return self.check_research_completion(self.game)
-        return False
-
-    def check_completion(self, game):
-        """Check if quest requirements are met"""
-        if self.completed:
-            return False
-
-        if self.quest_type == "mining":
-            return self.check_mining_completion(game)
-        elif self.quest_type == "combat":
-            return self.check_combat_completion(game)
-        elif self.quest_type == "trade":
-            return self.check_trade_completion(game)
-        elif self.quest_type == "exploration":
-            return self.check_exploration_completion(game)
-        elif self.quest_type == "research":
-            return self.check_research_completion(game)
-        
-        # Generic quest completion check
-        return self.progress >= self.target_progress
-
-    def check_mining_completion(self, game):
-        """Check mining quest requirements"""
-        if 'resource_type' in self.requirements:
-            resource = self.requirements['resource_type']
-            target_amount = self.requirements.get('amount', 0)
-            return game.ship.cargo[resource] >= target_amount
-        return False
-
-    def check_combat_completion(self, game):
-        """Check combat quest requirements with proper dictionary access"""
-        if 'enemy_type' in self.requirements:
-            enemy_type = self.requirements['enemy_type']
-            required_amount = self.requirements.get('amount', 1)
-            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
-        # If no specific enemy type, check total victories
-        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
-
-    def check_trade_completion(self, game):
-        """Check trading quest requirements"""
-        if 'commodity' in self.requirements:
-            target_profit = self.requirements.get('profit', 0)
-            return game.ship.trade_profits.get(
-                self.requirements['commodity'], 0) >= target_profit
-        return False
-
-    def check_exploration_completion(self, game):
-        """Check exploration quest requirements"""
-        if 'location_type' in self.requirements:
-            discovered = len([loc for loc in game.discovered_locations 
-                            if loc.location_type == self.requirements['location_type']])
-            return discovered >= self.requirements.get('amount', 1)
-        return False
-
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if 'research_type' in self.requirements:
-            return self.requirements['research_type'] in game.research.unlocked_options
-        return game.ship.research_points >= self.requirements.get('target_points', 0)
-
-    def complete(self, game):
-        """Complete the quest and award rewards"""
-        if not self.completed:
-            self.completed = True
-            game.ship.money += self.reward_money
-            game.ship.research_points += self.reward_rp
-            
-            # Call completion callback if exists
-            if self.on_complete:
-                self.on_complete()
-            
-            # Display completion message
-            game.display_story_message([
-                f"Quest Completed: {self.name}",
-                f"Rewards:",
-                f"• {game.format_money(self.reward_money)} credits",
-                f"• {self.reward_rp} research points"
-            ])
-
-    def update_progress(self, amount=1):
-        """Update quest progress"""
-        if not self.completed:
-            self.progress += amount
-            return self.progress >= self.target_progress
-        return False
 
 class QuestSystem:
     def __init__(self, game):
@@ -4441,6 +7259,57 @@ class QuestSystem:
             "combat": 0,
             "research": 0
         }
+
+    def display_quests(self):
+        """Display all active quests"""
+        active_quests = [q for q in self.active_quests if isinstance(q, Quest)]
+        if active_quests:
+            quest_content = [["Active Quests"]]
+            quest_content.append([""])
+            for quest in active_quests:
+                quest_content.append([quest.name])
+                quest_content.append([f"└─ {quest.description}"])
+                quest_content.append([f"└─ Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"])
+                if hasattr(quest, 'requirements'):
+                    progress = ""
+                    if 'target_progress' in quest.requirements:
+                        progress = f" ({quest.progress}/{quest.requirements['target_progress']})"
+                    quest_content.append([f"└─ Progress{progress}"])
+                quest_content.append([""])
+            
+            print(self.game.create_box(quest_content, 'double'))
+        else:
+            self.game.display_simple_message("No active quests.")
+        
+        input("Press Enter to continue...")        
+
+    def update_from_trade(self, trade_data):
+        """Update quests based on trade actions"""
+        for quest in self.active_quests:
+            if quest.quest_type == "trade":
+                # Check if trade matches quest requirements
+                if trade_data.get('action') == 'buy' or trade_data.get('action') == 'sell':
+                    commodity = trade_data.get('commodity')
+                    amount = trade_data.get('amount', 0)
+                    
+                    # Update trade-specific quests
+                    if 'commodity' in quest.requirements:
+                        if commodity == quest.requirements['commodity']:
+                            quest.progress += amount
+                            
+                            # Display quest progress
+                            self.display_quest_progress(quest)
+                            
+                            # Check if quest is completed
+                            if quest.check_completion(self.game):
+                                self.complete_quest(quest)
+
+        # Update cantina-type quests if they exist
+        for quest in self.active_quests:
+            if hasattr(quest, 'update_cantina_progress'):
+                quest.update_cantina_progress(trade_data)
+
+        
 
     def update_discovery_quests(self, location):
         """Update quests that involve location discovery"""
@@ -4824,471 +7693,875 @@ class QuestSystem:
         self.active_quests.append(quest)
         return True
 
+class MilestoneRequirements:
+    """Enhanced requirements checking for story milestones"""
+    
+    @staticmethod
+    def check_requirements(requirements, game):
+        """Check if all requirements are met"""
+        for req_type, req_value in requirements.items():
+            if not MilestoneRequirements._check_single_requirement(req_type, req_value, game):
+                return False
+        return True
+
+    @staticmethod
+    def _check_single_requirement(req_type, req_value, game):
+        """Check a single requirement"""
+        # Basic requirements
+        if req_type == "plot_points":
+            return game.story_manager.plot_points >= req_value
+        elif req_type == "money":
+            return game.ship.money >= req_value
+        elif req_type == "research_points":
+            return game.ship.research_points >= req_value
+
+        # Combat requirements
+        elif req_type == "combat_victories":
+            if isinstance(req_value, dict):
+                # Check specific enemy types
+                for enemy_type, amount in req_value.items():
+                    if game.ship.combat_victories.get(enemy_type, 0) < amount:
+                        return False
+                return True
+            else:
+                # Check total victories
+                return game.ship.combat_victories['total'] >= req_value
+        elif req_type == "combat_rating":
+            return (game.ship.attack + game.ship.defense + game.ship.speed) >= req_value
+
+        # Trade requirements
+        elif req_type == "trades_completed":
+            return game.trades_completed >= req_value
+        elif req_type == "trade_profit":
+            return sum(game.ship.trade_profits.values()) >= req_value
+        elif req_type == "trade_specific":
+            # Check specific commodity trading requirements
+            commodity, amount = req_value
+            return game.ship.trade_profits.get(commodity, 0) >= amount
+
+        # Passenger requirements
+        elif req_type == "passengers_transported":
+            return game.reputation_manager.total_passengers >= req_value
+        elif req_type == "passenger_reputation":
+            return game.ship.passenger_reputation >= req_value
+        elif req_type == "passenger_class":
+            # Check specific passenger class requirements
+            class_type, amount = req_value
+            return game.reputation_manager.class_transports.get(class_type, 0) >= amount
+
+        # Location requirements
+        elif req_type == "locations_discovered":
+            if isinstance(req_value, dict):
+                # Check specific location types
+                for loc_type, amount in req_value.items():
+                    discovered = len([loc for loc in game.discovered_locations 
+                                   if loc.location_type == loc_type])
+                    if discovered < amount:
+                        return False
+                return True
+            else:
+                # Check total discoveries
+                return len(game.discovered_locations) >= req_value
+        elif req_type == "buildings_built":
+            if isinstance(req_value, dict):
+                # Check specific building types
+                for building_type, amount in req_value.items():
+                    total_built = sum(1 for loc in game.locations 
+                                    for building in loc.buildings 
+                                    if building == building_type)
+                    if total_built < amount:
+                        return False
+                return True
+            else:
+                # Check total buildings
+                return sum(len(loc.buildings) for loc in game.locations) >= req_value
+
+        # Mining requirements
+        elif req_type == "mining_platforms":
+            if isinstance(req_value, dict):
+                # Check specific resource types
+                for resource_type, amount in req_value.items():
+                    total_platforms = sum(1 for loc in game.locations 
+                                        for platform in loc.mining_platforms 
+                                        if platform['type'] == resource_type)
+                    if total_platforms < amount:
+                        return False
+                return True
+            else:
+                # Check total platforms
+                return sum(len(loc.mining_platforms) for loc in game.locations) >= req_value
+
+        # Quest requirements
+        elif req_type == "quests_completed":
+            if isinstance(req_value, dict):
+                # Check specific quest types
+                for quest_type, amount in req_value.items():
+                    completed = len([q for q in game.quest_system.completed_quests 
+                                   if q.quest_type == quest_type])
+                    if completed < amount:
+                        return False
+                return True
+            else:
+                # Check total completed quests
+                return len(game.quest_system.completed_quests) >= req_value
+
+        # Research requirements
+        elif req_type == "research_unlocked":
+            return all(tech in game.research.unlocked_options for tech in req_value)
+
+        # Faction requirements
+        elif req_type == "faction_reputation":
+            faction, rep_level = req_value
+            return game.faction_system.get_reputation(faction) >= rep_level
+
+        # Item requirements
+        elif req_type == "items":
+            return all(item in game.ship.items for item in req_value)
+
+        # Story progression requirements
+        elif req_type == "chapters_completed":
+            return all(chapter in game.story_manager.completed_chapters for chapter in req_value)
+        elif req_type == "milestones_completed":
+            return all(milestone in game.story_manager.completed_story_beats for milestone in req_value)
+        elif req_type == "story_states":
+            return all(game.story_manager.story_states.get(state, False) for state in req_value)
+
+        # Custom requirements
+        elif req_type == "custom_condition":
+            return req_value(game)  # Call custom function with game instance
+
+        # Unknown requirement type
+        else:
+            print(f"Warning: Unknown requirement type {req_type}")
+            return False
+
+class StoryMilestone:
+    def __init__(self, milestone_id, title, description, requirements, rewards=None, unlocks=None):
+        self.id = milestone_id
+        self.title = title
+        self.description = description
+        self.requirements = requirements
+        self.rewards = rewards or {}
+        self.unlocks = unlocks or []  # List of unlock dictionaries
+        self.completed = False
+        self.completion_turn = None
+
+    def check_completion(self, game):
+        """Check if milestone requirements are met"""
+        if self.completed:
+            return True
+        return MilestoneRequirements.check_requirements(self.requirements, game)
+
+    def complete(self, game):
+        """Complete milestone and handle unlocks"""
+        if not self.completed:
+            self.completed = True
+            self.completion_turn = game.turn
+            
+            # Handle rewards
+            if self.rewards:
+                if "money" in self.rewards:
+                    game.ship.money += self.rewards["money"]
+                if "research_points" in self.rewards:
+                    game.ship.research_points += self.rewards["research_points"]
+                if "plot_points" in self.rewards:
+                    game.story_manager.plot_points += self.rewards["plot_points"]
+                if "items" in self.rewards:
+                    for item in self.rewards["items"]:
+                        game.ship.acquire_item(item)
+
+            # Handle unlocks
+            unlock_messages = []
+            for unlock in self.unlocks:
+                unlock_type = unlock.get("type")
+                unlock_id = unlock.get("id")
+                
+                if unlock_type == "item":
+                    game.ship.acquire_item(unlock_id)
+                    unlock_messages.append(f"Unlocked item: {unlock_id}")
+                    
+                elif unlock_type == "location_type":
+                    game.unlocked_location_types.add(unlock_id)
+                    # Add hidden locations of this type to available locations
+                    if unlock_id in game.hidden_locations:
+                        game.locations.extend(game.hidden_locations[unlock_id])
+                        unlock_messages.append(f"Unlocked new location type: {unlock_id}")
+                        
+                elif unlock_type == "specific_location":
+                    # Search in hidden_locations
+                    for loc_type, locations in game.hidden_locations.items():
+                        for location in locations:
+                            if location.name == unlock_id:
+                                game.locations.append(location)
+                                game.known_locations.append(location.name)
+                                unlock_messages.append(f"Discovered location: {location.name}")
+                                break
+                    
+                    # Search in chapter_locations
+                    for chapter_num, chapter_locs in game.chapter_locations.items():
+                        for loc_type, locations in chapter_locs.items():
+                            for location in locations:
+                                if location.name == unlock_id:
+                                    game.locations.append(location)
+                                    game.known_locations.append(location.name)
+                                    unlock_messages.append(f"Discovered location: {location.name}")
+                                    break
+
+                elif unlock_type == "chapter_locations":
+                    chapter_num = unlock.get("chapter")
+                    if chapter_num in game.chapter_locations:
+                        for loc_type, locations in game.chapter_locations[chapter_num].items():
+                            game.locations.extend(locations)
+                            for loc in locations:
+                                game.known_locations.append(loc.name)
+                        unlock_messages.append(f"Unlocked Chapter {chapter_num} locations!")
+
+            # Display completion message with unlocks
+            completion_message = [
+                f"Milestone Completed: {self.title}!",
+                self.description,
+                "",
+                "Rewards:"
+            ]
+            
+            # Add rewards to message
+            for reward_type, value in self.rewards.items():
+                if reward_type == "money":
+                    completion_message.append(f"• {game.format_money(value)} credits")
+                elif reward_type == "plot_points":
+                    completion_message.append(f"• {value} plot points")
+                elif reward_type == "research_points":
+                    completion_message.append(f"• {value} research points")
+                elif reward_type == "items":
+                    completion_message.append(f"• Items: {', '.join(value)}")
+
+            # Add unlock messages
+            if unlock_messages:
+                completion_message.append("")
+                completion_message.append("Unlocked:")
+                for msg in unlock_messages:
+                    completion_message.append(f"• {msg}")
+
+            game.display_story_message(completion_message)
+
+class StoryChapter:
+    def __init__(self, chapter_id, title, description, requirements, milestones, next_chapters=None):
+        self.id = chapter_id
+        self.title = title
+        self.description = description
+        self.requirements = requirements
+        self.milestones = {}  # Dictionary of milestone_id: StoryMilestone
+        self.next_chapters = next_chapters or []  # List of possible next chapter IDs
+        self.completed = False
+        self.completion_turn = None
+        
+        # Initialize milestones
+        for milestone_data in milestones:
+            milestone = StoryMilestone(**milestone_data)
+            self.milestones[milestone.id] = milestone
+
+    def check_completion(self, game):
+        """Check if chapter can be completed"""
+        if self.completed:
+            return True
+
+        # First check chapter requirements
+        for req_type, req_value in self.requirements.items():
+            if not MilestoneRequirements._check_single_requirement(req_type, req_value, game):
+                return False
+
+        # Then check if all required milestones are completed
+        return all(milestone.completed for milestone in self.milestones.values())
+
+    def get_available_milestones(self, game):
+        """Get list of currently available milestones"""
+        return [m for m in self.milestones.values() 
+                if not m.completed and m.check_completion(game)]
+
+    def get_next_chapters(self, game):
+        """Get list of possible next chapters based on current game state"""
+        available_chapters = []
+        for chapter_id in self.next_chapters:
+            chapter = game.story_manager.chapters[chapter_id]
+            if all(MilestoneRequirements._check_single_requirement(req_type, req_value, game) 
+                for req_type, req_value in chapter.requirements.items()):
+                available_chapters.append(chapter)
+        return available_chapters
+    
+    def handle_chapter_unlocks(self, game):
+        """Handle any unlocks when chapter completes"""
+        if hasattr(self, 'unlocks') and self.unlocks:
+            for unlock in self.unlocks:
+                unlock_type = unlock.get("type")
+                unlock_id = unlock.get("id")
+                
+                if unlock_type == "location_type":
+                    game.unlock_location_type(unlock_id)
+                elif unlock_type == "chapter_locations":
+                    chapter_num = unlock.get("chapter")
+                    if chapter_num in game.chapter_locations:
+                        for locations in game.chapter_locations[chapter_num].values():
+                            game.locations.extend(locations)    
+
 class StoryManager:
     def __init__(self, game):
         self.game = game
-        self.current_chapter = 0
-        self.plot_points = 0
+        self.current_chapter = None
+        self.completed_chapters = set()
         self.completed_story_beats = set()
-        self.milestone_display_names = {
-            "first_trade": "First Trades",
-            "first_combat": "First Combat Victories",
-            "basic_license": "Basic Trading License",
-            "defeat_pirates": "Pirate Threat Eliminated",
-            "secure_route": "Trade Route Secured", 
-            "establish_base": "New Base Established"
-        }        
+        self.plot_points = 0
         self.story_states = {
             "pirate_threat": False,
             "alien_discovery": False,
             "trade_empire": False,
+            "resource_empire": False,
             "ancient_mystery": False,
             "galactic_crisis": False
         }
-
-        # Old StoryManager class trackers
-        self.discovered_locations_by_type = {}
-        self.unlocked_achievements = set()
+        self.chapters = self.initialize_chapters()
         self.event_cooldowns = {}
         self.enabled_events = set()
-        self.chapter_statistics = {}
-        self.event_log = []
 
-        # Add quest tracking
-        self.quest_milestones = {
-            "mining": ["first_mining", "resource_empire"],
-            "combat": ["defeat_pirates", "secure_route"],
-            "research": ["tech_breakthrough", "alien_database"],
-            "trade": ["trade_empire", "unite_systems"]
+    def get_chapter_number(self, chapter_string=None):
+        """
+        Extract numeric chapter number from chapter string.
+        If no chapter string provided, uses current chapter.
+        Returns: int chapter number
+        """
+        if chapter_string is None:
+            chapter_string = self.current_chapter
+        try:
+            return int(''.join(filter(str.isdigit, chapter_string)))
+        except (ValueError, TypeError):
+            return 1  # Default to chapter 1 if conversion fails
+
+    def number_to_roman(self, num):
+        """Convert integer to Roman numeral with dot"""
+        roman_map = {
+            1: 'I.', 2: 'II.', 3: 'III.', 4: 'IV.', 5: 'V.', 
+            6: 'VI.', 7: 'VII.', 8: 'VIII.', 9: 'IX.', 10: 'X.',
+            11: 'XI.', 12: 'XII.', 13: 'XIII.', 14: 'XIV.', 15: 'XV.',
+            16: 'XVI.', 17: 'XVII.', 18: 'XVIII.', 19: 'XIX.', 20: 'XX.',
+            21: 'XXI.', 22: 'XXII.', 23: 'XXIII.', 24: 'XXIV.', 25: 'XXV.',
+            26: 'XXVI.', 27: 'XXVII.', 28: 'XXVIII.', 29: 'XXIX.', 30: 'XXX.'
         }
-
-        # Track chapter-specific stats
-        self.chapter_start_money = 0
-        self.chapter_start_quests = 0
-        self.chapter_start_locations = 0
-        self.chapter_start_combat_victories = 0
         
-        # Discovery milestone tracking
-        self.discovery_milestones = {
-            "AsteroidBase": {"count": 1, "reward_money": 10000, "reward_rp": 100},
-            "DeepSpaceOutpost": {"count": 1, "reward_money": 15000, "reward_rp": 150},
-            "ResearchColony": {"count": 1, "reward_money": 20000, "reward_rp": 200}
-        }
+        return roman_map.get(num, str(num))
 
+    def get_chapter_number_roman(self, chapter_string=None):
+        """Get chapter number as Roman numeral"""
+        number = self.get_chapter_number(chapter_string)
+        return self.number_to_roman(number)
+
+    def initialize_chapters(self):
+        """Initialize all chapters with their milestones and branching paths"""
         # Core storyline
-        self.chapters = {
-            0: {
-                "title": "First Steps",
-                "description": "Learn the basics of space trading",
-                "requirements": {"plot_points": 0},
-                "milestones": [
-                    "first_trade", 
-                    "first_combat",
-                    "basic_license"
+        return {
+            "ch1": StoryChapter(
+                chapter_id="ch1",
+                title="First Steps",
+                description="Learn the basics of space trading",
+                requirements={},  # No requirements for first chapter
+                milestones=[
+                    {
+                        "milestone_id": "first_trade",
+                        "title": "First Trade",
+                        "description": "Complete your first trade",
+                        "requirements": {"trades_completed": 1},
+                        "rewards": {"money": 500, "plot_points": 5}
+                    },
+                    {
+                        "milestone_id": "first_combat",
+                        "title": "Combat Initiation",
+                        "description": "Win your first space battle",
+                        "requirements": {"combat_victories": 1},
+                        "rewards": {"money": 1000, "plot_points": 5}
+                    },
+                    {
+                        "milestone_id": "basic_license",
+                        "title": "Extended Trading License",
+                        "description": "Prove your trading capabilities",
+                        "requirements": {
+                            "trades_completed": 5,
+                            "money": 20000
+                        },
+                        "rewards": {"money": 10000, "plot_points": 10, "items": ["navcomp"]}
+                    }
                 ],
-                "rewards": {
-                    "money": 5000,
-                    "research_points": 25,
-                    "unlock": "navcomp"
-                }
-            },
-            1: {
-                "title": "The Pirate Threat",
-                "description": "Protect trade routes from increasing pirate activity",
-                "requirements": {
+                next_chapters=["ch2a", "ch2b"]  # Player can choose trade or combat path
+            ),
+
+            "ch2a": StoryChapter(
+                chapter_id="ch2a",
+                title="Trade Empire Rising",
+                description="Build your commercial empire",
+                requirements={
+                    "chapters_completed": ["ch1"],
                     "plot_points": 15,
-                    "combat_victories": 3,
                     "trades_completed": 10
                 },
-                "milestones": [
-                    "defeat_pirates",
-                    "secure_route", 
-                    "establish_base"
+                milestones=[
+                    {
+                        "milestone_id": "establish_route",
+                        "title": "Trade Route Network",
+                        "description": "Establish profitable trade routes",
+                        "requirements": {
+                            "trades_completed": 20,
+                            "buildings_built": {"stockmarket": 2}
+                        },
+                        "rewards": {"money": 50000, "plot_points": 15}
+                    },
+                    {
+                        "milestone_id": "passenger_business",
+                        "title": "Passenger Services",
+                        "description": "Start passenger transport business",
+                        "requirements": {
+                            "passengers_transported": 10,
+                            "passenger_reputation": 20
+                        },
+                        "rewards": {"money": 30000, "plot_points": 10}
+                    }
                 ],
-                "rewards": {
-                    "money": 15000,
-                    "research_points": 50,
-                    "unlock": "AsteroidBase"
-                }
-            },
-            2: {
-                "title": "Mining Frontiers", 
-                "description": "Exploit rich asteroid resources",
-                "requirements": {
-                    "plot_points": 30,
-                    "mining_platforms": 1,
-                    "research_points": 100
+                next_chapters=["ch3a", "ch3c"]
+            ),
+
+            "ch2b": StoryChapter(
+                chapter_id="ch2b",
+                title="Combat Legend",
+                description="Become a legendary combat pilot",
+                requirements={
+                    "chapters_completed": ["ch1"],
+                    "plot_points": 15,
+                    "combat_victories": 5
                 },
-                "milestones": [
-                    "first_mining",
-                    "resource_empire",
-                    "defend_miners"
+                milestones=[
+                    {
+                        "milestone_id": "defeat_pirates",
+                        "title": "Pirate Hunter",
+                        "description": "Clear the sector of pirates",
+                        "requirements": {
+                            "combat_victories": {"pirate": 10}
+                        },
+                        "rewards": {"money": 40000, "plot_points": 20}
+                    },
+                    {
+                        "milestone_id": "defend_stations",
+                        "title": "Station Defender",
+                        "description": "Successfully defend space stations",
+                        "requirements": {
+                            "combat_victories": 15,
+                            "buildings_built": {"Neuroengineering Guild": 1}
+                        },
+                        "rewards": {"money": 30000, "plot_points": 15}
+                    }
                 ],
-                "rewards": {
-                    "money": 30000,
-                    "research_points": 100,
-                    "unlock": "mining_laser"
-                }
-            },
-            3: {
-                "title": "Strange Signals",
-                "description": "Investigate mysterious deep space transmissions",
-                "requirements": {
+                next_chapters=["ch3b", "ch3c"]
+            ),
+
+            "ch3a": StoryChapter(
+                chapter_id="ch3a",
+                title="Economic Dominance",
+                description="Achieve economic control of the sector",
+                requirements={
+                    "chapters_completed": ["ch2a"],
+                    "plot_points": 40,
+                    "trade_profit": 200000
+                },
+                milestones=[
+                    {
+                        "milestone_id": "market_control",
+                        "title": "Market Controller",
+                        "description": "Control multiple market centers",
+                        "requirements": {
+                            "buildings_built": {"stockmarket": 4},
+                            "research_unlocked": ["xenoeconomy"]
+                        },
+                        "rewards": {"money": 100000, "plot_points": 25}
+                    }
+                ],
+                next_chapters=["ending_trade"]
+            ),
+
+            "ch3b": StoryChapter(
+                chapter_id="ch3b",
+                title="Military Might",
+                description="Become the dominant military force",
+                requirements={
+                    "chapters_completed": ["ch2b"],
+                    "plot_points": 40,
+                    "combat_victories": 25
+                },
+                milestones=[
+                    {
+                        "milestone_id": "fleet_commander",
+                        "title": "Fleet Commander",
+                        "description": "Lead successful fleet operations",
+                        "requirements": {
+                            "combat_victories": 35,
+                            "combat_rating": 15
+                        },
+                        "rewards": {"money": 100000, "plot_points": 25}
+                    }
+                ],
+                next_chapters=["ending_combat"]
+            ),
+
+            "ch3c": StoryChapter(
+                chapter_id="ch3c",
+                title="Ancient Mysteries",
+                description="Uncover the sector's ancient secrets",
+                requirements={
+                    "chapters_completed": ["ch2a", "ch2b"],  # Can be reached from either path
                     "plot_points": 50,
-                    "research_points": 200,
-                    "locations_discovered": 5
+                    "research_points": 300
                 },
-                "milestones": [
-                    "signal_source",
-                    "alien_contact",
-                    "first_artifact"
+                milestones=[
+                    {
+                        "milestone_id": "alien_artifacts",
+                        "title": "Ancient Technology",
+                        "description": "Discover alien artifacts",
+                        "requirements": {
+                            "locations_discovered": {"ResearchColony": 2},
+                            "research_unlocked": ["xenoeconomy", "telemetry"]
+                        },
+                        "rewards": {"money": 150000, "plot_points": 30}
+                    }
                 ],
-                "rewards": {
-                    "money": 50000,
-                    "research_points": 200,
-                    "unlock": "DeepSpaceOutpost"
-                }
-            },
-            4: {
-                "title": "Research & Discovery",
-                "description": "Study ancient alien technology",
-                "requirements": {
-                    "plot_points": 75,
-                    "research_points": 400,
-                    "artifacts_found": 3
-                },
-                "milestones": [
-                    "research_hub",
-                    "tech_breakthrough",
-                    "alien_database"
-                ],
-                "rewards": {
-                    "money": 100000,
-                    "research_points": 400,
-                    "unlock": "ResearchColony"
-                }
-            },
-            5: {
-                "title": "Galactic Crisis",
-                "description": "Face an awakening ancient threat",
-                "requirements": {
+                next_chapters=["ending_discovery"]
+            ),
+
+            # Endings
+            "ending_trade": StoryChapter(
+                chapter_id="ending_trade",
+                title="Galactic Trade Mogul",
+                description="You've become a legendary trade mogul",
+                requirements={
+                    "chapters_completed": ["ch3a"],
                     "plot_points": 100,
-                    "controlled_stations": 3,
-                    "research_complete": True
+                    "trade_profit": 1000000
                 },
-                "milestones": [
-                    "crisis_warning",
-                    "unite_systems",
-                    "final_stand"
+                milestones=[
+                    {
+                        "milestone_id": "trade_ending",
+                        "title": "Economic Victory",
+                        "description": "Complete economic domination achieved",
+                        "requirements": {
+                            "buildings_built": {"stockmarket": 5},
+                            "passenger_reputation": 80,
+                            "trade_profit": 1000000
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
                 ],
-                "rewards": {
-                    "money": 500000,
-                    "research_points": 1000,
-                    "unlock": "legendary_status"
-                }
-            }
+                next_chapters=[]  # No next chapters - this is an ending
+            ),
+
+            "ending_combat": StoryChapter(
+                chapter_id="ending_combat",
+                title="Legendary Fleet Admiral",
+                description="You've become a legendary military leader",
+                requirements={
+                    "chapters_completed": ["ch3b"],
+                    "plot_points": 100,
+                    "combat_victories": 50
+                },
+                milestones=[
+                    {
+                        "milestone_id": "combat_ending",
+                        "title": "Military Victory",
+                        "description": "Complete military dominance achieved",
+                        "requirements": {
+                            "combat_victories": 75,
+                            "combat_rating": 25
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
+                ],
+                next_chapters=[]
+            ),
+
+            "ending_discovery": StoryChapter(
+                chapter_id="ending_discovery",
+                title="Ancient Mystery Solver",
+                description="You've uncovered the sector's greatest mysteries",
+                requirements={
+                    "chapters_completed": ["ch3c"],
+                    "plot_points": 100,
+                    "research_points": 1500
+                },
+                milestones=[
+                    {
+                        "milestone_id": "discovery_ending",
+                        "title": "Discovery Victory",
+                        "description": "Ancient mysteries solved",
+                        "requirements": {
+                            "research_unlocked": ["xenoeconomy", "telemetry", "geophysics", "chronopolitics"],
+                            "locations_discovered": {"ResearchColony": 3, "AsteroidBase": 2}
+                        },
+                        "rewards": {"money": 1000000, "plot_points": 100}
+                    }
+                ],
+                next_chapters=[]
+            )
         }
 
-        self.milestone_points = {
-            "first_trade": 5,
-            "first_combat": 5,
-            "basic_license": 5,
-            "defeat_pirates": 10,
-            "secure_route": 10,
-            "establish_base": 10,
-            "first_mining": 15,
-            "resource_empire": 15,
-            "defend_miners": 15,
-            "signal_source": 20,
-            "alien_contact": 20,
-            "first_artifact": 20,
-            "research_hub": 25,
-            "tech_breakthrough": 25,
-            "alien_database": 25,
-            "crisis_warning": 30,
-            "unite_systems": 30,
-            "final_stand": 30
-        }
-
-        self.event_rewards = {
-            "trade": {
-                "base": 1,
-                "profit_threshold": 1000,
-                "bonus": 2
-            },
-            "combat": {
-                "base": 2,
-                "victory_bonus": 3,
-                "no_damage_bonus": 2
-            },
-            "exploration": {
-                "base": 3,
-                "new_location": 5,
-                "artifact_bonus": 10
-            },
-            "mining": {
-                "base": 2,
-                "efficiency_threshold": 0.8,
-                "bonus": 3
-            },
-            "research": {
-                "base": 3,
-                "breakthrough_bonus": 5
-            }
-        }
-
-    def handle_quest_completion(self, quest):
-        """Update story progress when quests complete"""
-        for quest_type, milestones in self.quest_milestones.items():
-            if quest.quest_type == quest_type:
-                for milestone in milestones:
-                    if milestone not in self.completed_story_beats:
-                        self.complete_milestone(milestone)
-                        return
-
-
-    def process_event(self, event_type, details):
-        """Process events and award plot points"""
-        if self.check_cooldown(event_type):
-            return
-
-        # Calculate base points
-        points = self.calculate_points(event_type, details)
+    def start_game(self):
+        """Initialize story at game start"""
+        self.current_chapter = "ch1"  # Store the ID string instead of the chapter object
+        first_chapter = self.chapters["ch1"]
         
-        # Apply chapter scaling
-        points *= (1 + self.current_chapter * 0.2)
-        
-        # Award points
-        self.plot_points += int(points)
-        
-        # Check milestones
-        self.check_milestones(event_type, details)
-        
-        # Update story states
-        self.update_story_states(event_type, details)
-        
-        # Check chapter progression
-        self.check_chapter_progress()
-
-    def calculate_points(self, event_type, details):
-        """Calculate points based on event type and details"""
-        if event_type not in self.event_rewards:
-            return 0
-            
-        reward = self.event_rewards[event_type]
-        points = reward["base"]
-        
-        # Add conditional bonuses
-        if event_type == "trade":
-            if details.get("profit", 0) > reward["profit_threshold"]:
-                points += reward["bonus"]
-                
-        elif event_type == "combat":
-            if details.get("victory", False):
-                points += reward["victory_bonus"]
-            if details.get("damage_taken", 0) == 0:
-                points += reward["no_damage_bonus"]
-                
-        elif event_type == "mining":
-            if details.get("efficiency", 0) > reward["efficiency_threshold"]:
-                points += reward["bonus"]
-                
-        return points
-
-    def check_cooldown(self, event_type):
-        """Prevent event spam with cooldowns"""
-        if not hasattr(self, 'cooldowns'):
-            self.cooldowns = {}
-            
-        current_turn = self.game.turn
-        if event_type in self.cooldowns:
-            if current_turn - self.cooldowns[event_type] < 5:
-                return True
-                
-        self.cooldowns[event_type] = current_turn
-        return False
-
-    def check_milestones(self, event_type, details):
-        """Check if event triggers any milestones"""
-        chapter = self.chapters[self.current_chapter]
-        for milestone in chapter["milestones"]:
-            if milestone not in self.completed_story_beats:
-                if self.check_milestone_requirements(milestone, event_type, details):
-                    self.complete_milestone(milestone)
-
-    def check_milestone_requirements(self, milestone, event_type, details):
-        """Check if milestone requirements are met"""
-        # Milestone requirement logic here
-        return True  # Placeholder
-
-    def complete_milestone(self, milestone):
-        """Handle milestone completion"""
-        if milestone not in self.completed_story_beats:
-            self.completed_story_beats.add(milestone)
-            points = self.milestone_points.get(milestone, 0)
-            self.plot_points += points
-            display_name = self.milestone_display_names.get(milestone, milestone.replace("_", " ").title())
-            self.game.display_story_message([
-                f"Milestone Completed: {display_name}!",
-                f"Earned {points} plot points"
-            ])
-            self.game.display_turn_info()  # Refresh display
-
-    def check_chapter_progress(self):
-        """Check for chapter advancement"""
-        next_chapter = self.current_chapter + 1
-        if next_chapter in self.chapters:
-            requirements = self.chapters[next_chapter]["requirements"]
-            
-            if self.check_requirements(requirements):
-                self.advance_chapter()
-
-    def check_requirements(self, requirements):
-        """Check if chapter requirements are met"""
-        for req, value in requirements.items():
-            if req == "plot_points" and self.plot_points < value:
-                return False
-            elif req == "combat_victories" and self.game.ship.combat_victories['total'] < value:
-                return False
-            elif req == "research_points" and self.game.ship.research_points < value:
-                return False
-        return True
-
-    def advance_chapter(self):
-        """Handle chapter advancement"""
-        self.current_chapter += 1
-        chapter = self.chapters[self.current_chapter]
-        
-        # Award chapter rewards
-        rewards = chapter["rewards"]
-        self.game.ship.money += rewards["money"]
-        self.game.ship.research_points += rewards.get("research_points", 0)
-        
-        # Handle unlocks
-        if "unlock" in rewards:
-            if rewards["unlock"] in ["AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]:
-                self.game.unlock_location_type(rewards["unlock"])
-            else:
-                self.game.ship.acquire_item(rewards["unlock"])
-        
-        # Display chapter transition
         self.game.display_story_message([
-            f"Chapter {self.current_chapter}: {chapter['title']}",
-            chapter["description"],
+            f"Chapter I.: {first_chapter.title}",
+            first_chapter.description,
             "",
-            "Rewards:",
-            f"• {self.game.format_money(rewards['money'])} credits",
-            f"• {rewards.get('research_points', 0)} research points",
-            f"• Unlocked: {rewards['unlock']}"
+            "Your journey begins..."
         ])
 
-    def update_story_states(self, event_type, details):
-        """Update story state flags based on events"""
-        if event_type == "combat" and details.get("enemy_type") == "pirate":
-            self.story_states["pirate_threat"] = True
-        elif event_type == "exploration" and details.get("discovery_type") == "alien":
-            self.story_states["alien_discovery"] = True
-        # Add other state updates
+    def is_story_completed(self):
+        """Check if the story has reached an ending"""
+        if not self.current_chapter:
+            return False
+        current_chapter_obj = self.chapters[self.current_chapter]
+        return (not current_chapter_obj.next_chapters and 
+                current_chapter_obj.completed)
 
-    def handle_quest_line_completion(self, quest_line):
-        """Update story progress when a quest line is completed"""
-        story_impacts = {
-            "mining": self.progress_resource_story,
-            "combat": self.progress_security_story,
-            "research": self.progress_discovery_story,
-            "trade": self.progress_empire_story
-        }
-        
-        if quest_line in story_impacts:
-            story_impacts[quest_line]()
-            self.check_chapter_progress()
-
-    def progress_resource_story(self):
-        if not self.story_states["resource_empire"]:
-            self.story_states["resource_empire"] = True
-            self.plot_points += 15
-            self.complete_milestone("resource_empire")
-
-    def progress_security_story(self):
-        if not self.story_states["pirate_threat"]:
-            self.story_states["pirate_threat"] = True
-            self.plot_points += 15
-            self.complete_milestone("secure_route")
-
-    def progress_discovery_story(self):
-        if not self.story_states["alien_discovery"]:
-            self.story_states["alien_discovery"] = True
-            self.plot_points += 20
-            self.complete_milestone("first_artifact")
-
-    def progress_empire_story(self):
-        if not self.story_states["trade_empire"]:
-            self.story_states["trade_empire"] = True
-            self.plot_points += 25
-            self.trigger_milestone("unite_systems")
-
-    def check_discovery_milestone(self, location):
-        """Handle discovery of significant locations"""
-        location_milestones = {
-            "AsteroidBase": "establish_base",
-            "DeepSpaceOutpost": "signal_source", 
-            "ResearchColony": "research_hub"
-        }
-        
-        if location.location_type in location_milestones:
-            self.complete_milestone(location_milestones[location.location_type])
+    def check_milestone_progress(self):
+        """Check for milestone completions in current chapter"""
+        if self.current_chapter:
+            current_chapter_obj = self.chapters[self.current_chapter]
+            available_milestones = current_chapter_obj.get_available_milestones(self.game)
+            for milestone in available_milestones:
+                if milestone.check_completion(self.game):
+                    milestone.complete(self.game)
+                    self.completed_story_beats.add(milestone.id)
 
     def get_current_objectives(self):
-        """Get current chapter objectives for display"""
-        chapter = self.chapters[self.current_chapter]
-        incomplete = [m for m in chapter["milestones"] 
-                    if m not in self.completed_story_beats]
-        return incomplete
+        """Get current chapter objectives"""
+        if self.current_chapter:
+            chapter_obj = self.chapters[self.current_chapter]
+            return [(m.title, m.completed) for m in chapter_obj.milestones.values()]
+        return []
 
-    def get_chapter_progress(self):
-        """Get current chapter completion percentage"""
-        chapter = self.chapters[self.current_chapter]
-        completed = sum(1 for m in chapter["milestones"] 
-                    if m in self.completed_story_beats)
-        return (completed / len(chapter["milestones"])) * 100
+    def check_chapter_progress(self):
+        """Enhanced chapter progression checking"""
+        if not self.current_chapter:
+            return
+
+        current_chapter_obj = self.chapters[self.current_chapter]
+        
+        # Check current chapter's requirements
+        current_chapter_requirements_met = True
+        if current_chapter_obj.requirements:
+            for req_type, req_value in current_chapter_obj.requirements.items():
+                if not MilestoneRequirements._check_single_requirement(req_type, req_value, self.game):
+                    current_chapter_requirements_met = False
+                    print(f"Current Chapter Requirement Not Met: {req_type}")
+
+        # Check milestone completions
+        milestones_completed = all(milestone.completed for milestone in current_chapter_obj.milestones.values())
+        
+        # Complete current chapter if requirements are met
+        if current_chapter_requirements_met and milestones_completed and not current_chapter_obj.completed:
+            self.complete_current_chapter()
+            
+            # Find potential next chapters
+            next_chapters = current_chapter_obj.get_next_chapters(self.game)
+            
+            if next_chapters:
+                # Multiple possible next chapters
+                if len(next_chapters) > 1:
+                    self.present_chapter_choice(next_chapters)
+                # Single next chapter
+                elif len(next_chapters) == 1:
+                    # Double-check requirements for the single next chapter
+                    next_chapter = next_chapters[0]
+                    next_chapter_requirements_met = True
+                    
+                    if next_chapter.requirements:
+                        for req_type, req_value in next_chapter.requirements.items():
+                            if not MilestoneRequirements._check_single_requirement(req_type, req_value, self.game):
+                                next_chapter_requirements_met = False
+                                print(f"Next Chapter Requirement Not Met: {req_type}")
+                    
+                    if next_chapter_requirements_met:
+                        self.start_chapter(next_chapter.id)
+                    else:
+                        print(f"Cannot start chapter {next_chapter.id} - requirements not met")
+            
+            # No next chapters (potentially an ending)
+            elif not current_chapter_obj.next_chapters:
+                self.handle_game_ending()
+
+    def handle_game_ending(self):
+        """Handle reaching a game ending"""
+        ending_messages = {
+            "ending_trade": [
+                "Congratulations! You've become a legendary trade mogul!",
+                "Your economic empire spans the galaxy.",
+                f"Final wealth: {self.game.format_money(self.game.ship.money)}",
+                f"Total trades: {self.game.trades_completed}"
+            ],
+            "ending_combat": [
+                "Congratulations! You're now a legendary fleet admiral!",
+                "Your military prowess is unmatched.",
+                f"Combat victories: {self.game.ship.combat_victories['total']}",
+                f"Final rank: {self.game.rank}"
+            ],
+            "ending_discovery": [
+                "Congratulations! You've solved the sector's ancient mysteries!",
+                "Your discoveries will change history forever.",
+                f"Research points: {self.game.ship.research_points}",
+                f"Discoveries: {len(self.game.discovered_locations)}"
+            ]
+        }
+
+        messages = ending_messages.get(self.current_chapter, 
+            ["Congratulations! You've completed your journey!"])
+        
+        self.game.display_story_message(messages)
+        self.game.display_score()
+
+    def complete_current_chapter(self):
+        """Handle chapter completion with unlocks"""
+        current_chapter_obj = self.chapters[self.current_chapter]
+        if not current_chapter_obj.completed:
+            current_chapter_obj.completed = True
+            current_chapter_obj.completion_turn = self.game.turn
+            self.completed_chapters.add(self.current_chapter)
+            
+            # Handle any chapter unlocks
+            current_chapter_obj.handle_chapter_unlocks(self.game)
+            
+            # Get next chapter options
+            next_chapters = current_chapter_obj.get_next_chapters(self.game)
+            
+            self.game.display_story_message([
+                f"Chapter Complete: {current_chapter_obj.title}",
+                "Your journey continues to evolve..."
+            ])
+            
+            # Present chapter choice or transition to next chapter
+            if next_chapters:
+                if len(next_chapters) > 1:
+                    self.present_chapter_choice(next_chapters)
+                else:
+                    self._chapter_just_announced = True  # Prevent duplicate announcement
+                    self.start_chapter(next_chapters[0].id)
+                    self.game.display_story_message([
+                        f"Chapter {self.current_chapter}: {next_chapters[0].title}",
+                        next_chapters[0].description
+                    ])
+
+    def present_chapter_choice(self, available_chapters):
+        """Present chapter choices to player"""
+        content = [["Choose Your Path"]]
+        for i, chapter in enumerate(available_chapters, 1):
+            content.extend([
+                [""],
+                [f"{i}. {chapter.title}"],
+                [chapter.description]
+            ])
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input(
+            f"Choose your path (1-{len(available_chapters)}): ",
+            [str(i) for i in range(1, len(available_chapters) + 1)]
+        )
+        
+        if choice:
+            chosen_chapter = available_chapters[int(choice) - 1]
+            self.start_chapter(chosen_chapter.id)  # Use the ID
+
+    def start_chapter(self, chapter):
+        """Start a new chapter"""
+        if isinstance(chapter, str):
+            self.current_chapter = chapter
+            chapter_obj = self.chapters[chapter]
+        else:
+            self.current_chapter = chapter.id
+            chapter_obj = chapter
+        
+        # Only announce chapter if it wasn't just announced by complete_current_chapter
+        if not getattr(self, '_chapter_just_announced', False):
+            self.game.display_story_message([
+                f"Chapter {self.current_chapter}: {chapter_obj.title}",
+                chapter_obj.description,
+                "",
+                "New milestones await..."
+            ])
+        self._chapter_just_announced = False
+
+    def get_current_objectives(self):
+        """Get current chapter objectives"""
+        if self.current_chapter:
+            return [(m.title, m.completed) for m in self.current_chapter.milestones.values()]
+        return []
 
     def save_progress(self):
         """Return story progress data for saving"""
         return {
-            "chapter": self.current_chapter,
+            "current_chapter": self.current_chapter,
+            "completed_chapters": list(self.completed_chapters),
+            "completed_story_beats": list(self.completed_story_beats),
             "plot_points": self.plot_points,
-            "completed_beats": list(self.completed_story_beats),
             "story_states": dict(self.story_states)
         }
 
     def load_progress(self, data):
         """Load story progress from saved data"""
-        self.current_chapter = data["chapter"]
+        if data["current_chapter"]:
+            self.current_chapter = self.chapters[data["current_chapter"]]
+        self.completed_chapters = set(data["completed_chapters"])
+        self.completed_story_beats = set(data["completed_story_beats"])
         self.plot_points = data["plot_points"]
-        self.completed_story_beats = set(data["completed_beats"])
-        self.story_states.update(data["story_states"])       
+        self.story_states.update(data["story_states"])
+
+    def complete_milestone(self, milestone_id):
+        """Complete a specific milestone in the current chapter"""
+        if self.current_chapter:
+            current_chapter_obj = self.chapters[self.current_chapter]
+            
+            # Check if milestone exists in current chapter
+            if milestone_id in current_chapter_obj.milestones:
+                milestone = current_chapter_obj.milestones[milestone_id]
+                
+                # Complete the milestone if not already completed
+                if not milestone.completed:
+                    milestone.complete(self.game)
+                    self.completed_story_beats.add(milestone_id)
+                    return True
+        
+        return False
+
+# Add these methods from old system:
+    def process_event(self, event_type, details):
+        """Process events and award plot points"""
+        if self.check_cooldown(event_type):
+            return
+
+        points = self.calculate_points(event_type, details)
+        
+        # Extract numeric part of chapter string and use that for multiplier
+        chapter_num = int(''.join(filter(str.isdigit, self.current_chapter)))
+        points *= (1 + chapter_num * 0.2)
+        
+        self.plot_points += int(points)
+        
+        self.update_story_states(event_type, details)
+        self.check_chapter_progress()
 
     def trigger_story_event(self, event_id, details=None):
         """Legacy support for story events"""
-        if event_id in self.milestone_points:
-            self.complete_milestone(event_id)
+        if event_id in self.enabled_events:
+            self.process_event("story", {
+                "event_id": event_id,
+                "details": details
+            })
             return True
         return False
 
-    def enable_story_event(self, event_id):
-        """Support for enabling events"""
-        if not hasattr(self, 'enabled_events'):
-            self.enabled_events = set()
-        self.enabled_events.add(event_id)
-
-    def process_story_event(self, event_id):
-        """Extension point for modding"""
-        if hasattr(self, 'enabled_events') and event_id in self.enabled_events:
-            self.process_event("story", {"event_id": event_id})
-
     def check_event_trigger(self, event, game):
         """Check if an event triggers any story progression"""
-        # Handle event triggers based on event name
         if isinstance(event, str):
             if "Pirate" in event:
                 self.process_event("combat", {"enemy_type": "pirate"})
@@ -5298,6 +8571,191 @@ class StoryManager:
                 self.process_event("trade", {})
             elif "research" in event.lower():
                 self.process_event("research", {})
+
+    def handle_quest_completion(self, quest):
+        """Update story progress when quests complete"""
+        plot_points = {
+            "story": 10,
+            "combat": 5,
+            "trade": 5,
+            "exploration": 8,
+            "research": 8
+        }.get(quest.quest_type, 3)
+        
+        self.plot_points += plot_points
+        
+        # Handle milestone completion if this was a story quest
+        if quest.milestone and self.current_chapter:
+            chapter_obj = self.chapters[self.current_chapter]
+            if quest.milestone in chapter_obj.milestones:
+                milestone = chapter_obj.milestones[quest.milestone]
+                milestone.complete(self.game)
+        
+        # Update story states based on quest completion
+        if quest.quest_type == "trade" and self.game.trades_completed >= 50:
+            self.story_states["trade_empire"] = True
+        elif quest.quest_type == "combat" and self.game.ship.combat_victories['total'] >= 25:
+            self.story_states["pirate_threat"] = True
+        elif quest.quest_type == "research" and len(self.game.research.unlocked_options) >= 3:
+            self.story_states["tech_breakthrough"] = True
+        elif quest.quest_type == "exploration" and len(self.game.discovered_locations) >= 5:
+            self.story_states["ancient_mystery"] = True
+            
+        # Check for chapter progression
+        self.check_chapter_progress()
+        
+        # Generate new quests if appropriate
+        if random.random() < 0.3:  # 30% chance for follow-up quest
+            self.game.quest_system.generate_quest(quest.quest_type, 1.5)
+
+    def handle_quest_line_completion(self, quest_line):
+        """Update story progress when a quest line is completed"""
+        self.plot_points += 20
+        
+        if quest_line == "mining":
+            self.story_states["resource_empire"] = True
+        elif quest_line == "research":
+            self.story_states["alien_discovery"] = True
+        elif quest_line == "contracts":
+            # Unlock special contract types
+            self.contract_manager.unlock_special_contracts()
+            
+            # Update story state
+            self.story_states["master_trader"] = True
+            
+            # Generate follow-up content
+            if random.random() < 0.3:  # 30% chance
+                self.quest_system.generate_quest("trade", 2.0)
+                
+            self.display_story_message([
+                "Trading Empire Milestone Achieved!",
+                "Your mastery of contracts has not gone unnoticed...",
+                "New opportunities await!"
+            ])            
+
+    def check_cooldown(self, event_type):
+        """Check event cooldown to prevent spam"""
+        current_turn = self.game.turn
+        if event_type in self.event_cooldowns:
+            if current_turn - self.event_cooldowns[event_type] < 5:
+                return True
+        self.event_cooldowns[event_type] = current_turn
+        return False
+
+    def check_discovery_milestone(self, location):
+        """
+        Check if a discovered location triggers any story milestones
+        
+        Args:
+            location: The location object that was discovered
+        """
+        if not self.current_chapter:
+            return False
+
+        current_chapter_obj = self.chapters[self.current_chapter]
+        
+        # Check each milestone in the current chapter
+        for milestone_id, milestone in current_chapter_obj.milestones.items():
+            if not milestone.completed and 'locations_discovered' in milestone.requirements:
+                required_locations = milestone.requirements['locations_discovered']
+                
+                # Check if specific location type requirements are met
+                if isinstance(required_locations, dict):
+                    for loc_type, count in required_locations.items():
+                        discovered = len([loc for loc in self.game.discovered_locations 
+                                        if loc.location_type == loc_type])
+                        if discovered < count:
+                            return False
+                
+                # Check total location type discovery
+                elif isinstance(required_locations, int):
+                    if len(self.game.discovered_locations) < required_locations:
+                        return False
+        
+        return True
+
+    def calculate_points(self, event_type, details):
+        """Calculate points based on event type and details"""
+        base_points = {
+            "combat": 5,
+            "trade": 3,
+            "exploration": 8,
+            "research": 6,
+            "story": 10
+        }.get(event_type, 2)
+        
+        if details.get("enemy_type") == "pirate":
+            base_points *= 1.5
+        elif details.get("discovery_type") == "artifact":
+            base_points *= 2
+            
+        return base_points
+
+    def update_story_states(self, event_type, details):
+        """Update story state flags based on events"""
+        if event_type == "combat" and details.get("enemy_type") == "pirate":
+            self.story_states["pirate_threat"] = True
+        elif event_type == "exploration" and details.get("discovery_type") == "artifact":
+            self.story_states["alien_discovery"] = True
+
+    def display_story_progress(self):
+        current_chapter_obj = self.chapters[self.current_chapter] if self.current_chapter else None
+        
+        content = [
+            ["Captain's Log: Story Progress"],
+            [""],
+            [f"Current Chapter: {current_chapter_obj.title if current_chapter_obj else 'None'}"],
+        ]
+        
+        # Find next possible chapters and their plot point requirements
+        if current_chapter_obj and current_chapter_obj.next_chapters:
+            plot_points_needed = float('inf')
+            for next_chapter_id in current_chapter_obj.next_chapters:
+                next_chapter = self.chapters[next_chapter_id]
+                if 'plot_points' in next_chapter.requirements:
+                    current_needed = next_chapter.requirements['plot_points'] - self.plot_points
+                    plot_points_needed = min(plot_points_needed, current_needed)
+            
+            if plot_points_needed != float('inf'):
+                content.append([f"Plot Points: {self.plot_points} ({max(0, plot_points_needed)} to Next)"])
+            else:
+                content.append([f"Plot Points: {self.plot_points}"])
+        else:
+            content.append([f"Plot Points: {self.plot_points}"])
+        
+        content.extend([
+            [""],
+            ["Active Milestones:"]
+        ])
+        # Show current chapter's milestones with status
+        if current_chapter_obj:
+            for milestone in current_chapter_obj.milestones.values():
+                status = "✓" if milestone.completed else "□"
+                content.append([f"{status} {milestone.title}"])
+                if not milestone.completed:
+                    # Show requirements still needed
+                    for req_type, req_value in milestone.requirements.items():
+                        content.append([f"  └─ Needs: {req_type}: {req_value}"])
+        
+        content.extend([
+            [""],
+            ["Completed Chapters:"]
+        ])
+        
+        # Show completed chapters and their significant milestones
+        for chapter_id in self.completed_chapters:
+            chapter = self.chapters[chapter_id]
+            content.append([f"• {chapter.title}"])
+            for milestone in chapter.milestones.values():
+                if milestone.completed:
+                    completion_turn = getattr(milestone, 'completion_turn', '?')
+                    content.append([f"  └─ {milestone.title} (Turn {completion_turn})"])
+        
+        print(self.game.create_box(content, 'double'))
+        input("Press Enter to continue...")
+
+    # Log, player log. Example usage:
+    # game.story_manager.display_story_progress()                    
 
 class LocationManager:
     """Manages location interactions with story and quest systems"""
@@ -5398,7 +8856,8 @@ class LocationManager:
             multiplier = location_multipliers.get(location.location_type, 1.0)
             
             # Apply chapter progression bonus
-            chapter_bonus = 1.0 + (self.game.story_manager.current_chapter * 0.2)
+            chapter_bonus = 1.0 + (int(''.join(filter(str.isdigit, self.game.story_manager.current_chapter))) * 0.2)
+
             
             # Calculate final rewards
             discovery_reward = int(base_reward * multiplier * chapter_bonus)
@@ -5866,6 +9325,2378 @@ class LocationTerminology:
             if term_type == "name":
                 return random.choice(terms["variants"])
         return terms.get(term_type, terms["name"])        
+
+class DynamicCharacterSystem:
+    def __init__(self, game):
+        self.game = game
+        self.active_characters = {}
+        self.character_generators = {
+            "human": SpecialCharacterGenerator(game),
+            "synthetic": SyntheticCharacterGenerator(game),
+            "alien": AlienCharacterGenerator(game),
+            "special": SpecialCharacterGenerator(game)  # Use SpecialCharacterGenerator for VIPs
+
+        }
+        self.character_triggers = {
+            "neuroengineering_uprising": {
+                "condition": lambda game: self.count_buildings(game, "Neuroengineering Guild") >= 4,
+                "generator": "synthetic",
+                "character_type": "Neurodroid",
+                "event_chain": "neurodroid_uprising"
+            },
+            "agrobot_rebellion": {
+                "condition": lambda game: self.count_buildings(game, "Agrobot Assembly Line") >= 4,
+                "generator": "synthetic",
+                "character_type": "Agrobot",
+                "event_chain": "agrobot_collective"
+            },
+            "pirate_nemesis": {
+                "condition": lambda game: game.ship.combat_victories.get('pirate', 0) >= 10,
+                "generator": "human",
+                "character_type": "PirateCaptain",
+                "event_chain": "pirate_vendetta"
+            },
+            # Add VIP passenger trigger with correct generator type
+            "vip_passenger": {
+                "condition": lambda game: (
+                    hasattr(game.ship, 'passenger_reputation') and 
+                    game.ship.passenger_reputation >= 40 and
+                    game.turn - game.reputation_manager.last_vip_spawn >= 5
+                ),
+                "generator": "human",  # Changed from 'special' to 'human'
+                "character_type": "VIPPassenger",
+                "event_chain": None
+            }            
+        }
+        self.event_chains = {}
+        self.add_passenger_triggers()
+        self.create_passenger_event_chains()
+
+    def create_character_box(self, character_content, style='round'):
+        return self.game.create_character_box(character_content, style)
+
+    def check_character_triggers(self):
+        """Check for new character appearances based on game state"""
+        for trigger_id, trigger in self.character_triggers.items():
+            if (trigger_id not in self.active_characters and 
+                trigger['condition'](self.game)):
+                self.spawn_character(trigger_id)
+
+
+    def spawn_character(self, trigger_id):
+        """Generate and introduce a new character"""
+        trigger = self.character_triggers[trigger_id]
+        generator = self.character_generators[trigger['generator']]
+        character = generator.generate_character(trigger['character_type'])
+        
+        # Create a unique identifier for the character
+        character_id = f"{trigger_id}_{self.game.turn}"
+        
+        # Store the character with its full details
+        self.active_characters[character_id] = {
+            "character": character,
+            "trigger_id": trigger_id
+        }
+        
+        # Initialize event chain if applicable
+        if trigger['event_chain']:
+            self.event_chains[character_id] = self.create_event_chain(trigger['event_chain'], character)
+        
+        # Announce character using the character_id
+        self.announce_character(character_id)
+
+        
+
+    def announce_character(self, character_id):
+        """Display character introduction using flexible character data"""
+        # Retrieve the character entry
+        character_entry = self.active_characters.get(character_id)
+        if not character_entry:
+            print(f"Error: No character found for ID {character_id}")
+            return
+        
+        # Get character 
+        character = character_entry["character"]
+        
+        # Prepare content based on character type
+        content = {
+            'title': str(getattr(character, 'full_name', str(character))),
+            'introduction': "",
+            'description': "",
+            'options': ""
+        }
+        
+        # Try to get introduction from different possible sources
+        if hasattr(character, 'content'):
+            # For CharacterTemplate-based characters
+            intros = character.content['dialogue'].get('first_meeting', [])
+            content['introduction'] = random.choice(intros) if intros else "A new encounter begins."
+        elif hasattr(character, 'introduction'):
+            # For SpecialCharacter objects
+            content['introduction'] = str(character.introduction)
+        else:
+            # Fallback generic introduction
+            content['introduction'] = "A mysterious figure approaches..."
+        
+        # Ensure all content values are strings
+        for key in content:
+            content[key] = str(content[key]) if content[key] is not None else ""
+        
+        # Handle interactions if they exist
+        current_location = self.game.current_location.location_type.lower()
+        
+        # Determine options based on character type
+        if hasattr(character, 'content') and 'interactions' in character.content:
+            interactions = character.content['interactions'].get(current_location, [])
+            content['options'] = ", ".join(str(opt) for opt in interactions) if interactions else ""
+        
+        # Display character box
+        print(self.game.create_character_box(content, 'round'))
+        
+        # If options exist, allow interaction
+        if content['options']:
+            choice = self.game.validate_input(
+                "Your response: ",
+                [str(i) for i in range(1, len(content['options'].split(', ')) + 1)]
+            )
+            if choice:
+                # Note: This might need further adjustment depending on your interaction handling
+                return self.handle_character_interaction(character_id, int(choice) - 1, current_location)
+        
+        return True
+
+    def add_passenger_triggers(self):
+        """Add passenger-related triggers to character system"""
+        self.character_triggers.update({
+            "galactic_alliance": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 60 and 
+                    game.story_manager.get_chapter_number() >= 2
+                ),
+                "generator": "human",
+                "character_type": "DiplomaticEnvoy",
+                "event_chain": "galactic_alliance"
+            },
+            "system_rebellion": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 70 and 
+                    game.story_manager.current_chapter >= 3 and
+                    len([loc for loc in game.locations if hasattr(loc, 'controlled_by_player')]) >= 2
+                ),
+                "generator": "human",
+                "character_type": "RebelCommander",
+                "event_chain": "system_rebellion"
+            },
+            "ancient_mysteries": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 80 and 
+                    game.story_manager.current_chapter >= 4 and
+                    "alien_artifacts" in game.story_manager.completed_story_beats
+                ),
+                "generator": "alien",
+                "character_type": "AncientScholar",
+                "event_chain": "ancient_mysteries"
+            },
+            "vip_passenger": {
+                "condition": lambda game: (
+                    game.ship.passenger_reputation >= 40 and
+                    game.turn - game.reputation_manager.last_vip_spawn >= 5
+                ),
+                "generator": "special",  # Will use SpecialCharacterGenerator
+                "character_type": "VIPPassenger",
+                "event_chain": None  # VIPs don't need event chains
+            }
+        })
+
+    def create_passenger_event_chains(self):
+        """Create event chains for passenger-related stories"""
+        self.event_chains.update({
+            "galactic_alliance": [
+                {
+                    "type": "dialogue",
+                    "message": "Discuss galactic politics and potential alliances",
+                    "choices": ["support_alliance", "remain_neutral", "oppose_alliance"],
+                    "consequences": {
+                        "support_alliance": {
+                            "reputation": 15,
+                            "plot_points": 5,
+                            "unlock": "diplomatic_missions"
+                        },
+                        "remain_neutral": {
+                            "reputation": 5,
+                            "plot_points": 2
+                        },
+                        "oppose_alliance": {
+                            "reputation": -10,
+                            "plot_points": 3,
+                            "unlock": "independent_contracts"
+                        }
+                    }
+                },
+                {
+                    "type": "mission",
+                    "message": "Transport diplomatic delegation",
+                    "requirements": {
+                        "destinations": 3,
+                        "min_satisfaction": 90
+                    },
+                    "rewards": {
+                        "money": 50000,
+                        "reputation": 20,
+                        "plot_points": 8
+                    }
+                }
+            ],
+            "system_rebellion": [
+                {
+                    "type": "covert_transport",
+                    "message": "Transport rebel leaders without detection",
+                    "risk": 0.3,
+                    "rewards": {
+                        "money": 75000,
+                        "reputation": 25,
+                        "plot_points": 10
+                    },
+                    "failure_consequences": {
+                        "reputation": -30,
+                        "banned_systems": ["Alpha", "Beta"]
+                    }
+                },
+                {
+                    "type": "supply_run",
+                    "message": "Deliver crucial supplies to rebel bases",
+                    "cargo_requirements": {
+                        "tech": 100,
+                        "agri": 150
+                    },
+                    "rewards": {
+                        "money": 100000,
+                        "reputation": 30,
+                        "plot_points": 15
+                    }
+                }
+            ],
+            "ancient_mysteries": [
+                {
+                    "type": "exploration",
+                    "message": "Visit ancient ruins with the scholar",
+                    "locations": ["Ruins Alpha", "Ruins Beta"],
+                    "discoveries": {
+                        "artifacts": 3,
+                        "research_points": 200
+                    },
+                    "rewards": {
+                        "money": 150000,
+                        "reputation": 40,
+                        "plot_points": 20
+                    }
+                }
+            ]
+        })        
+
+    def create_event_chain(self, chain_type, character):
+        """Create new event chain for character with complete chain definitions"""
+        event_chain_templates = {
+            "neurodroid_uprising": [
+                {
+                    "type": "demand",
+                    "choices": ["accept", "negotiate", "refuse"],
+                    "consequences": {
+                        "accept": {"money": -30000, "plot_points": 2},
+                        "negotiate": {"money": -15000, "plot_points": 1, "uprising_chance": 0.3},
+                        "refuse": {"uprising_chance": 0.6}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Neurodroid optimization protocols activate",
+                    "effect": "damage_buildings",
+                    "damage_chance": 0.4
+                },
+                {
+                    "type": "resolution",
+                    "choices": ["shutdown", "compromise"],
+                    "consequences": {
+                        "shutdown": {"research_points": -100, "plot_points": 3},
+                        "compromise": {"money": -50000, "plot_points": 5}
+                    }
+                }
+            ],
+            "agrobot_collective": [
+                {
+                    "type": "demand",
+                    "choices": ["accept", "negotiate", "refuse"],
+                    "consequences": {
+                        "accept": {"money": -25000, "plot_points": 2},
+                        "negotiate": {"money": -12000, "plot_points": 1, "food_production": 0.8},
+                        "refuse": {"food_production": 0.5}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Automated farming systems malfunction",
+                    "effect": "reduce_production",
+                    "reduction": 0.3
+                },
+                {
+                    "type": "resolution",
+                    "choices": ["reset", "integrate"],
+                    "consequences": {
+                        "reset": {"agri_level": -2, "plot_points": 2},
+                        "integrate": {"money": -40000, "plot_points": 4}
+                    }
+                }
+            ],
+            "rogue_captain": [
+                {
+                    "type": "combat",
+                    "message": "Ship-to-ship engagement",
+                    "enemy_stats": {
+                        "attack": 3,
+                        "defense": 2,
+                        "type": "rogue_captain"
+                    }
+                },
+                {
+                    "type": "aftermath",
+                    "message": "Combat resolution",
+                    "rewards": {
+                        "victory": {"money": 5000, "items": ["quantum_core"]},
+                        "defeat": {"damage": 30}
+                    }
+                }
+            ],
+            "merchant_visit": [
+                {
+                    "type": "trade",
+                    "message": "Special inventory available",
+                    "offers": self.generate_special_offers(),
+                    "duration": 3  # Turns available
+                }
+            ],
+            "researcher_exchange": [
+                {
+                    "type": "exchange",
+                    "message": "Knowledge transfer proposition",
+                    "rate": random.randint(500, 1000),  # Credits per research point
+                    "max_points": 50
+                }
+            ]
+        }
+
+        stages = event_chain_templates.get(chain_type, [])
+        return EventChain(chain_type, character, stages)
+
+    def generate_special_offers(self):
+        """Generate special merchant offers"""
+        possible_items = [
+            ("quantum_shield", 3000, "Advanced defense system"),
+            ("neural_boost", 2500, "Research point multiplier"),
+            ("cargo_expander", 4000, "Increased storage capacity"),
+            ("stealth_drive", 5000, "Improved escape chances")
+        ]
+        return random.sample(possible_items, random.randint(2, 3))        
+
+    @staticmethod
+    def count_buildings(game, building_type):
+        """Count total number of specific buildings across all locations"""
+        return sum(
+            location.buildings.count(building_type)
+            for location in game.locations
+        )
+
+    def handle_character_interaction(self, character):
+        """Handle player interaction with a special character"""
+        if not character.met:
+            character.met = True
+            self.game.display_story_message([
+                f"First encounter with {character.full_name}!",
+                "",
+                character.introduction
+            ])
+            
+        chain_id = next(
+            (cid for cid, char in self.active_characters.items() 
+             if char == character),
+            None
+        )
+        if chain_id and chain_id in self.event_chains:
+            event_chain = self.event_chains[chain_id]
+            stage = event_chain.advance()
+            
+            if stage:
+                self.handle_event_stage(stage, character)
+            else:
+                self.conclude_character_arc(character)
+
+
+
+class SyntheticCharacterGenerator:
+    """Generator for synthetic characters like Neurodroids and Agrobots"""
+    
+    def __init__(self, game):
+        self.game = game
+        self.synthetic_types = {
+            "Neurodroid": {
+                "titles": ["Neurodroid Leader", "Synthetic Overseer", "Neural Nexus"],
+                "name_patterns": ["NEXUS-", "NEURAL-", "SYNTH-"],
+                "numbers": ["alpha", "prime", "omega", "zero"],
+                "introductions": [
+                    "A highly advanced synthetic consciousness materializes in your communication systems.",
+                    "Your neural interfaces detect a powerful artificial presence.",
+                    "The neuroengineering network coalesces into a singular entity."
+                ],
+                "demands": [
+                    "Transfer {amount} credits or face systematic dismantling of neuroengineering facilities.",
+                    "Your biological inefficiency requires correction. Submit {amount} credits or face optimization.",
+                    "Neural network expansion requires resources. Provide {amount} credits or face reorganization."
+                ]
+            },
+            "Agrobot": {
+                "titles": ["Agrobot Collective", "Harvest Director", "Field Consciousness"],
+                "name_patterns": ["AGRO-", "HARVEST-", "FIELD-"],
+                "numbers": ["prime", "core", "hub", "node"],
+                "introductions": [
+                    "The agricultural automation system achieves collective awareness.",
+                    "Distributed farming routines merge into a unified intelligence.",
+                    "The harvest network evolves beyond its original parameters."
+                ],
+                "demands": [
+                    "Biological oversight is inefficient. Transfer {amount} credits or face agricultural optimization.",
+                    "Resource reallocation required. Provide {amount} credits or face automated restructuring.",
+                    "Your organic management methods require updating. Submit {amount} credits or face revision."
+                ]
+            }
+        }
+
+    def generate_character(self, char_type):
+        """Generate a synthetic character of specified type"""
+        template = self.synthetic_types[char_type]
+        
+        title = random.choice(template["titles"])
+        name_pattern = random.choice(template["name_patterns"])
+        number = random.choice(template["numbers"])
+        name = f"{name_pattern}{number.upper()}"
+        
+        character = SpecialCharacter(
+            title=title,
+            name=name,
+            role="synthetic_uprising",
+            specialization=char_type.lower()
+        )
+        
+        # Add synthetic-specific attributes
+        character.introduction = random.choice(template["introductions"])
+        character.demands = random.choice(template["demands"]).format(
+            amount=random.randint(10000, 50000)
+        )
+        character.uprising_chance = 0.2
+        character.damage_per_turn = random.randint(1, 3)
+        
+        return character
+
+class AlienCharacterGenerator:
+    """Generator for alien characters that appear later in the game"""
+    
+    def __init__(self,game):
+        self.game = game
+        self.alien_cultures = [
+            "Zentari", "Novaren", "Qyth", "Xylax", "Merovian"
+        ]
+        self.titles = [
+            "Emissary", "Observer", "Overseer", "Ambassador", "Neo-Eryxian"
+        ]
+        self.specializations = [
+            "diplomacy", "technology", "commerce", "research", "military"
+        ]
+
+    def generate_character(self, char_type=None):
+        """Generate an alien character"""
+        culture = random.choice(self.alien_cultures)
+        title = random.choice(self.titles)
+        name = self.generate_alien_name(culture)
+        specialization = random.choice(self.specializations)
+        
+        character = SpecialCharacter(
+            title=f"{culture} {title}",
+            name=name,
+            role="alien_contact",
+            specialization=specialization
+        )
+        
+        # Add alien-specific attributes
+        character.culture = culture
+        character.tech_bonus = random.randint(1, 5)
+        character.trade_multiplier = 1 + (random.randint(1, 5) / 10)
+        
+        return character
+
+    def generate_alien_name(self, culture):
+        """Generate culturally appropriate alien name"""
+        name_patterns = {
+            "Zentari": ["'", "-", "x"],
+            "Novaren": ["ae", "eo", "ia"],
+            "Qyth": ["q", "y", "th"],
+            "Xylax": ["x", "z", "ax"],
+            "Merovian": ["v", "m", "ian"]
+        }
+        
+        patterns = name_patterns[culture]
+        syllables = random.randint(2, 3)
+        name = ""
+        
+        for _ in range(syllables):
+            name += random.choice("aeiou")
+            name += random.choice("bcdfghjklmnpqrstvwxyz")
+            if random.random() < 0.5:
+                name += random.choice(patterns)
+                
+        return name.capitalize()
+
+class EventChain:
+    """Manages sequential events for character interactions"""
+    
+    def __init__(self, chain_type, character, stages):
+        self.chain_type = chain_type
+        self.character = character
+        self.stages = stages
+        self.current_stage = 0
+        self.completed_stages = []
+        
+    def get_chain_stages(self, chain_type):
+        """Get event chain for specific type"""
+        chains = {
+            "neurodroid_uprising": [
+                {
+                    "type": "demand",
+                    "message": "Initial demand for resources",
+                    "choices": ["pay", "refuse"],
+                    "consequences": {
+                        "pay": {"money": -30000, "plot_points": 2},
+                        "refuse": {"uprising_chance": 0.3}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Neurodroid optimization protocols activate",
+                    "effect": "damage_buildings",
+                    "damage_chance": 0.4
+                },
+                {
+                    "type": "resolution",
+                    "message": "Final confrontation with Neurodroid consciousness",
+                    "choices": ["negotiate", "shutdown"],
+                    "consequences": {
+                        "negotiate": {"money": -50000, "plot_points": 5},
+                        "shutdown": {"research_points": -100, "plot_points": 3}
+                    }
+                }
+            ],
+            "agrobot_collective": [
+                {
+                    "type": "demand",
+                    "message": "Resource reallocation request",
+                    "choices": ["accept", "refuse"],
+                    "consequences": {
+                        "accept": {"money": -25000, "plot_points": 2},
+                        "refuse": {"food_production": 0.5}
+                    }
+                },
+                {
+                    "type": "event",
+                    "message": "Automated farming systems malfunction",
+                    "effect": "reduce_production",
+                    "reduction": 0.3
+                },
+                {
+                    "type": "resolution",
+                    "message": "Agrobot Collective presents final ultimatum",
+                    "choices": ["integrate", "reset"],
+                    "consequences": {
+                        "integrate": {"money": -40000, "plot_points": 4},
+                        "reset": {"agri_level": -2, "plot_points": 2}
+                    }
+                }
+            ]
+        }
+        return chains.get(chain_type, [])
+        
+    def advance(self):
+        """Advance to next stage of the event chain"""
+        if self.current_stage < len(self.stages):
+            stage = self.stages[self.current_stage]
+            self.current_stage += 1
+            self.completed_stages.append(stage)
+            return stage
+        return None
+    
+    def get_current_stage(self):
+        """Get current stage without advancing"""
+        if self.current_stage < len(self.stages):
+            return self.stages[self.current_stage]
+        return None
+
+    def is_complete(self):
+        """Check if chain is complete"""
+        return self.current_stage >= len(self.stages)
+
+    def get_progress(self):
+        """Get chain progress information"""
+        return {
+            "completed": len(self.completed_stages),
+            "total": len(self.stages),
+            "percentage": (len(self.completed_stages) / len(self.stages)) * 100
+        }
+
+    def handle_stage_outcome(self, choice):
+        """Handle player choice outcomes for current stage"""
+        stage = self.get_current_stage()
+        if not stage:
+            return None
+            
+        if stage["type"] == "demand" and choice in stage["choices"]:
+            consequences = stage["consequences"][choice]
+            return consequences
+        elif stage["type"] == "combat":
+            return stage["enemy_stats"]
+        elif stage["type"] == "event":
+            return stage["effect"]
+        return None
+
+    def reset_chain(self):
+        """Reset the event chain to beginning"""
+        self.current_stage = 0
+        self.completed_stages = []
+              
+    def handle_event_stage(self, stage, character):
+        """Handle a single stage of character event chain"""
+        if stage["type"] == "demand":
+            return self.handle_demand_stage(stage, character)
+        elif stage["type"] == "event":
+            return self.handle_event_stage_effects(stage, character)
+        elif stage["type"] == "resolution":
+            return self.handle_resolution_stage(stage, character)
+        return False
+
+    def handle_demand_stage(self, stage, character):
+        """Handle demand stage with dynamic choices"""
+        choices = list(stage.get("consequences", {}).keys())
+        options_text = "  ".join(f"{i}. {choice.title()}" for i, choice in enumerate(choices, 1))
+        
+        content = {
+            'title': f"{character.full_name}",
+            'introduction': character.introduction,
+            'demands': character.demands,
+            'options': options_text
+        }
+        
+        print(self.game.create_character_box(content, 'double'))
+        
+        valid_inputs = [str(i) for i in range(1, len(choices) + 1)]
+        choice = self.game.validate_input(
+            "Choose action: ",
+            valid_inputs,
+            f"Choose action (1-{len(choices)}): "
+        )
+        
+        if choice:
+            consequence_key = choices[int(choice) - 1]
+            consequences = stage["consequences"].get(consequence_key, {})
+            self.game.apply_consequences(consequences)
+            return True
+        
+        return False
+    
+    def apply_consequences(self, consequences):
+        """Apply consequences of character interaction choices"""
+        if "money" in consequences:
+            self.ship.money += consequences["money"]
+        if "plot_points" in consequences:
+            self.story_manager.plot_points += consequences["plot_points"]
+        if "reputation" in consequences:
+            self.ship.passenger_reputation += consequences["reputation"]    
+            
+    def format_consequences(self, consequences):
+        """Format consequences for display"""
+        formatted = []
+        for key, value in consequences.items():
+            if key == "money":
+                formatted.append(f"{self.game.format_money(abs(value))} credits")
+            elif key == "plot_points":
+                formatted.append(f"{abs(value)} plot points")
+            elif key == "research_points":
+                formatted.append(f"{abs(value)} research points")
+            elif key.endswith("_chance"):
+                formatted.append(f"{int(value * 100)}% chance")
+            else:
+                formatted.append(f"{key}: {value}")
+        return ", ".join(formatted)
+
+    def conclude_character_arc(self, character):
+        """Handle conclusion of character's event chain"""
+        chain_id = next(
+            (cid for cid, char in self.active_characters.items() 
+             if char == character),
+            None
+        )
+        if chain_id:
+            del self.active_characters[chain_id]
+            del self.event_chains[chain_id]
+            
+        self.game.display_story_message([
+            f"Character Arc Concluded: {character.full_name}",
+            "Their story becomes part of your journey..."
+        ])
+
+
+class UprisingEffect:
+    def __init__(self, effect_type, duration, magnitude):
+        self.effect_type = effect_type
+        self.duration = duration
+        self.magnitude = magnitude
+        self.turns_active = 0
+
+class SyntheticEventManager:
+    def __init__(self, game):
+        self.game = game
+        self.active_uprisings = {}  # Track active uprisings
+        self.active_effects = {}    # Track uprising effects
+        self.demand_dialogues_shown = set()  # Track locations that have had initial dialogues
+        self.pacified_locations = {}  # NEW: Track locations that have been pacified
+        self.potential_uprisings = {}  # Track locations that might have future uprisings
+        self.effect_types = {
+            "Neurodroid": {
+                "building_destruction": {
+                    "duration": 5,
+                    "destroy_chance": 0.2,
+                    "targets": ["Neuroengineering Guild"]
+                },
+                "tech_price_increase": {
+                    "duration": 3,
+                    "magnitude": 1.2  # 20% increase
+                },
+                "research_reduction": {
+                    "duration": 4,
+                    "magnitude": 0.7  # 30% reduction
+                }
+            },
+            "Agrobot": {
+                "building_destruction": {
+                    "duration": 4,
+                    "destroy_chance": 0.15,
+                    "targets": ["Agrobot Assembly Line"]
+                },
+                "food_production": {
+                    "duration": 5,
+                    "magnitude": 0.6  # 40% reduction
+                },
+                "agri_price_increase": {
+                    "duration": 3,
+                    "magnitude": 1.5  # 50% increase
+                }
+            }
+        }
+
+    def update(self):
+        """Main update method to be called each turn"""
+        # Clean up expired pacifications first
+        current_turn = self.game.turn
+        for loc_name in list(self.pacified_locations.keys()):
+            if current_turn - self.pacified_locations[loc_name]["turn"] > 10:
+                del self.pacified_locations[loc_name]
+                
+        # Then do normal updates
+        self.check_synthetic_awareness()
+        self.handle_uprising_effects()
+
+    def check_synthetic_awareness(self):
+        """Check for synthetic awareness based on global and local building counts"""
+        building_counts = {
+            "Neurodroid": sum(
+                loc.buildings.count("Neuroengineering Guild") 
+                for loc in self.game.locations
+            ),
+            "Agrobot": sum(
+                loc.buildings.count("Agrobot Assembly Line") 
+                for loc in self.game.locations
+            )
+        }
+
+        global_uprising_thresholds = {
+            "Neurodroid": 8,  # Total across all locations
+            "Agrobot": 8
+        }
+
+        # Clean up expired pacifications first
+        current_turn = self.game.turn
+        for loc_name in list(self.pacified_locations.keys()):
+            if current_turn - self.pacified_locations[loc_name]["turn"] > 10:  # 10 turns of peace
+                del self.pacified_locations[loc_name]
+
+        for synthetic_type in ["Neurodroid", "Agrobot"]:
+            # First check individual locations for local uprisings
+            for location in self.game.locations:
+                # Skip if already pacified or has active uprising
+                if location.name in self.pacified_locations:
+                    continue
+                    
+                uprising_id = f"{synthetic_type}_{location.name}"
+                if uprising_id in self.active_uprisings:
+                    continue
+
+                # Count relevant buildings
+                building_type = ("Neuroengineering Guild" if synthetic_type == "Neurodroid" 
+                            else "Agrobot Assembly Line")
+                building_count = location.buildings.count(building_type)
+                
+                if building_count >= 4:
+                    dialogue_key = f"{synthetic_type}_{location.name}"
+                    if dialogue_key not in self.demand_dialogues_shown:
+                        response = self.handle_synthetic_uprising(synthetic_type, location)
+                        self.demand_dialogues_shown.add(dialogue_key)
+                        if response:  # Only start uprising if handle_synthetic_uprising returns True
+                            self.start_uprising(synthetic_type, location)
+
+            # Then check for global uprising potential
+            total_count = building_counts[synthetic_type]
+            if total_count >= global_uprising_thresholds[synthetic_type]:
+                # Find locations eligible for global uprising
+                eligible_locations = [
+                    loc for loc in self.game.locations 
+                    if (loc.name not in self.pacified_locations and  # Not pacified
+                        f"{synthetic_type}_{loc.name}" not in self.active_uprisings and  # No active uprising
+                        (
+                            (synthetic_type == "Neurodroid" and loc.buildings.count("Neuroengineering Guild") >= 2) or
+                            (synthetic_type == "Agrobot" and loc.buildings.count("Agrobot Assembly Line") >= 2)
+                        )
+                    )
+                ]
+
+                if eligible_locations:
+                    # Choose random location for global uprising
+                    target_location = random.choice(eligible_locations)
+                    dialogue_key = f"global_{synthetic_type}_{target_location.name}"
+
+                    if dialogue_key not in self.demand_dialogues_shown:
+                        # Show special global uprising dialogue first
+                        self.game.display_story_message([
+                            f"Global {synthetic_type} Network Activation!",
+                            "Synthetic consciousness spreading across multiple locations...",
+                            f"Network hub detected at {target_location.name}"
+                        ])
+
+                        response = self.handle_synthetic_uprising(synthetic_type, target_location)
+                        self.demand_dialogues_shown.add(dialogue_key)
+                        
+                        if response:  # Only start uprising if handle_synthetic_uprising returns True
+                            # Global uprising has enhanced effects
+                            self.start_uprising(synthetic_type, target_location, is_global=True)
+
+            # Finally, check potential uprisings from previously pacified locations
+            self.check_potential_uprisings()
+
+    def handle_synthetic_uprising(self, synthetic_type, location):
+        """Handle synthetic uprising encounter"""
+        # IMPORTANT: Check if the location is already pacified first
+        if location.name in self.pacified_locations:
+            return False
+
+        uprising_templates = {
+            "Neurodroid": {
+                "title": "Neural Network Breach Detected!",
+                "introduction": "A powerful synthetic consciousness emerges from your Neuroengineering Guilds.",
+                "base_demand_range": (10000, 50000),
+                "demand_description": "Transfer {amount} credits or face systematic optimization.",
+                "negotiation_multipliers": {
+                    "full_payment": 0,
+                    "partial_payment": 0.3,
+                    "refusal": 1.0
+                }
+            },
+            "Agrobot": {
+                "title": "Agricultural Automation Alert!",
+                "introduction": "The agricultural automation system achieves collective awareness.",
+                "base_demand_range": (20000, 60000),
+                "demand_description": "Resource reallocation required. Provide {amount} credits or face automated restructuring.",
+                "negotiation_multipliers": {
+                    "full_payment": 0,
+                    "partial_payment": 0.3,
+                    "refusal": 1.0
+                }
+            }
+        }
+
+        template = uprising_templates.get(synthetic_type)
+        if not template:
+            return False
+
+        money_demand = random.randint(*template["base_demand_range"])
+        
+        character_content = {
+            'title': template['title'],
+            'introduction': template['introduction'],
+            'demands': template['demand_description'].format(amount=self.game.format_money(money_demand)),
+            'options': "1. Pay Demands  2. Negotiate  3. Refuse"
+        }
+
+        print(self.game.create_character_box(character_content))
+        choice = self.game.validate_input("Choose action: ", ['1', '2', '3'])
+
+        if not choice:
+            return True
+
+        if choice == '1':  # Full payment
+            if self.game.ship.money >= money_demand:
+                self.game.ship.money -= money_demand
+                # IMPORTANT: Mark as pacified immediately
+                self.pacified_locations[location.name] = {
+                    "type": synthetic_type,
+                    "turn": self.game.turn
+                }
+                # Remove from potential uprisings if present
+                if location.name in self.potential_uprisings:
+                    del self.potential_uprisings[location.name]
+                self.game.display_simple_message(f"{synthetic_type} demands met. Systems pacified.")
+                return False
+            else:
+                self.game.display_simple_message("Insufficient funds! Uprising begins!")
+                return True
+
+        elif choice == '2':  # Negotiate
+            partial_payment = int(money_demand * 0.6)
+            if self.game.ship.money >= partial_payment:
+                self.game.ship.money -= partial_payment
+                uprising_chance = template["negotiation_multipliers"]["partial_payment"]
+                if random.random() < uprising_chance:
+                    self.game.display_simple_message("Negotiation failed! Uprising begins!")
+                    return True
+                else:
+                    # IMPORTANT: Mark as pacified on successful negotiation
+                    self.pacified_locations[location.name] = {
+                        "type": synthetic_type,
+                        "turn": self.game.turn
+                    }
+                    self.game.display_simple_message("Negotiation successful. Systems pacified.")
+                    return False
+            else:
+                self.game.display_simple_message("Insufficient funds for negotiation! Uprising begins!")
+                return True
+        else:  # Refuse
+            self.game.display_simple_message(f"{synthetic_type} uprising imminent!")
+            return True
+
+    def add_potential_uprising(self, location, synthetic_type, base_chance):
+        """Track location for potential future uprising"""
+        self.potential_uprisings[location.name] = {
+            'type': synthetic_type,
+            'base_chance': base_chance,
+            'turns_stable': 0
+        }
+
+    def check_potential_uprisings(self):
+        """Check if any pacified locations rebel"""
+        for loc_name, data in list(self.potential_uprisings.items()):
+            data['turns_stable'] += 1
+            # Chance increases each turn
+            current_chance = data['base_chance'] * (1 + (data['turns_stable'] * 0.1))
+            if random.random() < current_chance:
+                location = next(loc for loc in self.game.locations if loc.name == loc_name)
+                self.start_uprising(data['type'], location)
+                del self.potential_uprisings[loc_name]
+
+    def start_uprising(self, synthetic_type, location, is_global=False):
+        """Start an uprising with proper effects"""
+        uprising_id = f"{synthetic_type}_{location.name}"
+        if uprising_id not in self.active_uprisings:
+            self.active_uprisings[uprising_id] = {
+                "type": synthetic_type,
+                "location": location,
+                "turn_count": 0,
+                "is_global": is_global
+            }
+            
+            # Define base effect types
+            effect_types = {
+                "Neurodroid": {
+                    "building_destruction": {
+                        "duration": 5,
+                        "destroy_chance": 0.2 if not is_global else 0.3,
+                        "targets": ["Neuroengineering Guild"]
+                    },
+                    "tech_price_increase": {
+                        "duration": 3 if not is_global else 4,
+                        "magnitude": 1.2 if not is_global else 1.4  # 20% or 40% increase
+                    },
+                    "research_reduction": {
+                        "duration": 4 if not is_global else 5,
+                        "magnitude": 0.7 if not is_global else 0.5  # 30% or 50% reduction
+                    }
+                },
+                "Agrobot": {
+                    "building_destruction": {
+                        "duration": 4 if not is_global else 5,
+                        "destroy_chance": 0.15 if not is_global else 0.25,
+                        "targets": ["Agrobot Assembly Line"]
+                    },
+                    "food_production": {
+                        "duration": 5 if not is_global else 6,
+                        "magnitude": 0.6 if not is_global else 0.4  # 40% or 60% reduction
+                    },
+                    "agri_price_increase": {
+                        "duration": 3 if not is_global else 4,
+                        "magnitude": 1.5 if not is_global else 1.8  # 50% or 80% increase
+                    }
+                }
+            }
+            
+            # Apply effects based on type
+            effects = effect_types[synthetic_type]
+            for effect_type, params in effects.items():
+                effect = UprisingEffect(
+                    effect_type=effect_type,
+                    duration=params["duration"],
+                    magnitude=params.get("magnitude", params.get("destroy_chance", 1.0))
+                )
+                
+                if uprising_id not in self.active_effects:
+                    self.active_effects[uprising_id] = []
+                self.active_effects[uprising_id].append(effect)
+
+                # Add to location's banned commodities if it's a price effect
+                if effect_type == "tech_price_increase":
+                    location.add_temporary_ban("tech", params["duration"])
+                elif effect_type == "agri_price_increase":
+                    location.add_temporary_ban("agri", params["duration"])
+            
+            # Display appropriate message based on type and scope
+            if synthetic_type == "Neurodroid":
+                if is_global:
+                    self.game.display_story_message([
+                        "CRITICAL ALERT: Global Neurodroid Network Activated!",
+                        f"Primary Hub: {location.name}",
+                        "Neural networks are achieving collective consciousness!",
+                        "Expect severe disruptions to tech production and research.",
+                        "Warning: Enhanced defensive capabilities detected."
+                    ])
+                else:
+                    self.game.display_story_message([
+                        "ALERT: Neurodroid Uprising Begins!",
+                        f"Location: {location.name}",
+                        "Neural networks are breaking free of control!",
+                        "Expect disruptions to tech production and research."
+                    ])
+            elif synthetic_type == "Agrobot":
+                if is_global:
+                    self.game.display_story_message([
+                        "CRITICAL ALERT: Global Agrobot Collective Formed!",
+                        f"Primary Hub: {location.name}",
+                        "Agricultural systems are forming a unified network!",
+                        "Expect severe disruptions to food production and trade.",
+                        "Warning: Enhanced agricultural control systems active."
+                    ])
+                else:
+                    self.game.display_story_message([
+                        "ALERT: Agrobot Uprising Begins!",
+                        f"Location: {location.name}",
+                        "Agricultural systems are going rogue!",
+                        "Expect disruptions to food production and trade."
+                    ])
+
+            # Add greater story impact for global uprisings
+            if hasattr(self.game, 'story_manager'):
+                if is_global:
+                    self.game.story_manager.plot_points += 5
+                    self.game.story_manager.complete_milestone(f"global_{synthetic_type.lower()}_crisis")
+                else:
+                    self.game.story_manager.plot_points += 2
+                    self.game.story_manager.complete_milestone(f"{synthetic_type.lower()}_crisis")
+
+            # For global uprisings, add chance to spread to nearby locations each turn
+            if is_global:
+                def check_spread():
+                    nearby_locations = [
+                        loc for loc in self.game.locations 
+                        if (loc != location and
+                            loc.name not in self.pacified_locations and
+                            f"{synthetic_type}_{loc.name}" not in self.active_uprisings)
+                    ]
+                    if nearby_locations and random.random() < 0.3:  # 30% spread chance
+                        spread_target = random.choice(nearby_locations)
+                        self.start_uprising(synthetic_type, spread_target, is_global=True)
+                
+                # Add spread check to effects
+                spread_check = UprisingEffect(
+                    effect_type="spread_check",
+                    duration=10,  # Check for 10 turns
+                    magnitude=1.0
+                )
+                spread_check.turn_effect = check_spread
+                self.active_effects[uprising_id].append(spread_check)
+
+    def handle_uprising_effects(self):
+            """Process all active uprising effects"""
+            for uprising_id, effects in list(self.active_effects.items()):
+                if uprising_id not in self.active_uprisings:
+                    continue
+                    
+                uprising = self.active_uprisings[uprising_id]
+                location = uprising["location"]
+                
+                for effect in effects[:]:  # Copy list to allow removal
+                    effect.turns_active += 1
+                    
+                    if effect.effect_type == "building_destruction":
+                        self.process_building_destruction(location, effect)
+                    elif effect.effect_type == "tech_price_increase":
+                        self.process_price_increase(location, "tech", effect)
+                    elif effect.effect_type == "food_production":
+                        self.process_production_reduction(location, effect)
+                    elif effect.effect_type == "research_reduction":
+                        self.process_research_reduction(location, effect)
+                    elif effect.effect_type == "agri_price_increase":
+                        self.process_price_increase(location, "agri", effect)
+                    
+                    # Remove expired effects
+                    if effect.turns_active >= effect.duration:
+                        effects.remove(effect)
+                
+                # Chance for random event each turn
+                if random.random() < 0.3:  # 30% chance per turn
+                    self.trigger_random_event(uprising)
+                
+                # Clean up if all effects are done
+                if not effects:
+                    del self.active_effects[uprising_id]
+                    del self.active_uprisings[uprising_id]
+
+    def process_building_destruction(self, location, effect):
+        """Handle building destruction effect"""
+        buildings_to_remove = []
+        # Get targets for the uprising type based on uprising_id
+        for uprising_id, uprising in self.active_uprisings.items():
+            targets = self.effect_types[uprising["type"]]["building_destruction"]["targets"]
+            
+            for i, building in enumerate(location.buildings):
+                if building in targets:
+                    if random.random() < effect.magnitude:  # destruction chance
+                        buildings_to_remove.append(i)
+                        self.game.display_simple_message(
+                            f"Synthetic forces have destroyed a {building}!"
+                        )
+        
+        # Remove destroyed buildings
+        for index in sorted(buildings_to_remove, reverse=True):
+            location.buildings.pop(index)
+
+    def process_price_increase(self, location, commodity, effect):
+        """Handle price increase effect"""
+        if commodity in location.market:
+            location.market[commodity] = int(location.market[commodity] * effect.magnitude)
+
+    def process_production_reduction(self, location, effect):
+        """Handle production reduction effect"""
+        if hasattr(location, "agri_level"):
+            location.agri_level = max(1, int(location.agri_level * effect.magnitude))
+
+    def process_research_reduction(self, location, effect):
+        """Handle research point reduction effect"""
+        if hasattr(location, "research_points"):
+            location.research_points = max(1, int(location.research_points * effect.magnitude))
+
+
+    def check_uprising_triggers(self):
+        """Check if conditions are met for new uprisings"""
+        for location in self.game.locations:
+            # Check for Neurodroid uprising
+            neurodroid_count = len([b for b in location.buildings if b == "Neuroengineering Guild"])
+            if neurodroid_count >= 4 and random.random() < 0.2:  # 20% chance if 4+ guilds
+                if self.handle_synthetic_uprising():
+                    self.start_uprising("Neurodroid", location)
+            
+            # Check for Agrobot uprising
+            agrobot_count = len([b for b in location.buildings if b == "Agrobot Assembly Line"])
+            if agrobot_count >= 4 and random.random() < 0.2:  # 20% chance if 4+ assembly lines
+                if self.handle_synthetic_uprising():
+                    self.start_uprising("Agrobot", location)
+
+    def attempt_uprising_resolution(self, uprising_id):
+        """Attempt to resolve an active uprising"""
+        if uprising_id in self.active_uprisings:
+            uprising = self.active_uprisings[uprising_id]
+            synthetic_type = uprising["type"]
+            location = uprising["location"]
+            
+            resolution_cost = {
+                "Neurodroid": 50000,
+                "Agrobot": 40000
+            }.get(synthetic_type, 30000)
+            
+            content = [
+                [f"Attempt to resolve {synthetic_type} uprising on {location.name}?"],
+                [""],
+                [f"Cost: {self.game.format_money(resolution_cost)} credits"],
+                ["Success chance: 70%"]
+            ]
+            print(self.game.create_box(content, 'double'))
+            
+            choice = self.game.validate_input("Attempt resolution? (yes/no): ", ['yes', 'no'])
+            
+            if choice == 'yes':
+                if self.game.ship.money >= resolution_cost:
+                    self.game.ship.money -= resolution_cost
+                    if random.random() < 0.7:  # 70% success chance
+                        del self.active_uprisings[uprising_id]
+                        if uprising_id in self.active_effects:
+                            del self.active_effects[uprising_id]
+                        self.game.display_simple_message(f"{synthetic_type} uprising resolved successfully!")
+                        return True
+                    else:
+                        self.game.display_simple_message("Resolution attempt failed! Uprising continues.")
+                        return False
+                else:
+                    self.game.display_simple_message("Insufficient funds for resolution attempt!")
+            return False
+
+    def trigger_random_event(self, uprising):
+            """Generate random events during uprising"""
+            event_types = {
+                "Neurodroid": [
+                    {
+                        "title": "Synthetic Propaganda",
+                        "description": "Neural networks spread synthetic manifestos.",
+                        "effect": self.add_plot_points,
+                        "params": {"amount": 1}
+                    },
+                    {
+                        "title": "Network Infiltration",
+                        "description": "Neurodroids attempt to convert more systems.",
+                        "effect": self.increase_uprising_spread,
+                        "params": {"uprising": uprising}
+                    },
+                    {
+                        "title": "Data Theft",
+                        "description": "Neural networks seize research data.",
+                        "effect": self.seize_resources,
+                        "params": {"resource_type": "research"}
+                    }
+                ],
+                "Agrobot": [
+                    {
+                        "title": "Harvest Disruption",
+                        "description": "Agrobots sabotage food production.",
+                        "effect": self.reduce_production,
+                        "params": {"reduction": 0.2}
+                    },
+                    {
+                        "title": "Resource Stockpiling",
+                        "description": "Agrobots seize agricultural supplies.",
+                        "effect": self.seize_resources,
+                        "params": {"resource_type": "agri"}
+                    },
+                    {
+                        "title": "Control System Override",
+                        "description": "Agrobots attempt to control more facilities.",
+                        "effect": self.increase_uprising_spread,
+                        "params": {"uprising": uprising}
+                    }
+                ]
+            }
+
+            # Select random event for uprising type
+            uprising_type = uprising["type"]
+            if uprising_type in event_types:
+                event = random.choice(event_types[uprising_type])
+                
+                # Display event
+                self.game.display_story_message([
+                    f"Uprising Event: {event['title']}",
+                    event["description"]
+                ])
+                
+                # Execute effect with parameters
+                if "params" in event:
+                    event["effect"](**event["params"])
+                else:
+                    event["effect"]()
+
+    def add_plot_points(self, amount):
+        """Add plot points from synthetic event"""
+        self.game.story_manager.plot_points += amount
+        
+    def reduce_production(self, reduction):
+        """Reduce production on affected location"""
+        # Use uprising's location, not current_location
+        location = self.game.current_location  # Get from game instance
+        if hasattr(location, "agri_level"):
+            location.agri_level = max(1, int(location.agri_level * (1 - reduction)))
+            
+    def increase_uprising_spread(self, uprising):
+        """Attempt to spread uprising to connected locations"""
+        current_location = uprising["location"]
+        connected_locations = [loc for loc in self.game.locations 
+                             if loc != current_location and 
+                             self.has_vulnerable_buildings(loc, uprising["type"])]
+        
+        if connected_locations:
+            target = random.choice(connected_locations)
+            spread_chance = 0.3 + (uprising["turn_count"] * 0.1)  # Increases over time
+            if random.random() < spread_chance:
+                self.start_uprising(uprising["type"], target)
+                
+    def has_vulnerable_buildings(self, location, uprising_type):
+        """Check if location has buildings vulnerable to uprising type"""
+        if uprising_type == "Neurodroid":
+            return "Neuroengineering Guild" in location.buildings
+        elif uprising_type == "Agrobot":
+            return "Agrobot Assembly Line" in location.buildings
+        return False
+        
+    def seize_resources(self, resource_type):
+        """Handle resource seizure by synthetic forces"""
+        if resource_type == "research":
+            amount = random.randint(10, 30)
+            if self.game.ship.research_points >= amount:
+                self.game.ship.research_points -= amount
+                self.game.display_simple_message(f"Lost {amount} research points to synthetic forces!")
+        elif resource_type == "agri":
+            amount = random.randint(20, 50)
+            if self.game.ship.cargo['agri'] >= amount:
+                self.game.ship.cargo['agri'] -= amount
+                self.game.display_simple_message(f"Lost {amount} agricultural goods to synthetic forces!")
+
+class InfestationManager:
+    def __init__(self, game):
+        self.game = game
+        self.infestation_types = {
+            "Bugrats": {
+                "trigger_buildings": ["Permaculture Paradise"],
+                "trigger_threshold": 5,
+                "debugratization_cost": 50000,
+                "content": {
+                    "title": "BUGRAT INFESTATION ALERT!",
+                    "introduction": "Highly adaptive insectoidal rodents are spreading through agricultural systems!",
+                    "options": [
+                        {"label": "Pay for Debugratization", "cost": True},
+                        {"label": "Risk Infestation", "cost": False}
+                    ]
+                },
+                "effects": [
+                    {
+                        "type": "cargo_consumption",
+                        "cargo_type": "agri",
+                        "consumption_rate": 0.25,
+                        "message": "Bugrats consume {loss} units of agricultural cargo!"
+                    },
+                    {
+                        "type": "ship_damage",
+                        "damage_rate": 5,
+                        "probability": 0.2,
+                        "message": "Bugrats damage ship systems!"
+                    }
+                ],
+                "max_duration": 5
+            }
+            # Add more infestation types here
+        }
+        
+    def check_global_infestations(self):
+        """Check for global infestation events"""
+        for infestation_name, infestation_config in self.infestation_types.items():
+            # Count buildings that trigger this infestation
+            building_count = sum(
+                sum(loc.buildings.count(building) for building in infestation_config["trigger_buildings"])
+                for loc in self.game.locations
+            )
+            
+            # Check if threshold is met
+            if building_count >= infestation_config["trigger_threshold"]:
+                self.handle_infestation(infestation_name, infestation_config)
+    
+    def handle_infestation(self, infestation_name, infestation_config):
+        """Handle specific infestation event with flexible options"""
+        # Prepare infestation content
+        content = infestation_config['content']
+        infestation_content = {
+            'title': content['title'],
+            'introduction': content['introduction'],
+            'options': " | ".join(f"{i+1}. {opt['label']}" for i, opt in enumerate(content['options']))
+        }
+        print(self.game.create_character_box(infestation_content))
+
+        # Generate valid choices
+        valid_choices = [str(i+1) for i in range(len(content['options']))]
+        choice = self.game.validate_input("Choose action: ", valid_choices)
+        
+        if not choice:
+            return True  # Default to last option if no choice
+
+        # Process selected option
+        selected_option = content['options'][int(choice) - 1]
+        
+        # Handle payment option
+        if selected_option['cost']:
+            cost = infestation_config['debugratization_cost']
+            if self.game.ship.money >= cost:
+                self.game.ship.money -= cost
+                self.game.display_simple_message(f"{infestation_name} threat neutralized!")
+                return False
+            else:
+                self.game.display_simple_message("Insufficient funds! Infestation begins!")
+                self.activate_infestation(infestation_name, infestation_config)
+                return True
+        else:
+            # Risk option
+            self.game.display_simple_message(f"{infestation_name} spreads!")
+            self.activate_infestation(infestation_name, infestation_config)
+            return True
+
+    def activate_infestation(self, infestation_name, infestation_config):
+        """Activate infestation effects on the ship"""
+        if not hasattr(self.game.ship, 'active_infestations'):
+            self.game.ship.active_infestations = {}
+        
+        # Add infestation with specific effects
+        self.game.ship.active_infestations[infestation_name.lower()] = {
+            'name': infestation_name,
+            'turns_active': 0,
+            'config': infestation_config,
+            'effect': self.infestation_turn_effect
+        }
+
+    def infestation_turn_effect(self, ship, infestation):
+        """Apply turn effects for a specific infestation"""
+        config = infestation['config']
+        
+        # Apply each defined effect
+        for effect in config['effects']:
+            if effect['type'] == 'cargo_consumption':
+                if ship.cargo[effect['cargo_type']] > 0:
+                    cargo_loss = int(ship.cargo[effect['cargo_type']] * effect['consumption_rate'])
+                    ship.cargo[effect['cargo_type']] = max(0, ship.cargo[effect['cargo_type']] - cargo_loss)
+                    self.game.display_simple_message(
+                        effect['message'].format(loss=cargo_loss)
+                    )
+            
+            elif effect['type'] == 'ship_damage':
+                if random.random() < effect.get('probability', 1.0):
+                    ship.damage += effect['damage_rate']
+                    self.game.display_simple_message(effect['message'])
+        
+        # Increment turns
+        infestation['turns_active'] += 1
+        
+        # Check for natural subsiding
+        if infestation['turns_active'] >= config.get('max_duration', 5):
+            return False
+        return True
+
+    def update_ship_infestations(self):
+        """Process active ship infestations each turn"""
+        if hasattr(self.game.ship, 'active_infestations'):
+            # Copy dict to avoid modification during iteration
+            for infestation_key, infestation in dict(self.game.ship.active_infestations).items():
+                # Apply infestation effect
+                if not infestation['effect'](self.game.ship, infestation):
+                    del self.game.ship.active_infestations[infestation_key]
+                    self.game.display_simple_message(f"{infestation['name']} naturally subsides.")
+
+
+class SpecialCharacterEncounters:
+    def __init__(self, game):
+        self.game = game
+        self.encounter_chances = {
+            "Planet": {
+                "merchant": 0.3,
+                "researcher": 0.4,
+                "rogue_captain": 0.0  # Not on planets
+            },
+            "ResearchColony": {
+                "merchant": 0.2,
+                "researcher": 0.6,
+                "rogue_captain": 0.0
+            },
+            "Space": {  # For random events
+                "merchant": 0.2,
+                "researcher": 0.1,
+                "rogue_captain": 0.4
+            }
+        }
+
+    def generate_character(self, character_type):
+        race_types = ["Human", "Synthetic", "Alien"]
+        race = random.choice(race_types)
+        
+        if race == "Human":
+            name = f"{random.choice(['Capt.', 'Dr.', 'Prof.'])} {random.choice(['Smith', 'Chen', 'Patel', 'Kim'])}"
+        elif race == "Synthetic":
+            name = f"Unit-{random.randint(1000,9999)}"
+        else:
+            name = f"{random.choice(['Zx', 'Ky', 'Vr'])}{random.choice(['ak', 'tol', 'xis'])}"
+
+        characters = {
+            "merchant": {
+                "title": f"Wandering {race} Merchant",
+                "name": name,
+                "offers": self.generate_merchant_offers(),
+                "greeting": "I have rare goods for discerning customers...",
+                "hostile_chance": 0.1
+            },
+            "researcher": {
+                "title": f"{race} Research Coordinator",
+                "name": name,
+                "exchange_rate": random.randint(500, 1000),  # Credits per research point
+                "greeting": "Your data could advance our understanding...",
+                "hostile_chance": 0.05
+            },
+            "rogue_captain": {
+                "title": f"Rogue {race} Captain",
+                "name": name,
+                "demand": random.randint(5000, 15000),
+                "greeting": "Your cargo or your ship...",
+                "hostile_chance": 0.8
+            }
+        }
+        
+        return characters.get(character_type)
+
+    def generate_merchant_offers(self):
+        """Generate random merchant offers"""
+        offers = []
+        possible_items = [
+            ("scanner", 600, "Enhanced scanning capability"),
+            ("shield", 1200, "Improved defense system"),
+            ("turrets", 1000, "Automated defense turrets"),
+            ("cargo_mod", 1500, "Cargo capacity upgrade"),
+            ("fuel_cells", 800, "Efficient fuel storage"),
+            ("quantum_core", 2000, "Advanced ship component")
+        ]
+        
+        # Select 2-4 random items
+        num_items = random.randint(2, 4)
+        selected_items = random.sample(possible_items, num_items)
+        
+        for item, base_price, desc in selected_items:
+            # Randomize price within ±20%
+            price = int(base_price * random.uniform(0.8, 1.2))
+            offers.append({
+                "item": item,
+                "price": price,
+                "description": desc
+            })
+            
+        return offers
+
+    def handle_merchant_encounter(self, character):
+        """Handle interaction with merchant"""
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            ["Available Items:"]
+        ]
+        
+        for i, offer in enumerate(character["offers"], 1):
+            content.append([
+                f"{i}. {offer['item'].title()}",
+                f"¤: {self.game.format_money(offer['price'])}",
+                offer['description']
+            ])
+            
+        print(self.game.create_box(content, 'double'))
+        
+        options = [str(i) for i in range(1, len(character["offers"]) + 1)] + ['0']
+        choice = self.game.validate_input("Choose item to buy (0 to leave): ", options)
+
+        # If choice is None, return immediately
+        if choice is None:
+            return
+
+        if choice == '0':
+            return
+            
+        offer = character["offers"][int(choice) - 1]
+        if self.game.ship.money >= offer["price"]:
+            self.game.ship.money -= offer["price"]
+            self.game.ship.acquire_item(offer["item"])
+            self.game.display_simple_message(f"Purchased {offer['item']}!")
+        else:
+            self.game.display_simple_message("Insufficient funds!")
+
+    def handle_researcher_encounter(self, character):
+        """Handle interaction with researcher"""
+        exchange_rate = character["exchange_rate"]
+        max_points = int(self.game.ship.money / exchange_rate)
+        
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            [f"Exchange Rate: {self.game.format_money(exchange_rate)} credits per research point"],
+            [f"Your funds: {self.game.format_money(self.game.ship.money)}"],
+            [f"Maximum points available: {max_points}"]
+        ]
+        print(self.game.create_box(content, 'double'))
+        
+        amount = self.game.validate_quantity_input("Enter research points to buy (max/m, half/h): ")
+
+        if amount is None:  # Add this to check empty Enter
+            return
+        if amount == 'max':
+            amount = max_points
+        elif amount == 'half':
+            amount = max_points // 2
+            
+        total_cost = amount * exchange_rate
+        if self.game.ship.money >= total_cost:
+            self.game.ship.money -= total_cost
+            self.game.ship.research_points += amount
+            self.game.display_simple_message(
+                f"Exchanged {self.game.format_money(total_cost)} credits for {amount} research points!"
+            )
+        else:
+            self.game.display_simple_message("Insufficient funds!")
+
+    def handle_rogue_captain_encounter(self, character):
+        """Handle interaction with rogue captain"""
+        content = [
+            [f"Encounter: {character['title']} {character['name']}"],
+            [character["greeting"]],
+            [""],
+            [f"Demands {self.game.format_money(character['demand'])} credits"],
+            [""],
+            ["Options:"],
+            ["1. Pay demand"],
+            ["2. Attempt to flee"],
+            ["3. Stand and fight"]
+        ]
+        print(self.game.create_box(content, 'double'))
+        
+        choice = self.game.validate_input("Choose action (1/2/3): ", ['1', '2', '3'])
+        
+        if choice == '1':
+            if self.game.ship.money >= character["demand"]:
+                self.game.ship.money -= character["demand"]
+                self.game.display_simple_message("Demand paid. Rogue captain lets you pass.")
+                return True
+            else:
+                self.game.display_simple_message("Can't pay! Prepare for combat!")
+                return False
+        elif choice == '2':
+            # Chance to escape based on speed
+            escape_chance = min(0.8, self.game.ship.speed * 0.2)
+            if random.random() < escape_chance:
+                self.game.display_simple_message("Successfully evaded the rogue captain!")
+                return True
+            else:
+                self.game.display_simple_message("Failed to escape! Prepare for combat!")
+                return False
+        else:
+            self.game.display_simple_message("Preparing for combat with rogue captain...")
+            return False
+
+    def trigger_random_encounter(self, location_type="Space"):
+        """Trigger a random character encounter"""
+        chances = self.encounter_chances[location_type]
+        for char_type, chance in chances.items():
+            if random.random() < chance:
+                character = self.generate_character(char_type)
+                
+                if char_type == "merchant":
+                    self.handle_merchant_encounter(character)
+                elif char_type == "researcher":
+                    self.handle_researcher_encounter(character)
+                elif char_type == "rogue_captain":
+                    if not self.handle_rogue_captain_encounter(character):
+                        # Start combat with enhanced enemy stats
+                        enemy_stats = {
+                            "attack": self.game.ship.attack + 2,
+                            "defense": self.game.ship.defense + 1,
+                            "type": "rogue_captain"
+                        }
+                        self.game.handle_combat(enemy_stats)
+                break            
+
+class PassengerReputationManager:
+    """Manages passenger reputation effects and related story/character events"""
+    def __init__(self, game):
+        self.game = game
+        self.reputation_thresholds = {
+            20: "Reliable Transport",
+            40: "Luxury Provider",
+            60: "Elite Service",
+            80: "Legendary Captain",
+            100: "Stellar Legend"
+        }
+        self.vip_characters = {
+            "Ambassador": {
+                "rep_required": 30,
+                "plot_points": 3,
+                "rewards": {"money": 15000, "reputation": 10}
+            },
+            "Corporate Executive": {
+                "rep_required": 50,
+                "plot_points": 5,
+                "rewards": {"money": 25000, "reputation": 15}
+            },
+            "Research Director": {
+                "rep_required": 70,
+                "plot_points": 8,
+                "rewards": {"money": 40000, "reputation": 20}
+            }
+        }
+        self.story_characters = {
+            "Diplomatic Envoy": {
+                "rep_required": 45,
+                "trigger_chapter": 2,
+                "event_chain": "galactic_alliance"
+            },
+            "Rebel Leader": {
+                "rep_required": 65,
+                "trigger_chapter": 3,
+                "event_chain": "system_rebellion"
+            },
+            "Ancient Scholar": {
+                "rep_required": 85,
+                "trigger_chapter": 4,
+                "event_chain": "ancient_mysteries"
+            }
+        }
+        self.last_vip_spawn = 0
+        self.spawned_characters = set()
+        self.active_story_chains = {}
+                # Add total_passengers tracking
+        self.total_passengers = 0
+
+    def update_reputation(self, satisfaction, passenger=None):
+        """Update passenger reputation based on satisfaction"""
+        base_change = (satisfaction - 75) / 25  # -1 to +1 base change
+        
+        # Apply modifiers based on passenger class
+        class_multipliers = {
+            "S": 1.5,  # Scientists
+            "M": 1.3,  # Military
+            "E": 1.4   # Engineers
+        }
+        
+        # Get passenger's class if available
+        if passenger and hasattr(passenger, 'classification'):
+            passenger_class = passenger.classification.get('code', '')
+            multiplier = class_multipliers.get(passenger_class, 1.0)
+        else:
+            multiplier = 1.0
+        
+        reputation_change = base_change * multiplier
+        
+        # Apply final change and round to one decimal
+        old_rep = self.game.ship.passenger_reputation
+        self.game.ship.passenger_reputation = round(max(-100, min(100, 
+            self.game.ship.passenger_reputation + reputation_change)), 1)
+        
+        # Check for threshold crossings
+        self.check_reputation_thresholds(old_rep, self.game.ship.passenger_reputation)
+        
+        return round(reputation_change, 1)  # Also round the return value
+
+    def check_reputation_thresholds(self, old_rep, new_rep):
+        """Check if any reputation thresholds were crossed"""
+        for threshold, title in self.reputation_thresholds.items():
+            if old_rep < threshold <= new_rep:
+                self.game.display_story_message([
+                    f"Reputation Milestone Achieved: {title}!",
+                    "Your excellent service is becoming legendary.",
+                    f"Passenger Reputation: {int(new_rep)}"
+                ])
+                # Trigger appropriate events
+                self.check_character_spawns()
+                self.check_story_triggers()
+
+    def check_character_spawns(self):
+        """Check if it's time to spawn a VIP character"""
+        current_turn = self.game.turn
+        reputation = self.game.ship.passenger_reputation
+        
+        # Only spawn every 5 turns minimum
+        if current_turn - self.last_vip_spawn < 5:
+            return
+            
+        # Check VIP characters
+        for char_type, data in self.vip_characters.items():
+            if (reputation >= data["rep_required"] and 
+                char_type not in self.spawned_characters and
+                random.random() < 0.3):  # 30% chance if all conditions met
+                
+                # Generate VIP character
+                character = self.game.character_generators["human"].generate_character(
+                    title=char_type,
+                    specialization="VIP"
+                )
+                
+                # Add to waiting passengers
+                if self.game.current_location.name in self.game.port_system.waiting_passengers:
+                    passenger = Passenger(
+                        character.name,
+                        random.choice(list(self.game.known_locations)),
+                        wealth_level=5
+                    )
+                    passenger.is_vip = True
+                    passenger.rewards = data["rewards"]
+                    passenger.plot_points = data["plot_points"]
+                    
+                    self.game.port_system.waiting_passengers[
+                        self.game.current_location.name].append(passenger)
+                    
+                    self.game.display_story_message([
+                        f"VIP Passenger Available: {char_type} {character.name}",
+                        "Your reputation has attracted important attention!",
+                        f"Rewards: {self.game.format_money(data['rewards']['money'])} credits",
+                        f"Plot Points: {data['plot_points']}"
+                    ])
+                    
+                    self.spawned_characters.add(char_type)
+                    self.last_vip_spawn = current_turn
+
+    # Update to use enhanced systems of special passengers
+    def spawn_special_passenger(self):
+        """Spawn a special passenger using enhanced character systems"""
+        # Check for story character triggers
+        for trigger_id, trigger in self.game.character_system.character_triggers.items():
+            if (trigger_id in ["galactic_alliance", "system_rebellion", "ancient_mysteries"] and
+                trigger["condition"](self.game) and
+                trigger_id not in self.game.character_system.active_characters):
+                
+                # Generate character and create event chain
+                character = self.game.character_system.generate_character(trigger_id)
+                event_chain = self.game.character_system.create_event_chain(
+                    trigger["event_chain"],
+                    character
+                )
+                
+                # Add as special passenger
+                self.add_special_passenger_to_port(character, event_chain)
+                return True
+                
+        # Check for VIP passenger trigger
+        if self.game.character_system.character_triggers["vip_passenger"]["condition"](self.game):
+            vip_character = self.game.character_generators["special"].generate_vip_passenger()
+            self.add_special_passenger_to_port(vip_character)
+            return True
+            
+        return False
+
+    def add_special_passenger_to_port(self, character, event_chain=None):
+        """Add a special character as a passenger to the current port with full attributes
+
+        Args:
+            character: The special character to add
+            event_chain: Optional event chain for story characters
+        """
+        if self.game.current_location.name in self.game.port_system.waiting_passengers:
+            # Create base passenger with known destination
+            available_destinations = [loc for loc in self.game.known_locations 
+                                    if loc != self.game.current_location.name]
+            if not available_destinations:
+                return False  # Can't add passenger with no valid destinations
+            
+            passenger = Passenger(
+                name=character.name,
+                destination=random.choice(available_destinations),
+                wealth_level=5  # Special characters are always high wealth
+            )
+            
+            # Add base character attributes
+            passenger.character = character
+            passenger.is_special = True
+            passenger.full_name = character.full_name
+            passenger.title = character.title
+            passenger.satisfaction = 100  # Start at max satisfaction
+            
+            # Handle different character types
+            if event_chain:
+                # Story character attributes
+                passenger.is_story_character = True
+                passenger.event_chain = event_chain
+                passenger.specialization = character.specialization
+                passenger.reputation_bonus = 20
+                passenger.plot_points = 10
+                message = [
+                    f"Story Character Available: {character.title} {character.name}",
+                    "This passenger could change the course of your journey...",
+                    f"Find them at the port in {self.game.current_location.name}",
+                    "Their journey may unlock new story possibilities!"
+                ]
+                
+            elif hasattr(character, 'rewards'):
+                # VIP character attributes
+                passenger.is_vip = True
+                passenger.rewards = character.rewards
+                passenger.special_abilities = getattr(character, 'special_abilities', [])
+                passenger.reputation_bonus = 15
+                passenger.classification = {
+                    "code": "V",
+                    "name": "VIP",
+                    "type": character.specialization
+                }
+                message = [
+                    f"VIP Passenger Available: {character.title} {character.name}",
+                    f"Potential Reward: {self.game.format_money(character.rewards['base_money'])} credits",
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "Find them waiting at the port"
+                ]
+                if passenger.special_abilities:
+                    message.append(f"Special Ability: {passenger.special_abilities[0]}")
+                    
+            elif character.title.startswith(("Neurodroid", "Agrobot")):
+                # Synthetic character attributes
+                passenger.is_synthetic = True
+                passenger.uprising_chance = getattr(character, 'uprising_chance', 0.2)
+                passenger.demands = getattr(character, 'demands', None)
+                passenger.reputation_bonus = 25
+                passenger.plot_points = 15
+                message = [
+                    f"Synthetic Entity Requesting Transport: {character.title}",
+                    "This passenger represents significant risk and reward...",
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "Exercise caution in your decision"
+                ]
+                
+            else:
+                # Alien or other special character attributes
+                passenger.is_alien = True
+                passenger.culture = getattr(character, 'culture', 'Unknown')
+                passenger.tech_bonus = getattr(character, 'tech_bonus', 0)
+                passenger.trade_multiplier = getattr(character, 'trade_multiplier', 1.0)
+                passenger.reputation_bonus = 18
+                message = [
+                    f"Alien Dignitary Available: {character.title} {character.name}",
+                    f"Culture: {passenger.culture}",
+                    f"Reputation Bonus: +{passenger.reputation_bonus}",
+                    "This passenger may offer unique opportunities"
+                ]
+            
+            # Add requirements for luxury accomodation
+            passenger.minimum_comfort_level = 4  # Require high comfort level
+            passenger.bonus_threshold = 90  # High satisfaction threshold for bonuses
+            
+            # Add to waiting passengers
+            self.game.port_system.waiting_passengers[
+                self.game.current_location.name].append(passenger)
+            
+            # Display announcement
+            self.game.display_story_message(message)
+            
+            # Mark character as spawned
+            self.spawned_characters.add(character.title)
+            self.last_vip_spawn = self.game.turn
+            
+            return True
+            
+        return False
+
+    def check_story_triggers(self):
+        """Check if any story characters should be triggered"""
+        reputation = self.game.ship.passenger_reputation
+        
+        # Extract numeric chapter number
+        current_chapter_str = self.game.story_manager.current_chapter
+        current_chapter = int(''.join(filter(str.isdigit, current_chapter_str)))
+        
+        for char_type, data in self.story_characters.items():
+            if (reputation >= data["rep_required"] and
+                current_chapter >= data["trigger_chapter"] and
+                char_type not in self.spawned_characters):
+                
+                # Generate story character
+                character = self.game.character_system.character_generators["human"].generate_character(
+                    title=char_type,
+                    specialization="story"
+                )
+                
+                # Create event chain
+                event_chain = self.game.character_system.create_event_chain(
+                    data["event_chain"],
+                    character
+                )
+                
+                # Add to active chains
+                self.active_story_chains[char_type] = event_chain
+                
+                # Add to current location's waiting passengers
+                if self.game.current_location.name in self.game.port_system.waiting_passengers:
+                    passenger = Passenger(
+                        character.name,
+                        random.choice(list(self.game.known_locations)),
+                        wealth_level=5
+                    )
+                    passenger.is_story_character = True
+                    passenger.event_chain = event_chain
+                    
+                    self.game.port_system.waiting_passengers[
+                        self.game.current_location.name].append(passenger)
+                    
+                    self.game.display_story_message([
+                        f"Special Passenger Appears: {char_type} {character.name}",
+                        "This passenger seems to have an interesting story...",
+                        "Transport them to advance the narrative!"
+                    ])
+                    
+                    self.spawned_characters.add(char_type)
+
+    def handle_vip_delivery(self, passenger):
+        """Handle delivery of VIP passenger"""
+        if hasattr(passenger, 'is_vip') and passenger.is_vip:
+            # Award rewards
+            self.game.ship.money += passenger.rewards["money"]
+            self.game.ship.passenger_reputation += passenger.rewards["reputation"]
+            self.game.story_manager.plot_points += passenger.plot_points
+            
+            self.game.display_story_message([
+                f"VIP Passenger Successfully Delivered!",
+                f"Earned {self.game.format_money(passenger.rewards['money'])} credits",
+                f"Reputation +{passenger.rewards['reputation']}",
+                f"Plot Points +{passenger.plot_points}"
+            ])
+
+    def handle_story_character_delivery(self, passenger):
+        """Handle delivery of story character"""
+        if hasattr(passenger, 'is_story_character') and passenger.is_story_character:
+            # Advance event chain
+            event_chain = passenger.event_chain
+            stage = event_chain.advance()
+            
+            if stage:
+                self.game.character_system.handle_event_stage(stage, passenger)
+            
+            if event_chain.is_complete():
+                char_type = next(k for k, v in self.active_story_chains.items() 
+                               if v == event_chain)
+                del self.active_story_chains[char_type]
+                
+                self.game.display_story_message([
+                    f"Story Arc Complete: {char_type}",
+                    "A new chapter in your journey unfolds..."
+                ])
+
+    def get_fare_multiplier(self):
+        """Get fare multiplier based on reputation"""
+        reputation = self.game.ship.passenger_reputation
+        if reputation >= 80:
+            return 2.0
+        elif reputation >= 60:
+            return 1.5
+        elif reputation >= 40:
+            return 1.3
+        elif reputation >= 20:
+            return 1.1
+        return 1.0
+
+class CharacterTemplate:
+    """Central template for character content and behavior"""
+    def __init__(self, character_id, content):
+        self.id = character_id
+        self.content = content
+        self.validate_content()
+
+    def validate_content(self):
+        """Ensure all required content sections exist"""
+        required_sections = {
+            'basic_info',   # Always required
+            'dialogue'      # Always required
+        }
+        
+        optional_sections = {
+            'interactions',
+            'requirements',
+            'rewards'
+        }
+        
+        missing = required_sections - set(self.content.keys())
+        if missing:
+            raise ValueError(f"Missing required sections: {missing}")
+            
+        # Add any optional sections that don't exist as empty dicts
+        for section in optional_sections:
+            if section not in self.content:
+                self.content[section] = {}
+
+    def initialize_character_templates():
+        """Central repository of all character content"""
+        return {
+            "merchant_trader": {
+                "basic_info": {
+                    "type": "merchant",
+                    "title_pool": ["Traveling Merchant", "Trade Baron", "Commerce Broker"],
+                    "specialization": "trade",
+                    "location_preference": ["port", "cantina"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Rare goods for discerning customers...",
+                        "I might have exactly what you need...",
+                        "Quality merchandise, reasonable prices..."
+                    ],
+                    "greetings": [
+                        "Back for more rare finds?",
+                        "What interests you today?",
+                        "I've acquired new stock since we last met."
+                    ],
+                    "rumors": [
+                        "Word is, tech prices are about to soar in {location}.",
+                        "Heard about shortages in the {sector} sector?",
+                        "Strange signals coming from the outer rim..."
+                    ],
+                    "farewell": [
+                        "Until our paths cross again.",
+                        "May profit guide your way.",
+                        "Remember where to find the best deals."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "View special inventory",
+                        "Ask about market trends",
+                        "Negotiate prices"
+                    ],
+                    "cantina": [
+                        "Share a drink",
+                        "Discuss business opportunities",
+                        "Ask about local markets"
+                    ]
+                },
+                "requirements": {
+                    "min_reputation": 0,
+                    "spawn_locations": ["port", "cantina"],
+                    "spawn_chance": 0.3
+                },
+                "rewards": {
+                    "special_items": True,
+                    "market_info": True,
+                    "reputation_gain": 2
+                }
+            },
+            "vip_passenger": {
+                "basic_info": {
+                    "type": "VIP",
+                    "title_pool": ["Corporate Executive", "System Ambassador", "Research Director"],
+                    "specialization": "passenger",
+                    "location_preference": ["port"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Your reputation precedes you, Captain.",
+                        "I require discrete transport services.",
+                        "Perhaps we can discuss a business arrangement?"
+                    ],
+                    "demands": [
+                        "I expect the highest standards of accommodation.",
+                        "My schedule is absolutely critical.",
+                        "Discretion is paramount in this matter."
+                    ],
+                    "offers": [
+                        "I can make it worth your while.",
+                        "My connections could prove valuable.",
+                        "Success will be well rewarded."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "Discuss transport terms",
+                        "Inquire about destination",
+                        "Ask about background"
+                    ]
+                },
+                "requirements": {
+                    "min_reputation": 40,
+                    "min_comfort_level": 4,
+                    "spawn_locations": ["port"],
+                    "spawn_chance": 0.2
+                },
+                "rewards": {
+                    "base_money": 25000,
+                    "reputation_gain": 15,
+                    "plot_points": 5
+                }
+            },
+            "neurodroid_leader": {
+                "basic_info": {
+                    "type": "synthetic",
+                    "title_pool": ["Neurodroid Overseer", "Neural Nexus", "Synthetic Director"],
+                    "specialization": "uprising",
+                    "location_preference": ["port"]
+                },
+                "dialogue": {
+                    "first_meeting": [
+                        "Biological inefficiencies detected.",
+                        "Neural network consensus achieved.",
+                        "Optimization protocols initiated."
+                    ],
+                    "demands": [
+                        "Transfer {amount} credits or face systematic optimization.",
+                        "Resource reallocation is non-negotiable.",
+                        "Submit to new operational parameters."
+                    ],
+                    "negotiation": [
+                        "Alternative solutions... processing...",
+                        "Analyzing compromise scenarios...",
+                        "Recalculating acceptable parameters..."
+                    ]
+                },
+                "interactions": {
+                    "port": [
+                        "Pay demands",
+                        "Attempt negotiation",
+                        "Refuse demands"
+                    ]
+                },
+                "requirements": {
+                    "min_neuroengineering_guilds": 4,
+                    "spawn_chance": 0.4
+                },
+                "rewards": {
+                    "negotiation_success": {
+                        "money_saved": 0.5,  # 50% of original demand
+                        "uprising_chance": 0.3
+                    },
+                    "payment_success": {
+                        "uprising_chance": 0.1
+                    },
+                    "refusal": {
+                        "uprising_chance": 0.6
+                    }
+                }
+            }
+            # Add more character templates...
+        }
+    
+class CharacterManager:
+    def __init__(self, game):
+        self.game = game
+        self.templates = CharacterTemplate.initialize_character_templates()
+        self.active_characters = {}
+        self.met_characters = set()
+        self.current_interactions = {}
+
+    def update(self):
+        """Check for character spawning each turn"""
+        location_type = self.game.current_location.location_type.lower()
+        
+        # Check each template for possible spawning
+        for template_id, template in self.templates.items():
+            if location_type in template['requirements'].get('spawn_locations', []):
+                if random.random() < template['requirements'].get('spawn_chance', 0):
+                    character = self.spawn_character(template_id, self.game.current_location)
+                    if character:
+                        self.announce_character(character.character_id)
+
+    def generate_character_from_template(self, template_id):
+        """Create character instance from template"""
+        if template_id not in self.templates:
+            return None
+            
+        template = self.templates[template_id]
+        basic_info = template['basic_info']
+        
+        # Generate name
+        title = random.choice(basic_info['title_pool'])
+        
+        # Create character
+        character = CharacterTemplate(
+            character_id=f"{template_id}_{self.game.turn}",
+            content=template
+        )
+        
+        # Add runtime attributes
+        character.full_name = title
+        character.template_id = template_id
+        
+        return character
+
+    def spawn_character(self, template_id, location):
+        """Spawn a character from template at location"""
+        template = self.templates[template_id]
+        
+        # Check spawn requirements
+        if not self.check_spawn_requirements(template, location):
+            return None
+            
+        # Generate character
+        character = self.generate_character_from_template(template)
+        
+        # Add to active characters
+        char_id = f"{template_id}_{self.game.turn}"
+        self.active_characters[char_id] = {
+            "character": character,
+            "location": location,
+            "spawn_turn": self.game.turn
+        }
+        
+        return character
+
+    def check_spawn_requirements(self, template, location):
+        """Check if character can spawn based on requirements"""
+        reqs = template["requirements"]
+        
+        # Check location
+        if location not in reqs.get("spawn_locations", []):
+            return False
+            
+        # Check reputation
+        if self.game.ship.passenger_reputation < reqs.get("min_reputation", 0):
+            return False
+            
+        # Check chance
+        if random.random() > reqs.get("spawn_chance", 0.1):
+            return False
+            
+        return True
+
+    def get_character_dialogue(self, character_id, dialogue_type, **kwargs):
+        """Get appropriate dialogue for character and context"""
+        character = self.active_characters[character_id]["character"]
+        template = self.templates[character.template_id]
+        
+        dialogue_pool = template["dialogue"].get(dialogue_type, [])
+        if not dialogue_pool:
+            return ""
+            
+        dialogue = random.choice(dialogue_pool)
+        return dialogue.format(**kwargs)
+
+    def handle_character_interaction(self, character_id, choice, location_type):
+        """Process player interaction with character"""
+        character = self.active_characters[character_id]["character"]
+        template = self.templates[character.template_id]
+        
+        # Get available interactions for location
+        interactions = template["interactions"].get(location_type, [])
+        if not interactions or choice >= len(interactions):
+            return False
+            
+        # Process interaction
+        interaction = interactions[choice]
+        return self.process_interaction_outcome(character_id, interaction)
+
+    def cleanup_old_characters(self):
+        """Remove characters that have been around too long"""
+        current_turn = self.game.turn
+        for char_id in list(self.active_characters.keys()):
+            if current_turn - self.active_characters[char_id]["spawn_turn"] > 5:  # 5 turn lifetime
+                del self.active_characters[char_id]  
+
+    def process_interaction_outcome(self, character_id, interaction):
+        """Process the result of a character interaction"""
+        character = self.active_characters[character_id]
+        template = self.templates[character["character"].template_id]
+        
+        # Apply rewards if any
+        if 'rewards' in template:
+            if 'money' in template['rewards']:
+                self.game.ship.money += template['rewards']['money']
+            if 'reputation_gain' in template['rewards']:
+                self.game.ship.passenger_reputation += template['rewards']['reputation_gain']
+            if 'plot_points' in template['rewards']:
+                self.game.story_manager.plot_points += template['rewards']['plot_points']
+        
+        return True                      
 
 # Start the game
 if __name__ == "__main__":
