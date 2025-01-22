@@ -1421,7 +1421,7 @@ class Game:
         if hasattr(self, 'story_manager'):
             current_chapter = self.story_manager.chapters[self.story_manager.current_chapter]
             status_content.append([
-                f"Chapter {self.story_manager.current_chapter}",
+                f"Chapter {self.story_manager.get_chapter_number_roman()}",
                 f"Plot Points: {self.story_manager.plot_points}",
                 current_chapter.title
             ])
@@ -4016,7 +4016,7 @@ class Game:
         
         # Current chapter info
         current_chapter_obj = self.story_manager.chapters[self.story_manager.current_chapter]
-        story_content.append([f"Current Chapter: {self.story_manager.current_chapter} - {current_chapter_obj.title}"])
+        story_content.append([f"Current Chapter {self.story_manager.get_chapter_number_roman()} : {current_chapter_obj.title}"])
         story_content.append([f"Plot Points: {self.story_manager.plot_points}"])
         
         # Completed story beats
@@ -8035,6 +8035,24 @@ class StoryManager:
         except (ValueError, TypeError):
             return 1  # Default to chapter 1 if conversion fails
 
+    def number_to_roman(self, num):
+        """Convert integer to Roman numeral with dot"""
+        roman_map = {
+            1: 'I.', 2: 'II.', 3: 'III.', 4: 'IV.', 5: 'V.', 
+            6: 'VI.', 7: 'VII.', 8: 'VIII.', 9: 'IX.', 10: 'X.',
+            11: 'XI.', 12: 'XII.', 13: 'XIII.', 14: 'XIV.', 15: 'XV.',
+            16: 'XVI.', 17: 'XVII.', 18: 'XVIII.', 19: 'XIX.', 20: 'XX.',
+            21: 'XXI.', 22: 'XXII.', 23: 'XXIII.', 24: 'XXIV.', 25: 'XXV.',
+            26: 'XXVI.', 27: 'XXVII.', 28: 'XXVIII.', 29: 'XXIX.', 30: 'XXX.'
+        }
+        
+        return roman_map.get(num, str(num))
+
+    def get_chapter_number_roman(self, chapter_string=None):
+        """Get chapter number as Roman numeral"""
+        number = self.get_chapter_number(chapter_string)
+        return self.number_to_roman(number)
+
     def initialize_chapters(self):
         """Initialize all chapters with their milestones and branching paths"""
         # Core storyline
@@ -8293,7 +8311,7 @@ class StoryManager:
         first_chapter = self.chapters["ch1"]
         
         self.game.display_story_message([
-            f"Chapter 1: {first_chapter.title}",
+            f"Chapter I.: {first_chapter.title}",
             first_chapter.description,
             "",
             "Your journey begins..."
