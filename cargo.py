@@ -3962,11 +3962,13 @@ class Game:
             self.display_simple_message("Not enough money to update the map.")
 
     def handle_gossip(self):
+        """Handle gossip and quest generation in cantina"""
         if self.ship.money >= 150:
             self.ship.money -= 150
             gossip_content = [["Latest Market Gossip"]]
             gossip_content.append([""])
             
+            # Generate market information
             found_gossip = False
             for location in self.locations:
                 if location.name in self.known_locations:
@@ -3979,31 +3981,27 @@ class Game:
                         location_gossip.append(f"High tech prices")
                     if location.market['agri'] > 80:
                         location_gossip.append(f"High agri prices")
-                        
+                            
                     if location_gossip:
                         found_gossip = True
                         gossip_content.append([location.name])
                         for gossip in location_gossip:
                             gossip_content.append([f"└─ {gossip}"])
-            
+                
             if found_gossip:
                 print(self.create_box(gossip_content, 'double'))
                 
-                if random.random() < 0.3:  # 30% chance to get a quest
-                    quest = Quest(
-                        name=random.choice([
-                            "Deliver Tech Goods",
-                            "Transport Agri Supplies",
-                            "Rescue Mission",
-                            "Mining Intel",
-                            "Eliminate Pirates"
-                        ]),
-                        description="Complete this mission for the cantina",
-                        reward_money=random.randint(500, 2500),
-                        reward_rp=random.randint(25, 100),
-                        quest_type="cantina"
-                    )
-                    self.quest_system.add_quest(quest)
+                # 30% chance to get a quest
+                if random.random() < 0.3:
+                    quest = self.quest_system.generate_cantina_quest()
+                    if quest:
+                        self.quest_system.add_quest(quest)
+                        self.display_story_message([
+                            "New Quest Available!",
+                            quest.name,
+                            quest.description,
+                            f"Rewards: {self.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
+                        ])
             else:
                 self.display_simple_message("No interesting gossip today!")
         else:
@@ -5274,19 +5272,22 @@ class SpecialCharacterGenerator:
 
 class Quest:
     def __init__(self, name, description, reward_money, reward_rp, quest_type="generic", 
-                 requirements=None, on_complete=None, milestone=None):
+                 requirements=None, on_complete=None, milestone=None, destination=None, rewards=None):
         self.name = name
         self.description = description
+        self.destination = destination
         self.reward_money = reward_money
         self.reward_rp = reward_rp  # Research Points reward
         self.quest_type = quest_type
         self.requirements = requirements or {}
         self.on_complete = on_complete
-        self.milestone = milestone  # New attribute
+        self.milestone = milestone
         self.progress = 0
         self.completed = False
         self.target_progress = self.requirements.get('target_progress', 1)
         self.location_requirement = self.requirements.get('location_type', None)
+        # Add additional rewards handling
+        self.rewards = rewards or {}  # Store extra rewards like items
 
     def __eq__(self, other):
         """Define equality to help prevent duplicates"""
@@ -5317,22 +5318,6 @@ class Quest:
             
         return False
 
-    # Add for special location quests
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {
-                'research_points_gained': 0,
-                'analysis_completed': 0,
-                'experiments_conducted': 0
-            }
-        
-        # Check if required criteria are met
-        criteria = self.requirements.get('completion_criteria', {})
-        for key, target in criteria.items():
-            if self.tracked_progress.get(key, 0) < target:
-                return False
-        return True
 
     def update_research_progress(self, activity_type):
         """Update progress for research activities"""
@@ -5348,43 +5333,26 @@ class Quest:
         """Check if quest requirements are met"""
         if self.completed:
             return False
-        
-        if self.quest_type == "mining":
-            return self.check_mining_completion(game)
-        elif self.quest_type == "combat":
-            return self.check_combat_completion(game)
-        elif self.quest_type == "trade":
-            return self.check_trade_completion(game)
-        elif self.quest_type == "exploration":
-            return self.check_exploration_completion(game)
-        elif self.quest_type == "research":
-            return self.check_research_completion(game)
-        elif self.quest_type == "cantina":
-            return self.check_cantina_completion(game)        
+
+        # Map quest types to their completion check methods
+        completion_checks = {
+            "mining": self.check_mining_completion,
+            "combat": self.check_combat_completion,
+            "trade": self.check_trade_completion,
+            "exploration": self.check_exploration_completion,
+            "research": self.check_research_completion,
+            "cantina": self.check_cantina_completion,
+            "item_delivery": self.check_item_delivery_completion,
+            "character_delivery": self.check_character_delivery_completion,
+            "delivery": self.check_delivery_completion
+        }
+
+        check_method = completion_checks.get(self.quest_type)
+        if check_method:
+            return check_method(game)
         
         # Generic quest completion check
         return self.progress >= self.target_progress
-
-    def check_cantina_completion(self, game):
-        """Check if quest requirements are met"""
-        if self.quest_type == "cantina":
-            # Specific cantina quest completion checks
-            if "Deliver" in self.name:
-                # Check trade profits
-                commodity = self.name.split()[2].lower()
-                return game.ship.trade_profits.get(commodity, 0) >= self.requirements.get('amount', 0)
-            
-            elif "Transport" in self.name:
-                # Check passenger transport
-                return game.reputation_manager.total_passengers >= self.requirements.get('count', 0)
-            
-            elif "Eliminate" in self.name:
-                # Check combat victories
-                enemy_type = self.name.split()[2].lower()
-                return game.ship.combat_victories.get(enemy_type, 0) >= self.requirements.get('victories', 0)
-        
-        # Existing completion logic for other quest types
-        return super().check_completion(game)
 
     def check_mining_completion(self, game):
         """Check mining quest requirements"""
@@ -5394,15 +5362,6 @@ class Quest:
             return game.ship.cargo[resource] >= target_amount
         return False
 
-    def check_combat_completion(self, game):
-        """Check combat quest requirements with proper dictionary access"""
-        if 'enemy_type' in self.requirements:
-            enemy_type = self.requirements['enemy_type']
-            required_amount = self.requirements.get('amount', 1)
-            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
-        # If no specific enemy type, check total victories
-        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
-
     def check_trade_completion(self, game):
         """Check trading quest requirements"""
         if 'commodity' in self.requirements:
@@ -5411,45 +5370,150 @@ class Quest:
                 self.requirements['commodity'], 0) >= target_profit
         return False
 
-    def check_exploration_completion(self, game):
-        """Check exploration quest requirements"""
-        if 'location_type' in self.requirements:
-            discovered = len([loc for loc in game.discovered_locations 
-                            if loc.location_type == self.requirements['location_type']])
-            return discovered >= self.requirements.get('amount', 1)
+    def check_delivery_completion(self, game):
+        """Check cargo delivery quest requirements"""
+        return (game.current_location.name == self.destination and
+                game.ship.cargo[self.requirements['commodity']] >= self.requirements['amount'])
+
+    def check_item_delivery_completion(self, game):
+        """Check item delivery quest requirements"""
+        return (game.current_location.name == self.destination and
+                self.requirements["item"] in game.ship.items)
+
+    def check_character_delivery_completion(self, game):
+        """Check character delivery quest requirements"""
+        if hasattr(game.ship, 'passenger_modules'):
+            for module in game.ship.passenger_modules:
+                for passenger in module.passengers:
+                    if (passenger.name == self.requirements["character"] and
+                        game.current_location.name == self.destination):
+                        return True
         return False
 
     def check_research_completion(self, game):
         """Check research quest requirements"""
-        if 'research_type' in self.requirements:
-            return self.requirements['research_type'] in game.research.unlocked_options
-        return game.ship.research_points >= self.requirements.get('target_points', 0)
+        if not hasattr(self, 'tracked_progress'):
+            self.tracked_progress = {
+                'research_points_gained': 0,
+                'analysis_completed': 0,
+                'experiments_conducted': 0
+            }
+        
+        # Check if required criteria are met
+        criteria = self.requirements.get('completion_criteria', {})
+        for key, target in criteria.items():
+            # Use game parameter to track research progress if needed
+            current_value = self.tracked_progress.get(key, 0)
+            
+            # If the key is research-related, you might want to pull from game state
+            if key == 'research_points_gained':
+                current_value = game.ship.research_points
+            
+            if current_value < target:
+                return False
+        return True
+    
+    def check_combat_completion(self, game):
+        """Check combat quest requirements"""
+        if 'enemy_type' in self.requirements:
+            enemy_type = self.requirements['enemy_type']
+            required_amount = self.requirements.get('amount', 1)
+            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
+        # If no specific enemy type, check total victories
+        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
 
+    def check_exploration_completion(self, game):
+        """Check exploration quest requirements"""
+        if 'location_type' in self.requirements:
+            discovered = len([loc for loc in game.discovered_locations 
+                            if isinstance(loc, self.requirements['location_type'])])
+            return discovered >= self.requirements.get('amount', 1)
+        
+        if 'specific_location' in self.requirements:
+            return self.requirements['specific_location'] in game.discovered_locations
+
+        # For generic exploration goals
+        return self.progress >= self.target_progress
+
+    def check_cantina_completion(self, game):
+        """Check if cantina quest requirements are met"""
+        if "Deliver" in self.name:
+            # Check trade profits
+            commodity = self.name.split()[2].lower()
+            return game.ship.trade_profits.get(commodity, 0) >= self.requirements.get('amount', 0)
+        
+        elif "Transport" in self.name:
+            # Check passenger transport
+            return game.reputation_manager.total_passengers >= self.requirements.get('count', 0)
+        
+        elif "Eliminate" in self.name:
+            # Check combat victories
+            enemy_type = self.name.split()[2].lower()
+            return game.ship.combat_victories.get(enemy_type, 0) >= self.requirements.get('victories', 0)
+
+        return False    
+
+    def update_progress(self, event_data):
+        """Update quest progress based on game events"""
+        if self.completed:
+            return False
+
+        progress_made = False
+        
+        # Update based on event type
+        if event_data.get("type") == "combat" and self.quest_type == "combat":
+            if event_data.get("outcome") == "victory":
+                self.progress += 1
+                progress_made = True
+                
+        elif event_data.get("action") in ["buy", "sell"] and self.quest_type == "trade":
+            commodity = event_data.get("commodity")
+            if commodity == self.requirements.get("commodity"):
+                self.progress += event_data.get("amount", 0)
+                progress_made = True
+
+        return progress_made and self.check_completion()
+    
     def complete(self, game):
-        """Complete the quest and award rewards"""
+        """Complete the quest and award all rewards"""
         if not self.completed:
             self.completed = True
+            
+            # Award base rewards
             game.ship.money += self.reward_money
             game.ship.research_points += self.reward_rp
             
-            # Call completion callback if exists
+            # Award additional rewards if present
+            if hasattr(self, 'rewards'):
+                if "reputation" in self.rewards:
+                    game.ship.passenger_reputation += self.rewards["reputation"]
+                if "plot_points" in self.rewards:
+                    game.story_manager.plot_points += self.rewards["plot_points"]
+                if "bonus_item" in self.rewards:
+                    game.ship.acquire_item(self.rewards["bonus_item"])
+
+            # Execute completion callback if exists
             if self.on_complete:
                 self.on_complete()
-            
-            # Display completion message
-            game.display_story_message([
+
+            # Display completion message with all rewards
+            completion_message = [
                 f"Quest Completed: {self.name}",
                 f"Rewards:",
                 f"• {game.format_money(self.reward_money)} credits",
                 f"• {self.reward_rp} research points"
-            ])
+            ]
 
-    def update_progress(self, amount=1):
-        """Update quest progress"""
-        if not self.completed:
-            self.progress += amount
-            return self.progress >= self.target_progress
-        return False
+            if hasattr(self, 'rewards'):
+                if self.rewards.get("reputation"):
+                    completion_message.append(f"• +{self.rewards['reputation']} reputation")
+                if self.rewards.get("plot_points"):
+                    completion_message.append(f"• +{self.rewards['plot_points']} plot points")
+                if self.rewards.get("bonus_item"):
+                    completion_message.append(f"• Bonus item: {self.rewards['bonus_item']}")
+
+            game.display_story_message(completion_message)
+
 
 class Contract:
     def __init__(self, contract_type, duration, requirements, rewards, description):
@@ -7574,6 +7638,138 @@ class QuestSystem:
 
         # Update legacy tuple-based quests
         self.check_quest_completion(self.game.ship, self.game.current_location)
+
+    def generate_cantina_quest(self):
+        """Generate quests based on player's progress and reputation"""
+        current_location = self.game.current_location.name
+        quest_types = {
+            "delivery": {
+                "name": "Urgent Delivery",
+                "description": lambda details: f"Deliver {details['amount']} {details['commodity']} to {details['destination']}",
+                "requirements": {
+                    "amount": (50, 150),
+                    "commodity": ["tech", "agri"],
+                    "time_limit": 5,
+                    "min_plot_points": 10,
+                    "min_reputation": 0
+                },
+                "rewards": {
+                    "money": (5000, 10000),
+                    "research_points": (50, 100),
+                    "reputation": 2,
+                    "items": ["scanner", "probe"]  # Possible bonus items
+                }
+            },
+            "item_delivery": {
+                "name": "Special Item Contract",
+                "description": lambda details: f"Deliver {details['item']} to {details['destination']}",
+                "requirements": {
+                    "item": ["scanner", "shield", "probe", "turrets"],
+                    "min_plot_points": 20,
+                    "min_reputation": 20
+                },
+                "rewards": {
+                    "money": (8000, 15000),
+                    "research_points": (80, 150),
+                    "reputation": 3,
+                    "items": ["quantum_core", "neural_hack"]  # High-tier rewards
+                }
+            },
+            "character_delivery": {
+                "name": "VIP Transport",
+                "description": lambda details: f"Transport {details['character']} to {details['destination']}",
+                "requirements": {
+                    "character": ["Research Director", "Trade Minister", "Military Commander"],
+                    "min_reputation": 50,
+                    "min_plot_points": 40
+                },
+                "rewards": {
+                    "money": (12000, 20000),
+                    "research_points": (100, 200),
+                    "reputation": 5,
+                    "plot_points": 2,
+                    "items": ["neural_boost", "quantum_shield"]
+                }
+            },
+            "mining_contract": {
+                "name": "Resource Contract",
+                "description": lambda details: f"Mine and deliver {details['amount']} {details['resource']} to {details['destination']}",
+                "requirements": {
+                    "amount": (100, 200),
+                    "resource": ["salt", "fuel"],
+                    "min_plot_points": 15,
+                    "min_reputation": 10
+                },
+                "rewards": {
+                    "money": (6000, 12000),
+                    "research_points": (60, 120),
+                    "reputation": 2,
+                    "items": ["mining_laser", "cargo_scanner"]
+                }
+            }
+        }
+
+        # Filter quests based on player's progress
+        available_quests = []
+        for quest_type, template in quest_types.items():
+            reqs = template["requirements"]
+            if (self.game.story_manager.plot_points >= reqs.get("min_plot_points", 0) and
+                self.game.ship.passenger_reputation >= reqs.get("min_reputation", 0)):
+                available_quests.append((quest_type, template))
+
+        if not available_quests:
+            return None
+
+        quest_type, template = random.choice(available_quests)
+
+        # Generate quest details
+        details = {}
+        for key, value in template["requirements"].items():
+            if isinstance(value, list):
+                details[key] = random.choice(value)
+            elif isinstance(value, tuple) and len(value) == 2:
+                details[key] = random.randint(*value)
+            elif key not in ["min_plot_points", "min_reputation"]:
+                details[key] = value
+
+        # Choose destination from known locations excluding current location
+        possible_destinations = [loc for loc in self.game.known_locations 
+                            if loc != current_location]
+        if not possible_destinations:
+            return None
+        
+        details['destination'] = random.choice(possible_destinations)
+
+        # Generate rewards
+        base_rewards = template["rewards"]
+        rewards = {
+            "money": random.randint(*base_rewards["money"]),
+            "research_points": random.randint(*base_rewards["research_points"]),
+            "reputation": base_rewards.get("reputation", 0),
+            "plot_points": base_rewards.get("plot_points", 0)
+        }
+
+        # Chance for bonus item
+        if random.random() < 0.3 and "items" in base_rewards:  # 30% chance
+            rewards["bonus_item"] = random.choice(base_rewards["items"])
+
+        # Scale rewards based on chapter and difficulty
+        chapter_multiplier = 1 + (self.game.story_manager.get_chapter_number() * 0.2)
+        rep_multiplier = 1 + (template["requirements"].get("min_reputation", 0) / 100)
+        
+        for key in ["money", "research_points"]:
+            rewards[key] = int(rewards[key] * chapter_multiplier * rep_multiplier)
+
+        return Quest(
+            name=template["name"],
+            description=template["description"](details),
+            reward_money=rewards["money"],
+            reward_rp=rewards["research_points"],
+            quest_type=quest_type,
+            requirements=details,
+            rewards=rewards,
+            destination=details['destination']  # Add destination
+        )
 
     def complete_quest(self, quest):
         """Handle quest completion and cleanup with full quest lifecycle"""
