@@ -4000,8 +4000,8 @@ class Game:
         story_content.append([""])
         
         # Current chapter info
-        chapter = self.story_manager.chapters[self.story_manager.current_chapter]
-        story_content.append([f"Current Chapter: {self.story_manager.current_chapter} - {chapter['title']}"])
+        current_chapter_obj = self.story_manager.chapters[self.story_manager.current_chapter]
+        story_content.append([f"Current Chapter: {self.story_manager.current_chapter} - {current_chapter_obj.title}"])
         story_content.append([f"Plot Points: {self.story_manager.plot_points}"])
         
         # Completed story beats
