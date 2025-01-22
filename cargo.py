@@ -8022,6 +8022,7 @@ class StoryManager:
 
     def initialize_chapters(self):
         """Initialize all chapters with their milestones and branching paths"""
+        # Core storyline
         return {
             "ch1": StoryChapter(
                 chapter_id="ch1",
