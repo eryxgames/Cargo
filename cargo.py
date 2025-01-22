@@ -1890,6 +1890,20 @@ class Game:
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
 
+    def force_check_chapter_progression(self):
+        """Manually trigger chapter progression checks"""
+        current_chapter = self.story_manager.current_chapter
+        current_chapter_obj = self.story_manager.chapters[current_chapter]
+        
+        # Check next possible chapters
+        next_chapters = current_chapter_obj.get_next_chapters(self)
+        
+        if next_chapters:
+            if len(next_chapters) > 1:
+                self.story_manager.present_chapter_choice(next_chapters)
+            else:
+                self.story_manager.start_chapter(next_chapters[0].id)        
+
     def play_turn(self):
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
@@ -1898,6 +1912,7 @@ class Game:
             # New chapter and milestone system
             self.story_manager.check_milestone_progress()
             self.story_manager.check_chapter_progress()
+            self.force_check_chapter_progression()
 
             # Get location commands
             location_commands = self.current_location.commands
@@ -8310,23 +8325,54 @@ class StoryManager:
         return []
 
     def check_chapter_progress(self):
-        """Check for chapter completion and handle branching"""
-        if self.current_chapter and not self.chapters[self.current_chapter].completed:
-            self.check_milestone_progress()
+        """Enhanced chapter progression checking"""
+        if not self.current_chapter:
+            return
+
+        current_chapter_obj = self.chapters[self.current_chapter]
+        
+        # Check current chapter's requirements
+        current_chapter_requirements_met = True
+        if current_chapter_obj.requirements:
+            for req_type, req_value in current_chapter_obj.requirements.items():
+                if not MilestoneRequirements._check_single_requirement(req_type, req_value, self.game):
+                    current_chapter_requirements_met = False
+                    print(f"Current Chapter Requirement Not Met: {req_type}")
+
+        # Check milestone completions
+        milestones_completed = all(milestone.completed for milestone in current_chapter_obj.milestones.values())
+        
+        # Complete current chapter if requirements are met
+        if current_chapter_requirements_met and milestones_completed and not current_chapter_obj.completed:
+            self.complete_current_chapter()
             
-            current_chapter_obj = self.chapters[self.current_chapter]
-            if current_chapter_obj.check_completion(self.game):
-                # This line to properly complete the chapter
-                self.complete_current_chapter()
-                
-                next_chapters = current_chapter_obj.get_next_chapters(self.game)
-                if next_chapters:
-                    if len(next_chapters) > 1:
-                        self.present_chapter_choice(next_chapters)
+            # Find potential next chapters
+            next_chapters = current_chapter_obj.get_next_chapters(self.game)
+            
+            if next_chapters:
+                # Multiple possible next chapters
+                if len(next_chapters) > 1:
+                    self.present_chapter_choice(next_chapters)
+                # Single next chapter
+                elif len(next_chapters) == 1:
+                    # Double-check requirements for the single next chapter
+                    next_chapter = next_chapters[0]
+                    next_chapter_requirements_met = True
+                    
+                    if next_chapter.requirements:
+                        for req_type, req_value in next_chapter.requirements.items():
+                            if not MilestoneRequirements._check_single_requirement(req_type, req_value, self.game):
+                                next_chapter_requirements_met = False
+                                print(f"Next Chapter Requirement Not Met: {req_type}")
+                    
+                    if next_chapter_requirements_met:
+                        self.start_chapter(next_chapter.id)
                     else:
-                        self.start_chapter(next_chapters[0].id)
-                elif not current_chapter_obj.next_chapters:
-                    self.handle_game_ending()
+                        print(f"Cannot start chapter {next_chapter.id} - requirements not met")
+            
+            # No next chapters (potentially an ending)
+            elif not current_chapter_obj.next_chapters:
+                self.handle_game_ending()
 
     def handle_game_ending(self):
         """Handle reaching a game ending"""
