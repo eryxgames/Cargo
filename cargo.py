@@ -4703,23 +4703,6 @@ class ContractManager:
         contract = completed[int(choice) - 1]
         self.handle_contract_completion(contract)
 
-    def get_trade_history_display(self):
-            """Get formatted trade history"""
-            if not self.trade_history:
-                return "No trades recorded"
-                
-            history = []
-            if self.contract_type == "cargo":
-                for trade in self.trade_history:
-                    history.append(
-                        f"Turn {trade['turn']}: Delivered {trade['amount']} units at {trade['location']}"
-                    )
-            elif self.contract_type == "passenger":
-                for trade in self.trade_history:
-                    history.append(
-                        f"Turn {trade['turn']}: Delivered {trade['count']} passengers at {trade['location']}"
-                    )
-            return "\n".join(history)
 
     def show_detailed_status(self):
         """Show detailed status of all active contracts with trade history"""
@@ -5587,6 +5570,25 @@ class Contract:
             ])
             
         return "\n".join(status_lines)
+
+    def get_trade_history_display(self):
+        """Get formatted trade history"""
+        if not hasattr(self, 'trade_history') or not self.trade_history:
+            return "No trade history recorded"
+            
+        history_lines = []
+        if self.contract_type == "cargo":
+            for trade in self.trade_history:
+                history_lines.append(
+                    f"Turn {trade.get('turn', '?')}: Delivered {trade.get('amount', 0)} units of {self.requirements.get('cargo_type', 'cargo')} at {trade.get('location', 'Unknown')}"
+                )
+        elif self.contract_type == "passenger":
+            for trade in self.trade_history:
+                history_lines.append(
+                    f"Turn {trade.get('turn', '?')}: Delivered {trade.get('count', 1)} passengers at {trade.get('location', 'Unknown')}"
+                )
+        
+        return "\n".join(history_lines) if history_lines else "No trade history recorded"
 
     def calculate_final_reward(self):
         """Calculate final reward with bonuses"""
