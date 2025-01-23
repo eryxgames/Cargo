@@ -2065,7 +2065,10 @@ class Game:
                     'agrobot': 5000,
                     'nanotech': 6000,
                     'neuroengineering': 7000,
-                    'mining': 10000
+                    'mining': 10000,
+                    'salt_refinery': 15000,
+                    'fuel_refinery': 15000,
+                    'combined_refinery': 25000
                 }
 
                 valid_options = [
@@ -2075,7 +2078,10 @@ class Game:
                     'agrobot', 'ab',
                     'nanotech', 'nt',
                     'neuroengineering', 'ne',
-                    'mining', 'm'
+                    'mining', 'm',
+                    'salt_refinery', 'sr',
+                    'fuel_refinery', 'fr',
+                    'combined_refinery', 'cr'
                 ]
 
                 building_name = self.validate_input(
@@ -2238,7 +2244,13 @@ class Game:
             'neuroengineering': ('Neuroengineering Guild', 'neuroengineering'),
             'ne': ('Neuroengineering Guild', 'neuroengineering'),
             'mining': ('Mining Facility', 'mining'),
-            'm': ('Mining Facility', 'mining')
+            'm': ('Mining Facility', 'mining'),
+            'salt_refinery': ('Halide Extraction Refinery', 'salt_refinery'),
+            'sr': ('Halide Extraction Refinery', 'salt_refinery'),
+            'fuel_refinery': ('Plasma Catalysis Refinery', 'fuel_refinery'), 
+            'fr': ('Plasma Catalysis Refinery', 'fuel_refinery'),
+            'combined_refinery': ('Elemental Fusion Refinery', 'combined_refinery'),
+            'cr': ('Elemental Fusion Refinery', 'combined_refinery')
         }
 
         if building_name not in building_mapping:
@@ -7025,36 +7037,30 @@ class Location:
         return False
 
     def generate_market(self):
-        """Generate market prices including mining commodities"""
+        # Generate base market prices based on tech and agri levels
         market = {
             'tech': 100 - (self.tech_level * 10),
             'agri': 50 + (self.agri_level * 5),
-            'salt': 0,  # Base price for salt
-            'fuel': 0   # Base price for fuel
+            'salt': 0,
+            'fuel': 0
         }
         
-        # Set prices for mined commodities if platforms exist
-        for platform in self.mining_platforms:
-            if platform.current_amount > 0:  # Only set price if resources available
-                if platform.resource_type == 'salt':
-                    market['salt'] = 10  # Base price at source
-                elif platform.resource_type == 'fuel':
-                    market['fuel'] = 15  # Base price at source
-
-        # Higher prices if refinery exists but no local mining
-        has_refinery = any(b == "Refinery" for b in self.buildings)
-        if has_refinery:
-            if market['salt'] == 0:  # No local mining
-                market['salt'] = 80  # Base selling price
-            if market['fuel'] == 0:  # No local mining
-                market['fuel'] = 150  # Base selling price
-            
-            # Improve prices if there is a refinery
-            if market['salt'] > 0:
-                market['salt'] = int(market['salt'] * 1.5)  # 50% better price
-            if market['fuel'] > 0:
-                market['fuel'] = int(market['fuel'] * 1.5)  # 50% better price
-
+        # Apply refinery effects
+        if "Halide Extraction Refinery" in self.buildings:
+            # Salt refinery lowers agri prices, sets salt price
+            market['salt'] = random.randint(100, 150)
+            market['agri'] = max(1, int(market['agri'] * 0.8))
+        
+        if "Plasma Catalysis Refinery" in self.buildings:
+            # Fuel refinery lowers tech prices, sets fuel price
+            market['fuel'] = random.randint(150, 200)
+            market['tech'] = max(1, int(market['tech'] * 0.8))
+        
+        if "Elemental Fusion Refinery" in self.buildings:
+            # Combined refinery raises tech and agri prices
+            market['tech'] = int(market['tech'] * 1.3)
+            market['agri'] = int(market['agri'] * 1.3)
+        
         return market
     
     def display_market_info(self):
@@ -7209,10 +7215,17 @@ class Location:
             self.market['agri'] = max(1, self.market['agri'] * 0.85)
         elif building_name == "Neuroengineering Guild":
             self.market['tech'] = self.market['tech'] * 1.3
-        elif building_name == "stockmarket":
+        elif building_name == "Stockmarket":
             self.stockmarket_base = True
             self.market['tech'] = max(1, self.market['tech'] - 10)
             self.market['agri'] = max(1, self.market['agri'] - 5)
+        elif building_name == "Halide Extraction Refinery":
+            self.market['agri'] = max(1, self.market['agri'] * 0.8)         
+        elif building_name == "Plasma Catalysis Refinery":
+            self.market['tech'] = max(1, self.market['tech'] * 0.8)          
+        elif building_name == "Elemental Fusion Refinery":
+            self.market['tech'] = int(self.market['tech'] * 1.3)
+            self.market['agri'] = int(self.market['agri'] * 1.3)        
         
         # Add building to location's buildings list
         self.buildings.append(building_name)
@@ -7229,9 +7242,26 @@ class Location:
 
     def can_trade(self, commodity):
         """Check if this location can trade a specific commodity"""
+        # First, check if commodity is banned - this should be the first check
         if commodity in self.banned_commodities:
             return False
-        return commodity in self.get_capabilities().get("can_trade", [])
+
+        # Always allow standard commodities
+        if commodity in self.get_capabilities().get("can_trade", []):
+            return True
+
+        # Allow salt/fuel if corresponding refinery exists
+        if commodity == 'salt' and any(b == "Halide Extraction Refinery" for b in self.buildings):
+            return True
+        
+        if commodity == 'fuel' and any(b == "Plasma Catalysis Refinery" for b in self.buildings):
+            return True
+        
+        # Allow trading all commodities if Combined Refinery exists
+        if any(b == "Elemental Fusion Refinery" for b in self.buildings):
+            return True
+
+        return False
 
     def can_build(self, building_type):
         """Check if this location can build a specific building with debug info"""
