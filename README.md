@@ -9,10 +9,18 @@ A text-based space trading and exploration game where you navigate between plane
                   ╔════════ C Δ R G Ω ════════╗
                   ║     Space Trading Saga    ║
                   ╚═══════════════════════════╝
-                          Version 1.0.1a
+                          Version 1.0.2a
 
 ```
-
+## Development Notes
+🛠 Current Status: Experimental Prototype.
+CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
+- [x] New contract system
+- [ ] New quest system 
+- [ ] New local/global events
+- [ ] Core storyline/characters
+- [ ] New items
+- [ ] New enemies
 ## Features
 - [x] Dynamic Trading System
   - Multiple commodities (tech, agricultural goods, minerals, fuel)
@@ -25,12 +33,11 @@ A text-based space trading and exploration game where you navigate between plane
   - Asteroid Mining Bases
   - Deep Space Outposts
   - Research Colonies
-  - Each with unique capabilities and bonuses
 
 - [x] Progressive Story Campaign
-  - 5 chapters with unique storylines
+  - Chapters with unique storylines
   - Multiple story branches and achievements
-  - Reputation-based rank progression
+  - Reputation-based progression
   - Plot points system unlocking new content
 
 - [x] Resource Management
@@ -51,14 +58,10 @@ A text-based space trading and exploration game where you navigate between plane
   - Market fluctuations
   - Natural disasters
   - Discoveries
-  - Each with unique consequences and opportunities
+  - Each with consequences and opportunities
      
 - [x] Combat System
   - Space battles with pirates, raiders, and militia
-  - Combat stats affecting battles (attack, defense, speed)
-  - Combat equipment (turrets, shields)
-  - Automatic defense systems
-  - Battle rewards and penalties
   - Combat reputation tracking
   - Enemy variety with different difficulty levels
   - Combat-based quests and story missions
@@ -67,7 +70,7 @@ A text-based space trading and exploration game where you navigate between plane
   - Victories contribute to rank progression and unlock secret location types 
 
 - [x] Progression Systems
-  - Character ranks from Explorer to Galactic Legend
+  - Character ranks 
   - Ship upgrades (attack, defense, speed)
   - Research technologies
   - Location unlocks
@@ -81,6 +84,7 @@ A text-based space trading and exploration game where you navigate between plane
      
 - [x] Passenger Transport
   - Passengers can embark on locations
+  - Passenger contracts
   - Develop story and plot points 
   - Character Quests    
 
