@@ -9676,7 +9676,7 @@ class DynamicCharacterSystem:
             "system_rebellion": {
                 "condition": lambda game: (
                     game.ship.passenger_reputation >= 70 and 
-                    game.story_manager.current_chapter >= 3 and
+                    game.story_manager.get_chapter_number() >= 3 and
                     len([loc for loc in game.locations if hasattr(loc, 'controlled_by_player')]) >= 2
                 ),
                 "generator": "human",
@@ -9686,7 +9686,7 @@ class DynamicCharacterSystem:
             "ancient_mysteries": {
                 "condition": lambda game: (
                     game.ship.passenger_reputation >= 80 and 
-                    game.story_manager.current_chapter >= 4 and
+                    game.story_manager.get_chapter_number() >= 4 and
                     "alien_artifacts" in game.story_manager.completed_story_beats
                 ),
                 "generator": "alien",
