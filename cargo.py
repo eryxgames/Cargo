@@ -1913,7 +1913,7 @@ class Game:
             self.story_manager.check_milestone_progress()
             self.story_manager.check_chapter_progress()
             self.force_check_chapter_progression()
-
+            self.quest_system.check_active_quests()
             # Get location commands
             location_commands = self.current_location.commands
 
@@ -2353,6 +2353,12 @@ class Game:
             
             # Add research points to the ship
             self.ship.research_points += total_gain
+
+            # After successful travel for quest
+            self.quest_system.update_from_travel({
+                "destination": location_name,
+                "turn": self.turn
+            })            
             
             # Display informative message about research gain
             if found_location.name not in self.known_locations:
@@ -7324,6 +7330,11 @@ class QuestSystem:
             "research": 0
         }
 
+    def check_active_quests(self):
+        for quest in self.active_quests:
+            if quest.check_completion(self.game):
+                self.complete_quest(quest)
+
     def display_quests(self):
         """Display all active quests"""
         active_quests = [q for q in self.active_quests if isinstance(q, Quest)]
@@ -7770,6 +7781,22 @@ class QuestSystem:
             rewards=rewards,
             destination=details['destination']  # Add destination
         )
+
+    def update_from_travel(self, travel_data):
+        """Update quests based on travel actions"""
+        for quest in self.active_quests:
+            if quest.quest_type == "exploration" or quest.quest_type == "location_unlock":
+                # Check location discovery requirements
+                if "destination" in travel_data:
+                    if quest.requirements.get('specific_location') == travel_data['destination']:
+                        quest.progress += 1
+                        
+                        # Display quest progress
+                        self.display_quest_progress(quest)
+                        
+                        # Check if quest is completed
+                        if quest.check_completion(self.game):
+                            self.complete_quest(quest)
 
     def complete_quest(self, quest):
         """Handle quest completion and cleanup with full quest lifecycle"""
@@ -11773,6 +11800,8 @@ class CharacterManager:
 
     def update(self):
         """Check for character spawning each turn"""
+        self.cleanup_old_characters()  # Add this line first
+
         location_type = self.game.current_location.location_type.lower()
         
         # Check each template for possible spawning
