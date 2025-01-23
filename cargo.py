@@ -2079,9 +2079,9 @@ class Game:
                     'nanotech', 'nt',
                     'neuroengineering', 'ne',
                     'mining', 'm',
-                    'salt_refinery', 'sr',
-                    'fuel_refinery', 'fr',
-                    'combined_refinery', 'cr'
+                    'salt refinery', 'sr',
+                    'fuel refinery', 'fr',
+                    'combined refinery', 'cr'
                 ]
 
                 building_name = self.validate_input(
@@ -2246,10 +2246,13 @@ class Game:
             'mining': ('Mining Facility', 'mining'),
             'm': ('Mining Facility', 'mining'),
             'salt_refinery': ('Halide Extraction Refinery', 'salt_refinery'),
+            'salt refinery': ('Halide Extraction Refinery', 'salt_refinery'),
             'sr': ('Halide Extraction Refinery', 'salt_refinery'),
             'fuel_refinery': ('Plasma Catalysis Refinery', 'fuel_refinery'), 
+            'fuel refinery': ('Plasma Catalysis Refinery', 'fuel_refinery'), 
             'fr': ('Plasma Catalysis Refinery', 'fuel_refinery'),
             'combined_refinery': ('Elemental Fusion Refinery', 'combined_refinery'),
+            'combined refinery': ('Elemental Fusion Refinery', 'combined_refinery'),
             'cr': ('Elemental Fusion Refinery', 'combined_refinery')
         }
 
