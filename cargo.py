@@ -409,7 +409,7 @@ class Ship:
             'salt': 0,
             'fuel': 0
         }
-        self.money = 1000000
+        self.money = 1000
         self.damage = 0
         self.research_points = 0
 
