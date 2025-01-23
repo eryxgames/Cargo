@@ -1776,7 +1776,7 @@ class Game:
         self.story_manager.trigger_milestone("first_artifact")
         
     def check_final_crisis(self):
-        return (self.story_manager.current_chapter >= 5 and 
+        return (self.story_manager.get_chapter_number() >= 5 and 
                 self.check_controlled_locations() >= 3 and
                 self.ship.research_points >= 1000)
     
@@ -8680,7 +8680,7 @@ class StoryManager:
         # Only announce chapter if it wasn't just announced by complete_current_chapter
         if not getattr(self, '_chapter_just_announced', False):
             self.game.display_story_message([
-                f"Chapter {self.current_chapter}: {chapter_obj.title}",
+                f"Chapter {self.story_manager.get_chapter_number_roman()}: {chapter_obj.title}",
                 chapter_obj.description,
                 "",
                 "New milestones await..."
@@ -11498,7 +11498,7 @@ class PassengerReputationManager:
         
         for char_type, data in self.story_characters.items():
             if (reputation >= data["rep_required"] and
-                current_chapter >= data["trigger_chapter"] and
+                self.story_manager.get_chapter_number() >= data["trigger_chapter"] and
                 char_type not in self.spawned_characters):
                 
                 # Generate story character
