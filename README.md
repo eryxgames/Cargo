@@ -6,9 +6,9 @@ A text-based space trading and exploration game where you navigate between plane
 
 ```console
 >>> 
-                  ╔════════ C Δ R G Ω ════════╗
-                  ║     Space Trading Saga    ║
-                  ╚═══════════════════════════╝
+        ╔════════ C Δ R G Ω ════════╗
+        ║     Space Trading Saga    ║
+        ╚═══════════════════════════╝
                           Version 1.0.2a
 
 ```
