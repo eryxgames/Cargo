@@ -15,6 +15,8 @@ A text-based space trading and exploration game where you navigate between plane
 ## Development Notes
 🛠 Current Status: Experimental Prototype.
 CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
+
+[Eryxian Universe Wiki](https://github.com/eryxgames/eryxian/wiki) 
 - [x] New contract system
 - [ ] New quest system 
 - [ ] New local/global events
