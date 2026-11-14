@@ -14,9 +14,30 @@ path, goal, seed = sys.argv[1], sys.argv[2], int(sys.argv[3])
 max_turns = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4].isdigit() else 3000
 verbose = "--verbose" in sys.argv
 save_every = 0
+trace_path = None
 for a in sys.argv:
     if a.startswith("--save-every="):
         save_every = int(a.split("=")[1])
+    if a.startswith("--trace="):
+        trace_path = a.split("=", 1)[1]
+trace_file = open(trace_path, "w", encoding="utf-8") if trace_path else None
+traced_turn = [-1]
+
+
+def write_trace(g, final=False):
+    """One line per turn: the story kit's view of the game, and the game's own verdicts."""
+    if not trace_file or g is None or (g.turn == traced_turn[0] and not final):
+        return
+    import cargo_story
+    traced_turn[0] = g.turn
+    snap = cargo_story.snapshot(g)
+    snap["verdicts"] = cargo_story.game_verdicts(g)
+    snap["style"] = goal
+    snap["seed"] = seed
+    if final:
+        snap["final"] = True
+        snap["ending"] = getattr(g, "ending_reached", None)
+    trace_file.write(json.dumps(snap, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 home = tempfile.mkdtemp(prefix="cargo-bot-")
 os.environ["CARGO_HOME"] = home
@@ -406,6 +427,7 @@ def fake_input(prompt=""):
         out.seek(0)
         out.truncate(0)
     g = bot.game
+    write_trace(g)
     if g is not None:
         if g.turn >= max_turns:
             raise Done("max turns")
@@ -477,6 +499,9 @@ finally:
     shutil.rmtree(home, ignore_errors=True)
 
 g = bot.game
+write_trace(g, final=True)
+if trace_file:
+    trace_file.close()
 if g is not None:
     sm = g.story_manager
     result.update({

@@ -1,0 +1,2104 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "game": {
+  "id": "cargo2",
+  "title": "Cargo 2",
+  "part": 2
+ },
+ "about": "Imported from Cargo 2's data/*.yml by tools/cargo2_story.py.",
+ "stats": {
+  "money": {
+   "about": "credits on hand"
+  },
+  "plot_points": {
+   "about": "story points (StoryManager.plot_points)"
+  },
+  "research_points": {
+   "about": "research points on hand"
+  },
+  "trades_completed": {
+   "about": "buy and sell actions completed"
+  },
+  "trade_profit": {
+   "about": "total trade profit, all goods"
+  },
+  "passengers_transported": {
+   "about": "passengers delivered"
+  },
+  "passenger_reputation": {
+   "about": "passenger reputation"
+  },
+  "combat_rating": {
+   "about": "attack + defence + speed"
+  },
+  "combat_victories": {
+   "about": "battles won (all kinds)"
+  },
+  "discovered": {
+   "about": "locations visited at least once"
+  },
+  "mining_platforms": {
+   "about": "mining platforms built, all locations"
+  },
+  "stockmarket_everywhere": {
+   "about": "1 when every planet, asteroid base and outpost has a stock market"
+  },
+  "controlled_locations": {
+   "about": "locations marked controlled_by_player (nothing in the game sets this)"
+  },
+  "milestones_done": {
+   "about": "story milestones completed (StoryManager.completed_story_beats)"
+  },
+  "turns_since_vip": {
+   "about": "turns since the last VIP passenger appeared"
+  },
+  "combat_victories.pirate": {
+   "about": "battles won against pirate"
+  },
+  "combat_victories.militia": {
+   "about": "battles won against militia"
+  },
+  "combat_victories.rogue_captain": {
+   "about": "battles won against rogue_captain"
+  },
+  "combat_victories.uprising": {
+   "about": "battles won against uprising"
+  },
+  "buildings.stockmarket": {
+   "about": "stockmarket buildings, all locations"
+  },
+  "buildings.Neuroengineering Guild": {
+   "about": "Neuroengineering Guild buildings, all locations"
+  },
+  "buildings.Agrobot Assembly Line": {
+   "about": "Agrobot Assembly Line buildings, all locations"
+  },
+  "buildings.mining_platform": {
+   "about": "mining_platform buildings, all locations"
+  },
+  "discovered.Planet": {
+   "about": "Planet locations visited"
+  },
+  "discovered.AsteroidBase": {
+   "about": "AsteroidBase locations visited"
+  },
+  "discovered.DeepSpaceOutpost": {
+   "about": "DeepSpaceOutpost locations visited"
+  },
+  "discovered.ResearchColony": {
+   "about": "ResearchColony locations visited"
+  },
+  "chapters_completed": {
+   "about": "chapters completed"
+  },
+  "comfort_level": {
+   "about": "passenger module comfort"
+  },
+  "ship_speed": {
+   "about": "ship speed"
+  }
+ },
+ "sets": {
+  "researched": {
+   "about": "research unlocked",
+   "members": [
+    "advanced_scanning",
+    "advanced_shielding",
+    "ancient_tech",
+    "chronopolitics",
+    "exogeology",
+    "geophysics",
+    "psychodynamics",
+    "pyroshield_upgrade",
+    "reflective_armor_upgrade",
+    "telemetry",
+    "weapon_calibration",
+    "xenoeconomy"
+   ]
+  },
+  "items": {
+   "about": "items carried"
+  }
+ },
+ "effects": {
+  "code": {
+   "about": "game code"
+  }
+ },
+ "flags": {},
+ "places": {
+  "Alien Outpost": {
+   "kind": "location type"
+  },
+  "Ancient Ruins": {
+   "kind": "location type"
+  },
+  "AsteroidBase": {
+   "kind": "location type"
+  },
+  "DeepSpaceOutpost": {
+   "kind": "location type"
+  },
+  "Planet": {
+   "kind": "location type"
+  },
+  "ResearchColony": {
+   "kind": "location type"
+  },
+  "port": {
+   "kind": "venue"
+  },
+  "cantina": {
+   "kind": "venue"
+  }
+ },
+ "characters": {
+  "merchant_trader": {
+   "name": "Traveling Merchant",
+   "kind": "merchant",
+   "role": "trade",
+   "generated": true
+  },
+  "vip_corporate": {
+   "name": "CEO",
+   "kind": "VIPPassenger",
+   "role": "VIP",
+   "generated": true
+  },
+  "vip_political": {
+   "name": "Senator",
+   "kind": "VIPPassenger",
+   "role": "VIP",
+   "generated": true
+  },
+  "vip_scientific": {
+   "name": "Professor",
+   "kind": "VIPPassenger",
+   "role": "VIP",
+   "generated": true
+  },
+  "neurodroid_leader": {
+   "name": "Neurodroid Overseer",
+   "kind": "synthetic",
+   "role": "uprising",
+   "generated": true
+  },
+  "agrobot_leader": {
+   "name": "Agrobot Collective",
+   "kind": "synthetic",
+   "role": "uprising",
+   "generated": true
+  },
+  "ancient_scholar": {
+   "name": "Emissary",
+   "kind": "alien",
+   "role": "research",
+   "generated": true
+  },
+  "grand_commander_voxx": {
+   "name": "Grand Commander Voxx",
+   "kind": "human",
+   "role": "military",
+   "generated": false
+  }
+ },
+ "arcs": {
+  "main": {
+   "title": "Main story",
+   "order": 0
+  },
+  "characters": {
+   "title": "Characters",
+   "order": 1
+  },
+  "quests": {
+   "title": "Quests",
+   "order": 9
+  },
+  "events: combat": {
+   "title": "Events: combat",
+   "order": 5
+  },
+  "events: trade": {
+   "title": "Events: trade",
+   "order": 5
+  },
+  "events: exploration": {
+   "title": "Events: exploration",
+   "order": 5
+  },
+  "events: disaster": {
+   "title": "Events: disaster",
+   "order": 5
+  },
+  "events: passenger": {
+   "title": "Events: passenger",
+   "order": 5
+  }
+ },
+ "nodes": {
+  "ch1": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 1,
+   "title": "First Steps",
+   "text": "Learn the basics of space trading",
+   "requires": {},
+   "next": [
+    "ch2a",
+    "ch2b"
+   ],
+   "source": "data/story.yml",
+   "choose": true,
+   "start": true
+  },
+  "ch1.first_trade": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch1",
+   "title": "First Trade",
+   "text": "You've taken your first step into the world of space trading. A small transaction, but the first of many on this journey.",
+   "requires": {
+    "trades_completed": 1
+   },
+   "effects": {
+    "money": 500,
+    "plot_points": 5
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "The market is unforgiving. Your first transaction was clumsy, but you survived it."
+    },
+    {
+     "when": "default",
+     "text": "You have made first steps in commerce."
+    },
+    {
+     "when": "alternate",
+     "text": "The market was unforgiving, and you barely made any money."
+    },
+    {
+     "when": "market_crash",
+     "text": "You have traded on the market, but there was market crash after you, and you lost money"
+    },
+    {
+     "when": "resource_shortage",
+     "text": "Your trade created a resource shortage. Be careful in the future."
+    }
+   ]
+  },
+  "ch1.first_combat": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch1",
+   "title": "Combat Initiation",
+   "text": "You've won your first space battle. The galaxy is not a safe place, but you've proven you can defend yourself.",
+   "requires": {
+    "combat_victories": 1
+   },
+   "effects": {
+    "money": 1000,
+    "plot_points": 5
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You were lucky to survive, but you did. It was not your skill, but a lucky shot."
+    },
+    {
+     "when": "default",
+     "text": "You won your first battle. You are ready for more."
+    },
+    {
+     "when": "alternate",
+     "text": "Your battle was not decisive. You barely managed to survive."
+    },
+    {
+     "when": "pirate_attack",
+     "text": "Your first battle was against pirates! Your actions were heroic."
+    },
+    {
+     "when": "rogue_corsair",
+     "text": "You fought against the rogue corsairs. You made quick work of them."
+    }
+   ]
+  },
+  "ch1.basic_license": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch1",
+   "title": "Extended Trading License",
+   "text": "After completing several successful trades, you've proven yourself capable to the local authorities. You've been granted an extended trading license, allowing access to more lucrative markets. This also comes with a free navigation computer, making your journeys much easier.",
+   "requires": {
+    "trades_completed": 5,
+    "money": 20000
+   },
+   "effects": {
+    "money": 10000,
+    "plot_points": 10,
+    "give": {
+     "items": [
+      "navcomp"
+     ]
+    }
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "A basic license was all you could get. You are not special. You are just another cog in the machine."
+    },
+    {
+     "when": "default",
+     "text": "You have acquired an extended trading license."
+    },
+    {
+     "when": "alternate",
+     "text": "Your trading capabilities impressed no one, so a basic license was all you could get."
+    }
+   ]
+  },
+  "ch2a": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 2,
+   "title": "Trade Empire Rising",
+   "text": "Build your commercial empire",
+   "requires": {
+    "done": [
+     "ch1"
+    ],
+    "plot_points": 15,
+    "trades_completed": 10
+   },
+   "next": [
+    "ch3a",
+    "ch3c"
+   ],
+   "source": "data/story.yml",
+   "choose": true
+  },
+  "ch2a.establish_route": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch2a",
+   "title": "Trade Route Network",
+   "text": "You've established a network of trade routes, with several stockmarkets to your disposal. Your operations are starting to look like a real business.",
+   "requires": {
+    "trades_completed": 20,
+    "buildings.stockmarket": 2
+   },
+   "effects": {
+    "money": 50000,
+    "plot_points": 15
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You are making some decent trades, still nothing that would change the galaxy."
+    },
+    {
+     "when": "default",
+     "text": "You have established your first trade route network."
+    },
+    {
+     "when": "alternate",
+     "text": "Your trading network is very small, nothing significant, just some decent trades."
+    }
+   ]
+  },
+  "ch2a.passenger_business": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch2a",
+   "title": "Passenger Services",
+   "text": "You've started to transport passengers, making your business more diversed. You are starting to build a real reputation.",
+   "requires": {
+    "passengers_transported": 10,
+    "passenger_reputation": 20
+   },
+   "effects": {
+    "money": 30000,
+    "plot_points": 10
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "Some people are willing to pay you to move them from one place to another."
+    },
+    {
+     "when": "default",
+     "text": "You have started the passenger transport business."
+    },
+    {
+     "when": "alternate",
+     "text": "There is some interest in your passenger transport business."
+    }
+   ]
+  },
+  "ch2b": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 2,
+   "title": "Combat Legend",
+   "text": "Become a legendary combat pilot",
+   "requires": {
+    "done": [
+     "ch1"
+    ],
+    "plot_points": 15,
+    "combat_victories": 5
+   },
+   "next": [
+    "ch3b",
+    "ch3c"
+   ],
+   "source": "data/story.yml",
+   "choose": true
+  },
+  "ch2b.defeat_pirates": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch2b",
+   "title": "Pirate Hunter",
+   "text": "You've become a known pirate hunter, making space lanes safer.",
+   "requires": {
+    "combat_victories.pirate": 10
+   },
+   "effects": {
+    "money": 40000,
+    "plot_points": 20
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've eliminated a few small groups of pirates. Nothing to be proud about."
+    },
+    {
+     "when": "default",
+     "text": "You have cleared the sector of pirates."
+    },
+    {
+     "when": "alternate",
+     "text": "You managed to defeat some pirates, but this is not significant."
+    }
+   ]
+  },
+  "ch2b.defend_stations": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch2b",
+   "title": "Station Defender",
+   "text": "You've defended several stations from attacks. You're starting to be known as a capable protector.",
+   "requires": {
+    "combat_victories": 15,
+    "buildings.Neuroengineering Guild": 1
+   },
+   "effects": {
+    "money": 30000,
+    "plot_points": 15
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've survived a few attacks. It was not skill, but pure luck."
+    },
+    {
+     "when": "default",
+     "text": "You are defending stations in the sector."
+    },
+    {
+     "when": "alternate",
+     "text": "You helped defend some stations, but it was not really difficult."
+    }
+   ]
+  },
+  "ch3a": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 3,
+   "title": "Economic Dominance",
+   "text": "Achieve economic control of the sector",
+   "requires": {
+    "done": [
+     "ch2a"
+    ],
+    "plot_points": 40,
+    "trade_profit": 200000
+   },
+   "next": [
+    "ending_trade"
+   ],
+   "source": "data/story.yml"
+  },
+  "ch3a.market_control": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch3a",
+   "title": "Market Controller",
+   "text": "Your network of stockmarkets and improved trade skills have brought you significant economic influence, making you a true market controller.",
+   "requires": {
+    "buildings.stockmarket": 4,
+    "has": {
+     "researched": [
+      "xenoeconomy"
+     ]
+    }
+   },
+   "effects": {
+    "money": 100000,
+    "plot_points": 25
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've accumulated some wealth. But your influence is not as strong as you might think."
+    },
+    {
+     "when": "default",
+     "text": "You have taken control over the market in this sector."
+    },
+    {
+     "when": "alternate",
+     "text": "You've some control over the markets, but it is not absolute yet."
+    }
+   ]
+  },
+  "ch3b": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 3,
+   "title": "Military Might",
+   "text": "Become the dominant military force",
+   "requires": {
+    "done": [
+     "ch2b"
+    ],
+    "plot_points": 40,
+    "combat_victories": 25
+   },
+   "next": [
+    "ending_combat"
+   ],
+   "source": "data/story.yml"
+  },
+  "ch3b.fleet_commander": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch3b",
+   "title": "Fleet Commander",
+   "text": "You've become a fleet commander, leading your forces to victory. Your name is now feared in the space lanes.",
+   "requires": {
+    "combat_victories": 35,
+    "combat_rating": 15
+   },
+   "effects": {
+    "money": 100000,
+    "plot_points": 25
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You are leading some forces, still nothing that would be a real threat to anyone."
+    },
+    {
+     "when": "default",
+     "text": "You have become a fleet commander. Your forces are well trained."
+    },
+    {
+     "when": "alternate",
+     "text": "You have some forces under your command, but you are still not the best leader."
+    }
+   ]
+  },
+  "ch3c": {
+   "kind": "chapter",
+   "arc": "main",
+   "act": 3,
+   "title": "Ancient Mysteries",
+   "text": "Uncover the sector's ancient secrets",
+   "requires": {
+    "done": [
+     "ch2a",
+     "ch2b"
+    ],
+    "plot_points": 50,
+    "research_points": 300
+   },
+   "next": [
+    "ending_discovery"
+   ],
+   "source": "data/story.yml"
+  },
+  "ch3c.alien_artifacts": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ch3c",
+   "title": "Ancient Technology",
+   "text": "You've uncovered secrets of ancient civilizations. You are now more than a simple trader, you are a seeker of knowledge.",
+   "requires": {
+    "discovered.ResearchColony": 2,
+    "has": {
+     "researched": [
+      "xenoeconomy",
+      "telemetry"
+     ]
+    }
+   },
+   "effects": {
+    "money": 150000,
+    "plot_points": 30
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've found some shiny objects. They don't seem to be worth much."
+    },
+    {
+     "when": "default",
+     "text": "You have found some ancient artifacts."
+    },
+    {
+     "when": "alternate",
+     "text": "You explored some old places, but did not find anything too impressive."
+    }
+   ]
+  },
+  "ending_trade": {
+   "kind": "ending",
+   "arc": "main",
+   "act": 4,
+   "title": "Galactic Trade Mogul",
+   "text": "You've become a legendary trade mogul",
+   "requires": {
+    "done": [
+     "ch3a"
+    ],
+    "plot_points": 100,
+    "trade_profit": 1000000
+   },
+   "next": [],
+   "source": "data/story.yml"
+  },
+  "ending_trade.trade_ending": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ending_trade",
+   "title": "Economic Victory",
+   "text": "You've become the greatest trade mogul of the sector. Your economic empire spans the whole galaxy.",
+   "requires": {
+    "buildings.stockmarket": 5,
+    "passenger_reputation": 80,
+    "trade_profit": 1000000
+   },
+   "effects": {
+    "money": 1000000,
+    "plot_points": 100
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've accumulated wealth, but it seems like there is nothing more to do."
+    },
+    {
+     "when": "default",
+     "text": "You are now a Galactic Trade Mogul!"
+    },
+    {
+     "when": "alternate",
+     "text": "You became very rich, but it feels like you could do more."
+    }
+   ]
+  },
+  "ending_combat": {
+   "kind": "ending",
+   "arc": "main",
+   "act": 4,
+   "title": "Legendary Fleet Admiral",
+   "text": "You've become a legendary military leader",
+   "requires": {
+    "done": [
+     "ch3b"
+    ],
+    "plot_points": 100,
+    "combat_victories": 50
+   },
+   "next": [],
+   "source": "data/story.yml"
+  },
+  "ending_combat.combat_ending": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ending_combat",
+   "title": "Military Victory",
+   "text": "You are now a legend in the space lanes. Your military prowess is unmatched, and your name is feared by everyone.",
+   "requires": {
+    "combat_victories": 75,
+    "combat_rating": 25
+   },
+   "effects": {
+    "money": 1000000,
+    "plot_points": 100
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've defeated some pirates, but you are not the only one. Nothing significant, really."
+    },
+    {
+     "when": "default",
+     "text": "You are now a Legendary Fleet Admiral!"
+    },
+    {
+     "when": "alternate",
+     "text": "You led your forces well, and managed to survive."
+    }
+   ]
+  },
+  "ending_discovery": {
+   "kind": "ending",
+   "arc": "main",
+   "act": 4,
+   "title": "Ancient Mystery Solver",
+   "text": "You've uncovered the sector's greatest mysteries",
+   "requires": {
+    "done": [
+     "ch3c"
+    ],
+    "plot_points": 100,
+    "research_points": 1500
+   },
+   "next": [],
+   "source": "data/story.yml"
+  },
+  "ending_discovery.discovery_ending": {
+   "kind": "milestone",
+   "arc": "main",
+   "in": "ending_discovery",
+   "title": "Discovery Victory",
+   "text": "You've solved the ancient mysteries of this sector, and your name will be remembered as the greatest researcher who has ever lived.",
+   "requires": {
+    "has": {
+     "researched": [
+      "xenoeconomy",
+      "telemetry",
+      "geophysics",
+      "chronopolitics"
+     ]
+    },
+    "discovered.ResearchColony": 3,
+    "discovered.AsteroidBase": 2
+   },
+   "effects": {
+    "money": 1000000,
+    "plot_points": 100
+   },
+   "source": "data/story.yml",
+   "variants": [
+    {
+     "when": "alternate",
+     "text": "You've visited some old places and found some old stuff. Nothing interesting, really."
+    },
+    {
+     "when": "default",
+     "text": "You are now a solver of Ancient Mysteries!"
+    },
+    {
+     "when": "alternate",
+     "text": "You found some artifacts, but not really anything significant."
+    }
+   ]
+  },
+  "visit.merchant_trader": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Traveling Merchant",
+   "who": [
+    "merchant_trader"
+   ],
+   "requires": {
+    "at": [
+     "port",
+     "cantina"
+    ]
+   },
+   "chance": 0.3,
+   "repeat": true,
+   "text": "Rare goods for discerning customers...",
+   "source": "data/characters.yml"
+  },
+  "visit.vip_corporate": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "CEO",
+   "who": [
+    "vip_corporate"
+   ],
+   "requires": {
+    "passenger_reputation": 40,
+    "comfort_level": 4,
+    "at": [
+     "port"
+    ]
+   },
+   "chance": 0.2,
+   "repeat": true,
+   "text": "Your reputation precedes you, Captain.",
+   "source": "data/characters.yml"
+  },
+  "visit.vip_political": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Senator",
+   "who": [
+    "vip_political"
+   ],
+   "requires": {
+    "passenger_reputation": 40,
+    "comfort_level": 4,
+    "at": [
+     "port"
+    ]
+   },
+   "chance": 0.2,
+   "repeat": true,
+   "text": "Your reputation precedes you, Captain.",
+   "source": "data/characters.yml"
+  },
+  "visit.vip_scientific": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Professor",
+   "who": [
+    "vip_scientific"
+   ],
+   "requires": {
+    "passenger_reputation": 40,
+    "comfort_level": 4,
+    "at": [
+     "port"
+    ]
+   },
+   "chance": 0.2,
+   "repeat": true,
+   "text": "Your reputation precedes you, Captain.",
+   "source": "data/characters.yml"
+  },
+  "visit.neurodroid_leader": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Neurodroid Overseer",
+   "who": [
+    "neurodroid_leader"
+   ],
+   "requires": {
+    "buildings.Neuroengineering Guild": 4
+   },
+   "chance": 0.4,
+   "repeat": true,
+   "text": "Biological inefficiencies detected.",
+   "source": "data/characters.yml",
+   "notes": [
+    "no spawn_locations: never offered in a port or cantina"
+   ],
+   "status": "unused"
+  },
+  "visit.agrobot_leader": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Agrobot Collective",
+   "who": [
+    "agrobot_leader"
+   ],
+   "requires": {
+    "buildings.Agrobot Assembly Line": 4
+   },
+   "chance": 0.4,
+   "repeat": true,
+   "text": "Biological oversight is inefficient.",
+   "source": "data/characters.yml",
+   "notes": [
+    "no spawn_locations: never offered in a port or cantina"
+   ],
+   "status": "unused"
+  },
+  "visit.ancient_scholar": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Emissary",
+   "who": [
+    "ancient_scholar"
+   ],
+   "requires": {
+    "passenger_reputation": 80,
+    "plot_points": 50,
+    "at": [
+     "port"
+    ]
+   },
+   "chance": 0.2,
+   "repeat": true,
+   "text": "We have observed your interest in the past.",
+   "source": "data/characters.yml"
+  },
+  "visit.grand_commander_voxx": {
+   "kind": "encounter",
+   "arc": "characters",
+   "title": "Grand Commander Voxx",
+   "who": [
+    "grand_commander_voxx"
+   ],
+   "requires": {
+    "passenger_reputation": 70,
+    "chapters_completed": 3,
+    "at": [
+     "port"
+    ]
+   },
+   "chance": 0.1,
+   "repeat": true,
+   "text": "I have come to see your fleet.",
+   "source": "data/characters.yml"
+  },
+  "event.pirate_attack_simple": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Pirate attack simple",
+   "text": "Pirates ambushed your cargo hauler!",
+   "requires": {
+    "at_type": [
+     "Planet",
+     "AsteroidBase",
+     "DeepSpaceOutpost"
+    ],
+    "turn_min": 1,
+    "turn_max": 100,
+    "passenger_reputation": {
+     "min": 0,
+     "max": 50
+    }
+   },
+   "repeat": {
+    "cooldown": 5
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Pirate attack repelled!"
+    },
+    {
+     "when": "damage_taken",
+     "text": "Pirate attack! Ship took some damage."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.pirate_attack": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Pirate attack",
+   "text": "Pirate attack!",
+   "requires": {
+    "at_type": [
+     "Planet",
+     "AsteroidBase",
+     "DeepSpaceOutpost"
+    ],
+    "turn_min": 10,
+    "turn_max": 100,
+    "passenger_reputation": {
+     "min": -20,
+     "max": 50
+    }
+   },
+   "repeat": {
+    "cooldown": 5
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Pirate attack repelled!"
+    },
+    {
+     "when": "damage_taken",
+     "text": "Pirate attack! Ship took some damage."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.rogue_corsair": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Rogue corsair",
+   "text": "Rogue Corsair sighted!",
+   "requires": {
+    "at_type": [
+     "DeepSpaceOutpost",
+     "AsteroidBase"
+    ],
+    "turn_min": 20,
+    "passenger_reputation": 10
+   },
+   "repeat": {
+    "cooldown": 7
+   },
+   "effects": {
+    "plot_points": 4
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Rogue Corsair defeated!"
+    },
+    {
+     "when": "damage_taken",
+     "text": "Rogue Corsair attack! Ship was damaged!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.militia_patrol": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Militia patrol",
+   "text": "Militia patrol approaching!",
+   "requires": {
+    "at_type": [
+     "Planet"
+    ],
+    "turn_min": 5,
+    "turn_max": 50
+   },
+   "repeat": {
+    "cooldown": 3
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Militia patrol has been checked."
+    },
+    {
+     "when": "damage_taken",
+     "text": "Militia patrol has engaged and caused damage."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.pirate_mothership": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Pirate mothership",
+   "text": "Pirate mothership is attacking!",
+   "requires": {
+    "combat_victories": 20,
+    "plot_points": 40
+   },
+   "repeat": {
+    "cooldown": 10
+   },
+   "effects": {
+    "plot_points": 8
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Pirate mothership is destroyed!"
+    },
+    {
+     "when": "damage_taken",
+     "text": "Pirate mothership attack has caused severe damage!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.rogue_warship": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Rogue warship",
+   "text": "Rogue Warship is present!",
+   "requires": {
+    "trades_completed": {
+     "min": 50,
+     "max": 100
+    },
+    "passenger_reputation": {
+     "min": 50,
+     "max": 80
+    }
+   },
+   "repeat": {
+    "cooldown": 12
+   },
+   "effects": {
+    "plot_points": 7
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Rogue Warship was defeated."
+    },
+    {
+     "when": "damage_taken",
+     "text": "Rogue Warship attack was significant!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.guerrilla_militia": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Guerrilla militia",
+   "text": "Guerrilla Militia are present",
+   "requires": {
+    "combat_victories": 40,
+    "plot_points": 80
+   },
+   "repeat": {
+    "cooldown": 15
+   },
+   "effects": {
+    "plot_points": 9
+   },
+   "variants": [
+    {
+     "when": "successful_defense",
+     "text": "Guerrilla Militia is pacified!"
+    },
+    {
+     "when": "damage_taken",
+     "text": "Guerrilla Militia attack has taken significant damage."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.market_crash": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Market crash",
+   "text": "Market crash!",
+   "requires": {
+    "turn_min": 15,
+    "turn_max": 100
+   },
+   "repeat": {
+    "cooldown": 8
+   },
+   "effects": {
+    "plot_points": 2
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Market crash! Affected commodities: {commodities}."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.trade_embargo": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Trade embargo",
+   "text": "Trade embargo has been issued!",
+   "requires": {
+    "trades_completed": 20
+   },
+   "repeat": {
+    "cooldown": 10
+   },
+   "effects": {
+    "plot_points": 4
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Trade embargo. Affected commodities: {commodities}!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.resource_shortage": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Resource shortage",
+   "text": "There is a resource shortage!",
+   "requires": {
+    "turn_min": 5,
+    "turn_max": 50
+   },
+   "repeat": {
+    "cooldown": 6
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Resource shortage! Affected commodities: {commodities}!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.price_manipulation": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Price manipulation",
+   "text": "Price manipulation is happening!",
+   "requires": {
+    "plot_points": {
+     "min": 10,
+     "max": 30
+    }
+   },
+   "repeat": {
+    "cooldown": 4
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Price manipulation! Affected commodities: {commodities}!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.trade_route_disruption": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Trade route disruption",
+   "text": "Trade route has been disrupted!",
+   "requires": {
+    "trades_completed": {
+     "min": 30,
+     "max": 70
+    }
+   },
+   "repeat": {
+    "cooldown": 9
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Trade route disruption! Affected commodities: {commodities}!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.black_market_emergence": {
+   "kind": "event",
+   "arc": "events: trade",
+   "title": "Black market emergence",
+   "text": "Black market has emerged!",
+   "requires": {
+    "ship_speed": 3,
+    "trade_profit": 30000
+   },
+   "repeat": {
+    "cooldown": 12
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [
+    {
+     "when": "affected_commodities",
+     "text": "Black market has emerged. Affected commodities: {commodities}!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.spacetime_rift": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Spacetime rift",
+   "text": "Spacetime rift detected!",
+   "requires": {
+    "turn_min": 10
+   },
+   "repeat": {
+    "cooldown": 5
+   },
+   "effects": {
+    "plot_points": 4
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "Spacetime rift discovered! You have retrieved some rare elements and samples."
+    },
+    {
+     "when": "failure",
+     "text": "Spacetime rift was dangerous and nothing was retrieved."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.gravitational_anomaly": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Gravitational anomaly",
+   "text": "Gravitational anomaly detected!",
+   "requires": {
+    "turn_min": 20
+   },
+   "repeat": {
+    "cooldown": 6
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "You have survived the gravitational anomaly and obtained some samples!"
+    },
+    {
+     "when": "failure",
+     "text": "Gravitational anomaly was too strong. Nothing was found."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.mysterious_signal": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Mysterious signal",
+   "text": "Mysterious signal detected!",
+   "requires": {
+    "turn_min": 30
+   },
+   "repeat": {
+    "cooldown": 8
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "You have discovered valuable minerals, artifacts, and data!"
+    },
+    {
+     "when": "failure",
+     "text": "Mysterious signal vanished. Nothing was found."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.quantum_fluctuation": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Quantum fluctuation",
+   "text": "Quantum fluctuation is present!",
+   "requires": {
+    "turn_min": 40
+   },
+   "repeat": {
+    "cooldown": 10
+   },
+   "effects": {
+    "plot_points": 6
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "You have investigated quantum fluctuation and acquired valuable materials."
+    },
+    {
+     "when": "failure",
+     "text": "Quantum fluctuation was too unstable and nothing was recovered."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.ancient_ruins": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Ancient ruins",
+   "text": "Ancient ruins detected nearby!",
+   "requires": {
+    "plot_points": 15
+   },
+   "repeat": {
+    "cooldown": 7
+   },
+   "effects": {
+    "plot_points": 4
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "You have found ancient artifacts."
+    },
+    {
+     "when": "failure",
+     "text": "Ruins were explored, but nothing interesting was found."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.alien_artifact": {
+   "kind": "event",
+   "arc": "events: exploration",
+   "title": "Alien artifact",
+   "text": "Alien artifact detected!",
+   "requires": {
+    "passenger_reputation": 30
+   },
+   "repeat": {
+    "cooldown": 11
+   },
+   "effects": {
+    "plot_points": 7
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "You have found alien artifacts, and ancient technology."
+    },
+    {
+     "when": "failure",
+     "text": "You tried to explore alien artifact, but found nothing."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.asteroid_impact": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Asteroid impact",
+   "text": "Asteroid impact!",
+   "requires": {
+    "turn_min": 10,
+    "at_type": [
+     "AsteroidBase"
+    ]
+   },
+   "repeat": {
+    "cooldown": 10
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [
+    {
+     "when": "shield_protection",
+     "text": "Asteroid impact! Shields partially absorbed the impact."
+    },
+    {
+     "when": "cargo_loss",
+     "text": "Asteroid impact! Cargo was damaged!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.solar_flare": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Solar flare",
+   "text": "Solar flare is approaching!",
+   "requires": {
+    "turn_min": 15,
+    "turn_max": 80
+   },
+   "repeat": {
+    "cooldown": 12
+   },
+   "effects": {
+    "plot_points": 4
+   },
+   "variants": [
+    {
+     "when": "shield_protection",
+     "text": "Solar flare! Shields protected most of the damage!"
+    },
+    {
+     "when": "equipment_failure",
+     "text": "Solar flare! Some equipment was damaged!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.equipment_malfunction": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Equipment malfunction",
+   "text": "Equipment malfunction detected!",
+   "requires": {
+    "turn_min": 10
+   },
+   "repeat": {
+    "cooldown": 8
+   },
+   "effects": {
+    "plot_points": 2
+   },
+   "variants": [
+    {
+     "when": "equipment_failure",
+     "text": "Equipment malfunction caused some of your items to break."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.hull_breach": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Hull breach",
+   "text": "Hull breach detected!",
+   "requires": {
+    "turn_min": 20,
+    "passenger_reputation": 30
+   },
+   "repeat": {
+    "cooldown": 12
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [
+    {
+     "when": "shield_protection",
+     "text": "Hull breach! Shields absorbed some damage."
+    },
+    {
+     "when": "cargo_loss",
+     "text": "Hull breach has caused cargo damage!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.reactor_leak": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Reactor leak",
+   "text": "Reactor leak is imminent!",
+   "requires": {
+    "turn_min": 25,
+    "turn_max": 90
+   },
+   "repeat": {
+    "cooldown": 15
+   },
+   "effects": {
+    "plot_points": 6
+   },
+   "variants": [
+    {
+     "when": "shield_protection",
+     "text": "Reactor leak! Partial protection by your ship."
+    },
+    {
+     "when": "equipment_failure",
+     "text": "Reactor leak! Some equipment was damaged."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.navigation_failure": {
+   "kind": "event",
+   "arc": "events: disaster",
+   "title": "Navigation failure",
+   "text": "Navigation failure detected!",
+   "requires": {
+    "turn_min": 10
+   },
+   "repeat": {
+    "cooldown": 7
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "equipment_failure",
+     "text": "Navigation failure damaged some of the systems."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.passenger_celebration": {
+   "kind": "event",
+   "arc": "events: passenger",
+   "title": "Passenger celebration",
+   "text": "Passengers are having a celebration!",
+   "requires": {
+    "passengers_transported": 5
+   },
+   "repeat": {
+    "cooldown": 3
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "celebration",
+     "text": "Passengers are celebrating their journey with you!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.passenger_complaint": {
+   "kind": "event",
+   "arc": "events: passenger",
+   "title": "Passenger complaint",
+   "text": "Passengers are complaining about accommodations!",
+   "requires": {
+    "passengers_transported": 5
+   },
+   "repeat": {
+    "cooldown": 5
+   },
+   "effects": {
+    "plot_points": 1
+   },
+   "variants": [
+    {
+     "when": "complaint",
+     "text": "Passengers have filed complaints about the quality of their stay."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.medical_emergency": {
+   "kind": "event",
+   "arc": "events: passenger",
+   "title": "Medical emergency",
+   "text": "Medical emergency!",
+   "requires": {
+    "passengers_transported": 3
+   },
+   "repeat": {
+    "cooldown": 7
+   },
+   "effects": {
+    "plot_points": 2
+   },
+   "variants": [
+    {
+     "when": "medical",
+     "text": "There is a medical emergency with one of your passengers!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.vip_request": {
+   "kind": "event",
+   "arc": "events: passenger",
+   "title": "Vip request",
+   "text": "VIP passenger requests special treatment.",
+   "requires": {
+    "passengers_transported": 1,
+    "passenger_reputation": 10
+   },
+   "repeat": {
+    "cooldown": 10
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [
+    {
+     "when": "vip",
+     "text": "VIP passenger made a special request!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.passenger_trade_info": {
+   "kind": "event",
+   "arc": "events: passenger",
+   "title": "Passenger trade info",
+   "text": "Passengers shared valuable trade information!",
+   "requires": {
+    "passengers_transported": 7
+   },
+   "repeat": {
+    "cooldown": 8
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [],
+   "source": "data/events.yml"
+  },
+  "event.distress_beacon_a_event": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Distress beacon a event",
+   "text": "Distress beacon A activated! Enemy detected!",
+   "requires": {
+    "code": "beacon_type = distress_a"
+   },
+   "repeat": {
+    "cooldown": 0
+   },
+   "effects": {
+    "plot_points": 2
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "Distress beacon A - the threat was neutralized."
+    },
+    {
+     "when": "damage",
+     "text": "Distress beacon A! You've sustained some damage."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.distress_beacon_b_event": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Distress beacon b event",
+   "text": "Distress beacon B activated! Enemy detected!",
+   "requires": {
+    "code": "beacon_type = distress_b"
+   },
+   "repeat": {
+    "cooldown": 0
+   },
+   "effects": {
+    "plot_points": 3
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "Distress beacon B - you were victorious."
+    },
+    {
+     "when": "damage",
+     "text": "Distress beacon B - you sustained some damage in the battle."
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.distress_beacon_c_event": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Distress beacon c event",
+   "text": "Distress beacon C activated! Very dangerous enemy detected!",
+   "requires": {
+    "code": "beacon_type = distress_c"
+   },
+   "repeat": {
+    "cooldown": 0
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [
+    {
+     "when": "success",
+     "text": "Distress beacon C - you managed to defeat a significant enemy force."
+    },
+    {
+     "when": "damage",
+     "text": "Distress beacon C - you have sustained heavy damage!"
+    }
+   ],
+   "source": "data/events.yml"
+  },
+  "event.nav_beacon_a_event": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Nav beacon a event",
+   "text": "You have found a merchant using Nav beacon A.",
+   "requires": {
+    "code": "beacon_type = nav_a"
+   },
+   "repeat": {
+    "cooldown": 0
+   },
+   "effects": {
+    "plot_points": 5
+   },
+   "variants": [],
+   "source": "data/events.yml"
+  },
+  "event.mcguffin_beacon_event": {
+   "kind": "event",
+   "arc": "events: combat",
+   "title": "Mcguffin beacon event",
+   "text": "You have activated mcguffin beacon!",
+   "requires": {
+    "code": "beacon_type = mcguffin"
+   },
+   "repeat": {
+    "cooldown": 0
+   },
+   "effects": {
+    "plot_points": 10
+   },
+   "variants": [],
+   "source": "data/events.yml"
+  },
+  "quest.mining.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Mine salt",
+   "text": "Extract {amount} units of salt from asteroid field",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 3000,
+    "research_points": 25
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.mining.2": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Extract Fuel",
+   "text": "Extract {amount} units of fuel from deep space deposits",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 3500,
+    "research_points": 30
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.combat.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Pirate Elimination",
+   "text": "Eliminate {amount} pirate ships in this sector",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 8000,
+    "research_points": 100
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.combat.2": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Militia Hunt",
+   "text": "Eliminate {amount} militia ships",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 6000,
+    "research_points": 80
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.trade.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Trade Boost",
+   "text": "Buy and sell 100 units of tech and gain {profit} profit.",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 4000,
+    "research_points": 40
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.trade.2": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Trade Boost",
+   "text": "Buy and sell 100 units of agri and gain {profit} profit",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 3000,
+    "research_points": 30
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.research.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Research Data",
+   "text": "Collect {target_points} research data from space",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 7000,
+    "research_points": 150
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.research.2": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Experimental Research",
+   "text": "Conduct high risk research project for {target_points} RP",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 6000,
+    "research_points": 120
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.station.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Station Defense",
+   "text": "Defend the station from incoming threats. Eliminate {victories} enemies, do not take damage more then {damage_threshold}%.",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 5000,
+    "research_points": 50
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.emergency.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Emergency Response",
+   "text": "Help ships in distress while avoiding damage, rescue {rescues} and not take more then {max_damage}% damage.",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 6000,
+    "research_points": 75
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.exploration.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Valuable Discovery",
+   "text": "Find valuable resources during the exploration.",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 0,
+    "research_points": 0
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.item_delivery.1": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Deliver Scanner",
+   "text": "Deliver {amount} scanner to the location",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 0,
+    "research_points": 0
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.item_delivery.2": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Deliver Turrets",
+   "text": "Deliver {amount} turrets to the location",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 0,
+    "research_points": 0
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  },
+  "quest.item_delivery.3": {
+   "kind": "quest",
+   "arc": "quests",
+   "title": "Deliver Equipment",
+   "text": "Deliver equipment to the location",
+   "requires": {},
+   "repeat": true,
+   "chance": 0.1,
+   "effects": {
+    "money": 0,
+    "research_points": 0
+   },
+   "notes": [
+    "procedural quest template: offered in the cantina"
+   ],
+   "source": "data/quests.yml"
+  }
+ }
+}

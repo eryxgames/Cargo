@@ -1,0 +1,315 @@
+"""storykit: a game's story as data, and the rules for reading it.
+
+Standard library only, no game imports: the same file serves the validator, the
+replay simulator, the map, and (later) the games themselves.
+
+A story file holds nodes (chapters, milestones, quests, events, encounters,
+endings...), the characters and places they use, and the vocabulary of
+requirements and effects the game understands.  See FORMAT.md.
+"""
+import json
+import os
+
+FORMAT = "storykit"
+SAGA_FORMAT = "storykit-saga"
+VERSION = 1
+
+# Condition keys every game understands (anything else must be a declared stat)
+CORE_CONDITIONS = {
+    "all", "any", "not",            # combinators
+    "flag", "not_flag",             # story flags
+    "done", "done_any", "not_done", # nodes completed
+    "act_min", "act_max",           # act (chapter number) of the main story
+    "turn_min", "turn_max",
+    "at", "at_type",                # where the player is
+    "has",                          # members of a declared set (items, research ...)
+    "visiting_captain",             # a captain record from another part of the saga
+    "code",                         # opaque: game code the tools cannot read
+}
+
+# Effect keys every game understands (anything else must be a declared stat or effect)
+CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "code"}
+
+NODE_KINDS = {"chapter", "milestone", "ending", "quest", "event", "encounter", "stage", "unlock", "beat"}
+
+
+class StoryError(Exception):
+    pass
+
+
+def _read_json(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def load(path):
+    """Load a story file and every file it includes, merged into one dict."""
+    data = _read_json(path)
+    if data.get("format") != FORMAT:
+        raise StoryError("%s is not a storykit file" % path)
+    data.setdefault("nodes", {})
+    for section in ("stats", "sets", "effects", "flags", "places", "characters", "arcs"):
+        data.setdefault(section, {})
+    base = os.path.dirname(os.path.abspath(path))
+    for include in data.get("include", []):
+        part = _read_json(os.path.join(base, include))
+        for section in ("stats", "sets", "effects", "flags", "places", "characters", "arcs", "nodes"):
+            for key, value in part.get(section, {}).items():
+                if key in data[section]:
+                    raise StoryError("%s: %s %r is defined twice" % (include, section, key))
+                if section == "nodes":
+                    value.setdefault("file", include)
+                data[section][key] = value
+    data["path"] = path
+    return data
+
+
+def load_saga(path):
+    """Load a saga file (the trilogy) and the story files of the parts that exist."""
+    saga = _read_json(path)
+    if saga.get("format") != SAGA_FORMAT:
+        raise StoryError("%s is not a storykit saga file" % path)
+    base = os.path.dirname(os.path.abspath(path))
+    saga["stories"] = {}
+    for part in saga.get("parts", []):
+        file = part.get("file")
+        if file and os.path.exists(os.path.join(base, file)):
+            saga["stories"][part["game"]] = load(os.path.join(base, file))
+    saga["path"] = path
+    return saga
+
+
+# ---------------------------------------------------------------------------
+# Conditions
+# ---------------------------------------------------------------------------
+
+def as_list(value):
+    if value is None:
+        return []
+    return list(value) if isinstance(value, (list, tuple, set)) else [value]
+
+
+class State:
+    """What a condition is evaluated against: a snapshot of one moment of play.
+
+    stats   {"money": 1200, "combat_victories.pirate": 3, ...}
+    sets    {"researched": [...], "items": [...]}
+    flags   set of story flags that are on
+    done    set of node ids that are complete
+    act     current act (chapter number); turn; place; place_type
+    visitors  captain records that crossed over from other games
+    """
+
+    def __init__(self, stats=None, sets=None, flags=None, done=None, act=1, turn=0,
+                 place=None, place_type=None, visitors=None):
+        self.stats = dict(stats or {})
+        self.sets = {k: set(v) for k, v in (sets or {}).items()}
+        self.flags = set(flags or ())
+        self.done = set(done or ())
+        self.act = act
+        self.turn = turn
+        self.place = place
+        self.place_type = place_type
+        self.visitors = list(visitors or [])
+
+    @classmethod
+    def from_snapshot(cls, snap):
+        return cls(snap.get("stats"), snap.get("sets"), snap.get("flags"), snap.get("done"),
+                   snap.get("act", 1), snap.get("turn", 0), snap.get("place"), snap.get("place_type"),
+                   snap.get("visitors"))
+
+
+def _threshold(value, wanted):
+    if isinstance(wanted, dict):
+        if "min" in wanted and value < wanted["min"]:
+            return False
+        if "max" in wanted and value > wanted["max"]:
+            return False
+        return True
+    return value >= wanted
+
+
+def check(cond, state, unknown="fail"):
+    """True when `cond` holds in `state`.
+
+    unknown: what an opaque {"code": ...} condition counts as: "fail", "pass" or "raise".
+    """
+    if not cond:
+        return True
+    if isinstance(cond, list):
+        return all(check(c, state, unknown) for c in cond)
+    for key, want in cond.items():
+        if key.startswith("_"):
+            continue
+        if key == "all":
+            ok = all(check(c, state, unknown) for c in want)
+        elif key == "any":
+            ok = any(check(c, state, unknown) for c in want)
+        elif key == "not":
+            ok = not check(want, state, unknown)
+        elif key == "flag":
+            ok = all(f in state.flags for f in as_list(want))
+        elif key == "not_flag":
+            ok = not any(f in state.flags for f in as_list(want))
+        elif key == "done":
+            ok = all(n in state.done for n in as_list(want))
+        elif key == "done_any":
+            ok = any(n in state.done for n in as_list(want))
+        elif key == "not_done":
+            ok = not any(n in state.done for n in as_list(want))
+        elif key == "act_min":
+            ok = state.act >= want
+        elif key == "act_max":
+            ok = state.act <= want
+        elif key == "turn_min":
+            ok = state.turn >= want
+        elif key == "turn_max":
+            ok = state.turn <= want
+        elif key == "at":
+            ok = state.place in as_list(want)
+        elif key == "at_type":
+            ok = state.place_type in as_list(want)
+        elif key == "has":
+            ok = all(set(as_list(items)) <= state.sets.get(name, set()) for name, items in want.items())
+        elif key == "visiting_captain":
+            ok = any(visitor_matches(v, want) for v in state.visitors)
+        elif key == "code":
+            if unknown == "raise":
+                raise StoryError("opaque condition: %s" % want)
+            ok = unknown == "pass"
+        else:
+            ok = _threshold(state.stats.get(key, 0), want)
+        if not ok:
+            return False
+    return True
+
+
+def visitor_matches(record, want):
+    if want.get("game") and record.get("origin", {}).get("game") != want["game"]:
+        return False
+    story = record.get("story", {})
+    if want.get("ending") and story.get("ending") != want["ending"]:
+        return False
+    if want.get("flag") and want["flag"] not in story.get("flags", []):
+        return False
+    return True
+
+
+def walk_condition(cond, visit, path=()):
+    """Call visit(key, value, path) for every leaf of a condition."""
+    if not cond:
+        return
+    if isinstance(cond, list):
+        for c in cond:
+            walk_condition(c, visit, path)
+        return
+    for key, want in cond.items():
+        if key.startswith("_"):
+            continue
+        if key in ("all", "any"):
+            for c in want:
+                walk_condition(c, visit, path + (key,))
+        elif key == "not":
+            walk_condition(want, visit, path + ("not",))
+        else:
+            visit(key, want, path)
+
+
+def apply(effects, state):
+    """Apply effects to a State (used by the simulator)."""
+    for key, value in (effects or {}).items():
+        if key.startswith("_"):
+            continue
+        if key == "set":
+            state.flags.update(as_list(value))
+        elif key == "clear":
+            state.flags.difference_update(as_list(value))
+        elif key == "give":
+            for name, items in value.items():
+                state.sets.setdefault(name, set()).update(as_list(items))
+        elif key in ("start", "spawn", "code"):
+            pass
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            state.stats[key] = state.stats.get(key, 0) + value
+
+
+# ---------------------------------------------------------------------------
+# Indexes the tools share
+# ---------------------------------------------------------------------------
+
+def node_conditions(node):
+    """Every condition attached to a node (its own and its choices')."""
+    yield node.get("requires")
+    for choice in node.get("choices", []):
+        yield choice.get("requires")
+    for variant in node.get("variants", []):
+        yield variant.get("requires")
+
+
+def node_effects(node):
+    yield node.get("effects")
+    for choice in node.get("choices", []):
+        yield choice.get("effects")
+
+
+def references(node):
+    """Node ids a node points at, with how: [(kind, target)]."""
+    out = []
+    for nid in as_list(node.get("next")):
+        out.append(("next", nid))
+    if node.get("in"):
+        out.append(("in", node["in"]))
+    for cond in node_conditions(node):
+        def visit(key, want, path, out=out):
+            if key in ("done", "done_any", "not_done"):
+                for nid in as_list(want):
+                    out.append((key, nid))
+        walk_condition(cond, visit)
+    for effects in node_effects(node):
+        for nid in as_list((effects or {}).get("start")):
+            out.append(("start", nid))
+    for choice in node.get("choices", []):
+        for nid in as_list(choice.get("next")):
+            out.append(("next", nid))
+    return out
+
+
+def flags_read(node):
+    found = set()
+    for cond in node_conditions(node):
+        def visit(key, want, path):
+            if key in ("flag", "not_flag"):
+                found.update(as_list(want))
+        walk_condition(cond, visit)
+    return found
+
+
+def flags_set(node):
+    found = set()
+    for effects in node_effects(node):
+        found.update(as_list((effects or {}).get("set")))
+    return found
+
+
+def characters_of(node):
+    return set(as_list(node.get("who")))
+
+
+def act_of(story, node_id, _seen=None):
+    """The act a node belongs to: its own `act`, its parent's, or its act_min."""
+    node = story["nodes"].get(node_id, {})
+    if "act" in node:
+        return node["act"]
+    if node.get("in") and node["in"] in story["nodes"] and node["in"] != node_id:
+        seen = _seen or set()
+        if node_id not in seen:
+            seen.add(node_id)
+            return act_of(story, node["in"], seen)
+    found = []
+    walk_condition(node.get("requires"), lambda k, v, p: found.append(v) if k == "act_min" else None)
+    return max(found) if found else None
+
+
+def text_of(node):
+    text = node.get("text", "")
+    return " ".join(text) if isinstance(text, list) else str(text)

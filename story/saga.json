@@ -1,0 +1,34 @@
+{
+ "format": "storykit-saga",
+ "version": 1,
+ "title": "The Cargo trilogy",
+ "about": "What spans the three games: the parts, the characters who live across them, and the promises one part makes for a later one to keep.",
+ "parts": [
+  {"game": "cargo1", "title": "CARGO: Space Trading Saga", "file": "cargo1.story.json", "status": "released (1.1.0)"},
+  {"game": "cargo2", "title": "Cargo 2", "file": "cargo2.story.json", "status": "in development; story imported from data/*.yml"},
+  {"game": "cargo3", "title": "Cargo 3", "status": "planned"}
+ ],
+ "characters": {
+  "captain": {
+   "name": "The captain",
+   "about": "The player's captain. The captain's record (export / import) carries them between the parts; a later part's record lets an earlier part show the captain's future self.",
+   "timeline": [
+    {"game": "cargo1", "as": "the player; meets their future self (drafts)"},
+    {"game": "cargo2", "as": "the player, decades later (to be decided)"},
+    {"game": "cargo3", "as": "the player at the end of the saga (to be decided)"}
+   ]
+  },
+  "ancient_scholar": {
+   "name": "Ancient Scholar",
+   "about": "An alien scholar of the sector's past. Present in both existing games; a candidate for the character who links all three.",
+   "timeline": [
+    {"game": "cargo1", "as": "passenger who starts the 'ancient mysteries' chain"},
+    {"game": "cargo2", "as": "met in ports (characters.yml)"}
+   ]
+  }
+ },
+ "promises": {
+  "the_warning": {"about": "What the captain's future self warns of at the Stellar Portal. DRAFT: to be decided.", "pay_by": "cargo3"},
+  "the_stranger": {"about": "Who the old hauler at the outpost really is. DRAFT: to be decided.", "pay_by": "cargo2"}
+ }
+}

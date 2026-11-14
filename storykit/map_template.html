@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cargo trilogy story map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* A navigator's chart of the story: lanes are arcs, distance is turns played. */
+:root {
+  --bg: #edf0f3; --panel: #f9fafb; --ink: #15212c; --muted: #5a6875; --line: #c8d0d8; --accent: #b86e00;
+  --danger: #b42318; --warn: #a35a00; --ok: #2c7a4b;
+  --k-main-f: #f5e2bf; --k-main-s: #b86e00; --k-ms-f: #fbf0dc;
+  --k-enc-f: #d4ede8; --k-enc-s: #1d7568; --k-quest-f: #e5e0f5; --k-quest-s: #5843a6;
+  --k-event-f: #f6ddd3; --k-event-s: #ad4526; --k-beat-f: #e2e7ed; --k-beat-s: #56677a;
+  --display: "Chakra Petch", "Bahnschrift", "DIN Alternate", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d151e; --panel: #142030; --ink: #e2e9f0; --muted: #94a5b5; --line: #2a3b4d; --accent: #f0a733;
+  --danger: #f2766b; --warn: #f0b44c; --ok: #6cc690;
+  --k-main-f: #3b2c10; --k-main-s: #f0a733; --k-ms-f: #2a2214;
+  --k-enc-f: #10302b; --k-enc-s: #52c3b1; --k-quest-f: #231c3e; --k-quest-s: #a796ec;
+  --k-event-f: #391e16; --k-event-s: #ee8a66; --k-beat-f: #1c2632; --k-beat-s: #8fa3b8;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d151e; --panel: #142030; --ink: #e2e9f0; --muted: #94a5b5; --line: #2a3b4d; --accent: #f0a733;
+  --danger: #f2766b; --warn: #f0b44c; --ok: #6cc690;
+  --k-main-f: #3b2c10; --k-main-s: #f0a733; --k-ms-f: #2a2214;
+  --k-enc-f: #10302b; --k-enc-s: #52c3b1; --k-quest-f: #231c3e; --k-quest-s: #a796ec;
+  --k-event-f: #391e16; --k-event-s: #ee8a66; --k-beat-f: #1c2632; --k-beat-s: #8fa3b8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+main { padding: 20px clamp(16px, 3vw, 32px) 48px; display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 26px; } h2 { font-size: 19px; } h3 { font-size: 15px; }
+.sub { color: var(--muted); font-size: 13.5px; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+header { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: end; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12px/1 var(--body); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); white-space: nowrap; }
+.chip.error { color: var(--danger); border-color: currentColor; } .chip.warning { color: var(--warn); border-color: currentColor; }
+.chip.ok { color: var(--ok); border-color: currentColor; } .chip.accent { color: var(--accent); border-color: currentColor; }
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+nav.tabs a { font: 600 14px/1 var(--display); color: var(--muted); text-decoration: none; padding: 10px 14px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; }
+nav.tabs a[aria-current="page"] { color: var(--ink); background: var(--panel); border-color: var(--line); margin-bottom: -1px; }
+nav.tabs a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, .linkish:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 13.5px; }
+.controls label { display: inline-flex; gap: 6px; align-items: center; }
+select, input[type="search"] { font: 13.5px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.seg button { font: 500 13px var(--body); color: var(--muted); background: var(--panel); border: 0; padding: 6px 10px; cursor: pointer; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+.chart svg { display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); align-items: center; }
+.sw { display: inline-block; width: 18px; height: 12px; border-radius: 3px; border: 1.5px solid; vertical-align: -2px; margin-right: 5px; }
+.split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; }
+.card p { margin: 0; max-width: 68ch; }
+dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; }
+.quote { border-left: 3px solid var(--accent); padding: 2px 0 2px 12px; font-style: italic; max-width: 68ch; }
+.variant { font-size: 13.5px; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12.5px var(--body); color: var(--muted); }
+.linkish { color: var(--ink); background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.linkish:hover { text-decoration-color: var(--accent); }
+.problems { max-height: 560px; overflow-y: auto; display: grid; gap: 2px; }
+.prob { display: grid; grid-template-columns: 8px 1fr; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.prob .bar { border-radius: 2px; }
+.prob.error .bar { background: var(--danger); } .prob.warning .bar { background: var(--warn); } .prob.note .bar { background: var(--line); }
+.prob small { color: var(--muted); display: block; }
+.empty { color: var(--muted); font-style: italic; }
+.parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.how { color: var(--muted); font-size: 13px; }
+.how code { font-family: var(--mono); font-size: 12px; }
+[hidden] { display: none !important; }
+/* map marks */
+.lane-bg { fill: var(--bg); opacity: .55; }
+.lane-label { font: 600 12.5px var(--display); fill: var(--ink); }
+.lane-count { font: 11px var(--body); fill: var(--muted); }
+.axis { stroke: var(--line); stroke-width: 1; }
+.tick { font: 11px var(--mono); fill: var(--muted); }
+.colhead { font: 600 12px var(--display); fill: var(--muted); }
+.node { cursor: pointer; }
+.node rect.box { stroke-width: 1.4; }
+.node text { font: 500 11.5px var(--body); fill: var(--ink); pointer-events: none; }
+.node.k-chapter rect.box, .node.k-ending rect.box { fill: var(--k-main-f); stroke: var(--k-main-s); }
+.node.k-ending rect.box { stroke-width: 2.4; }
+.node.k-milestone rect.box { fill: var(--k-ms-f); stroke: var(--k-main-s); }
+.node.k-encounter rect.box, .node.k-stage rect.box { fill: var(--k-enc-f); stroke: var(--k-enc-s); }
+.node.k-stage rect.box { fill: var(--panel); }
+.node.k-quest rect.box, .node.k-unlock rect.box { fill: var(--k-quest-f); stroke: var(--k-quest-s); }
+.node.k-event rect.box { fill: var(--k-event-f); stroke: var(--k-event-s); }
+.node.k-beat rect.box { fill: var(--k-beat-f); stroke: var(--k-beat-s); }
+.node.draft rect.box { stroke-dasharray: 5 3; stroke-width: 2; }
+.node.unused rect.box { fill: url(#hatch); }
+.node.dim { opacity: .32; }
+.node.sel rect.box { stroke: var(--ink); stroke-width: 2.6; }
+.node.hit rect.box { stroke: var(--accent); stroke-width: 2.6; }
+.node:hover rect.box { stroke-width: 2.4; }
+.pmark.error { fill: var(--danger); } .pmark.warning { fill: var(--warn); }
+.edge { fill: none; stroke: var(--line); stroke-width: 1.3; }
+.edge.main { stroke: var(--k-main-s); opacity: .45; }
+.edge.hot { stroke: var(--accent); stroke-width: 2; opacity: 1; }
+.edge.hot.in { stroke-dasharray: 4 3; }
+@media (prefers-reduced-motion: no-preference) { .node rect.box { transition: stroke-width .12s; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Cargo trilogy story map</h1>
+      <div class="sub" id="gen"></div>
+    </div>
+    <div class="chips" id="totals"></div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Parts of the saga"></nav>
+
+  <section id="gameView">
+    <div style="display:grid; gap:12px">
+      <div class="controls">
+        <span class="seg" role="group" aria-label="Place nodes by" id="modeSeg"></span>
+        <label for="charSel">Character <select id="charSel"></select></label>
+        <label for="search">Find <input type="search" id="search" placeholder="title or id"></label>
+        <label><input type="checkbox" id="showUnused"> Unused content</label>
+        <label><input type="checkbox" id="showDrafts" checked> Drafts</label>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="chart" id="chart"></div>
+      <div class="split">
+        <div class="card" id="detail" aria-live="polite"></div>
+        <div class="card">
+          <h2>Findings</h2>
+          <div class="sub" id="probSummary"></div>
+          <div class="problems" id="problems"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sagaView" hidden>
+    <div style="display:grid; gap:18px">
+      <div class="card"><h2 id="sagaTitle"></h2><p id="sagaAbout"></p><div class="parts" id="parts"></div></div>
+      <div class="card"><h2>Characters across the saga</h2><div style="overflow-x:auto"><table id="charTable"></table></div></div>
+      <div class="split">
+        <div class="card"><h2>Promises</h2><p class="sub">Foreshadowing one part makes and a later part must pay off.</p><table id="promTable"></table></div>
+        <div class="card"><h2>Crossings</h2><p class="sub">Content that changes when a captain from another part has crossed over.</p><table id="crossTable"></table></div>
+      </div>
+      <div class="card"><h2>Saga findings</h2><div class="problems" id="sagaProblems"></div></div>
+    </div>
+  </section>
+
+  <p class="how">Regenerate after editing the story files: <code>python storykit/storymap.py story/saga.json -o story/map.html --replay cargo1=story/cargo1.replay.json</code>. Turn positions come from replaying recorded games (<code>storykit/replay.py</code>); without a replay a part is shown by act.</p>
+</main>
+
+<script type="application/json" id="data">__STORY_DATA__</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const NS = 'http://www.w3.org/2000/svg';
+const KIND_LABEL = {chapter: 'Chapter', ending: 'Ending', milestone: 'Milestone', encounter: 'Encounter', stage: 'Chain stage',
+  quest: 'Quest', unlock: 'Unlock', event: 'Event', beat: 'Story beat'};
+const STYLE_ORDER = ['trade', 'discovery', 'discovery2', 'combat'];
+const state = { game: null, mode: null, char: '', q: '', unused: false, drafts: true, sel: null };
+
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+function svg(tag, attrs) { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); return e; }
+const list = v => v == null ? [] : (Array.isArray(v) ? v : [v]);
+const human = k => k.replace(/^combat_victories\.(.*)$/, '$1 victories').replace(/^combat_victories$/, 'victories')
+  .replace(/^buildings\./, '').replace(/^discovered\.(.*)$/, '$1 visited').replace(/[._]/g, ' ');
+const num = v => typeof v === 'number' ? v.toLocaleString('en-US') : String(v);
+
+function condText(c) {
+  if (!c || (typeof c === 'object' && !Object.keys(c).length)) return ['always'];
+  if (Array.isArray(c)) return c.flatMap(condText);
+  const out = [];
+  for (const [k, v] of Object.entries(c)) {
+    if (k.startsWith('_')) continue;
+    if (k === 'all') out.push(...v.flatMap(condText));
+    else if (k === 'any') out.push('one of: ' + v.map(x => condText(x).join(' and ')).join(' / '));
+    else if (k === 'not') out.push('not (' + condText(v).join(', ') + ')');
+    else if (k === 'done') out.push('after ' + list(v).join(', '));
+    else if (k === 'done_any') out.push('after one of ' + list(v).join(', '));
+    else if (k === 'not_done') out.push('before ' + list(v).join(', '));
+    else if (k === 'flag') out.push('flag ' + list(v).join(', '));
+    else if (k === 'not_flag') out.push('without flag ' + list(v).join(', '));
+    else if (k === 'act_min') out.push('act ' + v + ' or later');
+    else if (k === 'act_max') out.push('act ' + v + ' or earlier');
+    else if (k === 'turn_min') out.push('turn ' + v + ' or later');
+    else if (k === 'turn_max') out.push('turn ' + v + ' or earlier');
+    else if (k === 'at') out.push('at ' + list(v).join(' or '));
+    else if (k === 'at_type') out.push('at a ' + list(v).join(' or '));
+    else if (k === 'has') out.push(Object.entries(v).map(([s, m]) => human(s) + ': ' + list(m).join(', ')).join('; '));
+    else if (k === 'visiting_captain') out.push('a captain from ' + (v.game || 'another game') + ' has crossed over' + (v.ending ? ' (ending ' + v.ending + ')' : '') + (v.flag ? ' (flag ' + v.flag + ')' : ''));
+    else if (k === 'code') out.push('game code: ' + v);
+    else if (v && typeof v === 'object') out.push(human(k) + ' ' + ('min' in v ? num(v.min) : '0') + (('max' in v) ? '–' + num(v.max) : '+'));
+    else out.push(human(k) + ' ≥ ' + num(v));
+  }
+  return out;
+}
+function effText(e) {
+  if (!e || !Object.keys(e).length) return [];
+  const out = [];
+  for (const [k, v] of Object.entries(e)) {
+    if (k === 'set') out.push('sets ' + list(v).join(', '));
+    else if (k === 'clear') out.push('clears ' + list(v).join(', '));
+    else if (k === 'give') out.push(Object.entries(v).map(([s, m]) => human(s) + ' + ' + list(m).join(', ')).join('; '));
+    else if (k === 'start') out.push('starts ' + list(v).join(', '));
+    else if (k === 'spawn') out.push('brings in ' + v);
+    else if (k === 'code') out.push('game code: ' + v);
+    else out.push(human(k) + ' ' + (v >= 0 ? '+' : '−') + num(Math.abs(v)));
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- shell
+function totals() {
+  const t = document.getElementById('totals');
+  const c = DATA.counts;
+  t.replaceChildren(
+    ...DATA.games.map(g => el('span', {class: 'chip', text: g.short + ': ' + Object.keys(g.nodes).length + ' nodes'})),
+    el('span', {class: 'chip error', text: c.error + ' errors'}),
+    el('span', {class: 'chip warning', text: c.warning + ' warnings'}),
+    el('span', {class: 'chip', text: c.note + ' notes'}));
+  document.getElementById('gen').textContent = 'From ' + DATA.source + ', generated ' + DATA.generated + '.';
+}
+function tabs() {
+  const nav = document.getElementById('tabs');
+  const items = DATA.games.map(g => [g.id, g.short]);
+  if (DATA.saga) items.push(['saga', 'Saga']);
+  nav.replaceChildren(...items.map(([id, name]) => el('a', {href: '#' + id, 'data-id': id, text: name})));
+}
+function route() {
+  const id = location.hash.slice(1);
+  const ids = DATA.games.map(g => g.id).concat(DATA.saga ? ['saga'] : []);
+  const pick = ids.includes(id) ? id : ids[0];
+  for (const a of document.querySelectorAll('#tabs a')) a.toggleAttribute('aria-current', false), a.dataset.id === pick && a.setAttribute('aria-current', 'page');
+  document.getElementById('sagaView').hidden = pick !== 'saga';
+  document.getElementById('gameView').hidden = pick === 'saga';
+  if (pick === 'saga') renderSaga(); else openGame(pick);
+}
+
+// ---------------------------------------------------------------- one game
+function game() { return DATA.games.find(g => g.id === state.game); }
+function openGame(id) {
+  if (state.game !== id) {
+    state.game = id; state.char = ''; state.q = '';
+    const g = game();
+    const styles = STYLE_ORDER.filter(s => g.styles.some(x => x.id === s)).concat(g.styles.map(s => s.id).filter(s => !STYLE_ORDER.includes(s)));
+    state.mode = styles.length ? 'style:' + styles[0] : 'act';
+    state.sel = g.nodes.ch1 ? 'ch1' : Object.keys(g.nodes)[0];
+    const seg = document.getElementById('modeSeg');
+    const btns = styles.map(s => [ 'style:' + s, g.styles.find(x => x.id === s).name ]).concat([['act', 'By act']]);
+    seg.replaceChildren(...btns.map(([m, label]) => el('button', {type: 'button', 'data-mode': m, text: label,
+      title: m === 'act' ? 'Place nodes in the act they belong to' : 'Place nodes at the turn this kind of player reached them',
+      onclick: () => { state.mode = m; draw(); }})));
+    const cs = document.getElementById('charSel');
+    const used = new Set(Object.values(g.nodes).flatMap(n => list(n.who)));
+    cs.replaceChildren(el('option', {value: '', text: 'everyone'}),
+      ...Object.entries(g.characters).filter(([cid]) => used.has(cid)).sort((a, b) => a[1].name.localeCompare(b[1].name))
+        .map(([cid, c]) => el('option', {value: cid, text: c.name})));
+    cs.value = ''; document.getElementById('search').value = '';
+  }
+  if (state.pendingSel && game().nodes[state.pendingSel]) state.sel = state.pendingSel;
+  state.pendingSel = null;
+  draw(); renderProblems();
+}
+
+function visible(n) {
+  if (n.status === 'unused' && !state.unused) return false;
+  if (n.status === 'draft' && !state.drafts) return false;
+  return true;
+}
+function styleEntry(n, style) {
+  const g = game();
+  const r = g.replay && g.replay.nodes[n._id];
+  return r ? r[style] : null;
+}
+function actColumn(n) {
+  if (n.reach === 'no' || n.status === 'unused') return 5;
+  const a = n.act_;
+  if (a == null) return 4;
+  return Math.max(0, Math.min(3, a - 1));
+}
+
+function draw() {
+  const g = game();
+  for (const [id, n] of Object.entries(g.nodes)) n._id = id;
+  for (const b of document.querySelectorAll('#modeSeg button')) b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode));
+  const host = document.getElementById('chart');
+  const W = Math.max(1180, host.clientWidth - 2);
+  const LABEL = 178, NW = 150, NH = 24, GAP = 6, RIGHT = 2 * (NW + GAP) + 14, TOP = 40, ROWH = NH + 7;
+  const plotX0 = LABEL + 12, plotX1 = W - RIGHT - 12;
+  const byStyle = state.mode.startsWith('style:') ? state.mode.slice(6) : null;
+  let maxT = 1;
+  if (byStyle) for (const n of Object.values(g.nodes)) { const e = styleEntry(n, byStyle); if (e && e.median != null) maxT = Math.max(maxT, e.median); }
+  maxT = Math.max(maxT, 10);
+  const xTurn = t => plotX0 + Math.sqrt(t / maxT) * (plotX1 - plotX0 - NW);
+  const actCols = ['Act 1', 'Act 2', 'Act 3', 'Finale', 'Any time'];
+  const colW = (plotX1 - plotX0) / actCols.length;
+
+  // position every visible node
+  const placed = [];
+  for (const n of Object.values(g.nodes)) {
+    if (!visible(n)) continue;
+    let x, off = false;
+    if (byStyle) {
+      const e = styleEntry(n, byStyle);
+      if (e && e.share > 0) x = xTurn(e.median); else { off = true; x = W - RIGHT + 8; }
+    } else {
+      const c = actColumn(n);
+      if (c === 5) { off = true; x = W - RIGHT + 8; } else x = plotX0 + c * colW + 6 + (n.kind === 'milestone' ? 14 : 0);
+    }
+    placed.push({n, x, off});
+  }
+  // lanes with stacked rows
+  const lanes = g.arcs.map(a => ({...a, items: placed.filter(p => p.n.arc === a.id)})).filter(l => l.items.length);
+  let y = TOP;
+  for (const lane of lanes) {
+    const rows = [];
+    lane.items.sort((a, b) => a.x - b.x || (a.n.kind === 'milestone') - (b.n.kind === 'milestone'));
+    let offCount = 0;
+    for (const p of lane.items) {
+      if (p.off) {               // the side column holds two nodes per row
+        p.row = Math.floor(offCount / 2); p.x = W - RIGHT + 8 + (offCount % 2) * (NW + GAP); offCount++;
+        while (rows.length <= p.row) rows.push(0);
+        continue;
+      }
+      let r = rows.findIndex(end => end + GAP <= p.x);
+      if (r < 0) { rows.push(0); r = rows.length - 1; }
+      rows[r] = p.x + NW; p.row = r;
+    }
+    lane.y = y; lane.h = Math.max(1, rows.length) * ROWH + 14;
+    for (const p of lane.items) p.y = y + 7 + p.row * ROWH;
+    y += lane.h + 4;
+  }
+  const H = y + 8;
+  const s = svg('svg', {width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Story nodes by arc and ' + (byStyle ? 'turn' : 'act')});
+  const defs = svg('defs');
+  const pat = svg('pattern', {id: 'hatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'});
+  pat.append(svg('rect', {width: 6, height: 6, fill: 'var(--panel)'}), svg('line', {x1: 0, y1: 0, x2: 0, y2: 6, stroke: 'var(--line)', 'stroke-width': 2.5}));
+  const mk = svg('marker', {id: 'arr', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse'});
+  mk.append(svg('path', {d: 'M1 1L9 5L1 9', fill: 'none', stroke: 'context-stroke', 'stroke-width': 1.6}));
+  defs.append(pat, mk); s.append(defs);
+
+  // axis
+  if (byStyle) {
+    for (const t of [0, 5, 10, 25, 50, 100, 200, 400, 800].filter(t => t <= maxT)) {
+      const x = xTurn(t) + 2;
+      s.append(svg('line', {x1: x, x2: x, y1: TOP - 10, y2: H - 6, class: 'axis', 'stroke-dasharray': '2 4'}));
+      const tx = svg('text', {x, y: TOP - 16, class: 'tick', 'text-anchor': 'middle'}); tx.textContent = t === 0 ? 'turn 0' : t; s.append(tx);
+    }
+  } else {
+    actCols.forEach((name, i) => {
+      const x = plotX0 + i * colW;
+      s.append(svg('line', {x1: x, x2: x, y1: TOP - 10, y2: H - 6, class: 'axis'}));
+      const tx = svg('text', {x: x + 6, y: TOP - 16, class: 'colhead'}); tx.textContent = name; s.append(tx);
+    });
+  }
+  s.append(svg('line', {x1: W - RIGHT, x2: W - RIGHT, y1: TOP - 10, y2: H - 6, class: 'axis'}));
+  const nv = svg('text', {x: W - RIGHT + 8, y: TOP - 16, class: 'colhead'});
+  nv.textContent = byStyle ? 'Not on this path' : 'Never happens'; s.append(nv);
+
+  for (const lane of lanes) {
+    s.append(svg('rect', {x: 0, y: lane.y, width: W, height: lane.h, class: 'lane-bg'}));
+    const t = svg('text', {x: 14, y: lane.y + 20, class: 'lane-label'}); t.textContent = lane.title; s.append(t);
+    const c = svg('text', {x: 14, y: lane.y + 36, class: 'lane-count'}); c.textContent = lane.items.length + ' nodes'; s.append(c);
+  }
+
+  // edges: the main path faintly, the selected node's links strongly
+  const pos = new Map(placed.map(p => [p.n._id, p]));
+  const edgeLayer = svg('g'); s.append(edgeLayer);
+  const link = (a, b, cls) => {
+    const x1 = a.x + NW, y1 = a.y + NH / 2, x2 = b.x, y2 = b.y + NH / 2;
+    const fwd = x2 > x1 + 8;
+    const d = fwd ? `M${x1} ${y1} C${x1 + 30} ${y1} ${x2 - 30} ${y2} ${x2 - 2} ${y2}`
+                  : `M${a.x + NW / 2} ${a.y + NH} C${a.x + NW / 2} ${a.y + NH + 40} ${b.x + NW / 2} ${b.y - 40} ${b.x + NW / 2} ${b.y - 2}`;
+    edgeLayer.append(svg('path', {d, class: 'edge ' + cls, 'marker-end': 'url(#arr)'}));
+  };
+  for (const p of placed) if (p.n.arc === 'main' && !p.off) for (const [k, t] of p.n.refs) if (k === 'next' && pos.has(t) && !pos.get(t).off) link(p, pos.get(t), 'main');
+  const selP = pos.get(state.sel);
+  if (selP) {
+    for (const [, t] of selP.n.refs) if (pos.has(t) && t !== state.sel) link(selP, pos.get(t), 'hot');
+    for (const p of placed) for (const [, t] of p.n.refs) if (t === state.sel && p !== selP) link(p, selP, 'hot in');
+  }
+
+  // nodes
+  const q = state.q.trim().toLowerCase();
+  for (const p of placed) {
+    const n = p.n;
+    const cls = ['node', 'k-' + n.kind];
+    if (n.status === 'draft') cls.push('draft');
+    if (n.status === 'unused') cls.push('unused');
+    if (p.off || n.reach === 'no') cls.push('dim');
+    if (state.char && !list(n.who).includes(state.char)) cls.push('dim');
+    if (q && !(n._id.toLowerCase().includes(q) || (n.title || '').toLowerCase().includes(q))) cls.push('dim');
+    if (q && (n._id.toLowerCase().includes(q) || (n.title || '').toLowerCase().includes(q))) cls.push('hit');
+    if (state.char && list(n.who).includes(state.char)) cls.push('hit');
+    if (n._id === state.sel) cls.push('sel');
+    const gN = svg('g', {class: cls.join(' '), transform: `translate(${p.x},${p.y})`, tabindex: 0, role: 'button',
+      'aria-label': (KIND_LABEL[n.kind] || n.kind) + ': ' + (n.title || n._id)});
+    gN.append(svg('rect', {class: 'box', width: NW, height: NH, rx: n.kind === 'ending' ? 11 : 4}));
+    const label = (n.title || n._id);
+    const tx = svg('text', {x: 8, y: 16}); tx.textContent = label.length > 22 ? label.slice(0, 21) + '…' : label; gN.append(tx);
+    const worst = (n.problems || []).some(x => x.level === 'error') ? 'error' : (n.problems || []).some(x => x.level === 'warning') ? 'warning' : null;
+    if (worst) gN.append(svg('circle', {cx: NW - 6, cy: 6, r: 4, class: 'pmark ' + worst}));
+    const ttl = svg('title'); ttl.textContent = n._id; gN.append(ttl);
+    gN.addEventListener('click', () => select(n._id));
+    gN.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(n._id); } });
+    s.append(gN);
+  }
+  host.replaceChildren(s);
+  legend();
+  renderDetail();
+}
+
+function legend() {
+  const items = [['Chapter, ending', '--k-main-f', '--k-main-s'], ['Milestone', '--k-ms-f', '--k-main-s'], ['Encounter, chain stage', '--k-enc-f', '--k-enc-s'],
+    ['Quest', '--k-quest-f', '--k-quest-s'], ['Event', '--k-event-f', '--k-event-s'], ['Story beat', '--k-beat-f', '--k-beat-s']];
+  const L = document.getElementById('legend');
+  L.replaceChildren(...items.map(([t, f, st]) => el('span', {}, el('span', {class: 'sw', style: `background:var(${f});border-color:var(${st})`}), t)),
+    el('span', {}, el('span', {class: 'sw', style: 'border-style:dashed;border-color:var(--muted)'}), 'Draft'),
+    el('span', {}, el('span', {class: 'sw', style: 'opacity:.35;border-color:var(--muted)'}), 'Faded: never happens, or not on this path'),
+    el('span', {}, el('span', {class: 'sw', style: 'border-radius:50%;width:9px;height:9px;background:var(--danger);border-color:var(--danger)'}), 'Has a finding'));
+}
+
+function select(id) { state.sel = id; draw(); document.getElementById('detail').scrollIntoView({block: 'nearest'}); }
+
+function nodeLink(id, gid) {
+  const g = gid ? DATA.games.find(x => x.id === gid) : game();
+  const n = g && g.nodes[id];
+  return el('button', {type: 'button', class: 'linkish', text: n ? (n.title || id) : id, title: id,
+    onclick: () => {
+      const target = gid || state.game;
+      if (location.hash.slice(1) !== target || document.getElementById('gameView').hidden) { state.pendingSel = id; location.hash = target; }
+      else select(id);
+    }});
+}
+
+function renderDetail() {
+  const g = game(); const n = g.nodes[state.sel]; const D = document.getElementById('detail');
+  if (!n) { D.replaceChildren(el('p', {class: 'empty', text: 'Pick a node on the map.'})); return; }
+  const chips = el('div', {class: 'chips'}, el('span', {class: 'chip accent', text: KIND_LABEL[n.kind] || n.kind}),
+    el('span', {class: 'chip', text: (g.arcs.find(a => a.id === n.arc) || {}).title || n.arc}));
+  if (n.status === 'draft') chips.append(el('span', {class: 'chip warning', text: 'draft'}));
+  if (n.status === 'unused') chips.append(el('span', {class: 'chip', text: 'unused'}));
+  if (n.reach === 'no' && n.status !== 'unused') chips.append(el('span', {class: 'chip error', text: 'never happens'}));
+  if (n.reach === 'opaque') chips.append(el('span', {class: 'chip', text: 'depends on game code'}));
+  const kids = [el('h2', {text: n.title || state.sel}), el('div', {class: 'mono sub', text: state.sel}), chips];
+  const texts = list(n.text).filter(Boolean);
+  if (texts.length) kids.push(el('div', {class: 'quote'}, ...texts.flatMap((t, i) => i ? [el('br'), t] : [t])));
+  for (const v of n.variants || []) kids.push(el('div', {class: 'variant', text: (v.requires ? 'When ' + condText(v.requires).join(', ') : 'Variant ' + v.when) + ': ' + v.text}));
+  const facts = el('dl', {class: 'facts'});
+  const fact = (k, v) => { if (v == null || (Array.isArray(v) && !v.length) || v === '') return; facts.append(el('dt', {text: k}), el('dd', {}, ...(Array.isArray(v) ? v.flatMap((x, i) => i ? [', ', x] : [x]) : [v]))); };
+  fact('Needs', condText(n.requires).join(' · '));
+  if (n.in) fact('Part of', nodeLink(n.in));
+  if (n.reach === 'no' && n.why) fact('Why never', n.why);
+  fact('Gives', effText(n.effects).join(' · '));
+  fact('Who', list(n.who).map(w => (g.characters[w] || {}).name || w).join(', ') + (n.as ? ' (' + n.as + ')' : ''));
+  fact('Where', n.where);
+  if (n.chance) fact('Chance', Math.round(n.chance * 1000) / 10 + '% per turn' + (n.trigger ? ', ' + n.trigger : ''));
+  if (n.repeat) fact('Repeats', n.repeat === true ? 'yes' : 'every ' + n.repeat.cooldown + ' turns at most');
+  const outs = n.refs.filter(([k]) => k === 'next' || k === 'start').map(([, t]) => t);
+  if (outs.length) fact(n.choose ? 'Player chooses' : 'Leads to', [...new Set(outs)].map(t => nodeLink(t)));
+  const ins = Object.entries(g.nodes).filter(([, m]) => m.refs.some(([, t]) => t === state.sel)).map(([id]) => id);
+  if (ins.length) fact('Linked from', ins.map(t => nodeLink(t)));
+  if (n.promises) fact('Promises', list(n.promises).join(', '));
+  if (n.pays) fact('Pays off', list(n.pays).join(', '));
+  if (n.handled_by) fact('Content in code', n.handled_by);
+  fact('Source', n.source || n.file);
+  kids.push(facts);
+  for (const c of n.choices || []) kids.push(el('div', {class: 'variant', text: '› ' + c.say + (c.requires ? ' [' + condText(c.requires).join(', ') + ']' : '') + (effText(c.effects).length ? ' → ' + effText(c.effects).join(', ') : '') + (c.next ? ' → ' + list(c.next).join(', ') : '')}));
+  if (g.styles.length) {
+    const t = el('table');
+    t.append(el('tr', {}, el('th', {text: 'Player'}), el('th', {text: 'Games'}), el('th', {text: 'Reached'}), el('th', {text: 'Turn (median, range)'})));
+    for (const st of STYLE_ORDER.filter(s => g.styles.some(x => x.id === s))) {
+      const e = styleEntry(n, st) || {}; const info = g.styles.find(x => x.id === st);
+      t.append(el('tr', {}, el('td', {text: info.name}), el('td', {text: info.games}),
+        el('td', {text: Math.round((e.share || 0) * 100) + '%'}),
+        el('td', {text: e.share ? `${e.median} (${e.first}–${e.last})` + (e.expected_wait ? `, then about ${e.expected_wait} turns of chance` : '') : '–'})));
+    }
+    kids.push(el('h3', {text: 'In recorded games'}), t);
+  }
+  for (const note of n.notes || []) kids.push(el('p', {class: 'sub', text: 'Note: ' + note}));
+  for (const p of n.problems || []) kids.push(el('p', {class: 'sub', style: `color:var(--${p.level === 'error' ? 'danger' : p.level === 'warning' ? 'warn' : 'muted'})`, text: p.level + ': ' + p.message}));
+  D.replaceChildren(...kids);
+}
+
+function probRow(p, onPick) {
+  const [gid, rest] = p.where.split(':');
+  const nid = rest || '';
+  const g = DATA.games.find(x => x.id === gid);
+  const target = g && g.nodes[nid] ? nodeLink(nid, gid) : el('span', {class: 'mono', text: p.where});
+  return el('div', {class: 'prob ' + p.level}, el('span', {class: 'bar'}), el('div', {}, target, el('small', {text: p.code + ' · ' + p.message})));
+}
+function renderProblems() {
+  const g = game(); const P = document.getElementById('problems');
+  const order = {error: 0, warning: 1, note: 2};
+  const items = g.problems.slice().sort((a, b) => order[a.level] - order[b.level] || a.code.localeCompare(b.code));
+  const c = l => items.filter(i => i.level === l).length;
+  document.getElementById('probSummary').textContent = `${c('error')} errors, ${c('warning')} warnings, ${c('note')} notes in ${g.short}.`;
+  P.replaceChildren(...(items.length ? items.map(p => probRow(p)) : [el('p', {class: 'empty', text: 'Nothing found.'})]));
+}
+
+// ---------------------------------------------------------------- saga
+function renderSaga() {
+  const S = DATA.saga;
+  document.getElementById('sagaTitle').textContent = S.title;
+  document.getElementById('sagaAbout').textContent = S.about;
+  document.getElementById('parts').replaceChildren(...S.parts.map(p => {
+    const g = DATA.games.find(x => x.id === p.game);
+    const endings = g ? Object.values(g.nodes).filter(n => n.kind === 'ending').map(n => n.title) : [];
+    return el('div', {class: 'card'}, el('h3', {text: p.title}), el('div', {class: 'sub', text: p.status || ''}),
+      el('div', {text: g ? Object.keys(g.nodes).length + ' nodes, ' + Object.keys(g.characters).length + ' characters' : 'No story file yet'}),
+      endings.length ? el('div', {class: 'sub', text: 'Endings: ' + endings.join(', ')}) : null);
+  }));
+  const ct = document.getElementById('charTable');
+  ct.replaceChildren(el('tr', {}, el('th', {text: 'Character'}), ...S.parts.map((p, i) => el('th', {text: 'Cargo ' + (i + 1)}))));
+  for (const [cid, c] of Object.entries(S.characters)) {
+    const row = el('tr', {}, el('td', {}, el('strong', {text: c.name}), el('div', {class: 'sub', text: c.about || ''})));
+    for (const p of S.parts) {
+      const t = (c.timeline || []).find(e => e.game === p.game);
+      const nodes = ((S.appears[cid] || {})[p.game]) || [];
+      const cell = el('td');
+      if (t) cell.append(el('div', {text: t.as || 'appears'}));
+      if (nodes.length) cell.append(el('div', {class: 'sub'}, `${nodes.length} node${nodes.length > 1 ? 's' : ''}: `, ...nodes.slice(0, 4).flatMap((n, i) => i ? [', ', nodeLink(n, p.game)] : [nodeLink(n, p.game)])));
+      else if (t && DATA.games.some(g => g.id === p.game)) cell.append(el('div', {class: 'sub', style: 'color:var(--warn)', text: 'not written yet'}));
+      if (!t && !nodes.length) cell.append(el('span', {class: 'sub', text: '–'}));
+      row.append(cell);
+    }
+    ct.append(row);
+  }
+  const pt = document.getElementById('promTable');
+  pt.replaceChildren(el('tr', {}, el('th', {text: 'Promise'}), el('th', {text: 'Made in'}), el('th', {text: 'Paid in'})));
+  for (const [pid, p] of Object.entries(S.promises)) {
+    const made = S.made[pid] || [], paid = S.paid[pid] || [];
+    const status = paid.length ? el('span', {class: 'chip ok', text: 'paid'}) : DATA.games.some(g => g.id === p.pay_by) ? el('span', {class: 'chip warning', text: 'unpaid: due in ' + p.pay_by}) : el('span', {class: 'chip', text: 'due in ' + (p.pay_by || '?')});
+    pt.append(el('tr', {}, el('td', {}, el('strong', {class: 'mono', text: pid}), el('div', {class: 'sub', text: p.about || ''})),
+      el('td', {}, ...made.flatMap(([g, n], i) => i ? [', ', nodeLink(n, g)] : [nodeLink(n, g)])), el('td', {}, ...(paid.length ? paid.flatMap(([g, n], i) => i ? [', ', nodeLink(n, g)] : [nodeLink(n, g)]) : [status]))));
+  }
+  const xt = document.getElementById('crossTable');
+  xt.replaceChildren(el('tr', {}, el('th', {text: 'In'}), el('th', {text: 'Node'}), el('th', {text: 'Captain from'})));
+  for (const c of S.crossings) xt.append(el('tr', {}, el('td', {text: c.game}), el('td', {}, nodeLink(c.node, c.game), c.status === 'draft' ? ' (draft)' : ''), el('td', {text: c.from || 'any part'})));
+  if (!S.crossings.length) xt.append(el('tr', {}, el('td', {colspan: 3, class: 'empty', text: 'None yet.'})));
+  document.getElementById('sagaProblems').replaceChildren(...(S.problems.length ? S.problems.map(p => probRow(p)) : [el('p', {class: 'empty', text: 'Nothing found.'})]));
+}
+
+// ---------------------------------------------------------------- wiring
+document.getElementById('charSel').addEventListener('change', e => { state.char = e.target.value; draw(); });
+document.getElementById('search').addEventListener('input', e => { state.q = e.target.value; draw(); });
+document.getElementById('showUnused').addEventListener('change', e => { state.unused = e.target.checked; draw(); });
+document.getElementById('showDrafts').addEventListener('change', e => { state.drafts = e.target.checked; draw(); });
+window.addEventListener('hashchange', route);
+let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!document.getElementById('gameView').hidden) draw(); }, 150); });
+totals(); tabs(); route();
+</script>
+</body>
+</html>
