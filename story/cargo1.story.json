@@ -15,7 +15,8 @@
   "cargo1/pirates.json",
   "cargo1/passengers.json",
   "cargo1/houses.json",
-  "cargo1/frontier.json"
+  "cargo1/frontier.json",
+  "cargo1/enclaves.json"
  ],
  "stats": {
   "money": {

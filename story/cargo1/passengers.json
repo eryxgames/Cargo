@@ -3,50 +3,124 @@
  "version": 1,
  "about": "Passengers and envoys. The 'galactic alliance' becomes the five colonies' customs talks, the never-happening 'system rebellion' becomes the Gamma miners' strike (it waited on a stat the game never raises), the alien scholar becomes Matylda Korinek, a human archaeophysicist, and the VIP and merchant visits get places they can actually happen.",
  "characters": {
-  "deacon": {"name": "Deacon Amaro", "kind": "human", "about": "Solarian reading-house at Barnard's Star; reads sunspots, and trade routes in them"},
-  "pilgrims": {"name": "Pilgrims of the Tarnished Gear", "kind": "human", "about": "cargo cult from a broken-down hauler's crew; worship ships, tip in spare parts"}
+  "deacon": {
+   "name": "Deacon Amaro",
+   "kind": "human",
+   "about": "Solarian reading-house at Barnard's Star; reads sunspots, and trade routes in them"
+  },
+  "pilgrims": {
+   "name": "Pilgrims of the Broken Machine",
+   "kind": "human",
+   "about": "cargo cult founded by the crew of a hauler that broke down at an outpost; worship ships, tip in spare parts"
+  }
  },
  "flags": {
-  "solarian_friend": {"about": "the captain donated to the Solarian reading-house", "carries_to": ["cargo2", "cargo3"]},
-  "carried_the_pilgrims": {"about": "the captain flew the Tarnished Gear pilgrims to Alpha", "carries_to": ["cargo2"]}
+  "solarian_friend": {
+   "about": "the captain donated to the Solarian reading-house",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "carried_the_pilgrims": {
+   "about": "the captain flew the Broken Machine pilgrims to Alpha",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
  },
  "nodes": {
   "pass.deacon": {
-   "kind": "encounter", "arc": "passengers", "status": "draft", "act": 2,
+   "kind": "encounter",
+   "arc": "passengers",
+   "status": "draft",
+   "act": 2,
    "title": "The deacon's reading",
-   "who": ["deacon"],
+   "who": [
+    "deacon"
+   ],
    "where": "Beta",
-   "requires": {"at": "Beta", "passenger_reputation": 20},
+   "requires": {
+    "at": "Beta",
+    "passenger_reputation": 20
+   },
    "chance": 0.2,
    "text": [
     "Deacon Amaro of the Solarian reading-house at Barnard's Star needs passage to Alpha. The reading-house has logged the star's spots for forty years, and the deacon reads trade routes in them, for a donation.",
     "'Avoid Gamma on even cycles,' the deacon says. Over the next year this is right more often than your broker."
    ],
    "choices": [
-    {"id": "donate", "say": "Make a donation", "requires": {"money": 500}, "effects": {"money": -500, "plot_points": 2, "set": ["solarian_friend"]}},
-    {"id": "fly", "say": "Just fly the deacon to Alpha", "effects": {"money": 800, "passengers_transported": 1}}
+    {
+     "id": "donate",
+     "say": "Make a donation",
+     "requires": {
+      "money": 500
+     },
+     "effects": {
+      "money": -500,
+      "plot_points": 2,
+      "set": [
+       "solarian_friend"
+      ]
+     }
+    },
+    {
+     "id": "fly",
+     "say": "Just fly the deacon to Alpha",
+     "effects": {
+      "money": 800,
+      "passengers_transported": 1
+     }
+    }
    ]
   },
   "pass.pilgrims": {
-   "kind": "encounter", "arc": "passengers", "status": "draft", "act": 2,
+   "kind": "encounter",
+   "arc": "passengers",
+   "status": "draft",
+   "act": 2,
    "title": "Pilgrims",
-   "who": ["pilgrims"],
+   "who": [
+    "pilgrims"
+   ],
    "where": "DeepSpaceOutpost",
-   "requires": {"done": "beat.DeepSpaceOutpost.alien_contact", "at_type": "DeepSpaceOutpost"},
+   "requires": {
+    "done": "beat.DeepSpaceOutpost.alien_contact",
+    "at_type": "DeepSpaceOutpost"
+   },
    "chance": 0.25,
    "text": [
-    "Six pilgrims of the Tarnished Gear want to ride a real hauler to Alpha, to see where ships come from.",
+    "Six pilgrims of the Cult of the Broken Machine want to ride a working hauler to Alpha, to see where ships come from.",
     "They pray to your reactor twice a day and leave offerings in the airlock: bolts, ration bars, a fuel pump for a ship two models older than yours. Nobody touches the controls. They are very clear that nobody touches the controls."
    ],
-   "effects": {"money": 1200, "passengers_transported": 6, "set": ["carried_the_pilgrims"]}
+   "effects": {
+    "money": 1200,
+    "passengers_transported": 6,
+    "set": [
+     "carried_the_pilgrims"
+    ]
+   }
   }
  },
  "amend": {
   "characters": {
-   "diplomatic_envoy": {"name": "Envoy Ines Halloran", "generated": false, "about": "Alpha's colonial council; wants one customs code for five systems"},
-   "rebel_commander": {"name": "Teodor Brann", "generated": false, "about": "spokesman of the Gamma free miners"},
-   "ancient_scholar": {"name": "Matylda Korinek", "kind": "human", "generated": false, "saga": true,
-    "about": "archaeophysicist at the Stellar Institute; first to say the builders' metal was a ring around our own Sun; still right in Cargo 2"}
+   "diplomatic_envoy": {
+    "name": "Envoy Ines Halloran",
+    "generated": false,
+    "about": "Alpha's colonial council; wants one customs code for five systems"
+   },
+   "rebel_commander": {
+    "name": "Teodor Brann",
+    "generated": false,
+    "about": "spokesman of the Gamma free miners"
+   },
+   "ancient_scholar": {
+    "name": "Matylda Korinek",
+    "kind": "human",
+    "generated": false,
+    "saga": true,
+    "about": "archaeophysicist at the Stellar Institute; first to say the builders' metal was a ring around our own Sun; still right in Cargo 2"
+   }
   },
   "nodes": {
    "meet.galactic_alliance": {
@@ -63,9 +137,15 @@
    },
    "meet.system_rebellion": {
     "title": "The Gamma miners",
-    "requires": {"passenger_reputation": 70, "act_min": 3, "done": "galactic_alliance.1"},
+    "requires": {
+     "passenger_reputation": 70,
+     "act_min": 3,
+     "done": "galactic_alliance.1"
+    },
     "text": "The free miners at Gamma have stopped shipping ore to the legions. The good rock is gone, the flares cook the drills, and the legions still want the same tonnage.",
-    "notes": ["repair: waited on controlled_locations >= 2, a number the game never raises; now follows the customs talks"]
+    "notes": [
+     "repair: waited on controlled_locations >= 2, a number the game never raises; now follows the customs talks"
+    ]
    },
    "system_rebellion.1": {
     "title": "A passenger in the coolant tank",
@@ -77,21 +157,36 @@
    },
    "meet.ancient_mysteries": {
     "title": "Korinek",
-    "text": "Matylda Korinek buys passage with research credits and a promise. She has traced the builders' metal to a segment drifting in the wake of Scholz's Star and wants to stand on it herself."
+    "text": "Matylda Korinek buys passage with research credits and a promise. She has traced the builders' metal to a segment turning on its own in the wake of Scholz's Star, the Builder Site, and wants to stand on it herself."
    },
    "ancient_mysteries.1": {
     "title": "What it took",
     "text": "She brings a spectrometer, a folding chair and a bottle she says is for afterwards. 'Seventy thousand years ago this star passed close enough to our Sun to steal from it,' she says. 'I want to see what it took.'"
    },
    "visit.vip_passenger": {
-    "requires": {"at_type": ["Planet"], "passenger_reputation": 40, "code": "comfort_level >= 4"},
+    "requires": {
+     "at_type": [
+      "Planet"
+     ],
+     "passenger_reputation": 40,
+     "code": "comfort_level >= 4"
+    },
     "text": "Your reputation precedes you, Captain. So does your cabin rating.",
-    "notes": ["repair: the game compared the location type (planet, outpost...) with 'port', which never matches; this should spawn on a port visit"]
+    "notes": [
+     "repair: the game compared the location type (planet, outpost...) with 'port', which never matches; this should spawn on a port visit"
+    ]
    },
    "visit.merchant_trader": {
-    "requires": {"at_type": ["Planet", "DeepSpaceOutpost"]},
+    "requires": {
+     "at_type": [
+      "Planet",
+      "DeepSpaceOutpost"
+     ]
+    },
     "text": "Rare goods for discerning customers. Some for undiscerning ones too; those are cheaper.",
-    "notes": ["repair: compared the location type with 'port' or 'cantina'; this should spawn on a port or cantina visit"]
+    "notes": [
+     "repair: compared the location type with 'port' or 'cantina'; this should spawn on a port or cantina visit"
+    ]
    }
   }
  }

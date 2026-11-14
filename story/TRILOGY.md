@@ -20,11 +20,13 @@ So the trilogy runs from the Hauler Hansa's founding to the eve of ERYX:
 | --- | --- | --- | --- |
 | Cargo 1 | about 2420 | the Hansa and its Mark; the first corporate legion; the Collective's first node | who runs the routes |
 | Cargo 2 | about 2460 | the Terran Mandate (legions merged), the Concord's houses and gates, the Binary Dawn | who owns the jump |
-| Cargo 3 | about 2533 | Project ERYX, which needs something no faction can build | who restarts the Gyrotron, and from where |
+| Cargo 3 | from about 2533, over several centuries | Project ERYX, which needs something no faction can build | who restarts the Gyrotron, and from where |
 
 Cargo 3 opens just after the Debacle, when anyone talking about ancient
-machines is laughed out of the room. The captain has evidence from two earlier
-games.
+machines is laughed out of the room, and runs for several centuries of external
+time on relativistic legs. It ends as the ERYX missions leave, before anyone
+reaches Eryxia (the wiki's "discovery" around 2552 is remote observation). The
+captain has evidence from two earlier games.
 
 Time dilation does the rest. A captain who spends Cargo 2 on long sublight legs
 can be fifteen years older at its end while the routes are forty years older.
@@ -83,9 +85,10 @@ pointing at an empty patch of sky. Eryxians and Gordians do not appear.
 | Hauler Hansa | independent haulers, a few cooperatives, no common money | the player's people; the charter and the first Mark |
 | Terran Mandate | security legions of OmniCorp, Stellar Dynamics and the Xylo Consortium | legion contracts, the commission, the merger |
 | Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests | Ysolde van Rostrom, Dharr Santor |
-| Collective | Curator Unit 113 at the player's guild; the Sowers on the farm drums | the first refusal, the first node |
+| Collective | CU-113, a Curator neurodroid at the player's guild (the game's Neurodroid Overseer); the Sowers on the farm drums | the first refusal, the first node, long before vectorspace |
+| Other machines | heavy agrobots (Krog loading docks, Geod founding Delta's farms, Aela boring the Rockwardens' mine); the nanobot colony at Sigma VII; the Unsorted, robots who belong to nothing | jobs, passengers, enclave quests |
 | Solarians | a reading-house at Barnard's Star that logs sunspots | Deacon Amaro, who reads trade routes in them |
-| Cargo cults | the Order of the Tarnished Gear (an outpost), the Cult of the Broken Machine (Zeta Reticuli) | first contact, pilgrims, relics |
+| Cargo cults | the Cult of the Broken Machine (worships a broken-down hauler at an outpost), the Order of the Tarnished Gear (collects broken technology), the Star-Shaped Scar Tribe (Zeta Reticuli) | first contact, pilgrims, the holy manifest, the unholy shelf, the brass band |
 | Hatters | the Grey Hats, an outpost crew | record cleaning, for a fee |
 | Technoshamans | the farm drums | blessings with firmware patches, on subscription |
 
@@ -95,7 +98,8 @@ pointing at an empty patch of sky. Eryxians and Gordians do not appear.
 | --- | --- | --- | --- |
 | The captain | the player | the player, or an old NPC | the player, or a name on a memorial |
 | The other captain (clone) | partner, rival or runaway | the other hauler with your name | |
-| Curator Unit 113 | first neurodroid to refuse an order | a node of the Binary Dawn; remembers what you chose | unchanged, several times over |
+| CU-113, Neurodroid Overseer | first neurodroid to refuse an order; six legs and a sensor mast | a node of the Binary Dawn; remembers what you chose | unchanged, several times over |
+| Aela (agrobot) | bores the Rockwardens' first gallery; asks if it is in the cooperative | | still digging for Stonewright, if given a share |
 | Hedda Mraz | the pirate vendetta | founder of the Void Angels, if spared | |
 | Anselm Rockwarden | the cooperative; takes Stonewright sublight | | a name on the keel; Maret Rockwarden (wiki) commands |
 | Ysolde van Rostrom | junior researcher, then founder of House Rostrom | head of the house | |
@@ -108,7 +112,7 @@ Tracked in `saga.json`; the validator lists any a written part fails to pay.
 
 | Promise | Made in Cargo 1 by | Paid in |
 | --- | --- | --- |
-| the_seed | Unit 113's refusal | Cargo 2 |
+| the_seed | CU-113's refusal | Cargo 2 |
 | the_stranger | the old hauler and the pellet | Cargo 2 |
 | the_first_mark | the Hansa charter | Cargo 2 |
 | the_fourth_test | Santor's eleven minutes | Cargo 2 |
@@ -116,6 +120,8 @@ Tracked in `saga.json`; the validator lists any a written part fails to pay.
 | the_heading | the discovery ending | Cargo 2 (opened), Cargo 3 (flown) |
 | the_warning | the older captain at the portal | Cargo 3 |
 | the_stonewright | Anselm's long run | Cargo 3 |
+| the_hollow_rock | the nanobot colony's galleries | Cargo 2 |
+| the_lyra_rumour | the Maud Kettle's story and the chirps from Lyra | Cargo 2 |
 
 ## Cargo 1: what changed
 
@@ -128,8 +134,8 @@ no content):
   now four scenes ending in a choice.
 - **The VIP and the travelling merchant**: compared the location type with "port";
   they should appear on port and cantina visits.
-- **The Neurodroid Overseer**: had nowhere to appear; now Unit 113 visiting after
-  the first node.
+- **The Neurodroid Overseer**: had nowhere to appear; it is CU-113, and visits
+  after the first node.
 - **The mining, combat and research quest lines**: declared, never offered; now
   the Rockwarden cooperative, the legion contracts and House Rostrom.
 - **The rogue captain, merchant and researcher chains**: no trigger; now the clone
@@ -140,16 +146,21 @@ no content):
 
 Rewritten: every chapter and ending text, the passenger and synthetics chains,
 and the ancient scholar (now human). New: the Hansa charter, the samples, the
-legion commission, the older captain, the clone, Unit 113, the Sowers'
-technoshaman, the deacon, the pilgrims, the Grey Hats, the stator field, the
-beacon and the cult capital.
+legion commission, the older captain, the clone, CU-113, the Sowers'
+technoshaman, Krog, Geod, Aela, the nanobot colony, the Unsorted, the holy
+manifest, the deacon, the pilgrims, the Grey Hats, the Lyra rumour, the ruins,
+the Stator Field, the Builder Site and the Star-Shaped Scar Tribe.
 
 What players of each style see (from 16 recorded bot games): traders, whose game
-lasts about 45 turns, get the charter, the customs talks, the strike, the deacon
-and sometimes the old hauler; explorers add the samples, the clone, the Rostrom
-line and the old hauler; fighters add the legions, Mraz and Unit 113. Players who
-build guilds and farms meet the Sowers and the first node. The portal and its
-older captain need the tycoon ending's secret coordinate, so they stay rare.
+lasts about 45 turns, get Krog, Geod, the charter, the customs talks, the strike,
+the deacon, the Lyra story and sometimes the old hauler. Explorers add the
+samples, the clone, the Rostrom line and the old hauler; fighters add the
+legions, Mraz, CU-113 and the Unsorted. Players who build guilds and farms meet
+the Sowers and the first node; those who build mining platforms meet Aela and the
+nanobot colony, late in the discovery path. The ruins, the Stator Field, the
+Builder Site and the signal outposts need the player to travel there. The portal
+and its older captain need the tycoon ending's secret coordinate, so they stay
+rare.
 
 ## The places
 
@@ -174,22 +185,33 @@ colonies and politics are invented. Details per place: `cargo1/places.json`.
 | Nova Labs | Wolf 359 | 7.9 | flare star, unconfirmed planets |
 | Quantum Center | YZ Ceti | 12 | radio bursts from a planet stirring its star's field |
 | Stellar Institute | TRAPPIST-1 | 40 | seven rocky planets |
-| Ancient Ruins Alpha / Beta | our outer system near Sedna; Scholz's Star's wake | | stator fields (rename proposed) |
-| Alien Outpost X / Y | our far outer system; Scholz's Star's track | | builder sites, empty (rename proposed) |
+| Ancient Ruins Alpha / Beta | Tau Ceti's debris disk; a moon of Epsilon Indi Ab | | builder foundations and an "anchor" |
+| Alien Signal Research Outpost X / Y (game: Alien Outpost) | our far outer system; a dish pointed at Lyra | | listening posts; Y hears the chirps from Lyra |
+| Stator Field Megastructure (new) | our outer system, near Sedna's orbit | | the ring's segments, turning together |
+| Builder Site (new) | Scholz's Star's wake | | the stolen segment and its beacon |
 | Zeta, Eta, Theta, Omega-1, DSO-Delta (past the portal) | Zeta Reticuli, Eta Corvi, Gliese 667 C, Vega, Gliese 229 B | 19-59 | farther systems, another time |
 
 The Gordian moon's system (a G and a K star, a 2.5 Jupiter-mass giant, in Lyra,
 hidden in a molecular cloud) has no real match. The nearest candidate is
 HD 178911 in Lyra, about 160 ly away: a close G+K pair plus a Sun-like third star
 with a planet of at least 6 Jupiter masses. It is too close and too visible to be
-hidden, so Er stays fictional; Cargo 2 can send an expedition to HD 178911 to
-chase the rumour and come back with a better one.
+hidden, so Er stays fictional. Cargo 1 plants the rumour: a crashed hauler's
+survivor whose electronics failed near a moon in Lyra, and magnetic chirps
+logged by a research outpost. On the Gordian moon ordinary electronics fail,
+which is why its inhabitants are only found much later. Cargo 2 can send an
+expedition past HD 178911 to chase it.
+
+## Decided (2026-11-14)
+
+1. Years: about 2420, 2460, and 2533 onwards; Cargo 3 may span several hundred years.
+2. Cargo 2's "alien" cultures stay undefined: hybrid colonists of human, biorobot or
+   synthetic descent. Some characters call them aliens anyway.
+3. "Alien Outpost" becomes "Alien Signal Research Outpost"; "Ancient Ruins" stays;
+   "Builder Site" and "Stator Field Megastructure" are added as new locations.
+4. The Neurodroid Overseer stays, as CU-113. Neurodroids are synthetic life,
+   sometimes humanoid, usually not.
 
 ## Open questions
 
-1. Are the years right (2420, 2460, 2533)?
-2. Cargo 2's data has alien cultures (Zentari, Novaren, Qyth...). Keep them as
-   human cultures with alien-sounding names, or cut them?
-3. Should the game show the real system next to the code (for example
+1. Should the game show the real system next to the code (for example
    "Gamma (Ross 154)") in the location info?
-4. Rename "Alien Outpost" and "Ancient Ruins" in the game, as proposed?

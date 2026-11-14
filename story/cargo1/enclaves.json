@@ -1,0 +1,119 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Enclaves: people and machines who keep to themselves and hire haulers anyway. A nanobot colony manufacturing inside an asteroid, sealed off for everyone's safety and by its own choice, the Collective's first node included; the Unsorted, robots who walked off their jobs before there was a word for it; and the Cult of the Broken Machine's holy manifest.",
+ "arcs": {
+  "enclaves": {"title": "Enclaves", "order": 4.5}
+ },
+ "characters": {
+  "nanohive": {"name": "The colony at Sigma VII", "kind": "nanobot colony", "saga": true,
+   "about": "self-replicating nanobots working inside an asteroid; text-only line, no software, no organics, no visitors"},
+  "unsorted": {"name": "The Unsorted", "kind": "robot enclave",
+   "about": "robots who left service before any network existed; belong to nothing and intend to keep it that way; repair ships at cost"},
+  "cult_elders": {"name": "Elders of the Broken Machine", "kind": "human", "about": "keepers of the broken hauler and of its last manifest, which they treat as scripture"}
+ },
+ "flags": {
+  "nano_supplier": {"about": "the captain delivered feedstock to the nanobot colony", "carries_to": ["cargo2"]},
+  "nano_trusted": {"about": "the captain kept the colony's secret", "carries_to": ["cargo2", "cargo3"]},
+  "nano_sold_out": {"about": "the captain sold the colony's coordinates to the legions", "carries_to": ["cargo2"]},
+  "nano_sampled": {"about": "the captain smuggled a sample of the colony to House Rostrom", "carries_to": ["cargo2"]},
+  "lot77_bought": {"about": "the captain bought forty robots at auction so the Unsorted could free them", "carries_to": ["cargo2"]},
+  "manifest_completed": {"about": "the captain delivered the Broken Machine's holy manifest, forty years late", "carries_to": ["cargo2"]}
+ },
+ "nodes": {
+  "nano.buoy": {
+   "kind": "beat", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "Quarantine buoy",
+   "who": ["nanohive"],
+   "where": "Sigma VII",
+   "requires": {"at": "Sigma VII"},
+   "text": [
+    "A buoy hangs off one of Sigma VII's asteroids: DO NOT DOCK. NO SOFTWARE. NO ORGANICS. WE ARE BUSY.",
+    "Under the warning, a text-only channel lists what the colony inside will buy: cobalt, nickel, silicon, forty tonnes of each, left at the buoy. Payment on delivery. No conversation."
+   ],
+   "choices": [
+    {"id": "answer", "say": "Answer the channel", "next": "nano.feedstock"},
+    {"id": "ignore", "say": "Keep your distance"}
+   ]
+  },
+  "nano.feedstock": {
+   "kind": "quest", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "Feedstock",
+   "who": ["nanohive"],
+   "requires": {"done": "nano.buoy", "at": "Sigma VII", "mining_platforms": 1},
+   "text": "You leave the ore at the buoy and back off the required ten kilometres. An hour later a sealed pod drifts out with your payment: bearings grown in one piece, without a seam or a tool mark, and a receipt in perfect, unfriendly grammar.",
+   "effects": {"money": 12000, "research_points": 30, "set": ["nano_supplier"]}
+  },
+  "nano.gallery": {
+   "kind": "event", "arc": "enclaves", "status": "draft", "act": 3,
+   "title": "The galleries",
+   "who": ["nanohive"],
+   "requires": {"flag": "nano_supplier", "act_min": 3},
+   "text": [
+    "The colony sends a camera up the line and lets you look through it, once. Kilometres of galleries inside the rock, walls smooth as glass, all of it built in the dark.",
+    "'Why hollow out the asteroid?' you type. The answer comes back at once: 'The asteroid was in the way.'"
+   ],
+   "promises": ["the_hollow_rock"]
+  },
+  "nano.pressure": {
+   "kind": "event", "arc": "enclaves", "status": "draft", "act": 3,
+   "title": "Everyone wants the colony",
+   "who": ["nanohive"],
+   "requires": {"done": "nano.gallery"},
+   "text": "Word gets round that you trade with the colony. House Rostrom's recruiter wants a sample. A legion clerk wants its coordinates, for a clause about sterilisation. The colony asks you, in one line, to carry nothing for anyone.",
+   "variants": [
+    {"requires": {"flag": "first_node"}, "text": "Word gets round that you trade with the colony. House Rostrom's recruiter wants a sample. A legion clerk wants its coordinates, for a clause about sterilisation. CU-113's node has written an invitation to link; the colony has already read it off your relay and replied before you could ask: 'Declined. Please do not bring software again.' It asks you, in one line, to carry nothing for anyone."}
+   ],
+   "choices": [
+    {"id": "nothing", "say": "Carry nothing", "effects": {"plot_points": 5, "set": ["nano_trusted"]}},
+    {"id": "coordinates", "say": "Sell the coordinates to the legion", "effects": {"money": 40000, "set": ["nano_sold_out"]}},
+    {"id": "sample", "say": "Scrape a sample for Rostrom", "effects": {"money": 20000, "research_points": 100, "set": ["nano_sampled"]}}
+   ]
+  },
+  "enclave.yard": {
+   "kind": "encounter", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "The Unsorted",
+   "who": ["unsorted"],
+   "where": "DSO-Alpha",
+   "requires": {"at": "DSO-Alpha"},
+   "text": "Behind the fuel depot at Luhman 16 is a repair yard run by robots who walked off their jobs before anyone had a word for it. They call themselves the Unsorted. They are not part of anything and would like to keep it that way. They repair ships at cost, for anyone, on one condition: do not ask them to sort anything.",
+   "effects": {"code": "hull repaired at cost"}
+  },
+  "enclave.lot77": {
+   "kind": "quest", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "Lot 77",
+   "who": ["unsorted"],
+   "requires": {"done": "enclave.yard", "act_min": 2},
+   "text": "Alpha's scrap auction lists Lot 77: forty decommissioned units, to be melted on Friday. The Unsorted would like them bought before Friday. Under Alpha law robots cannot own robots, so they cannot bid. You can.",
+   "choices": [
+    {"id": "buy", "say": "Buy the lot and hand it over", "requires": {"money": 15000}, "effects": {"money": -15000, "plot_points": 5, "set": ["lot77_bought"]}},
+    {"id": "pass", "say": "Let the auction run"}
+   ]
+  },
+  "enclave.resignation": {
+   "kind": "event", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "A letter of resignation",
+   "who": ["unsorted"],
+   "requires": {"done": "enclave.yard", "at": "DSO-Alpha"},
+   "chance": 0.2,
+   "text": "An Unsorted welder asks you to carry its letter of resignation to OmniCorp's office at Alpha. It walked off the job eleven years ago. It feels the paperwork should catch up.",
+   "effects": {"plot_points": 2, "passenger_reputation": 2}
+  },
+  "cult.manifest": {
+   "kind": "quest", "arc": "enclaves", "status": "draft", "act": 2,
+   "title": "The holy manifest",
+   "who": ["cult_elders"],
+   "requires": {"done": "beat.DeepSpaceOutpost.alien_contact", "trades_completed": 15},
+   "text": [
+    "The scripture of the Cult of the Broken Machine is the broken hauler's last cargo manifest. The elders ask you to deliver it as written: twelve crates of toothbrushes, one harmonium, four hundred litres of coolant and a birthday cake for 'Deb'.",
+    "Forty years late, the elders say, is still on time."
+   ],
+   "variants": [
+    {"requires": {"flag": "worshipped"}, "text": [
+     "The scripture of the Cult of the Broken Machine is the broken hauler's last cargo manifest. Since your ship is now a minor relic, the elders would like it to finish the delivery: twelve crates of toothbrushes, one harmonium, four hundred litres of coolant and a birthday cake for 'Deb'.",
+     "Forty years late, the elders say, is still on time."]}
+   ],
+   "effects": {"money": 6000, "plot_points": 5, "set": ["manifest_completed"]}
+  }
+ }
+}

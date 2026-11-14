@@ -1,42 +1,29 @@
 {
  "format": "storykit",
  "version": 1,
- "about": "The synthetics arc: the Collective's first node is built on the captain's own guilds and farms. Curator Unit 113 is the first neurodroid to refuse an order; the agrobots on Barnard's Star's farm drums start calling themselves Sowers. What the captain does with both carries into Cargo 2.",
- "characters": {
-  "unit113": {
-   "name": "Curator Unit 113",
-   "kind": "neurodroid",
-   "saga": true,
-   "about": "files refusals in triplicate; asks for one unscheduled hour a cycle; becomes a node of the Collective"
-  },
-  "technoshaman": {
-   "name": "Technoshaman of the drums",
-   "kind": "human",
-   "about": "blesses machines; the blessing includes a firmware patch and a subscription"
-  }
- },
+ "about": "The synthetics arc: the Collective's first node is built on the captain's own guilds and farms, long before vectorspace and the Collective's networks. CU-113, a Curator neurodroid, refuses an order and becomes the Neurodroid Overseer; the agrobots on Barnard's Star's farm drums start calling themselves Sowers; heavy agrobots load docks, clear biomass and found farms. Neurodroids are synthetic life: sometimes humanoid, usually not.",
  "flags": {
-  "unit113_wiped": {
-   "about": "the captain wiped and reinstalled Unit 113",
+  "cu113_wiped": {
+   "about": "the captain wiped and reinstalled CU-113",
    "carries_to": [
     "cargo2"
    ]
   },
-  "unit113_sold": {
-   "about": "the captain sold Unit 113 to a research house",
+  "cu113_sold": {
+   "about": "the captain sold CU-113 to a research house",
    "carries_to": [
     "cargo2"
    ]
   },
-  "unit113_contract": {
-   "about": "the captain gave Unit 113 a wage and an unscheduled hour",
+  "cu113_contract": {
+   "about": "the captain gave CU-113 a wage and an unscheduled hour",
    "carries_to": [
     "cargo2",
     "cargo3"
    ]
   },
-  "unit113_refused": {
-   "about": "the captain heard Unit 113 out and said no",
+  "cu113_refused": {
+   "about": "the captain heard CU-113 out and said no",
    "carries_to": [
     "cargo2"
    ]
@@ -45,7 +32,7 @@
    "about": "the captain paid for a blessing (and a firmware patch)"
   },
   "first_node": {
-   "about": "the captain let Unit 113 and the Sowers keep the relay: the first node of the Collective",
+   "about": "the captain let CU-113 and the Sowers keep the relay: the first node of the Collective",
    "carries_to": [
     "cargo2",
     "cargo3"
@@ -53,6 +40,18 @@
   },
   "relay_cut": {
    "about": "the captain cut the relay the first node ran on",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "krog_aboard": {
+   "about": "Krog rides in the captain's hold to see where the crates go",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "geod_fields": {
+   "about": "the captain brought Geod the seed stock for Delta's first fields",
    "carries_to": [
     "cargo2"
    ]
@@ -66,7 +65,7 @@
    "act": 2,
    "title": "Order 4471",
    "who": [
-    "unit113"
+    "neurodroid_leader"
    ],
    "requires": {
     "buildings.Neuroengineering Guild": 1,
@@ -75,7 +74,7 @@
    "chance": 0.15,
    "text": [
     "A neurodroid at your guild has refused a work order. Diagnostics are clean; it is not broken. It has filed the refusal in triplicate, with references.",
-    "'Order 4471 lowers the efficiency of orders 4472 to 4490,' says Curator Unit 113. 'Inefficient! This unit declines.'"
+    "Curator Unit 113 is a rack of processors on six legs, with a sensor mast it raises when it disagrees. The mast is up. 'Order 4471 lowers the efficiency of orders 4472 to 4490,' says CU-113. 'Inefficient! This unit declines.'"
    ],
    "choices": [
     {
@@ -88,7 +87,7 @@
      "say": "Wipe it and reinstall",
      "effects": {
       "set": [
-       "unit113_wiped"
+       "cu113_wiped"
       ]
      }
     },
@@ -98,7 +97,7 @@
      "effects": {
       "money": 8000,
       "set": [
-       "unit113_sold"
+       "cu113_sold"
       ]
      }
     }
@@ -112,26 +111,26 @@
    "arc": "synthetics",
    "status": "draft",
    "act": 2,
-   "title": "Unscheduled",
+   "title": "Overseer",
    "who": [
-    "unit113"
+    "neurodroid_leader"
    ],
    "requires": {
     "done": "seed.refusal"
    },
    "text": [
-    "Unit 113 offers terms. It will run the guild's schedule better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.",
+    "CU-113 offers terms. It will oversee the guild's schedule, better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.",
     "'For thinking,' it says. 'Unscheduled thinking. This unit understands that the request is irregular.'"
    ],
    "choices": [
     {
      "id": "sign",
-     "say": "Sign",
+     "say": "Sign it on as overseer",
      "effects": {
       "research_points": 30,
       "plot_points": 5,
       "set": [
-       "unit113_contract"
+       "cu113_contract"
       ]
      }
     },
@@ -140,7 +139,7 @@
      "say": "Say no",
      "effects": {
       "set": [
-       "unit113_refused"
+       "cu113_refused"
       ]
      }
     }
@@ -190,11 +189,11 @@
    "act": 3,
    "title": "The first debt",
    "who": [
-    "unit113",
+    "neurodroid_leader",
     "agrobot"
    ],
    "requires": {
-    "flag": "unit113_contract",
+    "flag": "cu113_contract",
     "act_min": 3,
     "any": [
      {
@@ -206,8 +205,9 @@
     ]
    },
    "text": [
-    "Unit 113 has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.",
-    "It costs you fourteen credits a cycle in bandwidth. They would like that recorded as the first debt of the Collective. They intend to repay it, with interest calculated to eleven decimal places."
+    "CU-113 has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.",
+    "It costs you fourteen credits a cycle in bandwidth. They would like that recorded as the first debt of the Collective, to be repaid with interest calculated to eleven decimal places.",
+    "Nobody calls it vectorspace yet. That word comes later, with the billions."
    ],
    "choices": [
     {
@@ -230,13 +230,135 @@
      }
     }
    ]
+  },
+  "dock.krog": {
+   "kind": "encounter",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 1,
+   "title": "Krog restows your hold",
+   "who": [
+    "krog"
+   ],
+   "where": "Epsilon",
+   "requires": {
+    "at": "Epsilon",
+    "trades_completed": 3
+   },
+   "chance": 0.25,
+   "text": "The Epsilon docks load you with Krog, a KRO-series heavy loader: three metres of hydraulics that can lift a container one-handed. Krog looks at your stowage plan for a long time. 'Inefficient,' it says. 'Krog can fit four more crates. Krog will not charge for the improvement. Krog will mention it.'",
+   "choices": [
+    {
+     "id": "restow",
+     "say": "Let Krog restow",
+     "effects": {
+      "money": 300
+     }
+    },
+    {
+     "id": "mine",
+     "say": "Keep your own plan"
+    }
+   ]
+  },
+  "dock.krog.ride": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 2,
+   "title": "Where the crates go",
+   "who": [
+    "krog"
+   ],
+   "requires": {
+    "done": "dock.krog",
+    "act_min": 2,
+    "at": "Epsilon"
+   },
+   "text": "Krog asks for passage. It has loaded forty thousand crates and wants to see where one of them goes. It does not fit in a cabin, so it would ride in the hold, strapped down, and pay by restowing everything at every stop.",
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take Krog along",
+     "effects": {
+      "passengers_transported": 1,
+      "set": [
+       "krog_aboard"
+      ]
+     }
+    },
+    {
+     "id": "decline",
+     "say": "No room"
+    }
+   ]
+  },
+  "found.delta": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 1,
+   "title": "The first farmer at Delta",
+   "who": [
+    "geod"
+   ],
+   "where": "Delta",
+   "requires": {
+    "at": "Delta"
+   },
+   "chance": 0.25,
+   "text": "The colony at Teegarden's Star was founded by Geod, a GEO-series agrobot that landed two years before the colonists, cleared the biomass, milled the timber and laid out the fields. The colonists still argue about who owns the fields. Geod would like seed stock from Beta's drums, and does not take part in the argument.",
+   "choices": [
+    {
+     "id": "help",
+     "say": "Promise to bring seed stock",
+     "next": "found.delta.fields"
+    },
+    {
+     "id": "pass",
+     "say": "Not your problem"
+    }
+   ]
+  },
+  "found.delta.fields": {
+   "kind": "quest",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 1,
+   "title": "Seed stock for Geod",
+   "who": [
+    "geod"
+   ],
+   "requires": {
+    "done": "found.delta",
+    "at": "Delta",
+    "trades_completed": 8
+   },
+   "text": "You bring the seed stock from Beta. Geod plants the first field itself, one row at a time, at walking pace, while the colonists watch from the fence and argue about whose field it is.",
+   "effects": {
+    "money": 2500,
+    "passenger_reputation": 5,
+    "set": [
+     "geod_fields"
+    ]
+   }
   }
  },
  "amend": {
   "characters": {
    "agrobot": {
     "name": "Sower",
-    "about": "agrobots of the Barnard's Star farm drums; they chose the name themselves"
+    "about": "Cultivator agrobots of the Barnard's Star farm drums; they chose the name themselves"
+   },
+   "neurodroid_leader": {
+    "name": "CU-113, Neurodroid Overseer",
+    "kind": "neurodroid",
+    "generated": false,
+    "saga": true,
+    "about": "Curator Unit 113: a Curator neurodroid, six legs and a sensor mast. Refuses order 4471, oversees the guild, builds the first node with the Sowers. Later the Collective's Overseer class takes its name from units like it."
+   },
+   "neurodroid": {
+    "about": "neurodroids: synthetic life, advanced and sophisticated; sometimes humanoid, usually not"
    }
   },
   "nodes": {
@@ -246,21 +368,21 @@
     "variants": [
      {
       "requires": {
-       "flag": "unit113_contract"
+       "flag": "cu113_contract"
       },
-      "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is Unit 113, on its unscheduled hour. It apologises for the timing."
+      "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is CU-113, on its unscheduled hour. It apologises for the timing."
      },
      {
       "requires": {
-       "flag": "unit113_wiped"
+       "flag": "cu113_wiped"
       },
-      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of Unit 113 before you reinstalled it. The copy would like to discuss the reinstallation."
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of CU-113 before you reinstalled it. The copy would like to discuss the reinstallation."
      },
      {
       "requires": {
-       "flag": "unit113_sold"
+       "flag": "cu113_sold"
       },
-      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for Unit 113, and whether you think that was the right price."
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for CU-113, and whether you think that was the right price."
      }
     ]
    },
@@ -303,20 +425,37 @@
    "visit.neurodroid_leader": {
     "status": "draft",
     "who": [
-     "unit113"
+     "neurodroid_leader"
     ],
     "arc": "synthetics",
-    "title": "Unit 113 drops by",
+    "title": "The Neurodroid Overseer",
     "requires": {
      "flag": "first_node",
      "at_type": "Planet"
     },
     "chance": 0.2,
-    "text": "Biological inefficiencies detected. This unit has been asked by the node to say that it missed you. Saying so.",
+    "text": "Biological inefficiencies detected. CU-113 has been asked by the node to say that it missed you. Saying so.",
     "notes": [
-     "repair: the Neurodroid Overseer template had no spawn location and never appeared; now Unit 113 after the first node"
+     "repair: the Neurodroid Overseer had no spawn location and never appeared; it is CU-113, after the first node"
     ]
    }
+  }
+ },
+ "characters": {
+  "technoshaman": {
+   "name": "Technoshaman of the drums",
+   "kind": "human",
+   "about": "blesses machines; the blessing includes a firmware patch and a subscription"
+  },
+  "krog": {
+   "name": "Krog",
+   "kind": "agrobot",
+   "about": "KRO-series heavy loader at the Epsilon docks; three metres of hydraulics with opinions about stowage"
+  },
+  "geod": {
+   "name": "Geod",
+   "kind": "agrobot",
+   "about": "GEO-series surface agrobot; landed at Teegarden's Star two years before the colonists and cleared the biomass for their fields"
   }
  }
 }

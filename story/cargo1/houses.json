@@ -26,6 +26,12 @@
    "kind": "human",
    "saga": true,
    "about": "engineer; flies the fourth Bekkenheim test; the drive carries his name"
+  },
+  "aela": {
+   "name": "Aela",
+   "kind": "agrobot",
+   "saga": true,
+   "about": "AEL-series asteroid boring agrobot; opens the Rockwardens' new claim, then asks whether it is in the cooperative"
   }
  },
  "flags": {
@@ -67,9 +73,64 @@
    "carries_to": [
     "cargo2"
    ]
+  },
+  "aela_member": {
+   "about": "Aela became a member of the Rockwarden cooperative: the first machine shareholder",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "aela_leased": {
+   "about": "Aela stayed leased equipment",
+   "carries_to": [
+    "cargo2"
+   ]
   }
  },
- "nodes": {},
+ "nodes": {
+  "mine.aela": {
+   "kind": "event",
+   "arc": "houses",
+   "status": "draft",
+   "act": 2,
+   "title": "Who the gallery is for",
+   "who": [
+    "anselm",
+    "aela"
+   ],
+   "requires": {
+    "done": "questline.mining.1",
+    "at_type": "AsteroidBase"
+   },
+   "text": [
+    "The cooperative leases an AEL-series boring agrobot to open its new claim. Aela digs the first gallery in a week, shores it, lights it, and then stops and asks who the gallery is for.",
+    "'For the cooperative,' Anselm says. Aela asks whether it is in the cooperative. Anselm looks at you. You hold a share; it is partly your call."
+   ],
+   "choices": [
+    {
+     "id": "member",
+     "say": "Give Aela a share",
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "aela_member"
+      ]
+     }
+    },
+    {
+     "id": "lease",
+     "say": "Keep it on the lease",
+     "effects": {
+      "money": 3000,
+      "set": [
+       "aela_leased"
+      ]
+     }
+    }
+   ]
+  }
+ },
  "amend": {
   "nodes": {
    "questline.mining.1": {

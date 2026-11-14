@@ -1,66 +1,211 @@
 {
  "format": "storykit",
  "version": 1,
- "about": "Cargo 1's named locations and the real star systems their codes stand for. Astronomy as published by November 2026; colonies, industry and politics are invented. 'rename' is a proposed change to the name the game shows.",
+ "about": "Cargo 1's named locations and the real star systems their codes stand for. Astronomy as published by November 2026; colonies, industry and politics are invented. 'rename' is a proposed change to the name the game shows. 'status: proposed' marks a location the game does not have yet; 'unlock' says how it could appear.",
  "places": {
-  "Alpha": {"kind": "location", "type": "Planet", "system": "Alpha Centauri", "ly": 4.4,
+  "Alpha": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Alpha Centauri",
+   "ly": 4.4,
    "facts": "Proxima b, an Earth-mass planet in Proxima's habitable zone. A Saturn-mass candidate (S1) imaged once by JWST in Alpha Cen A's habitable zone in August 2024, not seen in 2025; unconfirmed.",
-   "colony": "The oldest colonies (Proxima, 2223 in the wiki). Stable, crowded, expensive. Every customs rule in the near systems was written here first."},
-  "Beta": {"kind": "location", "type": "Planet", "system": "Barnard's Star", "ly": 6.0,
+   "colony": "The oldest colonies (Proxima, 2223 in the wiki). Stable, crowded, expensive. Every customs rule in the near systems was written here first."
+  },
+  "Beta": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Barnard's Star",
+   "ly": 6.0,
    "facts": "Four small planets (0.2 to 0.3 Earth masses), all closer in than the habitable zone.",
-   "colony": "Agricultural, as in the wiki, but no planet is cool enough: the farms are rotating drums lit by mirrors. Booming. The agrobots here are Sowers."},
-  "Gamma": {"kind": "location", "type": "Planet", "system": "Ross 154", "ly": 9.7,
+   "colony": "Agricultural, as in the wiki, but no planet is cool enough: the farms are rotating drums lit by mirrors. Booming. The agrobots here are Sowers."
+  },
+  "Gamma": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Ross 154",
+   "ly": 9.7,
    "facts": "A flare star; no planets known.",
-   "colony": "Free Colonies mining (wiki). Declining: the good rock is gone and the flares cook the equipment. The miners are the first to strike."},
-  "Delta": {"kind": "location", "type": "Planet", "system": "Teegarden's Star", "ly": 12.5,
+   "colony": "Free Colonies mining (wiki). Declining: the good rock is gone and the flares cook the equipment. The miners are the first to strike."
+  },
+  "Delta": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Teegarden's Star",
+   "ly": 12.5,
    "facts": "Planets b and c, each about one Earth mass, in the habitable zone; a third planet d (2024).",
-   "colony": "The young colony on c. Formative: everything is on order."},
-  "Epsilon": {"kind": "location", "type": "Planet", "system": "Epsilon Eridani", "ly": 10.5,
+   "colony": "The young colony on c. Formative: everything is on order."
+  },
+  "Epsilon": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Epsilon Eridani",
+   "ly": 10.5,
    "facts": "A Jupiter-mass planet at 3.5 AU on a near-circular orbit; an inner warm disk and an outer belt at about 70 AU.",
-   "colony": "Stations on the giant's moons; the near systems' ore exchange. Stable."},
-  "Omega XIV": {"kind": "location", "type": "AsteroidBase", "system": "Tau Ceti", "ly": 11.9,
+   "colony": "Stations on the giant's moons; the near systems' ore exchange. Stable."
+  },
+  "Omega XIV": {
+   "kind": "location",
+   "type": "AsteroidBase",
+   "system": "Tau Ceti",
+   "ly": 11.9,
    "facts": "A debris disk far heavier than the Sun's Kuiper belt; its planets e and f are no longer thought habitable.",
-   "colony": "The wiki's Synthesis habitats: humans and machines sharing one payroll."},
-  "Sigma VII": {"kind": "location", "type": "AsteroidBase", "system": "Epsilon Indi", "ly": 11.9,
+   "colony": "The wiki's Synthesis habitats: humans and machines sharing one payroll."
+  },
+  "Sigma VII": {
+   "kind": "location",
+   "type": "AsteroidBase",
+   "system": "Epsilon Indi",
+   "ly": 11.9,
    "facts": "A cold giant planet (Ab) imaged directly by JWST in 2024; a pair of brown dwarfs (Ba, Bb) far out.",
-   "colony": "Ice mining on the giant's moons. Declining."},
-  "Theta III": {"kind": "location", "type": "AsteroidBase", "system": "Fomalhaut", "ly": 25,
+   "colony": "Ice mining on the giant's moons. Declining."
+  },
+  "Theta III": {
+   "kind": "location",
+   "type": "AsteroidBase",
+   "system": "Fomalhaut",
+   "ly": 25,
    "facts": "A bright debris ring where planetesimals collide: Hubble saw one collision cloud in 2004 and a second in 2023.",
-   "colony": "Salvage of a belt that keeps smashing itself. Booming."},
-  "DSO-Alpha": {"kind": "location", "type": "DeepSpaceOutpost", "system": "Luhman 16", "ly": 6.5,
-   "facts": "The nearest pair of brown dwarfs.", "colony": "A refuelling waypoint. Formative."},
-  "DSO-Beta": {"kind": "location", "type": "DeepSpaceOutpost", "system": "WISE 0855-0714", "ly": 7.4,
+   "colony": "Salvage of a belt that keeps smashing itself. Booming."
+  },
+  "DSO-Alpha": {
+   "kind": "location",
+   "type": "DeepSpaceOutpost",
+   "system": "Luhman 16",
+   "ly": 6.5,
+   "facts": "The nearest pair of brown dwarfs.",
+   "colony": "A refuelling waypoint. Formative."
+  },
+  "DSO-Beta": {
+   "kind": "location",
+   "type": "DeepSpaceOutpost",
+   "system": "WISE 0855-0714",
+   "ly": 7.4,
    "facts": "The coldest known brown dwarf, about 265 K; JWST saw its water clouds thicken and thin as it turns (2026).",
-   "colony": "Water skimmers. Booming."},
-  "DSO-Gamma": {"kind": "location", "type": "DeepSpaceOutpost", "system": "Scholz's Star", "ly": 20,
+   "colony": "Water skimmers. Booming."
+  },
+  "DSO-Gamma": {
+   "kind": "location",
+   "type": "DeepSpaceOutpost",
+   "system": "Scholz's Star",
+   "ly": 20,
    "facts": "A red dwarf and a brown dwarf that passed through the Sun's outer Oort cloud, about 0.8 ly out, some 70,000 years ago.",
-   "colony": "A quiet outpost. In the story the star took a piece of the Gyrotron with it on the way past."},
-  "Nova Labs": {"kind": "location", "type": "ResearchColony", "system": "Wolf 359", "ly": 7.9,
-   "facts": "A flare star with planet candidates, none confirmed.", "colony": "Research colonies, as in the wiki. Stable."},
-  "Quantum Center": {"kind": "location", "type": "ResearchColony", "system": "YZ Ceti", "ly": 12,
+   "colony": "A quiet outpost. In the story the star took a piece of the Gyrotron with it on the way past."
+  },
+  "Nova Labs": {
+   "kind": "location",
+   "type": "ResearchColony",
+   "system": "Wolf 359",
+   "ly": 7.9,
+   "facts": "A flare star with planet candidates, none confirmed.",
+   "colony": "Research colonies, as in the wiki. Stable."
+  },
+  "Quantum Center": {
+   "kind": "location",
+   "type": "ResearchColony",
+   "system": "YZ Ceti",
+   "ly": 12,
    "facts": "Three small planets on tight orbits; radio bursts thought to come from the innermost planet stirring the star's magnetic field.",
-   "colony": "Field physics. Booming."},
-  "Stellar Institute": {"kind": "location", "type": "ResearchColony", "system": "TRAPPIST-1", "ly": 40,
-   "facts": "Seven rocky planets, several in the habitable zone.", "colony": "The far research station. Formative. Matylda Korinek works here."},
-  "Ancient Ruins Alpha": {"kind": "location", "type": "Ancient Ruins", "system": "Sol, near Sedna's orbit", "rename": "Stator Field A",
-   "facts": "The clustered orbits of the most distant known Kuiper belt objects (the wiki's Solar System Hypothesis).",
-   "colony": "None. Segments of a broken ring, in our own outer system."},
-  "Ancient Ruins Beta": {"kind": "location", "type": "Ancient Ruins", "system": "Scholz's Star's wake", "rename": "Stator Field B",
-   "colony": "The segment Scholz's Star pulled away. It still turns."},
-  "Alien Outpost X": {"kind": "location", "type": "Alien Outpost", "system": "Sol, far outer system", "rename": "Builder Site X",
-   "colony": "Automated, empty. No aliens: the trilogy only hints at them."},
-  "Alien Outpost Y": {"kind": "location", "type": "Alien Outpost", "system": "interstellar, on Scholz's Star's track", "rename": "Builder Site Y",
-   "colony": "A beacon pointing outward, at nothing anyone can see yet."},
-  "Zeta": {"kind": "location", "type": "Planet", "system": "Zeta Reticuli", "ly": 39, "portal": true,
+   "colony": "Field physics. Booming."
+  },
+  "Stellar Institute": {
+   "kind": "location",
+   "type": "ResearchColony",
+   "system": "TRAPPIST-1",
+   "ly": 40,
+   "facts": "Seven rocky planets, several in the habitable zone.",
+   "colony": "The far research station. Formative. Matylda Korinek works here."
+  },
+  "Ancient Ruins Alpha": {
+   "kind": "location",
+   "type": "Ancient Ruins",
+   "system": "Tau Ceti, in the debris disk",
+   "facts": "A debris disk far heavier than the Sun's Kuiper belt.",
+   "colony": "Builder foundations under comet ice."
+  },
+  "Ancient Ruins Beta": {
+   "kind": "location",
+   "type": "Ancient Ruins",
+   "system": "Epsilon Indi, a moon of the cold giant Ab",
+   "colony": "A ring of pylons the scholars call an anchor.",
+   "facts": "A cold giant planet imaged by JWST in 2024."
+  },
+  "Alien Signal Research Outpost X": {
+   "kind": "location",
+   "type": "Alien Signal Research Outpost",
+   "system": "Sol, far outer system",
+   "colony": "A listening post on the stator line; logs the beacon's pulses.",
+   "game_name": "Alien Outpost X",
+   "notes": "renamed (decided 2026-11-14); the game still says 'Alien Outpost X'"
+  },
+  "Alien Signal Research Outpost Y": {
+   "kind": "location",
+   "type": "Alien Signal Research Outpost",
+   "system": "pointed at Lyra, past HD 178911",
+   "colony": "A dish that hears magnetic chirps from Lyra. The staff argue about the word 'alien'.",
+   "game_name": "Alien Outpost Y",
+   "notes": "renamed (decided 2026-11-14); the game still says 'Alien Outpost Y'"
+  },
+  "Zeta": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Zeta Reticuli",
+   "ly": 39,
+   "portal": true,
    "facts": "A pair of Sun-like stars; Zeta-2 has a debris disk. Famous in Earth's flying-saucer stories.",
-   "colony": "Capital of the Cult of the Broken Machine."},
-  "Eta": {"kind": "location", "type": "Planet", "system": "Eta Corvi", "ly": 59, "portal": true,
-   "facts": "Warm dust that looks like the aftermath of a comet bombardment.", "colony": "Comet catchers. Prices go wild after every impact."},
-  "Theta": {"kind": "location", "type": "Planet", "system": "Gliese 667 C", "ly": 23.6, "portal": true,
-   "facts": "A red dwarf in a triple system with at least one planet in its habitable zone.", "colony": "Three suns, one market."},
-  "Omega-1": {"kind": "location", "type": "AsteroidBase", "system": "Vega", "ly": 25, "portal": true,
-   "facts": "A wide, smooth disk with no obvious planets carving it.", "colony": "A base in a disk nobody can explain."},
-  "DSO-Delta": {"kind": "location", "type": "DeepSpaceOutpost", "system": "Gliese 229 B", "ly": 19, "portal": true,
-   "facts": "Long thought one brown dwarf; resolved into a tight pair in 2024.", "colony": "The outpost's sign was repainted when the dwarf turned out to be two."}
+   "colony": "Capital of the Cult of the Broken Machine."
+  },
+  "Eta": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Eta Corvi",
+   "ly": 59,
+   "portal": true,
+   "facts": "Warm dust that looks like the aftermath of a comet bombardment.",
+   "colony": "Comet catchers. Prices go wild after every impact."
+  },
+  "Theta": {
+   "kind": "location",
+   "type": "Planet",
+   "system": "Gliese 667 C",
+   "ly": 23.6,
+   "portal": true,
+   "facts": "A red dwarf in a triple system with at least one planet in its habitable zone.",
+   "colony": "Three suns, one market."
+  },
+  "Omega-1": {
+   "kind": "location",
+   "type": "AsteroidBase",
+   "system": "Vega",
+   "ly": 25,
+   "portal": true,
+   "facts": "A wide, smooth disk with no obvious planets carving it.",
+   "colony": "A base in a disk nobody can explain."
+  },
+  "DSO-Delta": {
+   "kind": "location",
+   "type": "DeepSpaceOutpost",
+   "system": "Gliese 229 B",
+   "ly": 19,
+   "portal": true,
+   "facts": "Long thought one brown dwarf; resolved into a tight pair in 2024.",
+   "colony": "The outpost's sign was repainted when the dwarf turned out to be two."
+  },
+  "Stator Field Megastructure": {
+   "kind": "location",
+   "type": "Megastructure",
+   "status": "proposed",
+   "system": "Sol, near Sedna's orbit",
+   "facts": "The clustered orbits of the most distant known Kuiper belt objects (the wiki's Solar System Hypothesis).",
+   "colony": "Segments of the ring, each the size of a hauler, turning together every eleven hours.",
+   "unlock": "the discovery ending's heading, or chapter 4 on the discovery path"
+  },
+  "Builder Site": {
+   "kind": "location",
+   "type": "Builder Site",
+   "status": "proposed",
+   "system": "Scholz's Star's wake",
+   "colony": "The segment the star pulled away 70,000 years ago, still turning; the beacon on its rim.",
+   "unlock": "Korinek's expedition (the ancient mysteries chain)"
+  }
  }
 }

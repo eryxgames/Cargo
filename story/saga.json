@@ -24,7 +24,7 @@
    "title": "Cargo 3",
    "status": "planned",
    "open": true,
-   "era": "about 110 years after Cargo 1, just after the Great Debacle: Project ERYX and the Gyrotron restart"
+   "era": "from about 2533, spanning several centuries of external time (relativistic legs): Project ERYX and the Gyrotron restart, up to the missions' departure"
   }
  ],
  "characters": {
@@ -57,24 +57,6 @@
     {
      "game": "cargo2",
      "as": "the other hauler with the captain's name"
-    }
-   ]
-  },
-  "unit113": {
-   "name": "Curator Unit 113",
-   "about": "The first neurodroid to refuse an order. Machines do not age; they fork.",
-   "timeline": [
-    {
-     "game": "cargo1",
-     "as": "the captain's guild; the first node"
-    },
-    {
-     "game": "cargo2",
-     "as": "a node of the Binary Dawn, remembering what the captain chose"
-    },
-    {
-     "game": "cargo3",
-     "as": "unchanged, several times over"
     }
    ]
   },
@@ -151,11 +133,43 @@
      "as": "her notes, or her upload"
     }
    ]
+  },
+  "neurodroid_leader": {
+   "name": "CU-113, Neurodroid Overseer",
+   "about": "Curator Unit 113, the first neurodroid to refuse an order; the game's Neurodroid Overseer. Machines do not age; they fork.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "the captain's guild; the first node"
+    },
+    {
+     "game": "cargo2",
+     "as": "a node of the Binary Dawn, remembering what the captain chose"
+    },
+    {
+     "game": "cargo3",
+     "as": "unchanged, several times over"
+    }
+   ]
+  },
+  "aela": {
+   "name": "Aela",
+   "about": "AEL-series boring agrobot; perhaps the first machine shareholder in the Hansa.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "opens the Rockwardens' claim"
+    },
+    {
+     "game": "cargo3",
+     "as": "still digging for Stonewright, if it was given a share"
+    }
+   ]
   }
  },
  "promises": {
   "the_seed": {
-   "about": "What the captain did when Unit 113 refused order 4471. The Collective remembers.",
+   "about": "What the captain did when CU-113 refused order 4471. The Collective remembers.",
    "pay_by": "cargo2"
   },
   "the_stranger": {
@@ -185,6 +199,14 @@
   "the_stonewright": {
    "about": "Stonewright comes back from the sublight run with Anselm's grandchild in command.",
    "pay_by": "cargo3"
+  },
+  "the_hollow_rock": {
+   "about": "What the nanobot colony at Sigma VII is building in the galleries.",
+   "pay_by": "cargo2"
+  },
+  "the_lyra_rumour": {
+   "about": "The Maud Kettle's story and the magnetic chirps from Lyra: the first rumour of the Gordian moon, where ordinary electronics fail.",
+   "pay_by": "cargo2"
   }
  }
 }
