@@ -62,6 +62,8 @@ def replay_one(story, trace, preds):
         for nid, verdict in (snap.get("verdicts") or {}).items():
             if verdict is None or nid not in nodes:
                 continue
+            if any("requires" in a.get("fields", []) for a in nodes[nid].get("amended", [])):
+                continue               # a deliberate change (a repair): the game has not caught up yet
             ours = kit.check(nodes[nid].get("requires"), state, unknown="pass")
             if ours != verdict:
                 mismatches.append({"turn": snap.get("turn"), "node": nid, "game": verdict, "story": ours})

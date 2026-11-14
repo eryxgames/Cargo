@@ -82,6 +82,7 @@ th { font: 600 12.5px var(--body); color: var(--muted); }
 .prob.error .bar { background: var(--danger); } .prob.warning .bar { background: var(--warn); } .prob.note .bar { background: var(--line); }
 .prob small { color: var(--muted); display: block; }
 .empty { color: var(--muted); font-style: italic; }
+.card { overflow-x: auto; min-width: 0; }
 .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .how { color: var(--muted); font-size: 13px; }
 .how code { font-family: var(--mono); font-size: 12px; }
@@ -212,7 +213,7 @@ function condText(c) {
     else if (k === 'at') out.push('at ' + list(v).join(' or '));
     else if (k === 'at_type') out.push('at a ' + list(v).join(' or '));
     else if (k === 'has') out.push(Object.entries(v).map(([s, m]) => human(s) + ': ' + list(m).join(', ')).join('; '));
-    else if (k === 'visiting_captain') out.push('a captain from ' + (v.game || 'another game') + ' has crossed over' + (v.ending ? ' (ending ' + v.ending + ')' : '') + (v.flag ? ' (flag ' + v.flag + ')' : ''));
+    else if (k === 'visiting_captain') out.push('a captain from ' + (v.game || 'another game') + ' has crossed over' + (v.ending ? ' (ending ' + v.ending + ')' : '') + (v.flag ? ' (flag ' + v.flag + ')' : '') + (v.same_name === true ? ', with your name' : v.same_name === false ? ', with another name' : ''));
     else if (k === 'code') out.push('game code: ' + v);
     else if (v && typeof v === 'object') out.push(human(k) + ' ' + ('min' in v ? num(v.min) : '0') + (('max' in v) ? '–' + num(v.max) : '+'));
     else out.push(human(k) + ' ≥ ' + num(v));
@@ -467,10 +468,11 @@ function renderDetail() {
   if (n.status === 'unused') chips.append(el('span', {class: 'chip', text: 'unused'}));
   if (n.reach === 'no' && n.status !== 'unused') chips.append(el('span', {class: 'chip error', text: 'never happens'}));
   if (n.reach === 'opaque') chips.append(el('span', {class: 'chip', text: 'depends on game code'}));
+  if (n.amended) chips.append(el('span', {class: 'chip warning', text: 'rewritten'}));
   const kids = [el('h2', {text: n.title || state.sel}), el('div', {class: 'mono sub', text: state.sel}), chips];
   const texts = list(n.text).filter(Boolean);
   if (texts.length) kids.push(el('div', {class: 'quote'}, ...texts.flatMap((t, i) => i ? [el('br'), t] : [t])));
-  for (const v of n.variants || []) kids.push(el('div', {class: 'variant', text: (v.requires ? 'When ' + condText(v.requires).join(', ') : 'Variant ' + v.when) + ': ' + v.text}));
+  for (const v of n.variants || []) kids.push(el('div', {class: 'variant', text: (v.requires ? 'When ' + condText(v.requires).join(', ') : 'Variant ' + v.when) + ': ' + list(v.text).join(' ')}));
   const facts = el('dl', {class: 'facts'});
   const fact = (k, v) => { if (v == null || (Array.isArray(v) && !v.length) || v === '') return; facts.append(el('dt', {text: k}), el('dd', {}, ...(Array.isArray(v) ? v.flatMap((x, i) => i ? [', ', x] : [x]) : [v]))); };
   fact('Needs', condText(n.requires).join(' · '));
@@ -501,6 +503,15 @@ function renderDetail() {
         el('td', {text: e.share ? `${e.median} (${e.first}–${e.last})` + (e.expected_wait ? `, then about ${e.expected_wait} turns of chance` : '') : '–'})));
     }
     kids.push(el('h3', {text: 'In recorded games'}), t);
+  }
+  for (const a of n.amended || []) {
+    const was = a.was || {};
+    const bits = [];
+    if (was.title) bits.push('title: ' + was.title);
+    if (was.text) bits.push('text: ' + list(was.text).join(' '));
+    if ('requires' in was) bits.push('needed: ' + (condText(was.requires).join(', ') || 'nothing'));
+    if (was.status) bits.push('status: ' + was.status);
+    kids.push(el('p', {class: 'sub', text: 'Rewritten in ' + a.file + ' (' + a.fields.join(', ') + ').' + (bits.length ? ' Before: ' + bits.join(' · ') : '')}));
   }
   for (const note of n.notes || []) kids.push(el('p', {class: 'sub', text: 'Note: ' + note}));
   for (const p of n.problems || []) kids.push(el('p', {class: 'sub', style: `color:var(--${p.level === 'error' ? 'danger' : p.level === 'warning' ? 'warn' : 'muted'})`, text: p.level + ': ' + p.message}));

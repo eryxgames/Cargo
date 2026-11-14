@@ -11,7 +11,7 @@ everything against those declarations.
 {
   "format": "storykit", "version": 1,
   "game": {"id": "cargo1", "title": "CARGO", "part": 1},
-  "include": ["cargo1.drafts.json"],
+  "include": ["cargo1/main.json"],
   "stats":  {"money": {"about": "credits on hand"}, "controlled_locations": {"produced": false}},
   "sets":   {"researched": {"about": "research unlocked", "members": ["telemetry", "xenoeconomy"]}},
   "effects": {"code": {"about": "game code the tools cannot read"}},
@@ -33,6 +33,13 @@ everything against those declarations.
   `carries_to` says it travels to later parts in the captain's record.
 - `include` merges more files of the same format (drafts, a new arc, translations
   of nothing but text). A name may be defined only once across them.
+- `amend` (in an included file) changes things defined in another file without
+  touching it: `{"nodes": {"ch1": {"title": "Deadhead", "text": "..."}}}`. It works
+  on `nodes`, `characters`, `flags`, `places` and `arcs`. Fields are replaced
+  whole; the replaced values are kept under `amended` so the map can show them.
+  Use it to rewrite text the game already has, or to repair a condition. A
+  repaired `requires` is left out of the replay's fidelity check, because the
+  game will disagree until it reads the file.
 
 ## Nodes
 
@@ -70,7 +77,7 @@ An object is "all of these". Keys:
 | `act_min`, `act_max`, `turn_min`, `turn_max` | the act or turn is in range |
 | `at`, `at_type` | the player is at this place, or a place of this type |
 | `has` | `{"researched": ["telemetry"]}`: the set holds these members |
-| `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x"}`: a captain record from that part has been imported |
+| `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x", "same_name": true}`: a captain record from that part has been imported; `same_name` true when it carries the current captain's name, false when another |
 | `all`, `any`, `not` | combine conditions |
 | `code` | opaque game code; the tools report it and cannot judge it |
 
@@ -91,7 +98,9 @@ Any declared stat adds the value (`"money": -1500`). `set` and `clear` take flag
 }
 ```
 
-Parts are in story order. A character's `timeline` says in which parts they appear
+Parts are in story order. `"open": true` marks a part still being written:
+promises it owes and characters it should use are reported as pending, not as
+warnings. A character's `timeline` says in which parts they appear
 and as what; the validator checks that the story files agree. Every promise a node
 makes must be declared here and paid (`pays`) in the same or a later part; a promise
 due in a part not written yet is reported as pending.

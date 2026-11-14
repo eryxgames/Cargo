@@ -341,6 +341,7 @@ def check_saga(saga, report):
         reaches[gid] = check_story(story, report, saga)
 
     # characters across the saga
+    open_parts = {part.get("game"): part.get("open", False) for part in saga.get("parts", [])}
     appears = {}
     for gid, story in stories.items():
         for nid, node in story["nodes"].items():
@@ -352,8 +353,12 @@ def check_saga(saga, report):
             if g not in order:
                 report.error("saga-game", "saga:character %s" % cid, "timeline names unknown game %r" % g)
             elif g in stories and g not in appears.get(cid, set()):
-                report.warn("timeline", "saga:character %s" % cid,
-                            "timeline places them in %s, but no node there uses them" % g)
+                if open_parts.get(g):
+                    report.note("timeline-pending", "saga:character %s" % cid,
+                                "timeline places them in %s (still being written)" % g)
+                else:
+                    report.warn("timeline", "saga:character %s" % cid,
+                                "timeline places them in %s, but no node there uses them" % g)
         for g in appears.get(cid, set()):
             if info.get("timeline") and g not in [e.get("game") for e in info["timeline"]]:
                 report.warn("timeline", "saga:character %s" % cid, "appears in %s, which their timeline does not list" % g)
@@ -381,6 +386,8 @@ def check_saga(saga, report):
             continue
         if pay_by and pay_by not in stories:
             report.note("promise-pending", "saga:promise %s" % p, "to be paid in %s (not written yet)" % pay_by)
+        elif pay_by and open_parts.get(pay_by):
+            report.note("promise-pending", "saga:promise %s" % p, "to be paid in %s (still being written)" % pay_by)
         else:
             report.warn("promise-unpaid", "saga:promise %s" % p, "made but never paid")
 

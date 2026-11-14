@@ -42,6 +42,9 @@ def _read_json(path):
         return json.load(handle)
 
 
+AMENDABLE = ("nodes", "characters", "flags", "places", "arcs")
+
+
 def load(path):
     """Load a story file and every file it includes, merged into one dict."""
     data = _read_json(path)
@@ -51,6 +54,7 @@ def load(path):
     for section in ("stats", "sets", "effects", "flags", "places", "characters", "arcs"):
         data.setdefault(section, {})
     base = os.path.dirname(os.path.abspath(path))
+    amends = []
     for include in data.get("include", []):
         part = _read_json(os.path.join(base, include))
         for section in ("stats", "sets", "effects", "flags", "places", "characters", "arcs", "nodes"):
@@ -60,6 +64,21 @@ def load(path):
                 if section == "nodes":
                     value.setdefault("file", include)
                 data[section][key] = value
+        for section, entries in part.get("amend", {}).items():
+            if section not in AMENDABLE:
+                raise StoryError("%s: cannot amend %r" % (include, section))
+            for key, changes in entries.items():
+                amends.append((include, section, key, changes))
+    # An amendment rewrites fields of something defined in another file (new text
+    # for an imported chapter, a repaired condition) without touching that file.
+    # The fields it replaced are kept under "amended", so the map can show both.
+    for include, section, key, changes in amends:
+        entry = data[section].get(key)
+        if entry is None:
+            raise StoryError("%s: amends unknown %s %r" % (include, section[:-1], key))
+        before = {k: entry.get(k) for k in changes if k in entry}
+        entry.update(changes)
+        entry.setdefault("amended", []).append({"file": include, "fields": sorted(changes), "was": before})
     data["path"] = path
     return data
 
@@ -101,7 +120,7 @@ class State:
     """
 
     def __init__(self, stats=None, sets=None, flags=None, done=None, act=1, turn=0,
-                 place=None, place_type=None, visitors=None):
+                 place=None, place_type=None, visitors=None, player=None):
         self.stats = dict(stats or {})
         self.sets = {k: set(v) for k, v in (sets or {}).items()}
         self.flags = set(flags or ())
@@ -111,12 +130,13 @@ class State:
         self.place = place
         self.place_type = place_type
         self.visitors = list(visitors or [])
+        self.player = player
 
     @classmethod
     def from_snapshot(cls, snap):
         return cls(snap.get("stats"), snap.get("sets"), snap.get("flags"), snap.get("done"),
                    snap.get("act", 1), snap.get("turn", 0), snap.get("place"), snap.get("place_type"),
-                   snap.get("visitors"))
+                   snap.get("visitors"), snap.get("player"))
 
 
 def _threshold(value, wanted):
@@ -172,7 +192,7 @@ def check(cond, state, unknown="fail"):
         elif key == "has":
             ok = all(set(as_list(items)) <= state.sets.get(name, set()) for name, items in want.items())
         elif key == "visiting_captain":
-            ok = any(visitor_matches(v, want) for v in state.visitors)
+            ok = any(visitor_matches(v, want, state.player) for v in state.visitors)
         elif key == "code":
             if unknown == "raise":
                 raise StoryError("opaque condition: %s" % want)
@@ -184,9 +204,18 @@ def check(cond, state, unknown="fail"):
     return True
 
 
-def visitor_matches(record, want):
+def visitor_matches(record, want, player=None):
+    """Does a captain record match {"game", "ending", "flag", "same_name"}?
+
+    same_name: true when the record carries the current captain's own name
+    (the same captain grown old), false when it is someone else's.
+    """
     if want.get("game") and record.get("origin", {}).get("game") != want["game"]:
         return False
+    if "same_name" in want:
+        same = player is not None and str(record.get("name", "")).strip().lower() == str(player).strip().lower()
+        if same != bool(want["same_name"]):
+            return False
     story = record.get("story", {})
     if want.get("ending") and story.get("ending") != want["ending"]:
         return False
