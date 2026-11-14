@@ -123,17 +123,38 @@ base64  hashlib  json  math  os  random  re  shutil  sys  time  unicodedata  zli
 - Requires Python 3.7+ for proper f-strings and dictionary ordering
 
 ## Controls
-Simple text commands to navigate gameplay:
-- `buy/sell` - Trade goods
-- `travel` - Move between locations
-- `build` - Construct buildings
-- `upgrade` - Improve ship
-- `action` - Special actions
-- `log` - Story progress: open milestones and what opens the way to the next chapter
-- `save` / `load` - Save the game under a name, or load a saved game
-- `journal` - The captain's journal: people met, choices the future will remember, places and the real stars they stand for
-- `captain` - The captain's record: export it, or take in a captain from another game
-- And more...
+Type a command, or its short form, and press Enter. `help` (or `h`) shows every command
+and how the game works; each location also lists its own commands under the status line.
+
+| Command | Short | What it does |
+|---|---|---|
+| `buy` / `sell` | `b` / `s` | Trade goods: `tech/t`, `agri/a` (also `agro`), `salt/s`, `fuel/f` |
+| `travel` | `t` | Move to another location |
+| `port` | `p` | Passengers, VIPs and contracts |
+| `cantina` | `c` | Rumours, people and quests |
+| `shop` | `sh` | Equipment for the ship |
+| `build` | `bl` | Construct buildings |
+| `upgrade` | `u` | Improve attack, defense or speed |
+| `repair` | `r` | Repair the hull (at research colonies `r` is `research`) |
+| `mine` / `action` | `m` / `a` | Mining, and what the place offers (where available) |
+| `info` | `i` | Prices, buildings and news here |
+| `end` | `e` | End the turn and stay |
+| `log` | `l` | Story progress: open milestones and what opens the next chapter |
+| `journal` | `j` | People met, choices the future will remember, places and the real stars behind them |
+| `captain` | `cap` | The captain's record: export it, or take in a captain from another game |
+| `save` / `load` | `sv` / `ld` | Save under a name, or load a saved game |
+| `help` | `h` | All commands, shortcuts and a short guide |
+| `quit` | `q` | Leave the game |
+
+Some commands exist only at certain places (mining at asteroid bases, research at colonies);
+`help` lists them. Inside a menu, press Enter on an empty line to go back.
+
+A few rules worth knowing:
+- The hold has room for 400 units of each good, and cargo equipment adds room.
+- Trade profit is what you sell for minus what you paid, so selling at a loss counts against you.
+- Fights take money and cargo only when you lose. Combat equipment helps you win or avoid a fight.
+- Passenger reputation runs from 0 to 100.
+- Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 
 A new game offers to start as any captain whose record is in `~/.cargo/captains/`:
 one who finished this game, or one carried back from a later part of the saga.

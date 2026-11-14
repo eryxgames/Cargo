@@ -733,25 +733,25 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "ch1.first_trade":{"kind":"milestone","arc":"main","title":"First Trade","text":"Complete your first trade","requires":{"trades_completed":1},"effects":{"money":500,"plot_points":5},"in":"ch1"},
 "ch1.first_combat":{"kind":"milestone","arc":"main","title":"Combat Initiation","text":"Win your first space battle","requires":{"combat_victories":1},"effects":{"money":1000,"plot_points":5},"in":"ch1"},
 "ch1.basic_license":{"kind":"milestone","arc":"main","title":"Extended Trading License","text":"Prove your trading capabilities","requires":{"trades_completed":5,"money":20000},"effects":{"money":10000,"plot_points":10,"give":{"items":["navcomp"]}},"in":"ch1"},
-"ch2a":{"kind":"chapter","arc":"main","act":2,"title":"Routes","text":["Your name is on manifests in five systems now.","Every dock charges its own fee and every dock master has a cousin in customs. The older captains have started talking about pooling cargo and setting their own rates. They need someone with routes."],"requires":{"done":["ch1"],"plot_points":30,"trades_completed":10},"next":["ch3a","ch3c"],"choose":true},
+"ch2a":{"kind":"chapter","arc":"main","act":2,"title":"Routes","text":["Your name is on manifests in five systems now.","Every dock charges its own fee and every dock master has a cousin in customs. The older captains have started talking about pooling cargo and setting their own rates. They need someone with routes."],"requires":{"done":["ch1"],"plot_points":50,"trades_completed":10},"next":["ch3a","ch3c"],"choose":true},
 "ch2a.establish_route":{"kind":"milestone","arc":"main","title":"Trade Route Network","text":"Establish profitable trade routes","requires":{"trades_completed":20,"buildings.stockmarket":2},"effects":{"money":50000,"plot_points":15},"in":"ch2a"},
 "ch2a.passenger_business":{"kind":"milestone","arc":"main","title":"Passenger Services","text":"Start passenger transport business","requires":{"passengers_transported":10,"passenger_reputation":20},"effects":{"money":30000,"plot_points":10},"in":"ch2a"},
-"ch2b":{"kind":"chapter","arc":"main","act":2,"title":"Contract Iron","text":["The corporations noticed that you shoot straight.","OmniCorp, Stellar Dynamics and the Xylo Consortium each keep a security legion, and each legion is short of pilots. The contracts pay well. Read them twice."],"requires":{"done":["ch1"],"plot_points":30,"combat_victories":5},"next":["ch3b","ch3c"],"choose":true},
+"ch2b":{"kind":"chapter","arc":"main","act":2,"title":"Contract Iron","text":["The corporations noticed that you shoot straight.","OmniCorp, Stellar Dynamics and the Xylo Consortium each keep a security legion, and each legion is short of pilots. The contracts pay well. Read them twice."],"requires":{"done":["ch1"],"plot_points":50,"combat_victories":5},"next":["ch3b","ch3c"],"choose":true},
 "ch2b.defeat_pirates":{"kind":"milestone","arc":"main","title":"Pirate Hunter","text":"Clear the sector of pirates","requires":{"combat_victories.pirate":10},"effects":{"money":40000,"plot_points":20},"in":"ch2b"},
 "ch2b.defend_stations":{"kind":"milestone","arc":"main","title":"Station Defender","text":"Successfully defend space stations","requires":{"combat_victories":15,"buildings.Neuroengineering Guild":1},"effects":{"money":30000,"plot_points":15},"in":"ch2b"},
-"ch3a":{"kind":"chapter","arc":"main","act":3,"title":"The Mark","text":["Money in the near systems is whatever the nearest bank says it is this week.","Haulers want something heavier: a coin that is also a receipt for mass carried. Somebody has to mint the first one and make every dock accept it."],"requires":{"done":["ch2a"],"plot_points":90,"trade_profit":200000},"next":["ending_trade"]},
+"ch3a":{"kind":"chapter","arc":"main","act":3,"title":"The Mark","text":["Money in the near systems is whatever the nearest bank says it is this week.","Haulers want something heavier: a coin that is also a receipt for mass carried. Somebody has to mint the first one and make every dock accept it."],"requires":{"done":["ch2a"],"plot_points":150,"trade_profit":150000},"next":["ending_trade"]},
 "ch3a.market_control":{"kind":"milestone","arc":"main","title":"Market Controller","text":"Control multiple market centers","requires":{"buildings.stockmarket":4,"has":{"researched":["xenoeconomy"]}},"effects":{"money":100000,"plot_points":25},"in":"ch3a"},
-"ch3b":{"kind":"chapter","arc":"main","act":3,"title":"Legion","text":["Three corporate legions, one pilot shortage, and you.","The corporations are talking about merging their security forces under one command. Everyone wants to know whose side your guns are on before the merger, not after."],"requires":{"done":["ch2b"],"plot_points":90,"combat_victories":25},"next":["ending_combat"]},
+"ch3b":{"kind":"chapter","arc":"main","act":3,"title":"Legion","text":["Three corporate legions, one pilot shortage, and you.","The corporations are talking about merging their security forces under one command. Everyone wants to know whose side your guns are on before the merger, not after."],"requires":{"done":["ch2b"],"plot_points":150,"combat_victories":25},"next":["ending_combat"]},
 "ch3b.fleet_commander":{"kind":"milestone","arc":"main","title":"Fleet Commander","text":"Lead successful fleet operations","requires":{"combat_victories":35,"combat_rating":15},"effects":{"money":100000,"plot_points":25},"in":"ch3b"},
-"ch3c":{"kind":"chapter","arc":"main","act":3,"title":"Builders' Metal","text":["The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.","It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."],"requires":{"done_any":["ch2a","ch2b"],"plot_points":90,"research_points":300},"next":["ending_discovery"]},
+"ch3c":{"kind":"chapter","arc":"main","act":3,"title":"Builders' Metal","text":["The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.","It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."],"requires":{"done_any":["ch2a","ch2b"],"plot_points":150,"research_points":300},"next":["ending_discovery"]},
 "ch3c.alien_artifacts":{"kind":"milestone","arc":"main","title":"Find the builders' metal","text":"Discover alien artifacts","requires":{"discovered.ResearchColony":2,"has":{"researched":["xenoeconomy","telemetry"]}},"effects":{"money":150000,"plot_points":30},"in":"ch3c"},
-"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":250,"trade_profit":1000000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
-"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":1000000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
-"ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer"],"plot_points":250,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":350,"trade_profit":600000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":600000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
+"ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer"],"plot_points":350,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
 "ending_combat.combat_ending":{"kind":"milestone","arc":"main","title":"Military Victory","text":"Complete military dominance achieved","requires":{"combat_victories":75,"combat_rating":25},"effects":{"money":1000000,"plot_points":100},"in":"ending_combat"},
-"ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples"],"plot_points":250,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples"],"plot_points":350,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
 "ending_discovery.discovery_ending":{"kind":"milestone","arc":"main","title":"Trace the ring","text":"Ancient mysteries solved","requires":{"has":{"researched":["xenoeconomy","telemetry","geophysics","chronopolitics"]},"discovered.ResearchColony":3,"discovered.AsteroidBase":2},"effects":{"money":1000000,"plot_points":100},"in":"ending_discovery"},
-"tycoon_offer":{"kind":"event","arc":"main","title":"The galaxy's markets are yours","text":"Every planet, asteroid base and outpost trades through a market you own. A courier offers you a coordinate for 1,500 credits: 'where the old metal goes when it moves'. Retire as Galactic Tycoon, or pay and fly there.","requires":{"stockmarket_everywhere":1},"choices":[{"id":"resign","say":"Resign","next":"ending_tycoon"},{"id":"continue","say":"Continue into the unknown","requires":{"money":1500},"effects":{"money":-1500,"set":["stellar_portal"],"code":"new set of locations; jump there"},"next":"stellar_portal"}],"repeat":true,"handled_by":"Game.play (text from the story)"},
+"tycoon_offer":{"kind":"event","arc":"main","title":"The galaxy's markets are yours","text":"Every planet, asteroid base and outpost trades through a market you own. A courier offers you a coordinate for 1,500 credits: 'where the old metal goes when it moves'. Retire as Galactic Tycoon, or pay and fly there.","requires":{"stockmarket_everywhere":1},"choices":[{"id":"resign","say":"Resign","next":"ending_tycoon"},{"id":"continue","say":"Continue into the unknown","requires":{"money":1500},"effects":{"money":-1500,"set":["stellar_portal"],"code":"new set of locations; jump there"},"next":"stellar_portal"}],"repeat":{"cooldown":10},"handled_by":"Game.play (text from the story)"},
 "ending_tycoon":{"kind":"ending","arc":"main","act":4,"title":"Galactic Tycoon","text":["You are the Galactic Tycoon!","Congratulations, {player_name}! You have achieved the rank of {rank}.","You retire to the most expensive drum on Barnard's Star and complain about the prices."],"requires":{"done":"tycoon_offer"},"effects":{"code":"score screen, captain record exported (ending: tycoon)"},"handled_by":"Game.play (text from the story)"},
 "stellar_portal":{"kind":"event","arc":"main","title":"The Stellar Portal","text":["The coordinate leads to a ring segment the size of a small moon, turning slowly, lit from inside.","Your navigation computer reports the date three times and gets three different answers.","On the far side the stars are where they should be. The prices are not."],"requires":{"flag":"stellar_portal"},"handled_by":"Game.open_portal (text from the story)"},
 "chance.Planet.merchant":{"kind":"encounter","arc":"chance meetings","title":"Merchant (Planet)","who":["merchant"],"chance":0.045,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_merchant_encounter"},
@@ -1598,6 +1598,11 @@ class Action:
 
 # Define the Ship class
 class Ship:
+    # Passenger reputation runs from 0 to 100 (it multiplies fares and VIP rewards)
+    passenger_reputation = property(
+        lambda self: self.__dict__.get("passenger_reputation", 0),
+        lambda self, value: self.__dict__.__setitem__("passenger_reputation", max(0, min(100, value))))
+
     def __init__(self, game=None):
         self.game = game
         # Basic cargo and resources
@@ -1681,8 +1686,60 @@ class Ship:
             if enemy_type in self.combat_defeats:
                 self.combat_defeats[enemy_type] += 1
 
+    # The hold: room for HOLD_BASE units of goods, more with equipment from the shop.
+    # Salt and fuel can also use the special containers.
+    HOLD_BASE = 400
+    HOLD_BONUS = {"cargo_extender": 0.2, "quantum_compressor": 0.5, "containment_optimizer": 0.25}
+    SPECIAL_HOLD_BONUS = {"containment_field": 0.3, "stasis_vault": 0.75, "mining_compressor": 0.4,
+                          "cargo_scanner": 0.2}
+
+    def hold_sizes(self):
+        """(general, special): units for any goods, and extra units for salt and fuel."""
+        base = self.HOLD_BASE
+        general = base * (1 + sum(b for item, b in self.HOLD_BONUS.items() if self.items.get(item)))
+        special = base * sum(b for item, b in self.SPECIAL_HOLD_BONUS.items() if self.items.get(item))
+        return int(general), int(special)
+
+    # Fighting equipment: (attack bonus, defense bonus, chance to avoid a fight)
+    FIGHT_GEAR = {"combat_drone": (1, 0, 0), "shield_booster": (0, 1, 0), "mining_laser": (0, 1, 0),
+                  "advanced_radar": (0, 0, 0.2), "emergency_warp": (0, 0, 0.5)}
+
+    def fight_attack(self):
+        return self.attack + sum(g[0] for item, g in self.FIGHT_GEAR.items() if self.items.get(item))
+
+    def fight_defense(self):
+        return max(1, self.defense + sum(g[1] for item, g in self.FIGHT_GEAR.items() if self.items.get(item)))
+
+    def evasion(self):
+        return max([g[2] for item, g in self.FIGHT_GEAR.items() if self.items.get(item)] or [0])
+
+    def trade_tax(self, rate):
+        """The tax rate after the ship's loading gear (never below 1%)."""
+        if self.items.get("auto_loader"):
+            rate -= 0.02
+        return max(0.01, rate)
+
+    def research_bonus(self):
+        """Extra share of research points from travel and discoveries."""
+        return (0.2 if self.items.get("research_module") else 0) + (0.1 if self.items.get("data_analyzer") else 0)
+
+    def hold_room(self, item):
+        """How many more units of `item` fit in the hold."""
+        general, special = self.hold_sizes()
+        dry = self.cargo['tech'] + self.cargo['agri']
+        bulk = self.cargo['salt'] + self.cargo['fuel']
+        if item in ('salt', 'fuel'):
+            return max(0, general + special - dry - bulk)
+        return max(0, general - dry - max(0, bulk - special))
+
+    def hold_text(self):
+        general, special = self.hold_sizes()
+        return "%d/%d" % (sum(self.cargo.values()), general + special)
+
     def buy(self, item, quantity, price, planet, player_rank):
         if not planet.can_trade(item):
+            return False
+        if quantity <= 0 or quantity > self.hold_room(item):
             return False
 
         if item in ['salt', 'fuel']:
@@ -1692,13 +1749,18 @@ class Ship:
 
         cost = quantity * price
         if self.money >= cost:
-            tax_rate = planet.calculate_tax_rate(player_rank, cost)
+            tax_rate = self.trade_tax(planet.calculate_tax_rate(player_rank, cost))
             tax_amount = cost * tax_rate
             total_cost = cost + tax_amount
 
             if self.money >= total_cost:
                 self.money -= total_cost
                 self.cargo[item] += quantity
+                # what the goods in the hold cost, so a sale can tell profit from revenue
+                basis = self.__dict__.setdefault("cost_basis", {})
+                if self.cargo[item] == quantity:          # the hold was empty: start afresh
+                    basis[item] = 0
+                basis[item] = basis.get(item, 0) + total_cost
 
                 # Add contract progress tracking for buy events
                 if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
@@ -1726,9 +1788,16 @@ class Ship:
 
         if self.cargo[item] >= quantity:
             revenue = quantity * price
-            tax_rate = planet.calculate_tax_rate(player_rank, revenue)
+            tax_rate = self.trade_tax(planet.calculate_tax_rate(player_rank, revenue))
             tax_amount = revenue * tax_rate
             net_revenue = revenue - tax_amount
+
+            # Profit is what the sale brought in minus what those goods cost.
+            # Goods that cost nothing (mined, found, given) are all profit.
+            basis = self.__dict__.setdefault("cost_basis", {})
+            held = self.cargo[item]
+            cost_of_sold = basis.get(item, 0) * quantity / held if held else 0
+            basis[item] = max(0, basis.get(item, 0) - cost_of_sold) if held > quantity else 0
 
             self.money += net_revenue
             self.cargo[item] -= quantity
@@ -1736,7 +1805,7 @@ class Ship:
             # Track trade profits
             if item not in self.trade_profits:
                 self.trade_profits[item] = 0
-            self.trade_profits[item] += net_revenue
+            self.trade_profits[item] += net_revenue - cost_of_sold
 
             # Add contract progress tracking for sell events
             if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
@@ -1822,7 +1891,7 @@ class LocationCommands:
             "base_commands": [
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('research', 'r'), ('info', 'i'),
-                ('build', 'bl'), ('shop', 'sh'), ('action', 'a'),
+                ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'), ('action', 'a'),
                 ('port', 'p'), ('end', 'e')
             ],
             "special_commands": {
@@ -1855,6 +1924,23 @@ class LocationCommands:
             "available": LocationCommands.get_available_commands(location.location_type),
             "special": LocationCommands.get_special_commands(location.location_type)
         }
+
+# The goods in a hold, with the shortcut each answers to in buy and sell
+COMMODITIES = {"tech": ("t",), "agri": ("a", "agro"), "salt": ("s",), "fuel": ("f",)}
+
+# Commands every location accepts besides its own (long form, shortcut)
+GLOBAL_COMMANDS = [('log', 'l'), ('journal', 'j'), ('save', 'sv'), ('load', 'ld'), ('captain', 'cap'),
+                   ('help', 'h'), ('version', 'v'), ('resign', 'rs'), ('quit', 'q')]
+
+
+def commodity_from(answer):
+    """'t', 'tech', 'agro', 'a' ... -> the commodity's name, or None."""
+    answer = (answer or "").strip().lower()
+    for name, shortcuts in COMMODITIES.items():
+        if answer == name or answer in shortcuts:
+            return name
+    return None
+
 
 # Define the Game class
 class Game:
@@ -2448,7 +2534,7 @@ class Game:
             [f"Agri: {self.format_money(self.ship.cargo['agri'])}", f"DMG: {self.ship.damage}%", f"ECO: {self.current_location.economy}"],
             [f"Salt: {self.format_money(self.ship.cargo['salt'])}", f"RP: {self.ship.research_points}", f"EFF: {self.current_location.exogeology}%"],
             [f"Fuel: {self.format_money(self.ship.cargo['fuel'])}", f"★ {self.rank}", f"NET: {len(self.current_location.buildings)}"],
-            [f"PAX: {total_passengers}/{total_capacity}", f"REP: {self.ship.passenger_reputation}", ""]
+            [f"PAX: {total_passengers}/{total_capacity}", f"REP: {self.ship.passenger_reputation}", f"Hold: {self.ship.hold_text()}"]
         ]
 
         # Add story progress if available
@@ -2484,13 +2570,8 @@ class Game:
                 market_content.append([f"{commodity.capitalize()}", f"{duration} turns"])
         print(self.create_box(market_content, 'single'))
 
-        # Display commands including port
-        commands = [
-            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, journal/j, info/i..."],
-
-        ]
-    #    print(self.create_box(commands, 'round'))
-        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, journal/j, info/i, save/sv, load/ld, captain/cap...", 1)
+        # The commands this place offers (help/h explains them)
+        self.display_simple_message(self.command_hint(), 1)
 
         # Display active effects
         if self.research.unlocked_options:
@@ -2709,6 +2790,58 @@ class Game:
         self.display_simple_message(f"Welcome aboard, {name}!")
         return name
 
+    COMMAND_HELP = {
+        'buy': "buy goods: then tech/t, agri/a, salt/s, fuel/f and an amount, max/m or half/h",
+        'sell': "sell goods, same answers as buy",
+        'travel': "fly to a known location (one turn; the trip may bring events)",
+        'port': "passengers, cabins, contracts",
+        'cantina': "maps, gossip, quests, contracts, and whoever is in the bar",
+        'shop': "equipment for the ship",
+        'upgrade': "attack, defense or speed (each upgrade costs more)",
+        'repair': "repair the hull",
+        'research': "spend research points (research colonies)",
+        'action': "scan, research and other actions",
+        'mine': "mining platforms and deposits",
+        'build': "buildings: stock market, farms, guilds, refineries",
+        'info': "this location in detail",
+        'end': "end the turn and wait here",
+        'log': "story progress: what the next chapter needs",
+        'journal': "people met, choices remembered, places",
+        'save': "save the game (it also saves itself every turn)",
+        'load': "load a saved game",
+        'captain': "your captain's record: carry it to another part of the saga",
+        'help': "this screen",
+        'version': "the game's version",
+        'resign': "end this game and see the score",
+        'quit': "leave (the autosave keeps your progress)",
+    }
+
+    def here_commands(self):
+        """(long, short) for every command accepted at this location, its own first."""
+        own = [pair for pair in self.current_location.commands["available"]]
+        return own + [pair for pair in GLOBAL_COMMANDS if pair not in own]
+
+    def command_hint(self):
+        own = self.current_location.commands["available"]
+        return "Commands: " + ", ".join("%s/%s" % pair for pair in own) + " - help/h for more"
+
+    def show_help(self):
+        """A short guide: what the game is about, and every command with its shortcut."""
+        rows = [["How to play"], [""],
+                ["You run a cargo hauler. Buy goods where they are cheap, sell where they are dear "
+                 "(your hold takes %d units; the shop sells more room), carry passengers, take contracts "
+                 "and quests from the cantina, and follow the story (log/l) to one of three endings: "
+                 "trade, combat or discovery." % sum(self.ship.hold_sizes())],
+                [""],
+                ["Type a command or its shortcut and press Enter. In any menu, Enter on its own goes back. "
+                 "Amounts: a number, max/m or half/h. Each 'end' or journey is one turn; the game saves "
+                 "itself after every turn."],
+                [""], ["Here at %s:" % self.current_location.name]]
+        for cmd, shortcut in self.here_commands():
+            rows.append(["%s/%s" % (cmd, shortcut), self.COMMAND_HELP.get(cmd, "")])
+        print(self.create_box(rows, 'double'))
+        input("Press Enter to continue...")
+
     def display_starting_info(self):
         """Display initial game information with location context"""
         # Get location info based on current_location
@@ -2796,9 +2929,8 @@ class Game:
                 valid_actions.extend([cmd, shortcut])
 
             # Add global commands
-            valid_actions.extend(['quit', 'q', 'resign', 'rs', 'version', 'v'])
-            valid_actions.extend(['log', 'l', 'journal', 'j'])  # Add but don't show in command hints
-            valid_actions.extend(['save', 'sv', 'load', 'ld', 'captain', 'cap'])
+            for cmd, shortcut in GLOBAL_COMMANDS:
+                valid_actions.extend([cmd, shortcut])
 
             action = self.validate_input("Choose action: ", valid_actions)
 
@@ -2818,11 +2950,11 @@ class Game:
                 self.handle_captain_menu()
                 return
 
-            # Handle research/repair based on location type
-            elif action in ['research', 'r']:
-                if isinstance(self.current_location, ResearchColony):
+            # Handle research/repair based on location type ('r' is research at a colony)
+            elif action in ['research', 'r', 'repair']:
+                if action != 'repair' and isinstance(self.current_location, ResearchColony):
                     self.handle_research_options()
-                elif action == 'r':  # Only handle repair if 'r' and not at Research Colony
+                else:
                     if self.ship.damage > 0:
                         cost = self.ship.damage * 10
                         if self.ship.repair(cost):
@@ -2835,8 +2967,9 @@ class Game:
                         self.display_simple_message("Ship doesn't need repairs.")
 
             elif action in ['buy', 'b']:
-                item = self.validate_input("Choose item (tech/agri/salt/fuel): ",
-                                        ['tech', 'agri', 'salt', 'fuel'])
+                item = commodity_from(self.validate_input(
+                    "Buy which? tech/t, agri/a, salt/s, fuel/f: ",
+                    [w for name, cuts in COMMODITIES.items() for w in (name,) + cuts]))
                 if item is None:
                     return
 
@@ -2859,23 +2992,33 @@ class Game:
                     self.display_simple_message(f"Cannot calculate amount: {item} has no valid price.")
                     return
 
-                tax_rate = self.current_location.calculate_tax_rate(self.rank, price)
+                tax_rate = self.ship.trade_tax(self.current_location.calculate_tax_rate(self.rank, price))
                 price_with_tax = price * (1 + tax_rate)
-                max_quantity = int(self.ship.money / price_with_tax)
+                room = self.ship.hold_room(item)
+                max_quantity = min(int(self.ship.money / price_with_tax), room)
 
                 if quantity == 'max':
                     quantity = max_quantity
                 elif quantity == 'half':
                     quantity = (max_quantity + 1) // 2  # Round up division
+                elif quantity > room:
+                    self.display_simple_message(f"The hold has room for {room} more {item}.")
+                    quantity = room
 
-                if self.ship.buy(item, quantity, self.current_location.market[item],
-                                self.current_location, self.rank):
+                if quantity <= 0:
+                    self.display_simple_message("The hold is full." if room <= 0 else
+                                                f"Not enough money for one unit of {item}.")
+                elif self.ship.buy(item, quantity, self.current_location.market[item],
+                                   self.current_location, self.rank):
                     self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
                     self.handle_trade('buy')
+                else:
+                    self.display_simple_message(f"Not enough money for {quantity} {item}.")
 
             elif action in ['sell', 's']:
-                item = self.validate_input("Choose item (tech/agri/salt/fuel): ",
-                                        ['tech', 'agri', 'salt', 'fuel'])
+                item = commodity_from(self.validate_input(
+                    "Sell which? tech/t, agri/a, salt/s, fuel/f: ",
+                    [w for name, cuts in COMMODITIES.items() for w in (name,) + cuts]))
                 if item is None:
                     return
 
@@ -2978,6 +3121,10 @@ class Game:
 
             elif action in ['journal', 'j']:
                 self.story.journal()
+                return
+
+            elif action in ['help', 'h']:
+                self.show_help()
                 return
 
             elif action in ['version', 'v']:
@@ -3230,7 +3377,8 @@ class Game:
             # Calculate final research gain
             total_gain = base_research + max(1, int(research_bonus * rank_multiplier * (1 + self.difficulty)))
 
-            # Add research points to the ship
+            # Add research points to the ship (a research module and an analyzer add a share)
+            total_gain = int(total_gain * (1 + self.ship.research_bonus()))
             self.ship.research_points += total_gain
 
             # After successful travel for quest
@@ -3594,9 +3742,9 @@ class Game:
         # Calculate probabilities based on location type
         location_modifiers = {
             "Planet": {"combat": 1.0, "trade": 1.0, "exploration": 1.0, "disaster": 1.0},
-            "Asteroid Base": {"combat": 1.2, "trade": 0.8, "exploration": 1.1, "disaster": 1.3},
-            "Deep Space Outpost": {"combat": 1.3, "trade": 0.7, "exploration": 1.2, "disaster": 1.1},
-            "Research Colony": {"combat": 0.7, "trade": 0.9, "exploration": 1.4, "disaster": 0.9}
+            "AsteroidBase": {"combat": 1.2, "trade": 0.8, "exploration": 1.1, "disaster": 1.3},
+            "DeepSpaceOutpost": {"combat": 1.3, "trade": 0.7, "exploration": 1.2, "disaster": 1.1},
+            "ResearchColony": {"combat": 0.7, "trade": 0.9, "exploration": 1.4, "disaster": 0.9}
         }
 
         # Get location-specific modifiers
@@ -3688,7 +3836,7 @@ class Game:
                 )
 
         elif event_type == "trade":
-            if "market_crash" in event_result["name"].lower():
+            if "market crash" in event_result["name"].lower().replace("_", " "):
                 quest = Quest(
                     name="Market Stabilizer",
                     description="Help stabilize local market prices",
@@ -3842,6 +3990,11 @@ class Game:
         scenario = combat_scenarios.get(event, combat_scenarios["Pirate attack!"])
         enemy_type = scenario["enemy_type"]
 
+        # Radar or an emergency warp may keep the ship out of the fight altogether
+        if random.random() < self.ship.evasion():
+            self.display_simple_message(f"Event! {event} Your sensors saw them first: you slip away.", 2)
+            return
+
         # Check for automatic defense
         if "turrets" in self.ship.items and random.random() < 0.4:
             self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
@@ -3857,7 +4010,7 @@ class Game:
             return
 
         # Calculate base damage
-        damage = random.randint(10, 25) * scenario["atk"] / self.ship.defense
+        damage = random.randint(10, 25) * scenario["atk"] / self.ship.fight_defense()
         damage *= (1 + self.difficulty)
 
         # Apply defensive equipment effects
@@ -3871,24 +4024,30 @@ class Game:
         damage_dealt = final_damage - self.ship.damage
         self.ship.damage = final_damage
 
-        # Handle cargo/money loss
+        # Losses (money and cargo) only when the fight is lost: a ship that wins keeps its hold
         losses = []
+        won = self.ship.fight_attack() > scenario["def"]
 
-        if self.ship.money > 0:
-            stolen = random.randint(1, max(1, int(self.ship.money // 2)))
+        if not won and self.ship.money > 0:
+            # pirates take a tenth to a quarter of what is aboard
+            stolen = random.randint(max(1, int(self.ship.money // 10)), max(1, int(self.ship.money // 4)))
             self.ship.money -= stolen
             losses.append(f"{self.format_money(stolen)} credits")
 
         # Only steal cargo that exists
         for cargo_type in ['tech', 'agri', 'salt', 'fuel']:
-            if self.ship.cargo[cargo_type] > 0:
+            if not won and self.ship.cargo[cargo_type] > 0:
                 stolen_cargo = random.randint(1, max(1, int(self.ship.cargo[cargo_type] // 3)))
                 self.ship.cargo[cargo_type] -= stolen_cargo
                 if stolen_cargo > 0:
                     losses.append(f"{stolen_cargo} {cargo_type}")
 
+        # A hull patcher fixes some of the damage right after the fight
+        if "patcher" in self.ship.items and self.ship.damage > 0:
+            self.ship.damage = max(0, self.ship.damage - 10)
+
         # Check for counter-attack opportunity
-        if self.ship.attack > scenario["def"]:
+        if won:
             # Counter-attack successful - record victory
             self.ship.record_combat_victory(enemy_type)
 
@@ -4001,6 +4160,8 @@ class Game:
             location_bonus = 1.0
             if isinstance(self.current_location, ResearchColony):
                 location_bonus = 1.5
+            if "quantum_scanner" in self.ship.items:      # finds more in the same places
+                location_bonus *= 1.25
 
             # Apply rewards
             money_reward = random.randint(*reward_ranges["money"])
@@ -4795,15 +4956,7 @@ class Game:
 
                 # 30% chance to get a quest
                 if random.random() < 0.3:
-                    quest = self.quest_system.generate_cantina_quest()
-                    if quest:
-                        self.quest_system.add_quest(quest)
-                        self.display_story_message([
-                            "New Quest Available!",
-                            quest.name,
-                            quest.description,
-                            f"Rewards: {self.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"
-                        ])
+                    self.quest_system.add_quest(self.quest_system.generate_cantina_quest())
             else:
                 self.display_simple_message("No interesting gossip today!")
         else:
@@ -4850,13 +5003,6 @@ class Game:
         # Whoever is in the cantina today, and what people are saying
         self.story.visit_venue("cantina")
 
-        # Check and complete cantina quests
-        cantina_quests = [q for q in self.quest_system.active_quests if q.quest_type == "cantina"]
-
-        for quest in cantina_quests:
-            if quest.check_completion(self):
-                quest.complete(self)
-
         while True:
             options = {
                 'map': ('bm', "Buy Map"),
@@ -4875,7 +5021,7 @@ class Game:
             print(self.create_box(menu_content, 'single'))
 
             valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
-            action = self.validate_input("Choose action: ", valid_inputs)
+            action = self.validate_input("Cantina - choose (Enter to leave): ", valid_inputs)
 
             if action in ['back', None]:
                 break
@@ -5213,14 +5359,19 @@ class Game:
                             loc.location_type in ["Planet", "AsteroidBase", "DeepSpaceOutpost"]]
 
             if valid_locations and all(loc.stockmarket_base for loc in valid_locations) \
-                    and not self.stellar_portal_available:
+                    and not self.stellar_portal_available \
+                    and self.turn - getattr(self, "tycoon_offered", -100) >= 10:
+                # every market is yours: retire, go through the portal, or keep trading
+                self.tycoon_offered = self.turn
                 self.secret_quest_available = True
-                if "tycoon_offer" not in self.story.done:
-                    self.display_story_message(self.story.text_of("tycoon_offer", fallback=(
-                        "Retire as Galactic Tycoon, or pay 1,500 credits and continue into the unknown.")))
                 self.story.mark("tycoon_offer")
-                resign = self.validate_input("Do you want to resign? (yes/no): ", ['yes', 'no'])
-                if resign == 'yes':
+                self.display_story_message(self.story.text_of("tycoon_offer", fallback=(
+                    "Retire as Galactic Tycoon, or pay 1,500 credits and continue into the unknown.")) + [
+                    "", "1. Keep trading here (asked again in 10 turns)",
+                    "2. Retire as Galactic Tycoon (the game ends)",
+                    "3. Pay 1,500 and fly through the portal (no way back)"], pause=0)
+                answer = self.validate_input("Your response (1-3): ", ['1', '2', '3'])
+                if answer == '2':
                     self.story.mark("ending_tycoon")
                     self.display_story_message(self.story.text_of("ending_tycoon", fallback=(
                         "You are the Galactic Tycoon!")))
@@ -5228,13 +5379,12 @@ class Game:
                     self.story.epilogue()
                     self.close_record("tycoon")
                     break
-                else:
-                    self.display_simple_message("You have chosen to continue your adventure into the unknown.")
+                elif answer == '3':
                     if self.ship.money >= 1500:
                         self.ship.money -= 1500
                         self.open_portal()
                     else:
-                        self.display_simple_message("Not enough money to pay for the secret quest.")
+                        self.display_simple_message("Not enough money for the coordinate.")
 
             # Ask to play again
             if turn_result == "quit":
@@ -5340,7 +5490,7 @@ class ContractManager:
             print(self.game.create_box(menu_content, 'single'))
 
             valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
-            action = self.game.validate_input("Choose action: ", valid_inputs)
+            action = self.game.validate_input("Contracts - choose (Enter to leave): ", valid_inputs)
 
             if action in ['back', None]:
                 break
@@ -5887,7 +6037,7 @@ class SpecialCharacterGenerator:
                 "titles": ["CEO", "Director", "Executive"],
                 "roles": ["business", "finance", "trade"],
                 "rewards": {
-                    "base_money": 30000,
+                    "base_money": 10000,
                     "reputation": 15,
                     "plot_points": 5
                 },
@@ -5897,7 +6047,7 @@ class SpecialCharacterGenerator:
                 "titles": ["Senator", "Councilor", "Minister"],
                 "roles": ["governance", "diplomacy", "policy"],
                 "rewards": {
-                    "base_money": 40000,
+                    "base_money": 14000,
                     "reputation": 20,
                     "plot_points": 8
                 },
@@ -5907,7 +6057,7 @@ class SpecialCharacterGenerator:
                 "titles": ["Professor", "Director", "Chief Researcher"],
                 "roles": ["research", "development", "innovation"],
                 "rewards": {
-                    "base_money": 35000,
+                    "base_money": 12000,
                     "reputation": 18,
                     "plot_points": 10
                 },
@@ -5990,130 +6140,122 @@ class Quest:
         return False
 
 
+    # What each kind of quest counts, and which requirement holds the target.
+    # Quests count from the moment they were taken, never from the start of the game.
+    COUNTED = {
+        "combat": ("victories.{enemy_type}", ("amount", "victories"), 1, "victories"),
+        "patrol": ("turn", ("turns", "patrol_turns"), 3, "turns on duty"),
+        "research": ("research_gained", ("target_points",), 30, "research points gained"),
+        "mining": ("acquired.{resource_type}", ("amount",), 50, "units"),
+        "exploration": ("discovered.{location_type}", ("amount", "discoveries"), 1, "discoveries"),
+        "rescue": ("events.disaster", ("rescues",), 1, "ships helped"),
+        "trade": ("trades", ("trades",), 1, "trades"),
+    }
+    # Quests finished by arriving somewhere with something: (what, requirement key, amount key)
+    DELIVERED = {
+        "delivery": ("cargo", "commodity", "amount"),
+        "mining_contract": ("cargo", "resource", "amount"),
+        "item_delivery": ("item", "item", None),
+        "character_delivery": ("passenger", "character", None),
+        "story": ("visit", None, None),
+    }
+
+    def begin(self, game):
+        """Remember where the counters stood when the quest was taken."""
+        if not isinstance(getattr(self, "start", None), dict):
+            self.start = game.quest_system.counters()
+
+    def counted(self, game):
+        """(done, target, unit) for a counted quest, or None."""
+        spec = self.COUNTED.get(self.quest_type)
+        if spec is None:
+            return None
+        key, target_keys, default, unit = spec
+        fields = dict(self.requirements)
+        fields.setdefault("enemy_type", "total")
+        fields.setdefault("location_type", "any")
+        fields.setdefault("resource_type", "salt")
+        key = key.format(**fields)
+        target = next((self.requirements[k] for k in target_keys if k in self.requirements), default)
+        self.begin(game)
+        now = game.quest_system.counters()
+        done = now.get(key, 0) - self.start.get(key, 0)
+        if self.quest_type == "mining":
+            unit = self.requirements.get("resource_type", "salt")
+        return max(0, int(done)), int(target), unit
+
+    def holding(self, game):
+        """For a delivery: does the ship carry what is to be delivered?"""
+        what, key, amount_key = self.DELIVERED[self.quest_type]
+        ship = game.ship
+        if what == "cargo":
+            return ship.cargo.get(self.requirements.get(key), 0) >= self.requirements.get(amount_key, 0)
+        if what == "item":
+            return ship.items.get(self.requirements.get(key), 0) > 0
+        if what == "passenger":
+            return self.quest_passenger(game) is not None
+        return True
+
+    def quest_passenger(self, game):
+        for module in getattr(game.ship, "passenger_modules", []):
+            for passenger in module.passengers:
+                if passenger.name == self.requirements.get("character"):
+                    return passenger
+        return None
+
+    def progress_text(self, game):
+        counted = self.counted(game)
+        if counted:
+            done, target, unit = counted
+            text = "%d/%d %s" % (min(done, target), target, unit)
+            if self.quest_type == "trade" and self.requirements.get("min_profit"):
+                profit = game.quest_system.counters()["profit"] - self.start.get("profit", 0)
+                text += ", %s/%s profit" % (game.format_money(max(0, profit)),
+                                            game.format_money(self.requirements["min_profit"]))
+            return text
+        if self.quest_type in self.DELIVERED:
+            where = self.destination or "?"
+            if self.quest_type == "story":
+                return "go to %s" % where
+            return "%s, then go to %s" % ("ready" if self.holding(game) else "not aboard yet", where)
+        if self.quest_type.startswith("unlock_"):
+            return "follow the lead: your next journey"
+        return ""
+
     def check_completion(self, game):
         """Check if quest requirements are met"""
         if self.completed:
             return False
-
-        # Map quest types to their completion check methods
-        completion_checks = {
-            "mining": self.check_mining_completion,
-            "combat": self.check_combat_completion,
-            "trade": self.check_trade_completion,
-            "exploration": self.check_exploration_completion,
-            "research": self.check_research_completion,
-            "cantina": self.check_cantina_completion,
-            "item_delivery": self.check_item_delivery_completion,
-            "character_delivery": self.check_character_delivery_completion,
-            "delivery": self.check_delivery_completion
-        }
-
-        check_method = completion_checks.get(self.quest_type)
-        if check_method:
-            return check_method(game)
-
-        # Generic quest completion check
+        counted = self.counted(game)
+        if counted:
+            done, target, _ = counted
+            if self.quest_type == "trade" and self.requirements.get("min_profit"):
+                profit = game.quest_system.counters()["profit"] - self.start.get("profit", 0)
+                if profit < self.requirements["min_profit"]:
+                    return False
+            return done >= target
+        if self.quest_type in self.DELIVERED:
+            return game.current_location.name == self.destination and self.holding(game)
+        # Generic quest completion check (location unlocks: a journey)
         return self.progress >= self.target_progress
 
-    def check_mining_completion(self, game):
-        """Check mining quest requirements"""
-        if 'resource_type' in self.requirements:
-            resource = self.requirements['resource_type']
-            target_amount = self.requirements.get('amount', 0)
-            return game.ship.cargo[resource] >= target_amount
-        return False
-
-    def check_trade_completion(self, game):
-        """Check trading quest requirements"""
-        if 'commodity' in self.requirements:
-            target_profit = self.requirements.get('profit', 0)
-            return game.ship.trade_profits.get(
-                self.requirements['commodity'], 0) >= target_profit
-        return False
-
-    def check_delivery_completion(self, game):
-        """Check cargo delivery quest requirements"""
-        return (game.current_location.name == self.destination and
-                game.ship.cargo[self.requirements['commodity']] >= self.requirements['amount'])
-
-    def check_item_delivery_completion(self, game):
-        """Check item delivery quest requirements"""
-        return (game.current_location.name == self.destination and
-                self.requirements["item"] in game.ship.items)
-
-    def check_character_delivery_completion(self, game):
-        """Check character delivery quest requirements"""
-        if hasattr(game.ship, 'passenger_modules'):
-            for module in game.ship.passenger_modules:
-                for passenger in module.passengers:
-                    if (passenger.name == self.requirements["character"] and
-                        game.current_location.name == self.destination):
-                        return True
-        return False
-
-    def check_research_completion(self, game):
-        """Check research quest requirements"""
-        if not hasattr(self, 'tracked_progress'):
-            self.tracked_progress = {
-                'research_points_gained': 0,
-                'analysis_completed': 0,
-                'experiments_conducted': 0
-            }
-
-        # Check if required criteria are met
-        criteria = self.requirements.get('completion_criteria', {})
-        for key, target in criteria.items():
-            # Use game parameter to track research progress if needed
-            current_value = self.tracked_progress.get(key, 0)
-
-            # If the key is research-related, you might want to pull from game state
-            if key == 'research_points_gained':
-                current_value = game.ship.research_points
-
-            if current_value < target:
-                return False
-        return True
-
-    def check_combat_completion(self, game):
-        """Check combat quest requirements"""
-        if 'enemy_type' in self.requirements:
-            enemy_type = self.requirements['enemy_type']
-            required_amount = self.requirements.get('amount', 1)
-            return game.ship.combat_victories.get(enemy_type, 0) >= required_amount
-        # If no specific enemy type, check total victories
-        return game.ship.combat_victories['total'] >= self.requirements.get('amount', 1)
-
-    def check_exploration_completion(self, game):
-        """Check exploration quest requirements"""
-        if 'location_type' in self.requirements:
-            wanted = self.requirements['location_type']
-            if isinstance(wanted, type):
-                wanted = wanted.__name__
-            return game.count_discovered(wanted) >= self.requirements.get('amount', 1)
-
-        if 'specific_location' in self.requirements:
-            return self.requirements['specific_location'] in game.discovered_locations
-
-        # For generic exploration goals
-        return self.progress >= self.target_progress
-
-    def check_cantina_completion(self, game):
-        """Check if cantina quest requirements are met"""
-        if "Deliver" in self.name:
-            # Check trade profits
-            commodity = self.name.split()[2].lower()
-            return game.ship.trade_profits.get(commodity, 0) >= self.requirements.get('amount', 0)
-
-        elif "Transport" in self.name:
-            # Check passenger transport
-            return game.reputation_manager.total_passengers >= self.requirements.get('count', 0)
-
-        elif "Eliminate" in self.name:
-            # Check combat victories
-            enemy_type = self.name.split()[2].lower()
-            return game.ship.combat_victories.get(enemy_type, 0) >= self.requirements.get('victories', 0)
-
-        return False
+    def hand_over(self, game):
+        """A finished delivery leaves the ship: cargo, item or passenger."""
+        what, key, amount_key = self.DELIVERED.get(self.quest_type, (None, None, None))
+        ship = game.ship
+        if what == "cargo":
+            item = self.requirements.get(key)
+            ship.cargo[item] = max(0, ship.cargo.get(item, 0) - self.requirements.get(amount_key, 0))
+        elif what == "item":
+            item = self.requirements.get(key)
+            ship.items[item] = ship.items.get(item, 0) - 1
+            if ship.items[item] <= 0:
+                del ship.items[item]
+        elif what == "passenger":
+            passenger = self.quest_passenger(game)
+            for module in getattr(ship, "passenger_modules", []):
+                if passenger in module.passengers:
+                    module.passengers.remove(passenger)
 
     def update_progress(self, event_data):
         """Update quest progress based on game events"""
@@ -6134,47 +6276,11 @@ class Quest:
                 self.progress += event_data.get("amount", 0)
                 progress_made = True
 
-        return progress_made and self.check_completion()
+        return progress_made
 
     def complete(self, game):
-        """Complete the quest and award all rewards"""
-        if not self.completed:
-            self.completed = True
-
-            # Award base rewards
-            game.ship.money += self.reward_money
-            game.ship.research_points += self.reward_rp
-
-            # Award additional rewards if present
-            if hasattr(self, 'rewards'):
-                if "reputation" in self.rewards:
-                    game.ship.passenger_reputation += self.rewards["reputation"]
-                if "plot_points" in self.rewards:
-                    game.story_manager.plot_points += self.rewards["plot_points"]
-                if "bonus_item" in self.rewards:
-                    game.ship.acquire_item(self.rewards["bonus_item"])
-
-            # Execute completion callback if exists
-            if self.on_complete:
-                run_quest_callback(game, self.on_complete)
-
-            # Display completion message with all rewards
-            completion_message = [
-                f"Quest Completed: {self.name}",
-                f"Rewards:",
-                f"• {game.format_money(self.reward_money)} credits",
-                f"• {self.reward_rp} research points"
-            ]
-
-            if hasattr(self, 'rewards'):
-                if self.rewards.get("reputation"):
-                    completion_message.append(f"• +{self.rewards['reputation']} reputation")
-                if self.rewards.get("plot_points"):
-                    completion_message.append(f"• +{self.rewards['plot_points']} plot points")
-                if self.rewards.get("bonus_item"):
-                    completion_message.append(f"• Bonus item: {self.rewards['bonus_item']}")
-
-            game.display_story_message(completion_message)
+        """Complete the quest (the quest system pays the rewards)."""
+        game.quest_system.complete_quest(self)
 
 
 class Contract:
@@ -6487,13 +6593,17 @@ class Port:
 
 
     def update_passengers(self, location):
-        """Update passenger list at a location"""
+        """Update passenger list at a location (once per turn: new arrivals, longer waits)"""
         if location not in self.waiting_passengers:
             self.waiting_passengers[location] = []
+        updated = self.__dict__.setdefault("updated_turn", {})
+        if updated.get(location) == self.game.turn:
+            return
+        updated[location] = self.game.turn
 
-        # Remove passengers waiting too long
+        # Remove passengers waiting too long (a quest's passenger waits for you)
         self.waiting_passengers[location] = [p for p in self.waiting_passengers[location]
-                                           if p.turns_waiting < 10]
+                                           if p.turns_waiting < 10 or getattr(p, "is_quest_passenger", False)]
 
         # Check for special character spawning
         if random.random() < 0.2:  # 20% chance per turn
@@ -6515,7 +6625,7 @@ class Port:
         """Calculate passenger fare based on distance, comfort, and wealth"""
         base_fare = 100 * passenger.wealth_level
         comfort_multiplier = 1 + (module.comfort_level * 0.2)
-        distance_multiplier = 1
+        distance_multiplier = 1.25 if self.game.ship.items.get("temporal_accelerator") else 1
 
         # Add distance calculation if game has that mechanic
         # distance_multiplier = calculate_distance(current, destination)
@@ -6597,7 +6707,7 @@ class Port:
             print(self.game.create_box(menu_content, 'single'))
 
             valid_inputs = [cmd for cmd in options.keys()] + [s[0] for s in options.values() if s[0]]
-            action = self.game.validate_input("Choose action: ", valid_inputs)
+            action = self.game.validate_input("Port - choose (Enter to leave): ", valid_inputs)
 
             if action in ['back', None]:
                 break
@@ -7093,7 +7203,7 @@ class Shop:
             },
             "patcher": {
                 "price": 300,
-                "description": "Hull patcher repairs minor combat damage",
+                "description": "Hull patcher: repairs 10% damage after every fight",
                 "tech_required": 1,
                 "plot_required": 0
             },
@@ -7112,7 +7222,7 @@ class Shop:
             },
             "auto_loader": {
                 "price": 12000,
-                "description": "Reduces loading/unloading time (-1 turn per trade)",
+                "description": "Loads and unloads for you: 2% less trade tax",
                 "tech_required": 5,
                 "plot_required": 35
             },
@@ -7131,7 +7241,7 @@ class Shop:
             },
             "temporal_accelerator": {
                 "price": 30000,
-                "description": "Time dilation for faster delivery (-2 turns per trade)",
+                "description": "Faster deliveries: passengers pay 25% more",
                 "tech_required": 8,
                 "plot_required": 75
             }
@@ -7142,19 +7252,19 @@ class Shop:
             "AsteroidBase": {
                 "mining_laser": {
                     "price": 2000,
-                    "description": "Improves mining efficiency and defense",
+                    "description": "Cuts rock and pirates: +1 defense in fights",
                     "tech_required": 3,
                     "plot_required": 15
                 },
                 "cargo_scanner": {
                     "price": 1800,
-                    "description": "Detects valuable mineral deposits",
+                    "description": "Sorts and stacks ore: +20% room for salt and fuel",
                     "tech_required": 4,
                     "plot_required": 20
                 },
                 "shield_booster": {
                     "price": 2500,
-                    "description": "Offers extra protection in asteroid fields",
+                    "description": "Stronger shields: +1 defense in fights",
                     "tech_required": 5,
                     "plot_required": 25
                 },
@@ -7168,13 +7278,13 @@ class Shop:
             "DeepSpaceOutpost": {
                 "advanced_radar": {
                     "price": 2200,
-                    "description": "Early warning system for threats",
+                    "description": "Early warning: 20% chance to avoid a fight",
                     "tech_required": 4,
                     "plot_required": 30
                 },
                 "combat_drone": {
                     "price": 3000,
-                    "description": "Assists in space battles",
+                    "description": "Fights beside you: +1 attack",
                     "tech_required": 5,
                     "plot_required": 35
                 },
@@ -7194,45 +7304,29 @@ class Shop:
             "ResearchColony": {
                 "research_module": {
                     "price": 2500,
-                    "description": "Improves research point gains",
+                    "description": "+20% research points from travel",
                     "tech_required": 5,
                     "plot_required": 40
                 },
                 "data_analyzer": {
                     "price": 2800,
-                    "description": "Better research success rates",
+                    "description": "+10% research points from travel",
                     "tech_required": 6,
                     "plot_required": 45
                 },
                 "quantum_scanner": {
                     "price": 3500,
-                    "description": "Reveals anomalies and secrets",
+                    "description": "Finds more: +25% rewards from discoveries",
                     "tech_required": 7,
                     "plot_required": 50
                 },
                 "containment_optimizer": {
                     "price": 22000,
-                    "description": "Smart cargo optimization (+25% capacity and -1 turn per trade)",
+                    "description": "Smart cargo optimization (+25% capacity)",
                     "tech_required": 8,
                     "plot_required": 60
                 }
             }
-        }
-
-        # Add specialized location-specific transport equipment
-        self.location_equipment["AsteroidBase"]["mining_compressor"] = {
-            "price": 15000,
-            "description": "Specialized for asteroid mining (+40% capacity for mined resources)"
-        }
-
-        self.location_equipment["DeepSpaceOutpost"]["emergency_warp"] = {
-            "price": 18000,
-            "description": "Emergency escape system (50% chance to avoid combat during transport)"
-        }
-
-        self.location_equipment["ResearchColony"]["containment_optimizer"] = {
-            "price": 22000,
-            "description": "Smart cargo optimization (+25% capacity and -1 turn per trade)"
         }
 
         # Track sold items per turn
@@ -7340,7 +7434,7 @@ class Location:
     def generate_market(self):
         # Generate base market prices based on tech and agri levels
         market = {
-            'tech': 100 - (self.tech_level * 10),
+            'tech': max(10, 100 - (self.tech_level * 10)),
             'agri': 50 + (self.agri_level * 5),
             'salt': 0,
             'fuel': 0
@@ -7468,8 +7562,49 @@ class QuestSystem:
         self.story_progress = 0
         self.quest_ids = set()  # Track unique quest IDs
         self.quest_message_shown = set()  # Track shown quest messages
+        self.research_gained = 0     # research points earned (spending does not undo it)
+        self.acquired = {}           # units of each commodity that came aboard
+        self.events_seen = {}        # random events by type
+        self._last_seen = None
 
         # Quest line progression tracking
+
+    MOST_ACTIVE = 6
+
+    def watch(self):
+        """Count what came in since the last look: research points, cargo."""
+        ship = self.game.ship
+        now = {"rp": ship.research_points, **{"cargo." + k: v for k, v in ship.cargo.items()}}
+        last = getattr(self, "_last_seen", None) or now
+        if now["rp"] > last.get("rp", now["rp"]):
+            self.research_gained = getattr(self, "research_gained", 0) + now["rp"] - last["rp"]
+        acquired = getattr(self, "acquired", None)
+        if acquired is None:
+            acquired = self.acquired = {}
+        for key, value in now.items():
+            if key.startswith("cargo.") and value > last.get(key, value):
+                acquired[key[6:]] = acquired.get(key[6:], 0) + value - last[key]
+        self._last_seen = now
+
+    def counters(self):
+        """Everything a quest can count, as it stands now."""
+        self.watch()
+        game = self.game
+        ship = game.ship
+        out = {"turn": game.turn, "trades": game.trades_completed,
+               "profit": int(sum(ship.trade_profits.values())),
+               "passengers": game.reputation_manager.total_passengers,
+               "research_gained": getattr(self, "research_gained", 0),
+               "discovered.any": game.count_discovered()}
+        for kind, count in ship.combat_victories.items():
+            out["victories." + kind] = count
+        for place_type in STORY_PLACE_TYPES:
+            out["discovered." + place_type] = game.count_discovered(place_type)
+        for item, count in (getattr(self, "acquired", None) or {}).items():
+            out["acquired." + item] = count
+        for kind, count in (getattr(self, "events_seen", None) or {}).items():
+            out["events." + kind] = count
+        return out
 
     def check_active_quests(self):
         for quest in list(self.active_quests):
@@ -7486,11 +7621,9 @@ class QuestSystem:
                 quest_content.append([quest.name])
                 quest_content.append([f"└─ {quest.description}"])
                 quest_content.append([f"└─ Rewards: {self.game.format_money(quest.reward_money)} credits, {quest.reward_rp} RP"])
-                if hasattr(quest, 'requirements'):
-                    progress = ""
-                    if 'target_progress' in quest.requirements:
-                        progress = f" ({quest.progress}/{quest.requirements['target_progress']})"
-                    quest_content.append([f"└─ Progress{progress}"])
+                progress = quest.progress_text(self.game)
+                if progress:
+                    quest_content.append([f"└─ Progress: {progress}"])
                 quest_content.append([""])
 
             print(self.game.create_box(quest_content, 'double'))
@@ -7614,14 +7747,13 @@ class QuestSystem:
 
 
     def check_event_requirements(self, event_result):
-        """Check if an event satisfies any quest requirements"""
+        """Count the event, then see whether it finished a quest."""
         event_type = event_result.get("type", "")
-        for quest in self.active_quests:
-            if quest.quest_type == event_type:
-                quest.progress += 1
-                self.display_quest_progress(quest)
-                if quest.check_completion(self.game):
-                    self.complete_quest(quest)
+        seen = getattr(self, "events_seen", None)
+        if seen is None:
+            seen = self.events_seen = {}
+        seen[event_type] = seen.get(event_type, 0) + 1
+        self.check_active_quests()
 
     def generate_quest(self, quest_type, difficulty):
         """Generate a quest based on type and difficulty"""
@@ -7706,13 +7838,23 @@ class QuestSystem:
         # Select a random quest template
         if quest_type in quest_templates:
             template = random.choice(quest_templates[quest_type])
+            destination = None
+            description = template["description"]
+            if template["type"] == "story":
+                places = [name for name in self.game.known_locations
+                          if name != self.game.current_location.name]
+                if not places:
+                    return None
+                destination = random.choice(places)
+                description += " (the trail leads to %s)" % destination
             quest = Quest(
                 name=template["name"],
-                description=template["description"],
+                description=description,
                 reward_money=template["reward_money"],
                 reward_rp=template["reward_rp"],
                 quest_type=template["type"],
-                requirements=template["requirements"]
+                requirements=template["requirements"],
+                destination=destination
             )
             return quest
         return None
@@ -7882,9 +8024,17 @@ class QuestSystem:
             self.active_quests.remove(quest)
             self.completed_quests.append(quest)
 
-            # Award rewards
+            # Award rewards (and hand over what was delivered)
+            quest.hand_over(self.game)
             self.game.ship.money += quest.reward_money
             self.game.ship.research_points += quest.reward_rp
+            extras = getattr(quest, "rewards", None) or {}
+            if extras.get("reputation"):
+                self.game.ship.passenger_reputation += extras["reputation"]
+            if extras.get("plot_points"):
+                self.game.story_manager.plot_points += extras["plot_points"]
+            if extras.get("bonus_item"):
+                self.game.ship.acquire_item(extras["bonus_item"])
 
             # Apply any special effects based on quest type
             if quest.quest_type == 'mining':
@@ -7906,12 +8056,16 @@ class QuestSystem:
                 self.quest_message_shown.remove(quest_id)
 
             # Display completion message
-            self.game.display_story_message([
-                f"Quest Completed: {quest.name}",
-                f"Rewards:",
-                f"• {self.game.format_money(quest.reward_money)} credits",
-                f"• {quest.reward_rp} research points"
-            ])
+            lines = [f"Quest Completed: {quest.name}", "Rewards:",
+                     f"• {self.game.format_money(quest.reward_money)} credits",
+                     f"• {quest.reward_rp} research points"]
+            if extras.get("reputation"):
+                lines.append(f"• +{extras['reputation']} reputation")
+            if extras.get("plot_points"):
+                lines.append(f"• +{extras['plot_points']} plot points")
+            if extras.get("bonus_item"):
+                lines.append(f"• Bonus item: {extras['bonus_item']}")
+            self.game.display_story_message(lines)
 
             # Update story progression if applicable
             if hasattr(self.game, 'story_manager'):
@@ -7937,6 +8091,8 @@ class QuestSystem:
 
     def add_quest(self, quest):
         """Add a new quest with duplication check"""
+        if quest is None:
+            return False
         # Create unique identifier for the quest
         quest_id = f"{quest.name}_{quest.quest_type}"
 
@@ -7945,6 +8101,15 @@ class QuestSystem:
                            for q in self.active_quests)
         if existing_quest:
             return False  # Don't add duplicate quest
+        if len(self.active_quests) >= self.MOST_ACTIVE and not quest.quest_type.startswith("unlock_"):
+            return False  # enough on the board already
+        quest.begin(self.game)
+        if quest.quest_type == "character_delivery":
+            # the passenger waits at this port for the captain to board them
+            port = self.game.port_system
+            passenger = Passenger(quest.requirements["character"], quest.destination, wealth_level=5)
+            passenger.is_quest_passenger = True
+            port.waiting_passengers.setdefault(self.game.current_location.name, []).append(passenger)
 
         # Check if we've already shown this quest message
         if quest_id not in self.quest_message_shown:
@@ -8449,7 +8614,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch2a"],
                     "plot_points": 40,
-                    "trade_profit": 200000
+                    "trade_profit": 150000
                 },
                 milestones=[
                     {
@@ -8522,7 +8687,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch3a"],
                     "plot_points": 100,
-                    "trade_profit": 1000000
+                    "trade_profit": 600000
                 },
                 milestones=[
                     {
@@ -8532,7 +8697,7 @@ class StoryManager:
                         "requirements": {
                             "buildings_built": {"stockmarket": 5},
                             "passenger_reputation": 80,
-                            "trade_profit": 1000000
+                            "trade_profit": 600000
                         },
                         "rewards": {"money": 1000000, "plot_points": 100}
                     }
@@ -8849,7 +9014,7 @@ class StoryManager:
 
         # Generate new quests if appropriate
         if random.random() < 0.3:  # 30% chance for follow-up quest
-            self.game.quest_system.generate_quest(quest.quest_type, 1.5)
+            self.game.quest_system.add_quest(self.game.quest_system.generate_quest(quest.quest_type, 1.5))
 
 
     def check_cooldown(self, event_type):
@@ -9239,8 +9404,8 @@ class LocationManager:
 
         if location_type in quest_templates:
             for template in quest_templates[location_type]:
-                self.game.quest_system.generate_quest(template["type"],
-                    template["reward_multiplier"])
+                self.game.quest_system.add_quest(self.game.quest_system.generate_quest(
+                    template["type"], template["reward_multiplier"]))
 
     def enable_location_story_events(self, location_type):
         """Enable story events specific to the location type"""
@@ -9640,7 +9805,7 @@ class SyntheticEventManager:
         }
 
         print(self.game.create_character_box(character_content))
-        choice = self.game.validate_input("Choose action: ", ['1', '2', '3'])
+        choice = self.game.validate_input("Your response (1-3): ", ['1', '2', '3'])
 
         if not choice:
             return True
@@ -10065,7 +10230,7 @@ class InfestationManager:
 
         # Generate valid choices
         valid_choices = [str(i+1) for i in range(len(content['options']))]
-        choice = self.game.validate_input("Choose action: ", valid_choices)
+        choice = self.game.validate_input("Your response: ", valid_choices)
 
         if not choice:
             return True  # Default to last option if no choice
@@ -10311,7 +10476,7 @@ class SpecialCharacterEncounters:
         ]
         print(self.game.create_box(content, 'double'))
 
-        choice = self.game.validate_input("Choose action (1/2/3): ", ['1', '2', '3'])
+        choice = self.game.validate_input("Your response (1-3): ", ['1', '2', '3'])
 
         if choice == '1':
             if self.game.ship.money >= character["demand"]:

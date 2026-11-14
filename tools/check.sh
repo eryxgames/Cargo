@@ -14,6 +14,12 @@ echo "== story machinery (stats forced, real chapter code)"
 $PY $T/story_probe.py cargo.py > /tmp/cargo-probe.txt; grep -E "REACHED|BLOCKED|!" /tmp/cargo-probe.txt
 grep -q "BLOCKED" /tmp/cargo-probe.txt && fail=1
 
+echo "== every command at every kind of location"
+$PY $T/commands.py cargo.py > /tmp/cargo-commands.txt || fail=1
+tail -1 /tmp/cargo-commands.txt
+echo "== every kind of quest can be finished"
+$PY $T/quests.py cargo.py > /tmp/cargo-quests.txt || fail=1
+grep FAIL /tmp/cargo-quests.txt; tail -1 /tmp/cargo-quests.txt
 echo "== damaged and hostile save / captain files"
 $PY $T/test_files.py cargo.py | tail -1 || fail=1
 

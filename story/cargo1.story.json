@@ -479,7 +479,7 @@
      "ch2a"
     ],
     "plot_points": 40,
-    "trade_profit": 200000
+    "trade_profit": 150000
    },
    "next": [
     "ending_trade"
@@ -596,7 +596,7 @@
      "ch3a"
     ],
     "plot_points": 100,
-    "trade_profit": 1000000
+    "trade_profit": 600000
    },
    "next": [],
    "source": "cargo.py StoryManager.__init__ (chapters)",
@@ -614,7 +614,7 @@
    "requires": {
     "buildings.stockmarket": 5,
     "passenger_reputation": 80,
-    "trade_profit": 1000000
+    "trade_profit": 600000
    },
    "effects": {
     "money": 1000000,
@@ -714,7 +714,9 @@
    "requires": {
     "stockmarket_everywhere": 1
    },
-   "repeat": true,
+   "repeat": {
+    "cooldown": 10
+   },
    "choices": [
     {
      "id": "resign",
@@ -738,7 +740,7 @@
     }
    ],
    "notes": [
-    "asked every turn while the condition holds, until the captain resigns"
+    "offered every 10 turns while the condition holds: keep trading, retire, or the portal"
    ],
    "handled_by": "Game.play (text from the story)",
    "source": "cargo.py Game.play (secret quest)"

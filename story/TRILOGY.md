@@ -172,10 +172,15 @@ these files, together with a small runtime (conditions, choices, effects, names)
 Character names are written once (saga characters in `saga.json`, the rest in
 their story file); texts say `{pirate_captain}` or `{pirate_captain.short}`.
 
-Balance: chapter thresholds now mean something (30 plot points for chapter 2,
-90 for chapter 3, 250 for an ending), and each ending needs its turning point
+Balance: chapter thresholds now mean something (50 plot points for chapter 2,
+150 for chapter 3, 350 for an ending), and each ending needs its turning point
 (the charter, the commission, the samples). Story chains now pay, so their
-rewards were scaled down.
+rewards were scaled down. Since 1.2 trade profit is real (sale price minus what
+the goods cost), the hold has a size, fights take money only when they are lost,
+and passenger reputation stops at 100; the trader's chapter asks 150 000 profit
+and the trade ending 600 000. Measured with the bot: traders finish in about
+70 to 230 turns, explorers in 50 to 120, fighters in 330 to 390 (the combat ending
+needs 50 victories).
 
 Rewritten: every chapter and ending text, the passenger and synthetics chains,
 and the ancient scholar (now human). New: the Hansa charter, the samples, the
@@ -184,16 +189,16 @@ technoshaman, Krog, Geod, Aela, the nanobot colony, the Unsorted, the holy
 manifest, the deacon, the pilgrims, the Grey Hats, the Lyra rumour, the ruins,
 the Stator Field, the Builder Site and the Star-Shaped Scar Tribe.
 
-What players of each style see (from 16 recorded bot games): traders, whose game
-lasts about 45 turns, get Krog, Geod, the charter, the customs talks, the strike,
-the deacon, the Lyra story and sometimes the old hauler. Explorers add the
+What players of each style see (from 16 recorded bot games): traders get Krog,
+Geod, the charter, the customs talks, the strike, the deacon, the Lyra story and
+sometimes the old hauler. Explorers add the
 samples, the clone, the Rostrom line and the old hauler; fighters add the
 legions, Mraz, CU-113 and the Unsorted. Players who build guilds and farms meet
 the Sowers and the first node; those who build mining platforms meet Aela and the
 nanobot colony, late in the discovery path. The ruins, the Stator Field, the
 Builder Site and the signal outposts need the player to travel there. The portal
-and its older captain need the tycoon ending's secret coordinate, so they stay
-rare.
+and its older captain need the tycoon's choice (offered every 10 turns to a rich
+trader: keep trading, retire, or pay for the portal), so they stay rare.
 
 ## The places
 

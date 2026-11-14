@@ -243,14 +243,14 @@ def import_story(cargo, game):
     add("tycoon_offer", kind="event", arc="main", title="The galaxy's markets are yours",
         text="Every planet, asteroid base and outpost has a stock market. Resign as Galactic Tycoon, "
              "or pay for the secret quest and continue into the unknown.",
-        requires={"stockmarket_everywhere": 1}, repeat=True,
+        requires={"stockmarket_everywhere": 1}, repeat={"cooldown": 10},
         choices=[
             {"id": "resign", "say": "Resign", "next": "ending_tycoon"},
             {"id": "continue", "say": "Continue into the unknown", "requires": {"money": 1500},
              "effects": {"money": -1500, "set": ["stellar_portal"], "code": "new set of locations; jump there"},
              "next": "stellar_portal"},
         ],
-        notes=["asked every turn while the condition holds, until the captain resigns"],
+        notes=["offered every 10 turns while the condition holds: keep trading, retire, or the portal"],
         handled_by="Game.play (text from the story)",
         source="cargo.py Game.play (secret quest)")
     add("ending_tycoon", kind="ending", arc="main", act=4, title="Galactic Tycoon",

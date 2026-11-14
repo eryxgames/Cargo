@@ -158,11 +158,11 @@
      "done": [
       "ch1"
      ],
-     "plot_points": 30,
+     "plot_points": 50,
      "trades_completed": 10
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ch2b": {
@@ -175,11 +175,11 @@
      "done": [
       "ch1"
      ],
-     "plot_points": 30,
+     "plot_points": 50,
      "combat_victories": 5
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ch3a": {
@@ -192,11 +192,11 @@
      "done": [
       "ch2a"
      ],
-     "plot_points": 90,
-     "trade_profit": 200000
+     "plot_points": 150,
+     "trade_profit": 150000
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ch3b": {
@@ -209,11 +209,11 @@
      "done": [
       "ch2b"
      ],
-     "plot_points": 90,
+     "plot_points": 150,
      "combat_victories": 25
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ch3c": {
@@ -227,11 +227,11 @@
       "ch2a",
       "ch2b"
      ],
-     "plot_points": 90,
+     "plot_points": 150,
      "research_points": 300
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ch3c.alien_artifacts": {
@@ -276,11 +276,11 @@
       "ch3a",
       "hansa.charter"
      ],
-     "plot_points": 250,
-     "trade_profit": 1000000
+     "plot_points": 350,
+     "trade_profit": 600000
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ending_combat": {
@@ -297,11 +297,11 @@
       "ch3b",
       "legion.offer"
      ],
-     "plot_points": 250,
+     "plot_points": 350,
      "combat_victories": 50
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ending_discovery": {
@@ -322,11 +322,11 @@
       "ch3c",
       "trail.samples"
      ],
-     "plot_points": 250,
+     "plot_points": 350,
      "research_points": 1500
     },
     "notes": [
-     "balance: plot points ran far above every threshold; the endings now also need their arc's turning point"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
     ]
    },
    "ending_discovery.discovery_ending": {

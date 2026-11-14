@@ -21,7 +21,7 @@ n=0
 for c in classes.values():
     d=info(c); miss=collections.defaultdict(list)
     for x in ast.walk(c):
-        if isinstance(x,ast.Attribute) and isinstance(x.value,ast.Name) and x.value.id=='self' and isinstance(x.ctx,ast.Load) and x.attr not in d:
+        if isinstance(x,ast.Attribute) and isinstance(x.value,ast.Name) and x.value.id=='self' and isinstance(x.ctx,ast.Load) and x.attr not in d and not x.attr.startswith('__'):
             miss[x.attr].append(x.lineno)
     for k,v in sorted(miss.items()): print(f"{c.name}.{k}: lines {v[:6]}"); n+=1
 print("broken self references:",n)

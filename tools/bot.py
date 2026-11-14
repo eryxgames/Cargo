@@ -21,6 +21,35 @@ for a in sys.argv:
     if a.startswith("--trace="):
         trace_path = a.split("=", 1)[1]
 trace_file = open(trace_path, "w", encoding="utf-8") if trace_path else None
+ledger_on = "--ledger" in sys.argv
+LEDGER = collections.defaultdict(lambda: collections.defaultdict(float))
+
+
+def install_ledger(cargo):
+    """Record every change to money, plot points and research points, by the
+    function that made it (for tools/economy.py)."""
+    def tracked(cls, attr, book):
+        store = "_ledger_" + attr
+
+        def get(self):
+            return self.__dict__.get(store, 0)
+
+        def put(self, value):
+            old = self.__dict__.get(store)
+            self.__dict__[store] = value
+            if old is None or not isinstance(value, (int, float)):
+                return
+            delta = value - old
+            if delta:
+                frame = sys._getframe(1)
+                while frame and frame.f_code.co_name in ("put", "<lambda>"):
+                    frame = frame.f_back
+                who = getattr(frame.f_code, "co_qualname", frame.f_code.co_name) if frame else "?"
+                LEDGER[book + ("+" if delta > 0 else "-")][who] += delta
+        setattr(cls, attr, property(get, put))
+    tracked(cargo.Ship, "money", "money")
+    tracked(cargo.Ship, "research_points", "rp")
+    tracked(cargo.StoryManager, "plot_points", "plot_points")
 traced_turn = [-1]
 
 
@@ -47,6 +76,8 @@ os.environ["CARGO_HOME"] = home
 size = os.terminal_size((80, 40))
 shutil.get_terminal_size = lambda fallback=(80, 24): size
 cargo = headless.load(path)
+if ledger_on:
+    install_ledger(cargo)
 headless.patch(cargo, headless.IO())
 random.seed(seed)
 rng = random.Random(seed * 7 + 1)
@@ -126,8 +157,10 @@ class Bot:
             buy = self.prices(here, item)
             if not buy:
                 continue
+            if g.ship.hold_room(item) <= 0:
+                continue
             for loc in g.locations:
-                if loc is here:
+                if loc is here or loc.name not in g.known_locations:
                     continue
                 sell = self.prices(loc, item)
                 if not sell:
@@ -180,7 +213,9 @@ class Bot:
                     continue
                 planned = self.sell_at.get(item) == here.name
                 better = self.best_sale_elsewhere(item)
-                if planned or price >= self.cost[item] * 1.08 or better is None or price >= better[0]:
+                cost = self.cost[item] or 0
+                stale = better is None or g.turn - self.__dict__.setdefault("bought_turn", {}).get(item, g.turn) > 12
+                if price >= cost * 1.08 or (planned and price >= cost) or (stale and price >= cost * 0.8):
                     self.flags.add(("sell", item))
                     self.item = item
                     return "s"
@@ -262,6 +297,9 @@ class Bot:
                 self.dest = dest
                 self.sell_at[item] = dest
                 self.buy_price = self.prices(here, item)
+                held = ship.cargo[item]
+                self.__dict__.setdefault("bought_turn", {})[item] = g.turn
+                self.cost[item] = self.buy_price if not held else (self.cost[item] or self.buy_price)
                 return "b"
 
         if "travel" not in self.flags:
@@ -278,6 +316,10 @@ class Bot:
             # then a passenger destination, then unexplored places, then the trade plan
             if dest is None and self.pax_dest and self.pax_dest != here.name:
                 dest = self.pax_dest
+            # a trader who only shuttles between two docks never sees the rest of the map
+            unseen = [l.name for l in g.locations if l.name not in g.known_locations]
+            if dest is None and unseen and (len(g.known_locations) < 5 or g.turn % 6 == 0):
+                dest = rng.choice(unseen)
             if dest is None:
                 carried = [i for i in ship.cargo if ship.cargo[i] > 0 and self.sell_at.get(i) and self.sell_at[i] != here.name]
                 if carried:
@@ -307,7 +349,7 @@ class Bot:
             p = prompt.lower()
             if "end" in options and "buy" in options:
                 return self.main_action(options)
-            if p.startswith("choose item (tech"):
+            if p.startswith(("buy which", "sell which")):
                 return self.item
             if "property to upgrade" in p:
                 return self.upgrade
@@ -440,6 +482,12 @@ def fake_input(prompt=""):
             raise Done("max turns")
         if getattr(g, "ending_reached", None):
             raise Done("ending")
+        if ledger_on:
+            marks = bot.__dict__.setdefault("chapters_at", {})
+            for chapter in g.story_manager.completed_chapters:
+                if chapter not in marks:
+                    marks[chapter] = {"turn": g.turn, "plot_points": g.story_manager.plot_points,
+                                      "money": int(g.ship.money)}
         prog = (g.turn, g.story_manager.current_chapter)
         if prog == bot.last_progress:
             bot.stall += 1
@@ -529,4 +577,8 @@ if g is not None:
         "active_quests": [q.name for q in g.quest_system.active_quests][:8],
         "unknown_prompts": [[list(map(str, k)), n] for k, n in bot.unknown.most_common(8)],
     })
+    if ledger_on:
+        result["ledger"] = {book: {k: round(v) for k, v in sorted(entries.items(), key=lambda kv: -abs(kv[1]))}
+                            for book, entries in LEDGER.items()}
+        result["chapters_at"] = getattr(bot, "chapters_at", {})
 print(json.dumps(result, ensure_ascii=False, default=str))
