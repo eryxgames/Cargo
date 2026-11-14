@@ -9,7 +9,7 @@ A text-based space trading and exploration game where you navigate between plane
         ╔════════ C Δ R G Ω ════════╗
         ║     Space Trading Saga    ║
         ╚═══════════════════════════╝
-                Version 1.0.2a
+                Version 1.1.0
 
 ```
 ## Development Notes
@@ -18,6 +18,10 @@ CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
 
 [Eryxian Universe Wiki](https://github.com/eryxgames/eryxian/wiki) 
 - [x] New contract system
+- [x] Save / load, autosave
+- [x] Captain's record (carry a captain between the parts of the Cargo trilogy)
+- [x] Layout that fits narrow phone screens (Termux), from 36 columns up
+- [x] All three endings verified reachable (see `tools/`)
 - [ ] New quest system 
 - [ ] New local/global events
 - [ ] Core storyline/characters
@@ -98,14 +102,18 @@ git clone https://github.com/eryxgames/cargo.git
 # Run the game
 python cargo.py
 ```
+### On a phone (Termux)
+```bash
+pkg install python git
+git clone https://github.com/eryxgames/cargo.git
+cd cargo && python cargo.py
+```
+The screens rearrange themselves for narrow terminals (36 columns and up); nothing
+is cut off. Set `CARGO_ASCII=1` if your terminal cannot draw the box characters.
 ### Core dependencies
 - These are standard library modules, no pip install needed.
 ```
-random
-os
-time
-shutil
-math
+base64  hashlib  json  math  os  random  re  shutil  sys  time  unicodedata  zlib
 ```
 - The game currently uses only built-in Python modules.
 - Requires Python 3.7+ for proper f-strings and dictionary ordering
@@ -117,7 +125,24 @@ Simple text commands to navigate gameplay:
 - `build` - Construct buildings
 - `upgrade` - Improve ship
 - `action` - Special actions
+- `log` - Story progress: open milestones and what opens the way to the next chapter
+- `save` / `load` - Save the game under a name, or load a saved game
+- `captain` - The captain's record: export it, or take in a captain from another game
 - And more...
+
+## Saving
+The game saves itself after every turn (slot `autosave`) and asks whether to continue
+when you start it again. `save` writes a named slot, `load` lists them. Saves are plain
+JSON files in `~/.cargo/cargo1/saves/` (set `CARGO_HOME` to keep them somewhere else).
+
+## The captain's record
+`captain` → `export` writes your captain to `~/.cargo/captains/` and prints the same
+record as one line of text beginning with `CARGO:`. The file is picked up by the other
+parts of the trilogy on the same device; the line of text can be copied to another
+device or into the browser version. `captain` → `import` takes in a captain from another
+part (or another playthrough). Reaching an ending writes the record automatically.
+Quests and milestones can ask for a visiting captain with the requirement
+`{"visiting_captain": {"game": "cargo2"}}` (optionally `"ending"` or `"flag"`).
 
 ## Development Screenshots
 
