@@ -277,10 +277,10 @@
       "hansa.charter"
      ],
      "plot_points": 350,
-     "trade_profit": 600000
+     "trade_profit": 500000
     },
     "notes": [
-     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales; the trade ending asks 500 000 profit (at 600 000 bot traders kept grinding for 100 turns after the last chapter)"
     ]
    },
    "ending_combat": {

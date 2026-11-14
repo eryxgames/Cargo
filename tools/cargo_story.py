@@ -25,11 +25,12 @@ STORY_PATH = os.path.join(ROOT, "story", "cargo1.story.json")
 # Hand-written story files merged into the imported one (drafts until the game reads them)
 INCLUDES = ["cargo1/legacy.json", "cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
             "cargo1/pirates.json", "cargo1/passengers.json", "cargo1/houses.json", "cargo1/frontier.json",
-            "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/rumours.json", "cargo1/epilogue.json"]
+            "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/crew.json", "cargo1/rumours.json",
+            "cargo1/gossip.json", "cargo1/epilogue.json"]
 
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
 BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
-VICTORY_TYPES = ["total", "pirate", "militia", "rogue_captain", "uprising"]
+VICTORY_TYPES = ["total", "pirate", "militia", "raider", "machine", "rogue_captain", "uprising"]
 
 STATS = {
     "money": "credits on hand",
@@ -48,6 +49,7 @@ STATS = {
     "milestones_done": "story milestones completed (StoryManager.completed_story_beats)",
     "best_cabin": "comfort level of the best passenger cabin aboard",
     "turns_since_vip": "turns since the last VIP passenger appeared",
+    "crew_size": "helpers hired (the ship has bunks for four)",
 }
 for _t in VICTORY_TYPES[1:]:
     STATS["combat_victories." + _t] = "battles won against " + _t
@@ -367,6 +369,8 @@ def import_story(cargo, game):
         "stats": {k: {"about": v, **({"produced": False} if k in NOT_PRODUCED else {})} for k, v in STATS.items()},
         "sets": {"researched": {"about": "research unlocked", "members": sorted(game.research.research_costs)},
                  "items": {"about": "items carried"},
+                 "crew": {"about": "helpers aboard", "members": ["loader", "steward", "mechanic", "gunner",
+                                                                 "navigator", "broker"]},
                  "unlocked_types": {"about": "hidden location types revealed", "members": PLACE_TYPES}},
         "effects": {"code": {"about": "game code the tools cannot read"}},
         "flags": flags,

@@ -583,7 +583,7 @@ CAPTAIN_CODE_PREFIX = "CARGO:"
 # The words the story's conditions are written in (see story/cargo1.story.json)
 STORY_PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
 STORY_BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
-STORY_VICTORY_TYPES = ["total", "pirate", "militia", "rogue_captain", "uprising"]
+STORY_VICTORY_TYPES = ["total", "pirate", "militia", "raider", "machine", "rogue_captain", "uprising"]
 CAPTAIN_GAMES = ("cargo1", "cargo2", "cargo3")
 
 
@@ -728,7 +728,7 @@ def run_quest_callback(game, callback):
 # =============================================================================
 
 # --- story data (tools/build_story.py) ---
-STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"Aela","kind":"agrobot"},"agrobot":{"name":"Sower","kind":"synthetic","generated":true},"ancient_scholar":{"name":"Matylda Korinek","short":"Korinek","kind":"human","generated":false},"anselm":{"name":"Anselm Rockwarden","short":"Anselm","kind":"human"},"captain":{"name":"The captain"},"clone":{"name":"The other captain","short":"the other captain"},"cult_elders":{"name":"Elders of the Broken Machine","kind":"human"},"deacon":{"name":"Deacon Amaro","short":"the deacon","kind":"human"},"diplomatic_envoy":{"name":"Envoy Ines Halloran","short":"Halloran","kind":"human","generated":false},"fluencer":{"name":"Brisa Vell","short":"Brisa","kind":"fluencer"},"geod":{"name":"Geod","short":"Geod","kind":"agrobot"},"grey_hats":{"name":"The Grey Hats","kind":"human"},"heritarchist":{"name":"Magister Sethric Aelwynn-Halen","short":"the Magister","kind":"human"},"kettle_survivor":{"name":"Ottilie Brandt","short":"Brandt","kind":"human"},"krog":{"name":"Krog","short":"Krog","kind":"agrobot"},"merchant":{"name":"Merchant","kind":"human","generated":true},"merchant_trader":{"name":"Traveling Merchant","kind":"merchant","generated":true},"nanohive":{"name":"The colony at Sigma VII","kind":"nanobot colony"},"neon_sleeper":{"name":"Lady Ottavine Kessary-Vel","short":"Lady Ottavine","kind":"neon"},"neurodroid":{"name":"Neurodroids","kind":"synthetic","generated":true},"neurodroid_leader":{"name":"CU-113","short":"CU-113","full":"Curator Unit 113","title":"Neurodroid Overseer","kind":"neurodroid","generated":false},"pilgrims":{"name":"Pilgrims of the Broken Machine","kind":"human"},"pirate_captain":{"name":"Hedda Mraz","short":"Mraz","kind":"human","generated":false},"rebel_commander":{"name":"Teodor Brann","short":"Brann","kind":"human","generated":false},"researcher":{"name":"Researcher","kind":"human","generated":true},"rogue_captain":{"name":"Rogue Captain","kind":"human","generated":true},"santor":{"name":"Dharr Santor","short":"Santor","kind":"human"},"scar_tribe":{"name":"The Star-Shaped Scar Tribe","kind":"human"},"tarnished_gear":{"name":"Order of the Tarnished Gear","kind":"human"},"technoshaman":{"name":"Technoshaman of the drums","kind":"human"},"unsorted":{"name":"The Unsorted","kind":"robot enclave"},"vip_passenger":{"name":"VIP Passenger","kind":"special","generated":true},"virtual_heir":{"name":"Ren Asquine-Vel","short":"Ren","kind":"virtual"},"ysolde":{"name":"Ysolde van Rostrom","short":"Ysolde","kind":"human"}},"flags":{"aela_leased":{"about":"{aela} stayed leased equipment","carries_to":["cargo2"]},"aela_member":{"about":"{aela} became a member of the Rockwarden cooperative: the first machine shareholder","carries_to":["cargo2","cargo3"]},"alien_discovery":{"about":""},"ancient_mystery":{"about":""},"bounty_war":{"about":"the captain answered {pirate_captain.short}'s bounty with a bigger one"},"carried_the_pilgrims":{"about":"the captain flew the Broken Machine pilgrims to Alpha","carries_to":["cargo2"]},"carried_the_samples":{"about":"the captain hauled the builders' metal to the Stellar Institute","carries_to":["cargo2"]},"clone_fight":{"about":"the captain went after the clone"},"clone_let_go":{"about":"the captain beat the clone in a fight and let it run","carries_to":["cargo2"]},"clone_partner":{"about":"the captain and the clone split the routes","carries_to":["cargo2"]},"clone_reported":{"about":"the captain reported the clone to the insurer","carries_to":["cargo2"]},"closed_the_channel":{"about":"the captain cut the older captain off at the portal","carries_to":["cargo3"]},"cu113_contract":{"about":"the captain gave {neurodroid_leader.short} a wage and an unscheduled hour","carries_to":["cargo2","cargo3"]},"cu113_refused":{"about":"the captain heard {neurodroid_leader.short} out and said no","carries_to":["cargo2"]},"cu113_sold":{"about":"the captain sold {neurodroid_leader.short} to a research house","carries_to":["cargo2"]},"cu113_wiped":{"about":"the captain wiped and reinstalled {neurodroid_leader.short}","carries_to":["cargo2"]},"first_node":{"about":"the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective","carries_to":["cargo2","cargo3"]},"fluencer_exposed":{"about":"the captain told {fluencer} that the Kessary-Vel family has never heard of her","carries_to":["cargo2"]},"fluencer_streamed":{"about":"{fluencer} streamed the captain's ship to nine million followers","carries_to":["cargo2"]},"fourth_test_copy":{"about":"the captain kept a copy of the fourth test recording","carries_to":["cargo2","cargo3"]},"fourth_test_to_rostrom":{"about":"the captain gave the only recording of the fourth test to {ysolde.short}","carries_to":["cargo2"]},"galactic_crisis":{"about":""},"geod_fields":{"about":"the captain brought {geod} the seed stock for Delta's first fields","carries_to":["cargo2"]},"grey_hats_client":{"about":"the captain paid the Grey Hats to clean a record","carries_to":["cargo2"]},"hansa_founder":{"about":"the captain minted the first Hansa Mark and signed the charter first","carries_to":["cargo2","cargo3"]},"hansa_member":{"about":"the captain signed the Hansa charter, not first","carries_to":["cargo2"]},"hansa_outside":{"about":"the captain stayed out of the Hansa","carries_to":["cargo2"]},"heard_the_lyra_story":{"about":"the captain heard how the Maud Kettle went down in Lyra","carries_to":["cargo2"]},"heard_the_warning":{"about":"the captain listened to the older captain at the portal","carries_to":["cargo2","cargo3"]},"kept_the_pellet":{"about":"the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any","carries_to":["cargo2"]},"krog_aboard":{"about":"{krog} rides in the captain's hold to see where the crates go","carries_to":["cargo2"]},"legion_freelance":{"about":"turned down every commission","carries_to":["cargo2"]},"legion_omnicorp":{"about":"commission with OmniCorp's legion","carries_to":["cargo2"]},"legion_stellar":{"about":"commission with Stellar Dynamics' legion","carries_to":["cargo2"]},"legion_xylo":{"about":"commission with the Xylo Consortium's legion","carries_to":["cargo2"]},"logged_the_lyra_signal":{"about":"the captain copied the Lyra signal log at the research outpost","carries_to":["cargo2"]},"lot77_bought":{"about":"the captain bought forty robots at auction so the Unsorted could free them","carries_to":["cargo2"]},"manifest_completed":{"about":"the captain delivered the Broken Machine's holy manifest, forty years late","carries_to":["cargo2"]},"met_the_stranger":{"about":"the captain spoke with the old hauler at an outpost bar","carries_to":["cargo2"]},"mraz_handed":{"about":"the captain handed {pirate_captain} to a legion","carries_to":["cargo2"]},"mraz_hired":{"about":"the captain hired {pirate_captain} as an escort","carries_to":["cargo2"]},"mraz_spared":{"about":"the captain let {pirate_captain} go","carries_to":["cargo2","cargo3"]},"nano_sampled":{"about":"the captain smuggled a sample of the colony to House Rostrom","carries_to":["cargo2"]},"nano_sold_out":{"about":"the captain sold the colony's coordinates to the legions","carries_to":["cargo2"]},"nano_supplier":{"about":"the captain delivered feedstock to the nanobot colony","carries_to":["cargo2"]},"nano_trusted":{"about":"the captain kept the colony's secret","carries_to":["cargo2","cargo3"]},"neon_land":{"about":"{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep","carries_to":["cargo2","cargo3"]},"neon_sleeper_carried":{"about":"the captain carried {neon_sleeper} asleep to Delta","carries_to":["cargo2","cargo3"]},"pirate_threat":{"about":""},"relay_cut":{"about":"the captain cut the relay the first node ran on","carries_to":["cargo2"]},"resource_empire":{"about":""},"rockwarden_books":{"about":"the captain kept the cooperative's books while Stonewright flew sublight","carries_to":["cargo2","cargo3"]},"rockwarden_share":{"about":"the captain holds a share in the Rockwarden cooperative","carries_to":["cargo2"]},"rostrom_creditor":{"about":"House Rostrom was founded on the captain's loan","carries_to":["cargo2","cargo3"]},"rostrom_declined":{"about":"the captain refused {ysolde.short} the loan","carries_to":["cargo2"]},"scanned_at_customs":{"about":"the captain's customs scan is on file with a research colony's insurer"},"solarian_friend":{"about":"the captain donated to the Solarian reading-house","carries_to":["cargo2","cargo3"]},"stellar_portal":{"about":"the captain paid for the secret quest"},"tech_breakthrough":{"about":""},"technoshaman_blessing":{"about":"the captain paid for a blessing (and a firmware patch)"},"trade_empire":{"about":""},"virtual_friend":{"about":"the captain charged {virtual_heir} for the passenger, not the projector","carries_to":["cargo2"]},"worshipped":{"about":"the Tarnished Gear adopted the captain's ship as a minor relic","carries_to":["cargo2"]}},"places":{"Alpha":{"kind":"location","type":"Planet","system":"Alpha Centauri","ly":4.4},"Beta":{"kind":"location","type":"Planet","system":"Barnard's Star","ly":6.0},"Gamma":{"kind":"location","type":"Planet","system":"Ross 154","ly":9.7},"Delta":{"kind":"location","type":"Planet","system":"Teegarden's Star","ly":12.5},"Epsilon":{"kind":"location","type":"Planet","system":"Epsilon Eridani","ly":10.5},"Omega XIV":{"kind":"location","type":"AsteroidBase","system":"Tau Ceti","ly":11.9},"Sigma VII":{"kind":"location","type":"AsteroidBase","system":"Epsilon Indi","ly":11.9},"Theta III":{"kind":"location","type":"AsteroidBase","system":"Fomalhaut","ly":25},"DSO-Alpha":{"kind":"location","type":"DeepSpaceOutpost","system":"Luhman 16","ly":6.5},"DSO-Beta":{"kind":"location","type":"DeepSpaceOutpost","system":"WISE 0855-0714","ly":7.4},"DSO-Gamma":{"kind":"location","type":"DeepSpaceOutpost","system":"Scholz's Star","ly":20},"Nova Labs":{"kind":"location","type":"ResearchColony","system":"Wolf 359","ly":7.9},"Quantum Center":{"kind":"location","type":"ResearchColony","system":"YZ Ceti","ly":12},"Stellar Institute":{"kind":"location","type":"ResearchColony","system":"TRAPPIST-1","ly":40},"Ancient Ruins Alpha":{"kind":"location","type":"Ancient Ruins","system":"Tau Ceti, in the debris disk"},"Ancient Ruins Beta":{"kind":"location","type":"Ancient Ruins","system":"Epsilon Indi, a moon of the cold giant Ab"},"Alien Signal Research Outpost X":{"kind":"location","type":"Alien Signal Research Outpost","system":"Sol, far outer system"},"Alien Signal Research Outpost Y":{"kind":"location","type":"Alien Signal Research Outpost","system":"pointed at Lyra, past HD 178911"},"Zeta":{"kind":"location","type":"Planet","system":"Zeta Reticuli","ly":39},"Eta":{"kind":"location","type":"Planet","system":"Eta Corvi","ly":59},"Theta":{"kind":"location","type":"Planet","system":"Gliese 667 C","ly":23.6},"Omega-1":{"kind":"location","type":"AsteroidBase","system":"Vega","ly":25},"DSO-Delta":{"kind":"location","type":"DeepSpaceOutpost","system":"Gliese 229 B","ly":19},"Stator Field Megastructure":{"kind":"location","type":"Megastructure","system":"Sol, near Sedna's orbit","made":{"tech":15,"agri":1,"research":80,"economy":"Mysterious"}},"Builder Site":{"kind":"location","type":"Builder Site","system":"Scholz's Star's wake","made":{"tech":18,"agri":1,"research":90,"economy":"Mysterious"}}},"repaired":["ch2a","ch2b","ch3a","ch3b","ch3c","ending_combat","ending_discovery","ending_trade","meet.system_rebellion","merchant_visit.1","questline.combat.1","questline.combat.2","questline.combat.3","questline.mining.1","questline.mining.2","questline.mining.3","questline.research.1","questline.research.2","questline.research.3","researcher_exchange.1","rogue_captain.1","visit.merchant_trader","visit.neurodroid_leader","visit.vip_passenger"],"order":["ch1","ch1.first_trade","ch1.first_combat","ch1.basic_license","ch2a","ch2a.establish_route","ch2a.passenger_business","ch2b","ch2b.defeat_pirates","ch2b.defend_stations","ch3a","ch3a.market_control","ch3b","ch3b.fleet_commander","ch3c","ch3c.alien_artifacts","ending_trade","ending_trade.trade_ending","ending_combat","ending_combat.combat_ending","ending_discovery","ending_discovery.discovery_ending","tycoon_offer","ending_tycoon","stellar_portal","chance.Planet.merchant","chance.Planet.researcher","chance.Planet.rogue_captain","chance.ResearchColony.merchant","chance.ResearchColony.researcher","chance.ResearchColony.rogue_captain","chance.Space.merchant","chance.Space.researcher","chance.Space.rogue_captain","unlock.AsteroidBase","unlock.DeepSpaceOutpost","unlock.ResearchColony","beat.AsteroidBase.mineral_discovery","beat.AsteroidBase.pirate_hideout","beat.AsteroidBase.ancient_technology","beat.DeepSpaceOutpost.smuggler_network","beat.DeepSpaceOutpost.alien_contact","beat.DeepSpaceOutpost.trade_revolution","beat.ResearchColony.breakthrough_discovery","beat.ResearchColony.experiment_crisis","beat.ResearchColony.alien_artifacts","uprising.Neurodroid.local","uprising.Neurodroid.global","uprising.Agrobot.local","uprising.Agrobot.global","meet.neuroengineering_uprising","neurodroid_uprising.1","neurodroid_uprising.2","neurodroid_uprising.3","meet.agrobot_rebellion","agrobot_collective.1","agrobot_collective.2","agrobot_collective.3","meet.pirate_nemesis","meet.vip_passenger","meet.galactic_alliance","galactic_alliance.1","galactic_alliance.2","meet.system_rebellion","system_rebellion.1","system_rebellion.2","meet.ancient_mysteries","ancient_mysteries.1","rogue_captain.1","rogue_captain.2","merchant_visit.1","researcher_exchange.1","visit.merchant_trader","visit.vip_passenger","visit.neurodroid_leader","questline.mining.1","questline.mining.2","questline.mining.3","questline.combat.1","questline.combat.2","questline.combat.3","questline.research.1","questline.research.2","questline.research.3","hansa.charter","trail.samples","trail.home","intro.fresh","intro.again","intro.from_cargo2","intro.from_cargo3","self.outpost","self.outpost.advice","self.portal","clone.scan","clone.bill","clone.meet","seed.refusal","seed.terms","harvest.shaman","node.first","dock.krog","dock.krog.ride","found.delta","found.delta.fields","vendetta.bounty","vendetta.convoys","vendetta.terms","legion.offer","pass.deacon","pass.pilgrims","mine.aela","hatters.grey","zeta.cult","megastructure.stator","builder.beacon","ruins.alpha","ruins.beta","signal.lyra","rumour.lyra","builder.crossing","nano.buoy","nano.feedstock","nano.gallery","nano.pressure","enclave.yard","enclave.lot77","enclave.resignation","cult.manifest","neon.sarcophagus","neon.sarcophagus.wake","neon.virtual","neon.fluencer","rumour.neon_coffee","rumour.drums_at_night","rumour.grey_hat_fines","rumour.legion_merger","rumour.your_registry","rumour.miners_out","rumour.first_mark","rumour.mraz_free","rumour.towers_hum","rumour.sterilisation","rumour.lyra_again","rumour.pellet_collector","rumour.yesterday","rumour.famous_coffee","after.mraz_spared","after.mraz_handed","after.mraz_hired","after.first_node","after.cu113_contract","after.cu113_wiped","after.cu113_sold","after.relay_cut","after.clone_partner","after.clone_reported","after.clone_let_go","after.rockwarden_books","after.aela_member","after.rostrom_creditor","after.fourth_test_copy","after.nano_trusted","after.nano_sold_out","after.nano_sampled","after.lot77_bought","after.krog_aboard","after.geod_fields","after.neon_land","after.manifest_completed","after.solarian_friend","after.fluencer_exposed","after.heard_the_warning"],"nodes":{
+STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"Aela","kind":"agrobot"},"agrobot":{"name":"Sower","kind":"synthetic","generated":true},"ancient_scholar":{"name":"Matylda Korinek","short":"Korinek","kind":"human","generated":false},"anselm":{"name":"Anselm Rockwarden","short":"Anselm","kind":"human"},"broker":{"name":"Old Fenn","short":"Fenn","kind":"human"},"captain":{"name":"The captain"},"clone":{"name":"The other captain","short":"the other captain"},"cult_elders":{"name":"Elders of the Broken Machine","kind":"human"},"deacon":{"name":"Deacon Amaro","short":"the deacon","kind":"human"},"diplomatic_envoy":{"name":"Envoy Ines Halloran","short":"Halloran","kind":"human","generated":false},"fluencer":{"name":"Brisa Vell","short":"Brisa","kind":"fluencer"},"geod":{"name":"Geod","short":"Geod","kind":"agrobot"},"grey_hats":{"name":"The Grey Hats","kind":"human"},"gunner":{"name":"Tadeo Ruiz","short":"Tadeo","kind":"human"},"heritarchist":{"name":"Magister Sethric Aelwynn-Halen","short":"the Magister","kind":"human"},"kettle_survivor":{"name":"Ottilie Brandt","short":"Brandt","kind":"human"},"krog":{"name":"Krog","short":"Krog","kind":"agrobot"},"loader":{"name":"Shunt","kind":"agrobot"},"mechanic":{"name":"Oksana Brell","short":"Oksana","kind":"human"},"merchant":{"name":"Merchant","kind":"human","generated":true},"merchant_trader":{"name":"Traveling Merchant","kind":"merchant","generated":true},"nanohive":{"name":"The colony at Sigma VII","kind":"nanobot colony"},"navigator":{"name":"Sister Iolanthe","short":"Iolanthe","kind":"human"},"neon_sleeper":{"name":"Lady Ottavine Kessary-Vel","short":"Lady Ottavine","kind":"neon"},"neurodroid":{"name":"Neurodroids","kind":"synthetic","generated":true},"neurodroid_leader":{"name":"CU-113","short":"CU-113","full":"Curator Unit 113","title":"Neurodroid Overseer","kind":"neurodroid","generated":false},"pilgrims":{"name":"Pilgrims of the Broken Machine","kind":"human"},"pirate_captain":{"name":"Hedda Mraz","short":"Mraz","kind":"human","generated":false},"rebel_commander":{"name":"Teodor Brann","short":"Brann","kind":"human","generated":false},"researcher":{"name":"Researcher","kind":"human","generated":true},"rogue_captain":{"name":"Rogue Captain","kind":"human","generated":true},"santor":{"name":"Dharr Santor","short":"Santor","kind":"human"},"scar_tribe":{"name":"The Star-Shaped Scar Tribe","kind":"human"},"steward":{"name":"Ambrose","kind":"robot"},"tarnished_gear":{"name":"Order of the Tarnished Gear","kind":"human"},"technoshaman":{"name":"Technoshaman of the drums","kind":"human"},"unsorted":{"name":"The Unsorted","kind":"robot enclave"},"vip_passenger":{"name":"VIP Passenger","kind":"special","generated":true},"virtual_heir":{"name":"Ren Asquine-Vel","short":"Ren","kind":"virtual"},"ysolde":{"name":"Ysolde van Rostrom","short":"Ysolde","kind":"human"}},"flags":{"aela_leased":{"about":"{aela} stayed leased equipment","carries_to":["cargo2"]},"aela_member":{"about":"{aela} became a member of the Rockwarden cooperative: the first machine shareholder","carries_to":["cargo2","cargo3"]},"alien_discovery":{"about":""},"ancient_mystery":{"about":""},"bounty_war":{"about":"the captain answered {pirate_captain.short}'s bounty with a bigger one"},"carried_the_pilgrims":{"about":"the captain flew the Broken Machine pilgrims to Alpha","carries_to":["cargo2"]},"carried_the_samples":{"about":"the captain hauled the builders' metal to the Stellar Institute","carries_to":["cargo2"]},"clone_fight":{"about":"the captain went after the clone"},"clone_let_go":{"about":"the captain beat the clone in a fight and let it run","carries_to":["cargo2"]},"clone_partner":{"about":"the captain and the clone split the routes","carries_to":["cargo2"]},"clone_reported":{"about":"the captain reported the clone to the insurer","carries_to":["cargo2"]},"closed_the_channel":{"about":"the captain cut the older captain off at the portal","carries_to":["cargo3"]},"cu113_contract":{"about":"the captain gave {neurodroid_leader.short} a wage and an unscheduled hour","carries_to":["cargo2","cargo3"]},"cu113_refused":{"about":"the captain heard {neurodroid_leader.short} out and said no","carries_to":["cargo2"]},"cu113_sold":{"about":"the captain sold {neurodroid_leader.short} to a research house","carries_to":["cargo2"]},"cu113_wiped":{"about":"the captain wiped and reinstalled {neurodroid_leader.short}","carries_to":["cargo2"]},"first_node":{"about":"the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective","carries_to":["cargo2","cargo3"]},"fluencer_exposed":{"about":"the captain told {fluencer} that the Kessary-Vel family has never heard of her","carries_to":["cargo2"]},"fluencer_streamed":{"about":"{fluencer} streamed the captain's ship to nine million followers","carries_to":["cargo2"]},"fourth_test_copy":{"about":"the captain kept a copy of the fourth test recording","carries_to":["cargo2","cargo3"]},"fourth_test_to_rostrom":{"about":"the captain gave the only recording of the fourth test to {ysolde.short}","carries_to":["cargo2"]},"galactic_crisis":{"about":""},"geod_fields":{"about":"the captain brought {geod} the seed stock for Delta's first fields","carries_to":["cargo2"]},"grey_hats_client":{"about":"the captain paid the Grey Hats to clean a record","carries_to":["cargo2"]},"hansa_founder":{"about":"the captain minted the first Hansa Mark and signed the charter first","carries_to":["cargo2","cargo3"]},"hansa_member":{"about":"the captain signed the Hansa charter, not first","carries_to":["cargo2"]},"hansa_outside":{"about":"the captain stayed out of the Hansa","carries_to":["cargo2"]},"heard_the_lyra_story":{"about":"the captain heard how the Maud Kettle went down in Lyra","carries_to":["cargo2"]},"heard_the_warning":{"about":"the captain listened to the older captain at the portal","carries_to":["cargo2","cargo3"]},"kept_the_pellet":{"about":"the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any","carries_to":["cargo2"]},"krog_aboard":{"about":"{krog} rides in the captain's hold to see where the crates go","carries_to":["cargo2"]},"legion_freelance":{"about":"turned down every commission","carries_to":["cargo2"]},"legion_omnicorp":{"about":"commission with OmniCorp's legion","carries_to":["cargo2"]},"legion_stellar":{"about":"commission with Stellar Dynamics' legion","carries_to":["cargo2"]},"legion_xylo":{"about":"commission with the Xylo Consortium's legion","carries_to":["cargo2"]},"logged_the_lyra_signal":{"about":"the captain copied the Lyra signal log at the research outpost","carries_to":["cargo2"]},"lot77_bought":{"about":"the captain bought forty robots at auction so the Unsorted could free them","carries_to":["cargo2"]},"manifest_completed":{"about":"the captain delivered the Broken Machine's holy manifest, forty years late","carries_to":["cargo2"]},"met_the_stranger":{"about":"the captain spoke with the old hauler at an outpost bar","carries_to":["cargo2"]},"mraz_handed":{"about":"the captain handed {pirate_captain} to a legion","carries_to":["cargo2"]},"mraz_hired":{"about":"the captain hired {pirate_captain} as an escort","carries_to":["cargo2"]},"mraz_spared":{"about":"the captain let {pirate_captain} go","carries_to":["cargo2","cargo3"]},"nano_sampled":{"about":"the captain smuggled a sample of the colony to House Rostrom","carries_to":["cargo2"]},"nano_sold_out":{"about":"the captain sold the colony's coordinates to the legions","carries_to":["cargo2"]},"nano_supplier":{"about":"the captain delivered feedstock to the nanobot colony","carries_to":["cargo2"]},"nano_trusted":{"about":"the captain kept the colony's secret","carries_to":["cargo2","cargo3"]},"neon_land":{"about":"{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep","carries_to":["cargo2","cargo3"]},"neon_sleeper_carried":{"about":"the captain carried {neon_sleeper} asleep to Delta","carries_to":["cargo2","cargo3"]},"pirate_threat":{"about":""},"relay_cut":{"about":"the captain cut the relay the first node ran on","carries_to":["cargo2"]},"resource_empire":{"about":""},"rockwarden_books":{"about":"the captain kept the cooperative's books while Stonewright flew sublight","carries_to":["cargo2","cargo3"]},"rockwarden_share":{"about":"the captain holds a share in the Rockwarden cooperative","carries_to":["cargo2"]},"rostrom_creditor":{"about":"House Rostrom was founded on the captain's loan","carries_to":["cargo2","cargo3"]},"rostrom_declined":{"about":"the captain refused {ysolde.short} the loan","carries_to":["cargo2"]},"scanned_at_customs":{"about":"the captain's customs scan is on file with a research colony's insurer"},"solarian_friend":{"about":"the captain donated to the Solarian reading-house","carries_to":["cargo2","cargo3"]},"stellar_portal":{"about":"the captain paid for the secret quest"},"tech_breakthrough":{"about":""},"technoshaman_blessing":{"about":"the captain paid for a blessing (and a firmware patch)"},"trade_empire":{"about":""},"virtual_friend":{"about":"the captain charged {virtual_heir} for the passenger, not the projector","carries_to":["cargo2"]},"worshipped":{"about":"the Tarnished Gear adopted the captain's ship as a minor relic","carries_to":["cargo2"]}},"places":{"Alpha":{"kind":"location","type":"Planet","system":"Alpha Centauri","ly":4.4},"Beta":{"kind":"location","type":"Planet","system":"Barnard's Star","ly":6.0},"Gamma":{"kind":"location","type":"Planet","system":"Ross 154","ly":9.7},"Delta":{"kind":"location","type":"Planet","system":"Teegarden's Star","ly":12.5},"Epsilon":{"kind":"location","type":"Planet","system":"Epsilon Eridani","ly":10.5},"Omega XIV":{"kind":"location","type":"AsteroidBase","system":"Tau Ceti","ly":11.9},"Sigma VII":{"kind":"location","type":"AsteroidBase","system":"Epsilon Indi","ly":11.9},"Theta III":{"kind":"location","type":"AsteroidBase","system":"Fomalhaut","ly":25},"DSO-Alpha":{"kind":"location","type":"DeepSpaceOutpost","system":"Luhman 16","ly":6.5},"DSO-Beta":{"kind":"location","type":"DeepSpaceOutpost","system":"WISE 0855-0714","ly":7.4},"DSO-Gamma":{"kind":"location","type":"DeepSpaceOutpost","system":"Scholz's Star","ly":20},"Nova Labs":{"kind":"location","type":"ResearchColony","system":"Wolf 359","ly":7.9},"Quantum Center":{"kind":"location","type":"ResearchColony","system":"YZ Ceti","ly":12},"Stellar Institute":{"kind":"location","type":"ResearchColony","system":"TRAPPIST-1","ly":40},"Ancient Ruins Alpha":{"kind":"location","type":"Ancient Ruins","system":"Tau Ceti, in the debris disk"},"Ancient Ruins Beta":{"kind":"location","type":"Ancient Ruins","system":"Epsilon Indi, a moon of the cold giant Ab"},"Alien Signal Research Outpost X":{"kind":"location","type":"Alien Signal Research Outpost","system":"Sol, far outer system"},"Alien Signal Research Outpost Y":{"kind":"location","type":"Alien Signal Research Outpost","system":"pointed at Lyra, past HD 178911"},"Zeta":{"kind":"location","type":"Planet","system":"Zeta Reticuli","ly":39},"Eta":{"kind":"location","type":"Planet","system":"Eta Corvi","ly":59},"Theta":{"kind":"location","type":"Planet","system":"Gliese 667 C","ly":23.6},"Omega-1":{"kind":"location","type":"AsteroidBase","system":"Vega","ly":25},"DSO-Delta":{"kind":"location","type":"DeepSpaceOutpost","system":"Gliese 229 B","ly":19},"Stator Field Megastructure":{"kind":"location","type":"Megastructure","system":"Sol, near Sedna's orbit","made":{"tech":15,"agri":1,"research":80,"economy":"Mysterious"}},"Builder Site":{"kind":"location","type":"Builder Site","system":"Scholz's Star's wake","made":{"tech":18,"agri":1,"research":90,"economy":"Mysterious"}}},"repaired":["ch2a","ch2b","ch3a","ch3b","ch3c","ending_combat","ending_discovery","ending_trade","meet.system_rebellion","merchant_visit.1","questline.combat.1","questline.combat.2","questline.combat.3","questline.mining.1","questline.mining.2","questline.mining.3","questline.research.1","questline.research.2","questline.research.3","researcher_exchange.1","rogue_captain.1","visit.merchant_trader","visit.neurodroid_leader","visit.vip_passenger"],"order":["ch1","ch1.first_trade","ch1.first_combat","ch1.basic_license","ch2a","ch2a.establish_route","ch2a.passenger_business","ch2b","ch2b.defeat_pirates","ch2b.defend_stations","ch3a","ch3a.market_control","ch3b","ch3b.fleet_commander","ch3c","ch3c.alien_artifacts","ending_trade","ending_trade.trade_ending","ending_combat","ending_combat.combat_ending","ending_discovery","ending_discovery.discovery_ending","tycoon_offer","ending_tycoon","stellar_portal","chance.Planet.merchant","chance.Planet.researcher","chance.Planet.rogue_captain","chance.ResearchColony.merchant","chance.ResearchColony.researcher","chance.ResearchColony.rogue_captain","chance.Space.merchant","chance.Space.researcher","chance.Space.rogue_captain","unlock.AsteroidBase","unlock.DeepSpaceOutpost","unlock.ResearchColony","beat.AsteroidBase.mineral_discovery","beat.AsteroidBase.pirate_hideout","beat.AsteroidBase.ancient_technology","beat.DeepSpaceOutpost.smuggler_network","beat.DeepSpaceOutpost.alien_contact","beat.DeepSpaceOutpost.trade_revolution","beat.ResearchColony.breakthrough_discovery","beat.ResearchColony.experiment_crisis","beat.ResearchColony.alien_artifacts","uprising.Neurodroid.local","uprising.Neurodroid.global","uprising.Agrobot.local","uprising.Agrobot.global","meet.neuroengineering_uprising","neurodroid_uprising.1","neurodroid_uprising.2","neurodroid_uprising.3","meet.agrobot_rebellion","agrobot_collective.1","agrobot_collective.2","agrobot_collective.3","meet.pirate_nemesis","meet.vip_passenger","meet.galactic_alliance","galactic_alliance.1","galactic_alliance.2","meet.system_rebellion","system_rebellion.1","system_rebellion.2","meet.ancient_mysteries","ancient_mysteries.1","rogue_captain.1","rogue_captain.2","merchant_visit.1","researcher_exchange.1","visit.merchant_trader","visit.vip_passenger","visit.neurodroid_leader","questline.mining.1","questline.mining.2","questline.mining.3","questline.combat.1","questline.combat.2","questline.combat.3","questline.research.1","questline.research.2","questline.research.3","hansa.charter","trail.samples","trail.home","intro.fresh","intro.again","intro.from_cargo2","intro.from_cargo3","self.outpost","self.outpost.advice","self.portal","clone.scan","clone.bill","clone.meet","seed.refusal","seed.terms","harvest.shaman","node.first","dock.krog","dock.krog.ride","found.delta","found.delta.fields","vendetta.bounty","vendetta.convoys","vendetta.terms","legion.offer","pass.deacon","pass.pilgrims","mine.aela","hatters.grey","zeta.cult","megastructure.stator","builder.beacon","ruins.alpha","ruins.beta","signal.lyra","rumour.lyra","builder.crossing","nano.buoy","nano.feedstock","nano.gallery","nano.pressure","enclave.yard","enclave.lot77","enclave.resignation","cult.manifest","neon.sarcophagus","neon.sarcophagus.wake","neon.virtual","neon.fluencer","crew.loader","crew.steward","crew.mechanic","crew.gunner","crew.navigator","crew.broker","rumour.neon_coffee","rumour.drums_at_night","rumour.grey_hat_fines","rumour.legion_merger","rumour.your_registry","rumour.miners_out","rumour.first_mark","rumour.mraz_free","rumour.towers_hum","rumour.sterilisation","rumour.lyra_again","rumour.pellet_collector","rumour.yesterday","rumour.famous_coffee","gossip.night_shift","gossip.coffee","gossip.crane","gossip.manifest","gossip.queue","gossip.soup","gossip.hull_paint","gossip.cards","gossip.pension","gossip.forklift","gossip.rations","gossip.dock_cat","gossip.weather","gossip.insurance","gossip.strike_rumour","gossip.long_haul","gossip.parts","gossip.tip","gossip.karaoke","gossip.delivery","gossip.pilot_exam","gossip.garden","gossip.canteen_robot","gossip.sleeper_berths","gossip.fines","gossip.old_ship","gossip.barter","gossip.broken_lift","gossip.new_kid","gossip.legion_ad","gossip.ore_dust","gossip.drill_bits","gossip.cave_in","gossip.shift_bell","gossip.outpost_mail","gossip.outpost_lights","gossip.outpost_shift","gossip.lonely","gossip.research_grant","gossip.lab_fridge","gossip.thesis","gossip.planet_market","gossip.planet_rain","gossip.planet_tourists","after.mraz_spared","after.mraz_handed","after.mraz_hired","after.first_node","after.cu113_contract","after.cu113_wiped","after.cu113_sold","after.relay_cut","after.clone_partner","after.clone_reported","after.clone_let_go","after.rockwarden_books","after.aela_member","after.rostrom_creditor","after.fourth_test_copy","after.nano_trusted","after.nano_sold_out","after.nano_sampled","after.lot77_bought","after.krog_aboard","after.geod_fields","after.neon_land","after.manifest_completed","after.solarian_friend","after.fluencer_exposed","after.heard_the_warning"],"nodes":{
 "ch1":{"kind":"chapter","arc":"main","act":1,"title":"Deadhead","text":["One ship, one loan, one empty hold. Haulers call that flying deadhead.","Five systems are close enough to reach before you retire: Alpha, Beta, Gamma, Delta, Epsilon. Buy where it is cheap, sell where it is not, and keep up the payments."],"requires":{},"next":["ch2a","ch2b"],"choose":true},
 "ch1.first_trade":{"kind":"milestone","arc":"main","title":"First Trade","text":"Complete your first trade","requires":{"trades_completed":1},"effects":{"money":500,"plot_points":5},"in":"ch1"},
 "ch1.first_combat":{"kind":"milestone","arc":"main","title":"Combat Initiation","text":"Win your first space battle","requires":{"combat_victories":1},"effects":{"money":1000,"plot_points":5},"in":"ch1"},
@@ -745,8 +745,8 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "ch3b.fleet_commander":{"kind":"milestone","arc":"main","title":"Fleet Commander","text":"Lead successful fleet operations","requires":{"combat_victories":35,"combat_rating":15},"effects":{"money":100000,"plot_points":25},"in":"ch3b"},
 "ch3c":{"kind":"chapter","arc":"main","act":3,"title":"Builders' Metal","text":["The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.","It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."],"requires":{"done_any":["ch2a","ch2b"],"plot_points":150,"research_points":300},"next":["ending_discovery"]},
 "ch3c.alien_artifacts":{"kind":"milestone","arc":"main","title":"Find the builders' metal","text":"Discover alien artifacts","requires":{"discovered.ResearchColony":2,"has":{"researched":["xenoeconomy","telemetry"]}},"effects":{"money":150000,"plot_points":30},"in":"ch3c"},
-"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":350,"trade_profit":600000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
-"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":600000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
+"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":350,"trade_profit":500000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":500000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
 "ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer"],"plot_points":350,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
 "ending_combat.combat_ending":{"kind":"milestone","arc":"main","title":"Military Victory","text":"Complete military dominance achieved","requires":{"combat_victories":75,"combat_rating":25},"effects":{"money":1000000,"plot_points":100},"in":"ending_combat"},
 "ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples"],"plot_points":350,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
@@ -862,6 +862,12 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "neon.sarcophagus.wake":{"kind":"event","arc":"neons","act":2,"title":"Eleven minutes awake","text":"At Delta the sarcophagus opens for eleven minutes. {neon_sleeper.short} buys every field next to {geod}'s Row, signs, tips you in a currency that has not existed for a century, and goes back to sleep. Her instructions to {heritarchist.short}: wake her in thirty years, when the land is worth something.","requires":{"flag":"neon_sleeper_carried","at":"Delta"},"effects":{"plot_points":3,"set":["neon_land"]},"who":["neon_sleeper","heritarchist"],"where":"Delta"},
 "neon.virtual":{"kind":"encounter","arc":"neons","act":2,"title":"Weightless","text":"{virtual_heir}, a young Neon who gave up on biology, books passage as a holographic body and a projector. The body weighs nothing. The projector weighs three hundred kilos and wants a power line of its own. {virtual_heir.short} would like to discuss the freight rate for something that weighs nothing.","requires":{"venue":"port","passenger_reputation":30},"choices":[{"id":"projector","say":"Charge for the projector","effects":{"money":4000}},{"id":"passenger","say":"Charge for the passenger, let the projector ride free","effects":{"money":1500,"passenger_reputation":5,"set":["virtual_friend"]}}],"who":["virtual_heir"],"chance":0.25},
 "neon.fluencer":{"kind":"encounter","arc":"neons","act":2,"title":"Live from your hold","text":"{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir and that your ship is giving authentic hauler. Her feed has nine million followers. Your coffee machine has never been filmed before and is not handling it well.","variants":[{"requires":{"flag":"neon_sleeper_carried"},"text":"{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir. You have carried the Kessary-Vel family, asleep, and {heritarchist.short} read you every name on the family line over dinner, twice. Hers was not one of them."}],"requires":{"at_type":"Planet","act_min":2},"choices":[{"id":"stream","say":"Let her stream","effects":{"passenger_reputation":5,"set":["fluencer_streamed"]}},{"id":"expose","say":"Tell her you have met the family","requires":{"flag":"neon_sleeper_carried"},"effects":{"plot_points":3,"set":["fluencer_exposed"]}},{"id":"off","say":"Put her off at the next dock"}],"who":["fluencer"],"chance":0.06},
+"crew.loader":{"kind":"encounter","arc":"crew","title":"A loader looking for work","text":"A small loader agrobot stands by the bar, holding its own job advert in two of its four arms. It is called {loader}. It has read your manifest. 'Your stowage wastes a tenth of the hold,' it says. 'I would not waste it.'","variants":[{"requires":{"done":"dock.krog"},"text":"A small loader agrobot stands by the bar, holding its own job advert. It is called {loader}, a KRO-series junior. '{krog} sent me,' it says. '{krog} said your hold was a disgrace and that I should fix it. I would like to fix it.'"}],"requires":{"venue":"cantina","at_type":["Planet","AsteroidBase"],"not":{"has":{"crew":["loader"]}},"crew_size":{"max":3},"trades_completed":3},"choices":[{"id":"hire","say":"Hire {loader} (4,000 credits; +10% hold)","requires":{"money":4000},"effects":{"money":-4000,"give":{"crew":["loader"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["loader"],"chance":0.3,"repeat":{"cooldown":8}},
+"crew.steward":{"kind":"encounter","arc":"crew","title":"A steward without a liner","text":"A steward robot in a jacket three sizes too formal is polishing glasses that belong to the bar. Its liner was scrapped last month. '{steward},' it says, and bows. 'I hear your passengers eat from the tin. I could change that. I would rather change that than polish these.'","requires":{"venue":"cantina","at_type":"Planet","not":{"has":{"crew":["steward"]}},"crew_size":{"max":3},"passengers_transported":3},"choices":[{"id":"hire","say":"Hire {steward} (5,000 credits; passengers pay more)","requires":{"money":5000},"effects":{"money":-5000,"give":{"crew":["steward"]},"passenger_reputation":3,"plot_points":2}},{"id":"later","say":"Not now"}],"who":["steward"],"chance":0.3,"repeat":{"cooldown":8}},
+"crew.mechanic":{"kind":"encounter","arc":"crew","title":"A fitter between contracts","text":"A woman with burn scars on both forearms is explaining to the bartender why his cooler is about to die. She is right; it dies while she talks. {mechanic} did eight years as a legion fitter. 'I fix what I swear at,' she says. 'Your ship sounds like it needs a lot of swearing.'","requires":{"venue":"cantina","at_type":["AsteroidBase","DeepSpaceOutpost","Planet"],"not":{"has":{"crew":["mechanic"]}},"crew_size":{"max":3},"turn_min":8},"choices":[{"id":"hire","say":"Hire {mechanic.short} (6,000 credits; repairs after fights, cheaper refits)","requires":{"money":6000},"effects":{"money":-6000,"give":{"crew":["mechanic"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["mechanic"],"chance":0.25,"repeat":{"cooldown":8}},
+"crew.gunner":{"kind":"encounter","arc":"crew","title":"A gunner who wants to shoot","text":"{gunner} spent six years on a militia cutter and fired the guns twice, both times at a drill target. He saw your hull on the way in. 'Somebody has been shooting at you,' he says, cheerfully. 'I would like to shoot back.'","requires":{"venue":"cantina","at_type":["DeepSpaceOutpost","AsteroidBase"],"not":{"has":{"crew":["gunner"]}},"crew_size":{"max":3},"combat_victories":1},"choices":[{"id":"hire","say":"Hire {gunner.short} (6,000 credits; +1 attack)","requires":{"money":6000},"effects":{"money":-6000,"give":{"crew":["gunner"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["gunner"],"chance":0.3,"repeat":{"cooldown":8}},
+"crew.navigator":{"kind":"encounter","arc":"crew","title":"A Solarian navigator","text":"{navigator} wears the Solarian sun on a chain and a star chart for a scarf. She reads the lanes in sunspots, which sounds like nonsense, and she gets you through storms, which does not. 'The sun keeps a timetable,' she says. 'Nobody else reads it.'","requires":{"venue":"cantina","not":{"has":{"crew":["navigator"]}},"crew_size":{"max":3},"discovered":4},"choices":[{"id":"hire","say":"Hire {navigator.short} (5,000 credits; better escapes, storm lanes)","requires":{"money":5000},"effects":{"money":-5000,"give":{"crew":["navigator"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["navigator"],"chance":0.25,"repeat":{"cooldown":8}},
+"crew.broker":{"kind":"encounter","arc":"crew","title":"An old broker","text":"{broker} has haggled at every market in five systems and been banned from two. He is not sure which two. He watched you sell this morning and winced twice. 'You pay the dock what the dock asks,' he says. 'Nobody pays the dock what the dock asks.'","requires":{"venue":"cantina","at_type":"Planet","not":{"has":{"crew":["broker"]}},"crew_size":{"max":3},"trades_completed":15},"choices":[{"id":"hire","say":"Hire {broker.short} (8,000 credits; 2% less trade tax)","requires":{"money":8000},"effects":{"money":-8000,"give":{"crew":["broker"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["broker"],"chance":0.25,"repeat":{"cooldown":8}},
 "rumour.neon_coffee":{"kind":"rumour","arc":"rumours","title":"Rumour: neon coffee","text":"A Neon woke up after thirty years asleep, asked for coffee at the old price and got it. Nobody wanted to be the one to explain.","repeat":true},
 "rumour.drums_at_night":{"kind":"rumour","arc":"rumours","title":"Rumour: drums at night","text":"The farm drums at Barnard's Star are harvesting at night again. The Sowers say the crop prefers it.","repeat":true},
 "rumour.grey_hat_fines":{"kind":"rumour","arc":"rumours","title":"Rumour: grey hat fines","text":"A Grey Hat at the bar offers to delete your parking fines. You do not have parking fines. He offers to add some.","repeat":true},
@@ -876,6 +882,50 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "rumour.pellet_collector":{"kind":"rumour","arc":"rumours","title":"Rumour: pellet collector","text":"The bartender asks whether you still have that heavy pellet. A collector was asking. From where, he did not say.","requires":{"flag":"kept_the_pellet"},"repeat":true},
 "rumour.yesterday":{"kind":"rumour","arc":"rumours","title":"Rumour: yesterday","text":"The bartender serves you the drink you ordered yesterday. You were not here yesterday.","requires":{"flag":"clone_partner"},"repeat":true},
 "rumour.famous_coffee":{"kind":"rumour","arc":"rumours","title":"Rumour: famous coffee","text":"Your ship was famous for four days on the fluencer feeds, mostly for the coffee machine.","requires":{"flag":"fluencer_streamed"},"repeat":true},
+"gossip.night_shift":{"kind":"rumour","arc":"gossip","title":"Gossip: night shift","text":"The night shift at the fuel depot got a pay rise. The day shift found out from the night shift's new boots.","repeat":true},
+"gossip.coffee":{"kind":"rumour","arc":"gossip","title":"Gossip: coffee","text":"Someone put real coffee in the dock canteen machine. Nobody knows who. The union wants it written into the contract.","repeat":true},
+"gossip.crane":{"kind":"rumour","arc":"gossip","title":"Gossip: crane","text":"Crane four has been 'out for maintenance' since spring. The maintenance crew says crane four knows what it did.","repeat":true},
+"gossip.manifest":{"kind":"rumour","arc":"gossip","title":"Gossip: manifest","text":"A hauler swears his manifest said forty crates of agri. He opened them at the dock. Forty crates of slightly different agri.","repeat":true},
+"gossip.queue":{"kind":"rumour","arc":"gossip","title":"Gossip: queue","text":"Customs queue at the inner lock is three hours today. The man in front of you has been in it since yesterday and seems happy.","repeat":true},
+"gossip.soup":{"kind":"rumour","arc":"gossip","title":"Gossip: soup","text":"The soup today is called 'Tuesday'. It is Thursday. Nobody orders it, and every bowl goes.","repeat":true},
+"gossip.hull_paint":{"kind":"rumour","arc":"gossip","title":"Gossip: hull paint","text":"Hull paint went up again. A captain at the bar says his ship is now mostly primer and good intentions.","repeat":true},
+"gossip.cards":{"kind":"rumour","arc":"gossip","title":"Gossip: cards","text":"Two loaders are playing cards with a deck that has three queens of hearts. Neither of them mentions it.","repeat":true},
+"gossip.pension":{"kind":"rumour","arc":"gossip","title":"Gossip: pension","text":"Old Marek retired after forty years of hauling. He bought a ship to live on. He says the commute is better.","repeat":true},
+"gossip.forklift":{"kind":"rumour","arc":"gossip","title":"Gossip: forklift","text":"A forklift drove itself into the harbour pool last night. Engineering says software. The forklift says nothing.","repeat":true},
+"gossip.rations":{"kind":"rumour","arc":"gossip","title":"Gossip: rations","text":"Ration bars have a new flavour. The packet says 'savoury'. The dockers have voted on 'brown'.","repeat":true},
+"gossip.dock_cat":{"kind":"rumour","arc":"gossip","title":"Gossip: dock cat","text":"The dock cat has been promoted to safety officer. It has done better inspections than the last one.","repeat":true},
+"gossip.weather":{"kind":"rumour","arc":"gossip","title":"Gossip: weather","text":"Station weather says rain at six. It always says rain at six. The sprinklers in the arcade agree.","repeat":true},
+"gossip.insurance":{"kind":"rumour","arc":"gossip","title":"Gossip: insurance","text":"Insurance rates for the outer lanes went up after a pilot claimed a comet as a personal enemy.","repeat":true},
+"gossip.strike_rumour":{"kind":"rumour","arc":"gossip","title":"Gossip: strike rumour","text":"Somebody says the loaders are going on strike. Somebody else says the loaders are robots. A third says that is the point.","repeat":true},
+"gossip.long_haul":{"kind":"rumour","arc":"gossip","title":"Gossip: long haul","text":"A long-haul crew came in after nine months out. Two of them are married now. To each other, they think.","repeat":true},
+"gossip.parts":{"kind":"rumour","arc":"gossip","title":"Gossip: parts","text":"The spare-parts man has a coupling that fits your ship. He also has one that fits every ship, and it costs more.","repeat":true},
+"gossip.tip":{"kind":"rumour","arc":"gossip","title":"Gossip: tip","text":"A pilot leaves a tip in Marks. The barman bites it, shrugs, and pockets it anyway.","repeat":true},
+"gossip.karaoke":{"kind":"rumour","arc":"gossip","title":"Gossip: karaoke","text":"Karaoke night was cancelled after the third rendition of the same mining song. The miners call it a protest.","repeat":true},
+"gossip.delivery":{"kind":"rumour","arc":"gossip","title":"Gossip: delivery","text":"A courier has been looking for 'the captain with the red hatch' all week. Half the ships at the dock have red hatches now.","repeat":true},
+"gossip.pilot_exam":{"kind":"rumour","arc":"gossip","title":"Gossip: pilot exam","text":"The pilot exam has a new question about what to do if your cargo starts talking. The answer is still 'file a form'.","repeat":true},
+"gossip.garden":{"kind":"rumour","arc":"gossip","title":"Gossip: garden","text":"Someone grows tomatoes in the airlock between shifts. Security has decided not to know about it.","repeat":true},
+"gossip.canteen_robot":{"kind":"rumour","arc":"gossip","title":"Gossip: canteen robot","text":"The canteen robot has started saying 'have a nice day' in a tone that suggests it means something else.","repeat":true},
+"gossip.sleeper_berths":{"kind":"rumour","arc":"gossip","title":"Gossip: sleeper berths","text":"Sleeper berths are full again. A miner rented a cupboard and now sublets half of it.","repeat":true},
+"gossip.fines":{"kind":"rumour","arc":"gossip","title":"Gossip: fines","text":"Docking fines went up by ten per cent. The sign announcing it cost more than the fines will bring in.","repeat":true},
+"gossip.old_ship":{"kind":"rumour","arc":"gossip","title":"Gossip: old ship","text":"An old hauler limps in with three engines out of four. The captain says the fourth is the reliable one.","repeat":true},
+"gossip.barter":{"kind":"rumour","arc":"gossip","title":"Gossip: barter","text":"Two crews trade a crate of salt for a crate of fuel and both go away sure they won.","repeat":true},
+"gossip.broken_lift":{"kind":"rumour","arc":"gossip","title":"Gossip: broken lift","text":"The lift to the upper deck is broken, so the upper deck has become very exclusive.","repeat":true},
+"gossip.new_kid":{"kind":"rumour","arc":"gossip","title":"Gossip: new kid","text":"A new pilot asks where the bathroom is and gets four sets of directions, all wrong, all with love.","repeat":true},
+"gossip.legion_ad":{"kind":"rumour","arc":"gossip","title":"Gossip: legion ad","text":"A legion recruiting poster promises adventure, travel and a pension. Someone has written 'pick two' underneath.","repeat":true},
+"gossip.ore_dust":{"kind":"rumour","arc":"gossip","title":"Gossip: ore dust","text":"Ore dust in everything again. The barman says the beer has extra minerals and charges for it.","requires":{"at_type":"AsteroidBase"},"repeat":true},
+"gossip.drill_bits":{"kind":"rumour","arc":"gossip","title":"Gossip: drill bits","text":"Drill bits are scarce this month. A mining crew is trying to sharpen the old ones with a song. It is not working.","requires":{"at_type":"AsteroidBase"},"repeat":true},
+"gossip.cave_in":{"kind":"rumour","arc":"gossip","title":"Gossip: cave in","text":"A gallery collapsed on level nine. Nobody hurt. The foreman says the rock got tired of waiting.","requires":{"at_type":"AsteroidBase"},"repeat":true},
+"gossip.shift_bell":{"kind":"rumour","arc":"gossip","title":"Gossip: shift bell","text":"The shift bell rang twice by mistake and half the mine went home. Management is trying to decide whose fault the bell is.","requires":{"at_type":"AsteroidBase"},"repeat":true},
+"gossip.outpost_mail":{"kind":"rumour","arc":"gossip","title":"Gossip: outpost mail","text":"The mail drone came in a week late, carrying birthday cards for last month and a tax notice for next year.","requires":{"at_type":"DeepSpaceOutpost"},"repeat":true},
+"gossip.outpost_lights":{"kind":"rumour","arc":"gossip","title":"Gossip: outpost lights","text":"Outpost power is rationed. The bar runs on candles shaped like the outpost commander.","requires":{"at_type":"DeepSpaceOutpost"},"repeat":true},
+"gossip.outpost_shift":{"kind":"rumour","arc":"gossip","title":"Gossip: outpost shift","text":"The radar watch says it saw something big go past at two in the morning. It did not stop, so it did not need a form.","requires":{"at_type":"DeepSpaceOutpost"},"repeat":true},
+"gossip.lonely":{"kind":"rumour","arc":"gossip","title":"Gossip: lonely","text":"A man at the end of the bar has been posted here for six years. He asks you what the weather is like on planets.","requires":{"at_type":"DeepSpaceOutpost"},"repeat":true},
+"gossip.research_grant":{"kind":"rumour","arc":"gossip","title":"Gossip: research grant","text":"A research team got their grant renewed. They are celebrating with a cake shaped like a confidence interval.","requires":{"at_type":"ResearchColony"},"repeat":true},
+"gossip.lab_fridge":{"kind":"rumour","arc":"gossip","title":"Gossip: lab fridge","text":"Someone ate a sample from the lab fridge. The researchers are less worried about the sample than about the someone.","requires":{"at_type":"ResearchColony"},"repeat":true},
+"gossip.thesis":{"kind":"rumour","arc":"gossip","title":"Gossip: thesis","text":"A doctoral student has been rewriting chapter three since the colony was founded.","requires":{"at_type":"ResearchColony"},"repeat":true},
+"gossip.planet_market":{"kind":"rumour","arc":"gossip","title":"Gossip: planet market","text":"Market day: a fruit seller shouts prices at the haulers, and the haulers shout back lower ones.","requires":{"at_type":"Planet"},"repeat":true},
+"gossip.planet_rain":{"kind":"rumour","arc":"gossip","title":"Gossip: planet rain","text":"It rained real rain on the landing field. Half the dockers went out to stand in it.","requires":{"at_type":"Planet"},"repeat":true},
+"gossip.planet_tourists":{"kind":"rumour","arc":"gossip","title":"Gossip: planet tourists","text":"Tourists from the inner systems are taking pictures of the dock workers. The dock workers are charging.","requires":{"at_type":"Planet"},"repeat":true},
 "after.mraz_spared":{"kind":"epilogue","arc":"epilogue","title":"After: mraz spared","text":"{pirate_captain} was last seen recruiting at Luhman 16 under a new flag: a halo with a bite out of it. Every year a bottle arrives for you, unsigned, with the label of whichever cargo it was stolen from.","requires":{"flag":"mraz_spared"}},
 "after.mraz_handed":{"kind":"epilogue","arc":"epilogue","title":"After: mraz handed","text":"{pirate_captain} served nine years in an OmniCorp brig, came out with a law degree and sued the legion for the cell.","requires":{"flag":"mraz_handed"}},
 "after.mraz_hired":{"kind":"epilogue","arc":"epilogue","title":"After: mraz hired","text":"{pirate_captain.short} flew your escort for three years and then, one morning, did not. The note said: 'Ten ships. I counted.'","requires":{"flag":"mraz_hired"}},
@@ -1255,6 +1305,9 @@ class StoryRuntime:
                             game.research.unlocked_options.add(member)
                         elif name == "unlocked_types":
                             game.unlock_location_type(member)
+                        elif name == "crew":
+                            if member not in ship.crew:
+                                ship.crew.append(member)
             elif key == "start":
                 for target in _as_list(value):
                     self.due[target] = game.turn
@@ -1309,7 +1362,9 @@ class StoryRuntime:
             node = data["nodes"][nid]
             if node.get("kind") == "rumour" and self.check(node.get("requires"), snap):
                 (heard if nid in self.done else fresh).append(nid)
-        pool = [n for n in fresh if data["nodes"][n].get("requires")] or fresh or heard
+        story = [n for n in fresh if data["nodes"][n].get("arc") != "gossip"]
+        pool = [n for n in story if data["nodes"][n].get("requires")] or \
+            ([n for n in fresh if n not in story] if random.random() < 0.6 else story) or fresh or heard
         if pool:
             nid = random.choice(pool)
             self.done[nid] = self.game.turn
@@ -1676,15 +1731,13 @@ class Ship:
         """Record a combat victory with proper type tracking"""
         self.combat_victories['total'] += 1
         if enemy_type:
-            if enemy_type in self.combat_victories:
-                self.combat_victories[enemy_type] += 1
+            self.combat_victories[enemy_type] = self.combat_victories.get(enemy_type, 0) + 1
 
     def record_combat_defeat(self, enemy_type=None):
         """Record a combat defeat with proper type tracking"""
         self.combat_defeats['total'] += 1
         if enemy_type:
-            if enemy_type in self.combat_defeats:
-                self.combat_defeats[enemy_type] += 1
+            self.combat_defeats[enemy_type] = self.combat_defeats.get(enemy_type, 0) + 1
 
     # The hold: room for HOLD_BASE units of goods, more with equipment from the shop.
     # Salt and fuel can also use the special containers.
@@ -1696,26 +1749,30 @@ class Ship:
     def hold_sizes(self):
         """(general, special): units for any goods, and extra units for salt and fuel."""
         base = self.HOLD_BASE
-        general = base * (1 + sum(b for item, b in self.HOLD_BONUS.items() if self.items.get(item)))
+        general = base * (1 + sum(b for item, b in self.HOLD_BONUS.items() if self.items.get(item))
+                          + (0.1 if "loader" in self.crew else 0))
         special = base * sum(b for item, b in self.SPECIAL_HOLD_BONUS.items() if self.items.get(item))
         return int(general), int(special)
 
-    # Fighting equipment: (attack bonus, defense bonus, chance to avoid a fight)
-    FIGHT_GEAR = {"combat_drone": (1, 0, 0), "shield_booster": (0, 1, 0), "mining_laser": (0, 1, 0),
-                  "advanced_radar": (0, 0, 0.2), "emergency_warp": (0, 0, 0.5)}
+    # Fighting equipment: (attack bonus, defense bonus)
+    FIGHT_GEAR = {"combat_drone": (1, 0), "shield_booster": (0, 1), "mining_laser": (0, 1)}
+
+    # The crew: helpers hired in cantinas (names in the story file, story/cargo1/crew.json)
+    crew = property(lambda self: self.__dict__.setdefault("crew", []))
+    CREW_BUNKS = 4
 
     def fight_attack(self):
-        return self.attack + sum(g[0] for item, g in self.FIGHT_GEAR.items() if self.items.get(item))
+        return self.attack + sum(g[0] for item, g in self.FIGHT_GEAR.items() if self.items.get(item)) \
+            + (1 if "gunner" in self.crew else 0)
 
     def fight_defense(self):
         return max(1, self.defense + sum(g[1] for item, g in self.FIGHT_GEAR.items() if self.items.get(item)))
 
-    def evasion(self):
-        return max([g[2] for item, g in self.FIGHT_GEAR.items() if self.items.get(item)] or [0])
-
     def trade_tax(self, rate):
-        """The tax rate after the ship's loading gear (never below 1%)."""
+        """The tax rate after the ship's loading gear and broker (never below 1%)."""
         if self.items.get("auto_loader"):
+            rate -= 0.02
+        if "broker" in self.crew:
             rate -= 0.02
         return max(0.01, rate)
 
@@ -1865,7 +1922,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('hunt', 'hu'), ('end', 'e')
             ],
             "description": "Standard planetary commerce hub"
         },
@@ -1874,7 +1931,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('end', 'e')
+                ('action', 'a'), ('mine', 'm'), ('port', 'p'), ('hunt', 'hu'), ('end', 'e')
             ],
             "description": "Mining and resource extraction facility"
         },
@@ -1883,7 +1940,7 @@ class LocationCommands:
                 ('buy', 'b'), ('sell', 's'), ('upgrade', 'u'),
                 ('travel', 't'), ('repair', 'r'), ('info', 'i'),
                 ('build', 'bl'), ('cantina', 'c'), ('shop', 'sh'),
-                ('action', 'a'), ('port', 'p'), ('end', 'e')
+                ('action', 'a'), ('port', 'p'), ('hunt', 'hu'), ('end', 'e')
             ],
             "description": "Strategic trading outpost"
         },
@@ -1940,6 +1997,216 @@ def commodity_from(answer):
         if answer == name or answer in shortcuts:
             return name
     return None
+
+
+# --- encounters: who stops a ship between docks, and what the captain can do about it ---
+# power: how hard they hit and how hard they are to beat (1-7); speed: how hard they are
+# to outrun; kind: what a victory counts as; deal: "pay" (they take money to leave),
+# "talk" (reputation can talk them down), "toll" (customs: pay a fee or show a clean scan).
+# tricks: equipment and crew that work especially well against them.
+ENEMIES = {
+    "skiff": {"name": "Scrap skiff", "kind": "pirate", "power": 1, "speed": 2, "deal": "pay",
+              "text": "A scavenger skiff with a harpoon gun and big ideas. Its pilot is about fifteen."},
+    "raider": {"name": "Pirate raider", "kind": "pirate", "power": 2, "speed": 3, "deal": "pay",
+               "text": "A cut-down hauler with guns welded where the cargo doors used to be."},
+    "drones": {"name": "Feral mining drones", "kind": "machine", "power": 2, "speed": 4, "deal": None,
+               "tricks": ["turrets", "mining_laser"],
+               "text": "A swarm of cutting drones that lost their mine and kept the habit. Your hull looks like ore to them."},
+    "corsair": {"name": "Corsair wing", "kind": "pirate", "power": 3, "speed": 5, "deal": "pay",
+                "tricks": ["advanced_radar"],
+                "text": "Three light fighters in a tight wedge. Too fast to outrun, too proud to miss."},
+    "harvester": {"name": "Runaway harvester", "kind": "machine", "power": 3, "speed": 1, "deal": None,
+                  "tricks": ["mining_laser", "quantum_scanner"],
+                  "text": "A forty-metre agrobot harvester, off its leash and sure that your hold is a field."},
+    "customs": {"name": "Customs cutter", "kind": "militia", "power": 3, "speed": 4, "deal": "toll",
+                "text": "A customs cutter flashes its lights: stop for inspection. Inspection has a fee."},
+    "cultists": {"name": "Cult boarding party", "kind": "raider", "power": 3, "speed": 2, "deal": "talk",
+                 "text": "The Cult of the Broken Machine wants to inspect your ship for holiness. They brought cutting torches."},
+    "militia": {"name": "Toll militia", "kind": "militia", "power": 4, "speed": 4, "deal": "pay",
+                "text": "A local militia has declared this lane a toll road. The toll is whatever they think you carry."},
+    "deserters": {"name": "Legion deserters", "kind": "raider", "power": 4, "speed": 3, "deal": "talk",
+                  "tricks": ["advanced_radar"],
+                  "text": "A legion gunboat with the corporate logo burned off. The crew left the legion; the training stayed."},
+    "mothership": {"name": "Pirate mothership", "kind": "pirate", "power": 5, "speed": 2, "deal": "pay",
+                   "tricks": ["quantum_scanner", "combat_drone"],
+                   "text": "A converted ore carrier with a pirate flotilla in its belly. It is in no hurry. Neither are you, now."},
+    "warship": {"name": "Rogue warship", "kind": "raider", "power": 6, "speed": 3, "deal": "talk",
+                "tricks": ["quantum_scanner", "advanced_radar"],
+                "text": "A frigate nobody admits to having lost. Its captain sends a polite request to surrender."},
+    "dreadnought": {"name": "Pirate dreadnought", "kind": "pirate", "power": 7, "speed": 2, "deal": "pay",
+                    "tricks": ["quantum_scanner", "combat_drone"],
+                    "text": "Three motherships welded together and called a fleet. Every pirate on the frontier pays it a share."},
+}
+
+# Gear and crew that change a fight: a line for the menu, and what it does
+FIGHT_TRICKS = {
+    "advanced_radar": ("Radar: jam their targeting", {"edge": 2}),
+    "combat_drone": ("Drone: send it in first", {"edge": 2, "shield": 0.5}),
+    "mining_laser": ("Mining laser: cut them up", {"edge": 3}),
+    "quantum_scanner": ("Quantum scanner: find the weak spot", {"edge": 2}),
+    "turrets": ("Turrets: fire first", {"edge": 2}),
+}
+
+
+def odds_word(chance):
+    return ("long odds" if chance < 0.35 else "even odds" if chance < 0.6
+            else "good odds" if chance < 0.85 else "easy")
+
+
+# --- situations: moments between docks where the right gear, crew or nerve pays off ---
+# Each option: say (the menu line), needs (items / crew / cargo the option requires;
+# "any" means one of them), and an outcome: a dict of effects with a line of text, or
+# {"chance": p, "win": {...}, "lose": {...}}.  Effects: money, damage, rp (research),
+# pp (plot points), rep (passenger reputation), cargo (good: amount, or "any": amount),
+# fight (an enemy id), tier (scale money by the danger level).  "{x}" names crew.
+SITUATIONS = {
+    "distress": {
+        "title": "Distress beacon",
+        "text": "A distress beacon, two light-minutes off your course. A life pod or bait: the signal looks the same.",
+        "options": [
+            {"say": "Scan it before you go in", "needs": {"any": ["advanced_radar", "scanner", "cargo_scanner"]},
+             "do": {"chance": 0.6, "win": {"say": "Real survivors: four miners in a pod built for two. The shipping line pays a finder's fee.",
+                                           "money": 600, "tier": True, "rep": 4, "pp": 4},
+                    "lose": {"say": "The scan shows weapons warm behind the beacon. You log it for the militia and fly on.",
+                             "rp": 10, "pp": 1}}},
+            {"say": "Answer the call",
+             "do": {"chance": 0.6, "win": {"say": "Real survivors: four miners in a pod built for two. The shipping line pays a finder's fee.",
+                                           "money": 600, "tier": True, "rep": 4, "pp": 4},
+                    "lose": {"say": "It was bait.", "fight": "raider"}}},
+            {"say": "Fly on", "do": {"say": "The beacon fades behind you. Somebody else's problem, or somebody else's trap."}},
+        ]},
+    "derelict": {
+        "title": "Derelict hauler",
+        "text": "A hauler drifts with its lights off and its bay doors welded shut. No answer on any channel.",
+        "options": [
+            {"say": "Cut the bay open with the mining laser", "needs": {"items": ["mining_laser"]},
+             "do": {"say": "The doors fall away in one piece. Most of the cargo is still there.",
+                    "cargo": {"any": 60}, "rp": 5, "pp": 2}},
+            {"say": "Read its log (quantum scanner)", "needs": {"items": ["quantum_scanner"]},
+             "do": {"say": "The log covers forty years of routes, including three nobody uses now. The research colonies will want this.",
+                    "rp": 35, "pp": 3}},
+            {"say": "Board it",
+             "do": {"chance": 0.55, "win": {"say": "You squeeze through a maintenance hatch and pass crates out by hand.",
+                                            "cargo": {"any": 25}, "pp": 1},
+                    "lose": {"say": "The airlock was rigged. Whoever welded those doors meant it.", "damage": 10}}},
+            {"say": "Report it to the registry", "do": {"say": "The registry thanks you and pays a small salvage notice fee.",
+                                                         "money": 200, "rep": 2}},
+        ]},
+    "ion_storm": {
+        "title": "Ion storm",
+        "text": "An ion storm sits across the lane like a bad mood. The navigation computer suggests prayer.",
+        "options": [
+            {"say": "Raise shields and ride it out", "needs": {"any": ["shield", "shield_booster"]},
+             "do": {"say": "The shields glow and complain, and hold.", "damage": 3, "rp": 8}},
+            {"say": "Let {navigator.short} find a gap", "needs": {"crew": ["navigator"]},
+             "do": {"say": "{navigator.short} reads the storm like weather on a farm drum and finds a lane through it.", "rp": 12, "pp": 1}},
+            {"say": "Emergency jump clear", "needs": {"items": ["emergency_warp"]},
+             "do": {"say": "One lurch, one headache, and the storm is behind you.", "damage": 2}},
+            {"say": "Ride it out", "do": {"say": "Every panel on the bridge lights up at once.", "damage": 18, "rp": 8}},
+            {"say": "Go around (extra fuel)", "do": {"say": "The long way round costs fuel and a day.", "money": -150, "tier": True}},
+        ]},
+    "debris": {
+        "title": "Debris field",
+        "text": "Debris from an old collision, spread thin and moving fast. Some of it is worth money.",
+        "options": [
+            {"say": "Shoot a path with the turrets", "needs": {"items": ["turrets"]},
+             "do": {"say": "The turrets turn the worst of it to gravel. You scoop the rest.", "cargo": {"salt": 30}, "pp": 1}},
+            {"say": "Cut and scoop with the mining laser", "needs": {"items": ["mining_laser"]},
+             "do": {"say": "You cut the big pieces down and scoop the ore.", "cargo": {"salt": 40, "fuel": 15}, "pp": 1}},
+            {"say": "Send the probe ahead", "needs": {"items": ["probe"]},
+             "do": {"say": "The probe maps a clear line through. It also maps where the debris came from.", "rp": 15}},
+            {"say": "Thread it slowly",
+             "do": {"chance": 0.5, "win": {"say": "Slow and careful works. Only paint lost.", "damage": 2},
+                    "lose": {"say": "Something the size of a fridge finds you.", "damage": 12}}},
+        ]},
+    "cargo_pod": {
+        "title": "Loose cargo pod",
+        "text": "A cargo pod tumbles past, beacon dead, owner unknown. Salvage law says finders keepers, mostly.",
+        "options": [
+            {"say": "Let {loader} grab it", "needs": {"crew": ["loader"]},
+             "do": {"say": "{loader} catches the pod one-handed and stacks it before you finish the sentence.",
+                    "cargo": {"any": 50}, "pp": 1}},
+            {"say": "Grab it", "do": {"say": "It takes an hour and a lot of swearing to get it in the hold.", "cargo": {"any": 25}}},
+            {"say": "Log it and leave it", "do": {"say": "You log the pod for its owner. Someone, somewhere, owes you a drink.", "rep": 1}},
+        ]},
+    "fluencer": {
+        "title": "Yacht alongside",
+        "text": "A yacht wrapped in screens pulls alongside. Somebody's heir, or somebody saying so, wants to stream your ship for her followers.",
+        "options": [
+            {"say": "Let {steward} handle her", "needs": {"crew": ["steward"]},
+             "do": {"say": "{steward} serves tea on camera and corrects her grammar. The stream loves him. So do the sponsors.",
+                    "money": 800, "rep": 5, "pp": 2}},
+            {"say": "Pose for the stream",
+             "do": {"chance": 0.65, "win": {"say": "Nine minutes of your best side. A paint company sends a sponsorship.",
+                                            "money": 500, "rep": 3, "pp": 1},
+                    "lose": {"say": "She also streams your cargo manifest. Three pirates subscribe.", "rep": -2}}},
+            {"say": "Close the shutters", "do": {"say": "The yacht films your shutters for a while and leaves."}},
+        ]},
+    "stowaway": {
+        "title": "Stowaway",
+        "text": "Your hold has one more person in it than the manifest. She says she is a welder. She is holding a welder.",
+        "options": [
+            {"say": "{steward} finds her a bunk", "needs": {"crew": ["steward"]},
+             "do": {"say": "{steward} finds her a bunk and a job list. She fixes three things before the next dock.",
+                    "damage": -8, "rep": 2, "pp": 2}},
+            {"say": "Let her work her fare",
+             "do": {"say": "She welds what needs welding and leaves at the next dock with a reference.", "damage": -5, "rep": 1}},
+            {"say": "Hand her to customs", "do": {"say": "Customs pays a small fee. The dock talks about it for a week.",
+                                                 "money": 300, "rep": -3}},
+        ]},
+    "comet": {
+        "title": "Comet tail",
+        "text": "A comet's tail crosses the lane: ice, dust and free volatiles for anyone with the gear.",
+        "options": [
+            {"say": "Skim it with the compressor", "needs": {"items": ["mining_compressor"]},
+             "do": {"say": "The compressor drinks the tail. The fuel tanks fill without a single invoice.", "cargo": {"fuel": 60}, "pp": 1}},
+            {"say": "Skim it anyway",
+             "do": {"chance": 0.6, "win": {"say": "A good haul of ice, and only a few new dents.", "cargo": {"fuel": 20}, "damage": 3},
+                    "lose": {"say": "A rock hidden in the ice hits the scoop.", "cargo": {"fuel": 8}, "damage": 10}}},
+            {"say": "Keep clear", "do": {"say": "You watch it go. It is very pretty, and very free."}},
+        ]},
+    "buoy": {
+        "title": "Old buoy",
+        "text": "An old navigation buoy keeps broadcasting a route that closed forty years ago, in a voice from a dead shipping line.",
+        "options": [
+            {"say": "Decode its archive", "needs": {"any": ["quantum_scanner", "data_analyzer", "research_module"]},
+             "do": {"say": "The archive holds survey data nobody bothered to copy. The colonies will pay in attention.",
+                    "rp": 30, "pp": 3}},
+            {"say": "Note the coordinates", "do": {"say": "You note them down. One day they may mean something.", "rp": 6}},
+        ]},
+    "flare": {
+        "title": "Flare warning",
+        "text": "Your star tracker warns of a flare in nine minutes.",
+        "options": [
+            {"say": "Raise shields", "needs": {"any": ["shield", "shield_booster"]},
+             "do": {"say": "The shields take the flare. The instruments take notes.", "rp": 8}},
+            {"say": "Shelter behind a moon", "do": {"say": "You lose half a day behind a moon, and gain a nice view.", "money": -100, "tier": True}},
+            {"say": "Push on", "do": {"chance": 0.5, "win": {"say": "The flare misses. Mostly.", "damage": 3},
+                                      "lose": {"say": "The flare does not miss.", "damage": 15}}},
+        ]},
+    "tow": {
+        "title": "Barge in trouble",
+        "text": "A broken-down ore barge asks for a tow to the nearest dock. Its crew offers money and soup.",
+        "options": [
+            {"say": "Let {loader} rig the tow", "needs": {"crew": ["loader"]},
+             "do": {"say": "{loader} rigs the tow in ten minutes. The barge crew asks if it is for sale. It is not.",
+                    "money": 700, "tier": True, "rep": 3, "pp": 2}},
+            {"say": "Tow it", "do": {"say": "A slow trip, good soup, and a fair fee at the dock.", "money": 400, "tier": True, "rep": 2, "pp": 1}},
+            {"say": "Pass by", "do": {"say": "The barge crew says nothing on the channel, which says plenty."}},
+        ]},
+    "breakdown": {
+        "title": "Reactor hiccup",
+        "text": "The reactor coughs, the lights dim, and something in the engine room makes a noise you have not heard before.",
+        "options": [
+            {"say": "Let {mechanic.short} have a look", "needs": {"crew": ["mechanic"]},
+             "do": {"say": "{mechanic.short} finds a cracked coupling, swears at it, and fixes two other things while she is there.",
+                    "damage": -10, "pp": 1}},
+            {"say": "Run the repair bot", "needs": {"items": ["repair_bot"]},
+             "do": {"say": "The repair bot crawls into the engine and comes out pleased with itself.", "damage": -5}},
+            {"say": "Hit it until it stops", "do": {"chance": 0.5, "win": {"say": "It stops. You decide not to ask why."},
+                                                    "lose": {"say": "It stops, and so does the port thruster.", "damage": 8}}},
+        ]},
+}
 
 
 # Define the Game class
@@ -2040,6 +2307,7 @@ class Game:
             "turns_since_vip": self.turn - self.reputation_manager.last_vip_spawn,
             "best_cabin": max([m.comfort_level for m in getattr(ship, "passenger_modules", [])
                                if hasattr(m, "comfort_level")] or [0]),
+            "crew_size": len(ship.crew),
         }
         for kind in STORY_VICTORY_TYPES[1:]:
             stats["combat_victories." + kind] = ship.combat_victories.get(kind, 0)
@@ -2066,6 +2334,7 @@ class Game:
                 "researched": sorted(self.research.unlocked_options),
                 "items": sorted(k for k, v in ship.items.items() if isinstance(v, int) and v > 0),
                 "unlocked_types": sorted(getattr(self, "unlocked_location_types", set())),
+                "crew": sorted(ship.crew),
             },
             "flags": sorted(f for f, on in sm.story_states.items() if on),
             "done": sorted(done),
@@ -2482,7 +2751,8 @@ class Game:
                 try:
                     user_input = input(">>> ").strip().lower()
                     if not user_input:
-                        self.display_simple_message("Command cancelled.")
+                        if "Enter" not in (prompt or default_prompt):
+                            self.display_simple_message("Command cancelled.")
                         return None
                     if user_input in valid_options:
                         return user_input
@@ -2540,9 +2810,11 @@ class Game:
         # Add story progress if available
         if hasattr(self, 'story_manager'):
             current_chapter = self.story_manager.chapters[self.story_manager.current_chapter]
+            target = self.story_manager.plot_target()
+            points = self.story_manager.plot_points
             status_content.append([
                 f"Chapter {self.story_manager.get_chapter_number_roman()}",
-                f"Plot Points: {self.story_manager.plot_points}",
+                f"Plot Points: {points}/{target}" if target and points < target else f"Plot Points: {points}",
                 current_chapter.title
             ])
 
@@ -2804,6 +3076,7 @@ class Game:
         'mine': "mining platforms and deposits",
         'build': "buildings: stock market, farms, guilds, refineries",
         'info': "this location in detail",
+        'hunt': "the bounty board: pick a wanted ship and go after it (takes the turn)",
         'end': "end the turn and wait here",
         'log': "story progress: what the next chapter needs",
         'journal': "people met, choices remembered, places",
@@ -2832,6 +3105,11 @@ class Game:
                  "(your hold takes %d units; the shop sells more room), carry passengers, take contracts "
                  "and quests from the cantina, and follow the story (log/l) to one of three endings: "
                  "trade, combat or discovery." % sum(self.ship.hold_sizes())],
+                [""],
+                ["Between docks you meet pirates, customs, drones and odd moments: pick how to handle each. "
+                 "Gear and crew open better options (a mining laser cuts drones, a scanner spots bait). "
+                 "The bounty board (hunt/hu) pays for wanted ships. Cantinas have rumours, people, and "
+                 "crew for hire (four bunks). Plot points move the story: earn them by doing things."],
                 [""],
                 ["Type a command or its shortcut and press Enter. In any menu, Enter on its own goes back. "
                  "Amounts: a number, max/m or half/h. Each 'end' or journey is one turn; the game saves "
@@ -2956,7 +3234,7 @@ class Game:
                     self.handle_research_options()
                 else:
                     if self.ship.damage > 0:
-                        cost = self.ship.damage * 10
+                        cost = self.ship.damage * (7 if "mechanic" in self.ship.crew else 10)
                         if self.ship.repair(cost):
                             self.display_simple_message("Ship repaired.")
                         else:
@@ -3035,9 +3313,18 @@ class Game:
                 if quantity == 'half':
                     quantity = (self.ship.cargo[item]) // 2
 
+                profit_before = sum(self.ship.trade_profits.values())
                 if self.ship.sell(item, quantity, self.current_location.market[item],
                                 self.current_location, self.rank):
-                    self.display_simple_message(f"Sold {self.format_money(quantity)} {item}.")
+                    profit = sum(self.ship.trade_profits.values()) - profit_before
+                    note = ""
+                    # a good deal is worth telling at the bar: a plot point, once a turn
+                    if profit >= 5000 and getattr(self, "good_deal_turn", None) != self.turn:
+                        self.good_deal_turn = self.turn
+                        self.story_manager.plot_points += 1
+                        note = " A good deal: +1 plot point."
+                    self.display_simple_message(f"Sold {self.format_money(quantity)} {item}, "
+                                                f"profit {self.format_money(int(profit))}.{note}")
                     self.handle_trade('sell')
 
             elif action in ['upgrade', 'u']:
@@ -3147,6 +3434,16 @@ class Game:
                 if self.validate_input("Are you sure you want to resign? (yes/no): ", ['yes', 'no']) == 'yes':
                     self.display_score()
                     exit()
+                return
+
+            elif action in ['hunt', 'hu']:
+                if self.handle_hunt():
+                    # the hunt took the day: the turn ends without another event
+                    if port_is_available:
+                        self.port_system.update_passenger_satisfaction()
+                    self.turn += 1
+                    self.shop.reset_turn()
+                    self.autosave()
                 return
 
             elif action in ['end', 'e']:
@@ -3338,9 +3635,14 @@ class Game:
             # Initialize and update discovered locations
             if not hasattr(self, 'discovered_locations'):
                 self.discovered_locations = set([old_location.name])
+            first_visit = found_location.name not in self.discovered_locations
             self.discovered_locations.add(found_location.name)
 
-            self.display_simple_message(f"Traveled to {found_location.name}.")
+            if first_visit:
+                self.story_manager.plot_points += 3
+                self.display_simple_message(f"Traveled to {found_location.name}. First visit: +3 plot points.")
+            else:
+                self.display_simple_message(f"Traveled to {found_location.name}.")
 
             # Calculate research exchange based on location differences
             research_difference = found_location.research_points - old_location.research_points
@@ -3480,6 +3782,9 @@ class Game:
                 if self.ship.research_points >= self.research.research_costs[option]:
                     self.ship.research_points -= self.research.research_costs[option]
                     success, message = self.action.research(self.current_location, option, self.research)
+                    if success:
+                        self.story_manager.plot_points += 4
+                        message += " +4 plot points."
                     self.display_simple_message(message)
                 else:
                     self.display_simple_message(f"Not enough research points! Need: {self.research.research_costs[option]}")
@@ -3581,16 +3886,9 @@ class Game:
 
     def integrate_event_outcome(self, event_type, outcome, details):
         """Central hub for processing event outcomes and their effects on other systems"""
-        # Update story progression
-        story_triggers = {
-            "combat_victory": ["pirate_defeat", "defend_station"],
-            "exploration_discovery": ["new_artifact", "alien_ruins"],
-            "disaster_survived": ["emergency_repair", "crisis_management"]
-        }
-        event_key = f"{event_type}_{outcome}"
-        if event_key in story_triggers:
-            for trigger in story_triggers[event_key]:
-                self.story_manager.process_event(trigger, details)
+        # Plot points are no longer handed out here for things that merely happened to the
+        # ship: the fight, the situation or the discovery itself pays them when the captain
+        # did something (see Game.fight, Game.apply_outcome, handle_exploration_event).
 
         # Update quest progress using specific details
         if 'cargo_lost' in details:
@@ -3703,16 +4001,10 @@ class Game:
                 elif "trade" in event:
                     self.handle_passenger_trade_info()
 
-        # Define all possible events with their categories
+        # Define all possible events with their categories (fights and situations: see ENEMIES, SITUATIONS)
         events = {
-            "combat": [
-                "Pirate attack!",
-                "Rogue Corsair!",
-                "Militia Patrol!",
-                "Pirate mothership!",
-                "Rogue Warship!",
-                "Guerrilla Militia!"
-            ],
+            "combat": [self.pick_enemy()],
+            "situation": sorted(SITUATIONS),
             "trade": [
                 "Market crash!",
                 "Trade embargo!",
@@ -3741,10 +4033,10 @@ class Game:
 
         # Calculate probabilities based on location type
         location_modifiers = {
-            "Planet": {"combat": 1.0, "trade": 1.0, "exploration": 1.0, "disaster": 1.0},
-            "AsteroidBase": {"combat": 1.2, "trade": 0.8, "exploration": 1.1, "disaster": 1.3},
-            "DeepSpaceOutpost": {"combat": 1.3, "trade": 0.7, "exploration": 1.2, "disaster": 1.1},
-            "ResearchColony": {"combat": 0.7, "trade": 0.9, "exploration": 1.4, "disaster": 0.9}
+            "Planet": {"combat": 1.0, "situation": 1.2, "trade": 1.0, "exploration": 1.0, "disaster": 0.5},
+            "AsteroidBase": {"combat": 1.2, "situation": 1.2, "trade": 0.8, "exploration": 1.1, "disaster": 0.7},
+            "DeepSpaceOutpost": {"combat": 1.3, "situation": 1.3, "trade": 0.7, "exploration": 1.2, "disaster": 0.6},
+            "ResearchColony": {"combat": 0.7, "situation": 1.1, "trade": 0.9, "exploration": 1.4, "disaster": 0.5}
         }
 
         # Get location-specific modifiers
@@ -3760,14 +4052,17 @@ class Game:
         # Record event
         event_result = {
             "type": category,
-            "name": event,
+            "name": ENEMIES[event]["name"] if category == "combat" else event,
             "location": self.current_location.name,
             "turn": self.turn
         }
+        before = self.event_before()
 
         # Handle event based on category
         if category == "combat":
             self.handle_combat_event(event)
+        elif category == "situation":
+            self.situation(event)
         elif category == "trade":
             self.handle_trade_event(event)
         elif category == "exploration":
@@ -3776,7 +4071,7 @@ class Game:
             self.handle_disaster_event(event)
 
         # Process event outcome
-        outcome_details = self.process_event_outcome(event_result)
+        outcome_details = self.process_event_outcome(event_result, before)
 
         # Integrate with other systems
         self.integrate_event_outcome(
@@ -3915,9 +4210,10 @@ class Game:
                 self.ship.research_points += bonus_points
                 self.display_simple_message(f"Colony researchers analyzed the phenomenon: +{bonus_points} RP")
 
-    def process_event_outcome(self, event_result):
-        """Process and categorize event outcomes with detailed information"""
-        details = {
+    def event_before(self):
+        """The ship before an event, so its outcome can be judged afterwards."""
+        self.last_fight = None
+        return {
             "location": self.current_location.name,
             "location_type": self.current_location.location_type,
             "initial_damage": self.ship.damage,
@@ -3926,12 +4222,20 @@ class Game:
             "timestamp": self.turn
         }
 
+    def process_event_outcome(self, event_result, before=None):
+        """Process and categorize event outcomes with detailed information"""
+        details = dict(before or self.event_before())
+
         # Calculate specific event impacts
         if event_result["type"] == "combat":
             damage_taken = self.ship.damage - details["initial_damage"]
             details["damage_taken"] = damage_taken
-            details["outcome"] = "victory" if damage_taken < 30 else "defeat"
-            details["reputation_change"] = 2 if damage_taken < 30 else -1
+            details["outcome"] = getattr(self, "last_fight", None) or "escaped"
+            details["reputation_change"] = {"victory": 2, "defeat": -1}.get(details["outcome"], 0)
+
+        elif event_result["type"] == "situation":
+            details["outcome"] = "handled"
+            details["reputation_change"] = 0
 
         elif event_result["type"] == "trade":
             money_change = self.ship.money - details["money_before"]
@@ -3976,140 +4280,302 @@ class Game:
 
         return details
 
-    def handle_combat_event(self, event):
-        """Handle combat event with proper victory/defeat recording and reputation gains"""
-        combat_scenarios = {
-            "Pirate attack!": {"atk": 2, "def": 1, "reward_mult": 1.0, "enemy_type": "pirate"},
-            "Rogue Corsair!": {"atk": 3, "def": 2, "reward_mult": 1.2, "enemy_type": "pirate"},
-            "Militia Patrol!": {"atk": 4, "def": 3, "reward_mult": 1.5, "enemy_type": "militia"},
-            "Pirate mothership!": {"atk": 5, "def": 4, "reward_mult": 2.0, "enemy_type": "pirate"},
-            "Rogue Warship!": {"atk": 6, "def": 5, "reward_mult": 2.5, "enemy_type": "raider"},
-            "Guerrilla Militia!": {"atk": 7, "def": 6, "reward_mult": 3.0, "enemy_type": "militia"}
-        }
+    # --- encounters: fights, bounties and situations between docks ------------------
+    WANTED_NAMES = ["Lucky Nine", "Widow's Tax", "Second Opinion", "Unpaid Invoice", "Small Print",
+                    "Overdraft", "Bad Penny", "Quiet Word", "Last Orders", "Due Diligence", "Rust Never",
+                    "Grandmother's Revenge", "Fine Print", "Late Fee", "No Refunds", "Sunday Best"]
 
-        scenario = combat_scenarios.get(event, combat_scenarios["Pirate attack!"])
-        enemy_type = scenario["enemy_type"]
+    def danger_tier(self):
+        """How dangerous the lanes are for this captain (1-7): it grows with time and guns."""
+        return max(1, min(7, 1 + self.turn // 50 + self.ship.fight_attack() // 3))
 
-        # Radar or an emergency warp may keep the ship out of the fight altogether
-        if random.random() < self.ship.evasion():
-            self.display_simple_message(f"Event! {event} Your sensors saw them first: you slip away.", 2)
-            return
+    def fight_chance(self, power, edge=0):
+        chance = 0.55 + 0.12 * (self.ship.fight_attack() + edge - power)
+        if self.ship.items.get("turrets"):
+            chance += 0.08
+        return max(0.08, min(0.95, chance))
 
-        # Check for automatic defense
-        if "turrets" in self.ship.items and random.random() < 0.4:
-            self.display_simple_message(f"Event! {event} repelled by defense systems!", 3, color='32')
-            # Count automatic defense as a victory and add reputation
-            self.ship.record_combat_victory(enemy_type)
-            if enemy_type == "pirate":
-                rep_gain = random.randint(1, 3)  # Smaller gain for automated defense
-                self.reputation += rep_gain
-                self.ship.passenger_reputation += rep_gain
-                self.display_simple_message(f"Gained {rep_gain} reputation for automated pirate defense!")
-            # Gain some experience even when automatically defending
-            self.ship.research_points += int(5 * scenario["reward_mult"])
-            return
+    def escape_chance(self, enemy):
+        chance = 0.4 + 0.1 * (self.ship.speed - enemy["speed"])
+        if "navigator" in self.ship.crew:
+            chance += 0.15
+        return max(0.05, min(0.95, chance))
 
-        # Calculate base damage
-        damage = random.randint(10, 25) * scenario["atk"] / self.ship.fight_defense()
-        damage *= (1 + self.difficulty)
-
-        # Apply defensive equipment effects
-        if "shield" in self.ship.items:
-            damage *= 0.7  # 30% damage reduction
-        if "armor" in self.ship.items:
-            damage *= 0.8  # 20% damage reduction
-
-        # Ensure damage doesn't exceed 99%
-        final_damage = min(99, int(self.ship.damage + damage))
-        damage_dealt = final_damage - self.ship.damage
-        self.ship.damage = final_damage
-
-        # Losses (money and cargo) only when the fight is lost: a ship that wins keeps its hold
-        losses = []
-        won = self.ship.fight_attack() > scenario["def"]
-
-        if not won and self.ship.money > 0:
-            # pirates take a tenth to a quarter of what is aboard
-            stolen = random.randint(max(1, int(self.ship.money // 10)), max(1, int(self.ship.money // 4)))
-            self.ship.money -= stolen
-            losses.append(f"{self.format_money(stolen)} credits")
-
-        # Only steal cargo that exists
-        for cargo_type in ['tech', 'agri', 'salt', 'fuel']:
-            if not won and self.ship.cargo[cargo_type] > 0:
-                stolen_cargo = random.randint(1, max(1, int(self.ship.cargo[cargo_type] // 3)))
-                self.ship.cargo[cargo_type] -= stolen_cargo
-                if stolen_cargo > 0:
-                    losses.append(f"{stolen_cargo} {cargo_type}")
-
-        # A hull patcher fixes some of the damage right after the fight
-        if "patcher" in self.ship.items and self.ship.damage > 0:
-            self.ship.damage = max(0, self.ship.damage - 10)
-
-        # Check for counter-attack opportunity
-        if won:
-            # Counter-attack successful - record victory
-            self.ship.record_combat_victory(enemy_type)
-
-            reward_mult = scenario["reward_mult"]
-            rewards = {
-                "money": int(random.randint(100, 500) * reward_mult),
-                "research": int(random.randint(10, 25) * reward_mult)
-            }
-
-            self.ship.money += rewards["money"]
-            self.ship.research_points += rewards["research"]
-
-            # Add reputation gains for pirate victories
-            if enemy_type == "pirate":
-                rep_gain = random.randint(2, 5)
-                self.reputation += rep_gain
-                self.ship.passenger_reputation += rep_gain
-                rep_message = f"\nReputation increased by {rep_gain} for defeating pirates!"
-            else:
-                rep_message = ""
-
-            if losses:
-                loss_text = ", ".join(losses)
-                self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
-                    rep_message,
-                    3, color='32'
-                )
-            else:
-                self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage!\n" +
-                    f"Counter-attack successful! Gained {self.format_money(rewards['money'])} credits and {rewards['research']} research points!" +
-                    rep_message,
-                    3, color='32'
-                )
+    def pick_enemy(self, power=None):
+        """An enemy for this place and moment: near the danger tier, or of the given power."""
+        if power is None:
+            tier = self.danger_tier()
+            pool = [e for e, d in ENEMIES.items() if tier - 2 <= d["power"] <= tier]
         else:
-            # Combat defeat - record defeat with enemy type
-            self.ship.record_combat_defeat(enemy_type)
+            pool = [e for e, d in ENEMIES.items() if d["power"] == power and d["deal"] != "toll"]
+        return random.choice(pool or ["skiff"])
 
-            # Lose reputation on pirate defeats
-            if enemy_type == "pirate":
-                rep_loss = random.randint(1, 3)
-                self.reputation = max(0, self.reputation - rep_loss)
-                self.ship.passenger_reputation = max(0, self.ship.passenger_reputation - rep_loss)
-                rep_message = f"\nLost {rep_loss} reputation from pirate defeat!"
-            else:
-                rep_message = ""
+    def crew_name(self, role):
+        person = story_data()["characters"].get(role) or {}
+        return person.get("short") or person.get("name") or role
 
-            if losses:
-                loss_text = ", ".join(losses)
-                self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage and stole {loss_text}!" +
-                    rep_message,
-                    3, color='31'
-                )
+    def ask_move(self, title, lines, options, default):
+        """Show a moment and its options; return the key of the option taken."""
+        box = [title, ""]
+        for line in lines:
+            box.extend(self.word_wrap(line))
+        box.append("")
+        for number, (_key, label) in enumerate(options, 1):
+            box.extend(self.word_wrap("%d. %s" % (number, label)))
+        self.display_story_message(box, pause=0)
+        self.move_options, self.move_title = options, title   # what a reader of the screen sees (tools/bot.py)
+        answer = self.validate_input("Your move (1-%d, Enter = %d): " % (len(options), default),
+                                     [str(i) for i in range(1, len(options) + 1)])
+        self.move_options = None
+        return options[int(answer or default) - 1][0]
+
+    def encounter(self, enemy_id, bounty=0, hunted=False):
+        """A fight, or the threat of one. The captain picks how to meet it.
+        Returns 'victory', 'defeat', 'escaped', 'paid' or 'talked'."""
+        enemy = ENEMIES[enemy_id]
+        ship = self.ship
+        power = enemy["power"]
+        options = [("fight", "Fight (%s)" % odds_word(self.fight_chance(power)))]
+        tricks = [t for t in FIGHT_TRICKS
+                  if ship.items.get(t) and (t in enemy.get("tricks", []) or t in ("advanced_radar", "combat_drone"))]
+        tricks.sort(key=lambda t: -FIGHT_TRICKS[t][1]["edge"])
+        for trick in tricks[:2]:
+            label, effect = FIGHT_TRICKS[trick]
+            options.append(("trick:" + trick, "%s (%s)" % (label, odds_word(self.fight_chance(power, effect["edge"])))))
+        if enemy_id == "harvester" and ship.cargo["agri"] >= 10:
+            options.append(("feed", "Throw it a crate of agri"))
+        if enemy_id == "cultists" and ship.damage >= 25:
+            options.append(("holy", "Show them your battered hull"))
+        if not hunted:
+            if enemy["deal"] in ("pay", "toll"):
+                price = self.toll_for(enemy)
+                options.append(("pay", "%s (%s)" % ("Pay the fee" if enemy["deal"] == "toll" else "Pay them off",
+                                                    self.format_money(price))))
+            if enemy["deal"] == "toll" and ship.items.get("cargo_scanner"):
+                options.append(("scan", "Hand over a clean cargo scan"))
+            if enemy["deal"] == "talk":
+                options.append(("talk", "Talk them down (%s)" % odds_word(self.talk_chance())))
+            if ship.items.get("advanced_radar"):
+                options.append(("slip", "Radar: slip away before they lock on"))
+        if ship.items.get("emergency_warp"):
+            options.append(("warp", "Emergency jump"))
+        options.append(("run", "%s (%s)" % ("Break off" if hunted else "Run for it",
+                                            odds_word(self.escape_chance(enemy)))))
+
+        title = "%s (threat %d)" % (enemy["name"], power)
+        if hunted:
+            title = "Bounty: " + title
+        move = self.ask_move(title, [enemy["text"]], options, 1)
+
+        if move == "pay":
+            price = self.toll_for(enemy)
+            ship.money -= price
+            return self.after_fight("paid", ["You pay %s. They take it and go." % self.format_money(price)], '33')
+        if move == "scan":
+            self.ship.passenger_reputation += 1
+            return self.after_fight("talked", ["The cutter reads your scan, finds nothing to fine, and waves you on."], '32')
+        if move == "talk":
+            if random.random() < self.talk_chance():
+                return self.after_fight("talked", ["Your reputation arrives before you do. They let you pass."], '32')
+            return self.fight(enemy_id, bounty, ["They are not in a talking mood."])
+        if move == "feed":
+            ship.cargo["agri"] -= 10
+            return self.after_fight("talked", ["The harvester eats the crate, crate and all, and wanders off content."], '32')
+        if move == "holy":
+            ship.research_points += 10
+            return self.after_fight("talked", ["The cultists see your hull and fall silent. They bless it, weld a "
+                                               "tin medal to the airlock and leave. +10 RP"], '32')
+        if move in ("slip", "warp"):
+            if move == "warp":
+                ship.damage = min(99, ship.damage + 3)
+            text = "The radar saw them first: you are gone before they lock on." if move == "slip" \
+                else "One lurch, one headache, and they are a long way behind you."
+            return self.after_fight("escaped", [text], '32')
+        if move == "run":
+            if random.random() < self.escape_chance(enemy):
+                return self.after_fight("escaped", ["You open the throttle and leave them behind."], '33')
+            return self.fight(enemy_id, bounty, ["They catch you."], edge=-1)
+        edge, shield = 0, 1.0
+        if move.startswith("trick:"):
+            effect = FIGHT_TRICKS[move[6:]][1]
+            edge, shield = effect["edge"], effect.get("shield", 1.0)
+        return self.fight(enemy_id, bounty, [], edge, shield)
+
+    def toll_for(self, enemy):
+        share = 0.03 if enemy["deal"] == "toll" else 0.06
+        return int(max(150 * enemy["power"], min(self.ship.money * share, 1500 * enemy["power"])))
+
+    def talk_chance(self):
+        return max(0.1, min(0.9, 0.15 + self.ship.passenger_reputation / 120))
+
+    def fight(self, enemy_id, bounty, lines, edge=0, shield=1.0):
+        enemy = ENEMIES[enemy_id]
+        ship = self.ship
+        power = enemy["power"]
+        won = random.random() < self.fight_chance(power, edge)
+        hit = random.randint(4, 9) * power / ship.fight_defense() * (1 + self.difficulty) * shield
+        if not won:
+            hit *= 2.2
+        if ship.items.get("shield"):
+            hit *= 0.7
+        if ship.items.get("armor"):
+            hit *= 0.8
+        before = ship.damage
+        ship.damage = min(99, int(ship.damage + hit))
+        if ship.items.get("patcher"):
+            ship.damage = max(0, ship.damage - 10)
+        if "mechanic" in ship.crew:
+            ship.damage = max(0, ship.damage - 5)
+        if ship.damage > before:
+            lines.append("Hull damage +%d%%." % (ship.damage - before))
+
+        if won:
+            ship.record_combat_victory(enemy["kind"])
+            money = int(random.randint(150, 350) * power) + bounty
+            research = int(random.randint(4, 10) * power * (1 + ship.research_bonus()))
+            plot = 1 + power // 3
+            ship.money += money
+            ship.research_points += research
+            self.story_manager.plot_points += plot
+            lines.append("Victory! +%s credits%s, +%d RP, +%d plot points." % (
+                self.format_money(money), " (bounty included)" if bounty else "", research, plot))
+            if enemy["kind"] == "machine":
+                parts = min(ship.hold_room("tech"), random.randint(5, 12) * power)
+                if parts > 0:
+                    ship.cargo["tech"] += parts
+                    lines.append("You salvage %d tech from the wreckage." % parts)
+            if enemy["kind"] == "pirate":
+                rep = random.randint(2, 4)
+                self.reputation += rep
+                ship.passenger_reputation += rep
+                lines.append("Reputation +%d for clearing the lane." % rep)
+            elif enemy_id == "customs":
+                ship.passenger_reputation -= 3
+                lines.append("You shot at customs. Reputation -3.")
+            return self.after_fight("victory", lines, '32')
+
+        ship.record_combat_defeat(enemy["kind"])
+        stolen = random.randint(int(ship.money // 10), int(ship.money // 4)) if ship.money > 10 else 0
+        stolen = min(stolen, 3000 * power)
+        losses = []
+        if stolen > 0:
+            ship.money -= stolen
+            losses.append("%s credits" % self.format_money(stolen))
+        for good in ('tech', 'agri', 'salt', 'fuel'):
+            if ship.cargo[good] > 0:
+                taken = random.randint(1, max(1, ship.cargo[good] // 3))
+                ship.cargo[good] -= taken
+                losses.append("%d %s" % (taken, good))
+        lines.append("Defeat." + (" They take " + ", ".join(losses) + "." if losses else ""))
+        if enemy["kind"] == "pirate":
+            rep = random.randint(1, 3)
+            self.reputation = max(0, self.reputation - rep)
+            ship.passenger_reputation -= rep
+            lines.append("Reputation -%d." % rep)
+        return self.after_fight("defeat", lines, '31')
+
+    def after_fight(self, outcome, lines, color):
+        self.last_fight = outcome
+        self.display_simple_message([line for text in lines for line in self.word_wrap(text)], 3, color=color)
+        return outcome
+
+    def handle_combat_event(self, event=None):
+        """Someone stops the ship between docks."""
+        return self.encounter(event if event in ENEMIES else self.pick_enemy())
+
+    def handle_hunt(self):
+        """The bounty board: the legions and the docks pay for ships they want gone.
+        Taking a bounty uses the turn. Returns True when a hunt was flown."""
+        if getattr(self, "hunted_turn", None) == self.turn:
+            self.display_simple_message("The board has nothing new until tomorrow.")
+            return False
+        tier = self.danger_tier()
+        act = self.story_manager.get_chapter_number()
+        targets = []
+        for power in (tier - 1, tier, tier + 1):
+            power = max(1, min(7, power))
+            enemy_id = self.pick_enemy(power)
+            bounty = int(power * 700 * (1 + 0.25 * act))
+            targets.append((enemy_id, bounty, random.choice(self.WANTED_NAMES)))
+        options = [("%d" % i, "%s '%s' - threat %d, bounty %s (%s)" % (
+            ENEMIES[e]["name"], name, ENEMIES[e]["power"], self.format_money(b),
+            odds_word(self.fight_chance(ENEMIES[e]["power"]))))
+            for i, (e, b, name) in enumerate(targets)]
+        options.append(("leave", "Not today"))
+        pick = self.ask_move("Bounty board - " + self.current_location.name,
+                             ["Wanted by the legions and the dock masters. Hunting one takes the day."],
+                             options, len(options))
+        if pick == "leave":
+            return False
+        enemy_id, bounty, _name = targets[int(pick)]
+        self.hunted_turn = self.turn
+        self.last_fight = None
+        outcome = self.encounter(enemy_id, bounty=bounty, hunted=True)
+        self.quest_system.check_event_requirements({"type": "combat", "name": ENEMIES[enemy_id]["name"],
+                                                    "location": self.current_location.name, "turn": self.turn,
+                                                    "outcome": outcome})
+        return True
+
+    def situation(self, sid=None):
+        """A moment between docks where gear, crew or nerve pays off."""
+        sid = sid or random.choice(sorted(SITUATIONS))
+        moment = SITUATIONS[sid]
+        offered = [opt for opt in moment["options"] if self.can_take(opt.get("needs"))]
+        options = [(str(i), self.story.fill(opt["say"])) for i, opt in enumerate(offered)]
+        pick = self.ask_move(moment["title"], [self.story.fill(moment["text"])], options, len(options))
+        self.apply_outcome(offered[int(pick)]["do"])
+        return sid
+
+    def can_take(self, needs):
+        if not needs:
+            return True
+        items = self.ship.items
+        if any(not items.get(i) for i in needs.get("items", [])):
+            return False
+        if "any" in needs and not any(items.get(i) for i in needs["any"]):
+            return False
+        if any(role not in self.ship.crew for role in needs.get("crew", [])):
+            return False
+        return True
+
+    def apply_outcome(self, out):
+        """Effects of a situation's choice: money, damage, research, plot points,
+        reputation, cargo, or a fight."""
+        if "chance" in out:
+            out = out["win"] if random.random() < out["chance"] else out["lose"]
+        ship = self.ship
+        lines = [self.story.fill(out["say"])] if out.get("say") else []
+        scale = self.danger_tier() if out.get("tier") else 1
+        money = int(out.get("money", 0) * scale)
+        if money:
+            ship.money = max(0, ship.money + money)
+            lines.append("%s%s credits" % ("+" if money > 0 else "-", self.format_money(abs(money))))
+        if out.get("damage"):
+            ship.damage = max(0, min(99, ship.damage + out["damage"]))
+            lines.append("Hull %s %d%%" % ("damage +" if out["damage"] > 0 else "repaired", abs(out["damage"])))
+        if out.get("rp"):
+            rp = int(out["rp"] * (1 + ship.research_bonus()))
+            ship.research_points += rp
+            lines.append("+%d RP" % rp)
+        if out.get("pp"):
+            self.story_manager.plot_points += out["pp"]
+            lines.append("+%d plot points" % out["pp"])
+        if out.get("rep"):
+            ship.passenger_reputation += out["rep"]
+            lines.append("Reputation %+d" % out["rep"])
+        for good, amount in (out.get("cargo") or {}).items():
+            if good == "any":
+                good = random.choice(['tech', 'agri', 'salt', 'fuel'])
+            amount = min(int(amount * random.uniform(0.6, 1.2)), ship.hold_room(good))
+            if amount > 0:
+                ship.cargo[good] += amount
+                lines.append("+%d %s in the hold" % (amount, good))
             else:
-                self.display_simple_message(
-                    f"Event! {event} caused {damage_dealt}% damage!" +
-                    rep_message,
-                    3, color='31'
-                )
+                lines.append("No room in the hold for the %s." % good)
+        if lines:
+            self.display_simple_message([line for text in lines for line in self.word_wrap(text)], 3)
+        if out.get("fight"):
+            self.encounter(out["fight"])
 
     def handle_exploration_event(self, event):
         """Handle exploration events with full outcome processing"""
@@ -5002,6 +5468,7 @@ class Game:
 
         # Whoever is in the cantina today, and what people are saying
         self.story.visit_venue("cantina")
+        self.story_manager.nudge()
 
         while True:
             options = {
@@ -6626,6 +7093,8 @@ class Port:
         base_fare = 100 * passenger.wealth_level
         comfort_multiplier = 1 + (module.comfort_level * 0.2)
         distance_multiplier = 1.25 if self.game.ship.items.get("temporal_accelerator") else 1
+        if "steward" in self.game.ship.crew:          # a steward makes any cabin feel first class
+            comfort_multiplier += 0.15
 
         # Add distance calculation if game has that mechanic
         # distance_multiplier = calculate_distance(current, destination)
@@ -7179,25 +7648,25 @@ class Shop:
             },
             "scanner": {
                 "price": 700,
-                "description": "Basic scanner improves resource detection",
+                "description": "Basic scanner: tells a real distress call from bait",
                 "tech_required": 2,
                 "plot_required": 0
             },
             "probe": {
                 "price": 900,
-                "description": "Deep space probe increases exploration success",
+                "description": "Deep space probe: scouts debris fields ahead of the ship",
                 "tech_required": 3,
                 "plot_required": 10
             },
             "turrets": {
                 "price": 1200,
-                "description": "Defense turrets to automatically repel pirates",
+                "description": "Defense turrets: better odds in every fight; shred drone swarms",
                 "tech_required": 4,
                 "plot_required": 15
             },
             "shield": {
                 "price": 1500,
-                "description": "Energy shield reduces damage taken in combat",
+                "description": "Energy shield: 30% less fight damage; rides out storms and flares",
                 "tech_required": 5,
                 "plot_required": 20
             },
@@ -7252,13 +7721,13 @@ class Shop:
             "AsteroidBase": {
                 "mining_laser": {
                     "price": 2000,
-                    "description": "Cuts rock and pirates: +1 defense in fights",
+                    "description": "Mining laser: +1 defense; cuts drones, derelicts and debris",
                     "tech_required": 3,
                     "plot_required": 15
                 },
                 "cargo_scanner": {
                     "price": 1800,
-                    "description": "Sorts and stacks ore: +20% room for salt and fuel",
+                    "description": "Cargo scanner: +20% room for salt and fuel; clean scans for customs",
                     "tech_required": 4,
                     "plot_required": 20
                 },
@@ -7270,7 +7739,7 @@ class Shop:
                 },
                 "mining_compressor": {
                     "price": 15000,
-                    "description": "Specialized for asteroid mining (+40% capacity for mined resources)",
+                    "description": "Mining compressor: +40% room for salt and fuel; skims comets",
                     "tech_required": 6,
                     "plot_required": 40
                 }
@@ -7278,25 +7747,25 @@ class Shop:
             "DeepSpaceOutpost": {
                 "advanced_radar": {
                     "price": 2200,
-                    "description": "Early warning: 20% chance to avoid a fight",
+                    "description": "Radar: slip away before a fight, or jam their targeting",
                     "tech_required": 4,
                     "plot_required": 30
                 },
                 "combat_drone": {
                     "price": 3000,
-                    "description": "Fights beside you: +1 attack",
+                    "description": "Combat drone: +1 attack; sent in first, it takes the first hit",
                     "tech_required": 5,
                     "plot_required": 35
                 },
                 "repair_bot": {
                     "price": 2800,
-                    "description": "Automatic repairs during travel",
+                    "description": "Repair bot: fixes breakdowns and some disaster damage",
                     "tech_required": 6,
                     "plot_required": 40
                 },
                 "emergency_warp": {
                     "price": 18000,
-                    "description": "Emergency escape system (50% chance to avoid combat)",
+                    "description": "Emergency jump out of any fight or storm",
                     "tech_required": 7,
                     "plot_required": 50
                 }
@@ -7316,7 +7785,7 @@ class Shop:
                 },
                 "quantum_scanner": {
                     "price": 3500,
-                    "description": "Finds more: +25% rewards from discoveries",
+                    "description": "Quantum scanner: +25% discovery rewards; finds weak spots",
                     "tech_required": 7,
                     "plot_required": 50
                 },
@@ -8687,7 +9156,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch3a"],
                     "plot_points": 100,
-                    "trade_profit": 600000
+                    "trade_profit": 500000
                 },
                 milestones=[
                     {
@@ -8697,7 +9166,7 @@ class StoryManager:
                         "requirements": {
                             "buildings_built": {"stockmarket": 5},
                             "passenger_reputation": 80,
-                            "trade_profit": 600000
+                            "trade_profit": 500000
                         },
                         "rewards": {"money": 1000000, "plot_points": 100}
                     }
@@ -8904,12 +9373,92 @@ class StoryManager:
             self.current_chapter = chapter.id
             chapter_obj = chapter
 
+        self.chapter_started = self.game.turn
         self.game.display_story_message([
             f"{self.get_chapter_label()}: {chapter_obj.title}",
             chapter_obj.description,
             "",
             "New milestones await..."
         ])
+
+    def plot_target(self):
+        """The plot points the next chapter asks for, or None when no chapter waits on them."""
+        chapter = self.chapters.get(self.current_chapter)
+        nodes = story_data()["nodes"]
+        wanted = [(nodes.get(c) or {}).get("requires", {}).get("plot_points") for c in (chapter.next_chapters if chapter else [])]
+        wanted = [w for w in wanted if isinstance(w, int)]
+        return min(wanted) if wanted else None
+
+    READABLE = {"plot_points": "plot points", "trades_completed": "trades", "trade_profit": "trade profit",
+                "combat_victories": "fights won", "research_points": "research points",
+                "passengers_transported": "passengers delivered", "passenger_reputation": "passenger reputation",
+                "combat_rating": "attack + defense + speed", "discovered": "places visited", "money": "credits"}
+
+    def chapter_needs(self, chapter):
+        """What still stands between the captain and a chapter: [(key, words)].
+        The story file's condition when it repairs the chapter's, else the code's."""
+        game = self.game
+        story = game.story
+        cond = story.condition_for(chapter.id)
+        if cond is None:
+            return [(k, "%s: %s" % (k, v)) for k, v in chapter.requirements.items()
+                    if not k.startswith("chapters_completed")
+                    and not MilestoneRequirements._check_single_requirement(k, v, game)]
+        snap = story.snapshot()
+        out = []
+        for key, want in cond.items():
+            if story.check({key: want}, snap):
+                continue
+            if key in ("done", "done_any"):
+                scenes = [n for n in _as_list(want) if n not in snap["done"] and n not in self.chapters]
+                if scenes:
+                    out.append((key, "a turning point: " + " or ".join(story.title_of(n) or n for n in scenes)))
+                continue
+            label = self.READABLE.get(key) or key.replace("buildings.", "buildings: ").replace(
+                "combat_victories.", "victories over ").replace("discovered.", "places visited: ")
+            value = game.format_money(want) if isinstance(want, int) and want >= 10000 else want
+            out.append((key, "%s: %s" % (label, value)))
+        return out
+
+    # What a dock master says to a captain who has been stuck in one chapter a while,
+    # by the first thing the way on still needs
+    NUDGES = [
+        ("done", "Some doors only open after the right meeting. Keep calling at cantinas and ports; "
+                 "the people who matter are looking for you too."),
+        ("plot", "Nobody sings about a captain who only waits. Take the jobs people offer in cantinas and ports, "
+                 "trade well, look at new places: that is how a story gets told."),
+        ("trade_profit", "Profit is what is left after the goods are paid for. Find a lane with a wide margin and work it."),
+        ("trades", "The dock masters count every trade. Buy, sell, and do it often."),
+        ("combat_victories", "The bounty board pays for ships the legions want gone. Hunt (hu) when your guns are ready."),
+        ("combat_rating", "Your ship is too soft for the work you want. Upgrade it: attack, defense, speed."),
+        ("research", "The research colonies pay attention to research points: travel, discoveries and old buoys all earn them."),
+        ("passenger", "Passengers pay and talk. A better cabin helps; so does a steward who knows which fork is which."),
+        ("building", "Build something: a stock market, a guild. People notice a captain who puts money into a dock."),
+        ("locations", "There are places you have not seen yet. The cantina sells maps; the bar sells rumours."),
+    ]
+
+    def nudge(self):
+        """After twenty turns in one chapter, the cantina offers a hint about what is missing."""
+        game = self.game
+        started = getattr(self, "chapter_started", 0)
+        if game.turn - started < 20 or game.turn - getattr(self, "nudged_turn", -100) < 10:
+            return
+        chapter = self.chapters.get(self.current_chapter)
+        if not chapter:
+            return
+        missing = []
+        for milestone in chapter.milestones.values():
+            if not milestone.completed:
+                missing += [k for k, v in milestone.requirements.items()
+                            if not MilestoneRequirements._check_single_requirement(k, v, game)]
+        for cid in chapter.next_chapters:
+            missing += [k for k, _ in self.chapter_needs(self.chapters[cid])]
+        for key, text in self.NUDGES:
+            if any(key in m for m in missing):
+                self.nudged_turn = game.turn
+                game.display_story_message(["A word at the bar", ""] + game.word_wrap(
+                    "An old dock master who has seen a hundred captains come and go leans over: '" + text + "'"), pause=1)
+                return
 
     def get_chapter_label(self, chapter_string=None):
         """'Chapter II.' for a numbered chapter, 'Finale' for an ending"""
@@ -8969,16 +9518,13 @@ class StoryManager:
         return False
 
     def check_event_trigger(self, event, game):
-        """Check if an event triggers any story progression"""
+        """Story switches that random events flip (no plot points: an event that only
+        happened to the ship is not progress; what the captain does about it is)"""
         if isinstance(event, str):
-            if "Pirate" in event:
-                self.process_event("combat", {"enemy_type": "pirate"})
+            if "pirate" in event.lower():
+                self.update_story_states("combat", {"enemy_type": "pirate"})
             elif "artifact" in event.lower():
-                self.process_event("exploration", {"discovery_type": "artifact"})
-            elif "trade" in event.lower():
-                self.process_event("trade", {})
-            elif "research" in event.lower():
-                self.process_event("research", {})
+                self.update_story_states("exploration", {"discovery_type": "artifact"})
 
     def handle_quest_completion(self, quest):
         """Update story progress when quests complete"""
@@ -9091,17 +9637,16 @@ class StoryManager:
 
         # Find next possible chapters and their plot point requirements
         if current_chapter_obj and current_chapter_obj.next_chapters:
-            plot_points_needed = float('inf')
-            for next_chapter_id in current_chapter_obj.next_chapters:
-                next_chapter = self.chapters[next_chapter_id]
-                if 'plot_points' in next_chapter.requirements:
-                    current_needed = next_chapter.requirements['plot_points'] - self.plot_points
-                    plot_points_needed = min(plot_points_needed, current_needed)
+            target = self.plot_target()     # the story's thresholds, which replace the code's
+            plot_points_needed = target - self.plot_points if target else float('inf')
 
             if plot_points_needed != float('inf'):
                 content.append([f"Plot Points: {self.plot_points} ({max(0, plot_points_needed)} to Next)"])
             else:
                 content.append([f"Plot Points: {self.plot_points}"])
+            content.extend([line] for line in self.game.word_wrap(
+                "Plot points come from story scenes, quests, passengers, good deals, research, "
+                "first visits, fights won and moments handled well."))
         else:
             content.append([f"Plot Points: {self.plot_points}"])
 
@@ -9124,12 +9669,7 @@ class StoryManager:
                 content.extend([[""], ["Ways on:"]])
                 for chapter_id in current_chapter_obj.next_chapters:
                     chapter = self.chapters[chapter_id]
-                    missing = [
-                        f"{req_type}: {req_value}"
-                        for req_type, req_value in chapter.requirements.items()
-                        if not req_type.startswith("chapters_completed")
-                        and not MilestoneRequirements._check_single_requirement(req_type, req_value, self.game)
-                    ]
+                    missing = [words for _, words in self.chapter_needs(chapter)]
                     content.append([f"→ {chapter.title}" + ("" if missing else " (open)")])
                     for line in missing:
                         content.append([f"  └─ Needs: {line}"])

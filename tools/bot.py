@@ -6,7 +6,7 @@ can type.
 
 usage: bot.py cargo.py <path: trade|combat|discovery> <seed> [max_turns] [--verbose]
 """
-import sys, os, io, json, random, shutil, traceback, tempfile, builtins, collections
+import sys, os, io, re, json, random, shutil, traceback, tempfile, builtins, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import headless
 
@@ -287,6 +287,17 @@ class Bot:
                     self.upgrade = prop
                     return "u"
 
+        # a fighter takes bounties two days in three (a hunt uses the turn)
+        fighter = goal == "combat" or "combat_victories" in need
+        if fighter and "hunt" in options and "hunt" not in self.flags and ship.damage < 40 and g.turn % 3:
+            self.flags.add("hunt")
+            return "hu"
+
+        # now and then a drink in the cantina: people, rumours, crew for hire
+        if "cantina" in options and "cantina" not in self.flags and g.turn % 4 == 0:
+            self.flags.add("cantina")
+            return "c"
+
         # buy for the best route and go
         if "buy" not in self.flags:
             self.flags.add("buy")
@@ -390,6 +401,8 @@ class Bot:
                     if afford:
                         return min(afford, key=lambda i: mods[i]["cost"])
                 return "back"
+            if p.startswith("your move"):             # a fight, a situation or the bounty board
+                return self.move(options)
             if p.startswith("your choice"):           # a story scene's choice
                 self.story_choices += 1
                 return random.choice(options) if options else ""
@@ -435,6 +448,40 @@ class Bot:
             return ""
         self.unknown[("raw", t.strip().splitlines()[-1][:50] if t.strip() else "")] += 1
         return ""
+
+    def move(self, numbers):
+        """Read the options on screen (game.move_options) and pick one like a sensible captain."""
+        g = self.game
+        shown = list(getattr(g, "move_options", None) or [])
+        if not shown:
+            return numbers[0] if numbers else ""
+        keys = [k for k, _ in shown]
+        fighter = goal == "combat" or "combat_victories" in self.need()
+        if "leave" in keys:                                  # the bounty board
+            best = None
+            for i, key in enumerate(keys):
+                if key == "leave":
+                    continue
+                label = shown[i][1]
+                if "easy" in label or "good odds" in label:
+                    best = i                                 # the hardest target with good odds
+            return str((best if best is not None and fighter else keys.index("leave")) + 1)
+        if "fight" in keys:                                  # a fight
+            found = re.search(r"threat (\d)", getattr(g, "move_title", "") or "")
+            power = int(found.group(1)) if found else 3
+            best_key, best_chance = "fight", g.fight_chance(power)
+            for key in keys:
+                if key.startswith("trick:"):
+                    chance = g.fight_chance(power, cargo.FIGHT_TRICKS[key[6:]][1]["edge"])
+                    if chance > best_chance:
+                        best_key, best_chance = key, chance
+            if best_chance >= (0.4 if fighter else 0.6):
+                return str(keys.index(best_key) + 1)
+            for key in ("slip", "warp", "scan", "holy", "feed", "talk", "pay", "run"):
+                if key in keys and not (key == "pay" and g.ship.money < 5000):
+                    return str(keys.index(key) + 1)
+            return str(keys.index(best_key) + 1)
+        return random.choice(numbers) if numbers else ""      # a situation: whatever looks interesting
 
     def port_action(self):
         g = self.game

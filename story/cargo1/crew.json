@@ -1,0 +1,145 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Helpers a captain can hire in cantinas. Four bunks. What each one does is in cargo.py (Ship.crew); who they are is here.",
+ "arcs": {
+  "crew": {"title": "Crew for hire", "order": 2.8}
+ },
+ "characters": {
+  "loader": {
+   "name": "Shunt",
+   "kind": "agrobot",
+   "about": "a KRO-series junior loader: two tonnes, four arms, stacks a hold ten per cent tighter than anyone else"
+  },
+  "steward": {
+   "name": "Ambrose",
+   "kind": "robot",
+   "about": "a steward unit from a scrapped Neon liner; too polite for a hauler and aware of it; passengers pay more"
+  },
+  "mechanic": {
+   "name": "Oksana Brell",
+   "short": "Oksana",
+   "kind": "human",
+   "about": "ex-legion fitter; patches the hull after fights and knows where the cheap parts are"
+  },
+  "gunner": {
+   "name": "Tadeo Ruiz",
+   "short": "Tadeo",
+   "kind": "human",
+   "about": "ex-militia gunner who left because the militia never shot at anything; +1 attack"
+  },
+  "navigator": {
+   "name": "Sister Iolanthe",
+   "short": "Iolanthe",
+   "kind": "human",
+   "about": "a Solarian navigator who reads lanes in sunspots and is right often enough to be annoying; better escapes, storm lanes"
+  },
+  "broker": {
+   "name": "Old Fenn",
+   "short": "Fenn",
+   "kind": "human",
+   "about": "a dock broker who has haggled at every market in five systems and been banned from two; 2% less trade tax"
+  }
+ },
+ "nodes": {
+  "crew.loader": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "A loader looking for work",
+   "who": ["loader"],
+   "requires": {"venue": "cantina", "at_type": ["Planet", "AsteroidBase"], "not": {"has": {"crew": ["loader"]}},
+                "crew_size": {"max": 3}, "trades_completed": 3},
+   "chance": 0.3,
+   "repeat": {"cooldown": 8},
+   "text": "A small loader agrobot stands by the bar, holding its own job advert in two of its four arms. It is called {loader}. It has read your manifest. 'Your stowage wastes a tenth of the hold,' it says. 'I would not waste it.'",
+   "variants": [
+    {"requires": {"done": "dock.krog"},
+     "text": "A small loader agrobot stands by the bar, holding its own job advert. It is called {loader}, a KRO-series junior. '{krog} sent me,' it says. '{krog} said your hold was a disgrace and that I should fix it. I would like to fix it.'"}
+   ],
+   "choices": [
+    {"id": "hire", "say": "Hire {loader} (4,000 credits; +10% hold)", "requires": {"money": 4000},
+     "effects": {"money": -4000, "give": {"crew": ["loader"]}, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  },
+  "crew.steward": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "A steward without a liner",
+   "who": ["steward"],
+   "requires": {"venue": "cantina", "at_type": "Planet", "not": {"has": {"crew": ["steward"]}},
+                "crew_size": {"max": 3}, "passengers_transported": 3},
+   "chance": 0.3,
+   "repeat": {"cooldown": 8},
+   "text": "A steward robot in a jacket three sizes too formal is polishing glasses that belong to the bar. Its liner was scrapped last month. '{steward},' it says, and bows. 'I hear your passengers eat from the tin. I could change that. I would rather change that than polish these.'",
+   "choices": [
+    {"id": "hire", "say": "Hire {steward} (5,000 credits; passengers pay more)", "requires": {"money": 5000},
+     "effects": {"money": -5000, "give": {"crew": ["steward"]}, "passenger_reputation": 3, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  },
+  "crew.mechanic": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "A fitter between contracts",
+   "who": ["mechanic"],
+   "requires": {"venue": "cantina", "at_type": ["AsteroidBase", "DeepSpaceOutpost", "Planet"],
+                "not": {"has": {"crew": ["mechanic"]}}, "crew_size": {"max": 3}, "turn_min": 8},
+   "chance": 0.25,
+   "repeat": {"cooldown": 8},
+   "text": "A woman with burn scars on both forearms is explaining to the bartender why his cooler is about to die. She is right; it dies while she talks. {mechanic} did eight years as a legion fitter. 'I fix what I swear at,' she says. 'Your ship sounds like it needs a lot of swearing.'",
+   "choices": [
+    {"id": "hire", "say": "Hire {mechanic.short} (6,000 credits; repairs after fights, cheaper refits)", "requires": {"money": 6000},
+     "effects": {"money": -6000, "give": {"crew": ["mechanic"]}, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  },
+  "crew.gunner": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "A gunner who wants to shoot",
+   "who": ["gunner"],
+   "requires": {"venue": "cantina", "at_type": ["DeepSpaceOutpost", "AsteroidBase"],
+                "not": {"has": {"crew": ["gunner"]}}, "crew_size": {"max": 3}, "combat_victories": 1},
+   "chance": 0.3,
+   "repeat": {"cooldown": 8},
+   "text": "{gunner} spent six years on a militia cutter and fired the guns twice, both times at a drill target. He saw your hull on the way in. 'Somebody has been shooting at you,' he says, cheerfully. 'I would like to shoot back.'",
+   "choices": [
+    {"id": "hire", "say": "Hire {gunner.short} (6,000 credits; +1 attack)", "requires": {"money": 6000},
+     "effects": {"money": -6000, "give": {"crew": ["gunner"]}, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  },
+  "crew.navigator": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "A Solarian navigator",
+   "who": ["navigator"],
+   "requires": {"venue": "cantina", "not": {"has": {"crew": ["navigator"]}}, "crew_size": {"max": 3}, "discovered": 4},
+   "chance": 0.25,
+   "repeat": {"cooldown": 8},
+   "text": "{navigator} wears the Solarian sun on a chain and a star chart for a scarf. She reads the lanes in sunspots, which sounds like nonsense, and she gets you through storms, which does not. 'The sun keeps a timetable,' she says. 'Nobody else reads it.'",
+   "choices": [
+    {"id": "hire", "say": "Hire {navigator.short} (5,000 credits; better escapes, storm lanes)", "requires": {"money": 5000},
+     "effects": {"money": -5000, "give": {"crew": ["navigator"]}, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  },
+  "crew.broker": {
+   "kind": "encounter",
+   "arc": "crew",
+   "title": "An old broker",
+   "who": ["broker"],
+   "requires": {"venue": "cantina", "at_type": "Planet", "not": {"has": {"crew": ["broker"]}}, "crew_size": {"max": 3},
+                "trades_completed": 15},
+   "chance": 0.25,
+   "repeat": {"cooldown": 8},
+   "text": "{broker} has haggled at every market in five systems and been banned from two. He is not sure which two. He watched you sell this morning and winced twice. 'You pay the dock what the dock asks,' he says. 'Nobody pays the dock what the dock asks.'",
+   "choices": [
+    {"id": "hire", "say": "Hire {broker.short} (8,000 credits; 2% less trade tax)", "requires": {"money": 8000},
+     "effects": {"money": -8000, "give": {"crew": ["broker"]}, "plot_points": 2}},
+    {"id": "later", "say": "Not now"}
+   ]
+  }
+ }
+}

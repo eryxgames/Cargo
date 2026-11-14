@@ -1,0 +1,363 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Dock talk: what haulers, loaders and miners say in cantinas when nobody is talking about the captain. Story rumours are told first; this fills the rest.",
+ "arcs": {
+  "gossip": {
+   "title": "Dock gossip",
+   "order": 8.5
+  }
+ },
+ "nodes": {
+  "gossip.night_shift": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: night shift",
+   "text": "The night shift at the fuel depot got a pay rise. The day shift found out from the night shift's new boots."
+  },
+  "gossip.coffee": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: coffee",
+   "text": "Someone put real coffee in the dock canteen machine. Nobody knows who. The union wants it written into the contract."
+  },
+  "gossip.crane": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: crane",
+   "text": "Crane four has been 'out for maintenance' since spring. The maintenance crew says crane four knows what it did."
+  },
+  "gossip.manifest": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: manifest",
+   "text": "A hauler swears his manifest said forty crates of agri. He opened them at the dock. Forty crates of slightly different agri."
+  },
+  "gossip.queue": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: queue",
+   "text": "Customs queue at the inner lock is three hours today. The man in front of you has been in it since yesterday and seems happy."
+  },
+  "gossip.soup": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: soup",
+   "text": "The soup today is called 'Tuesday'. It is Thursday. Nobody orders it, and every bowl goes."
+  },
+  "gossip.hull_paint": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: hull paint",
+   "text": "Hull paint went up again. A captain at the bar says his ship is now mostly primer and good intentions."
+  },
+  "gossip.cards": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: cards",
+   "text": "Two loaders are playing cards with a deck that has three queens of hearts. Neither of them mentions it."
+  },
+  "gossip.pension": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: pension",
+   "text": "Old Marek retired after forty years of hauling. He bought a ship to live on. He says the commute is better."
+  },
+  "gossip.forklift": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: forklift",
+   "text": "A forklift drove itself into the harbour pool last night. Engineering says software. The forklift says nothing."
+  },
+  "gossip.rations": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: rations",
+   "text": "Ration bars have a new flavour. The packet says 'savoury'. The dockers have voted on 'brown'."
+  },
+  "gossip.dock_cat": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: dock cat",
+   "text": "The dock cat has been promoted to safety officer. It has done better inspections than the last one."
+  },
+  "gossip.weather": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: weather",
+   "text": "Station weather says rain at six. It always says rain at six. The sprinklers in the arcade agree."
+  },
+  "gossip.insurance": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: insurance",
+   "text": "Insurance rates for the outer lanes went up after a pilot claimed a comet as a personal enemy."
+  },
+  "gossip.strike_rumour": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: strike rumour",
+   "text": "Somebody says the loaders are going on strike. Somebody else says the loaders are robots. A third says that is the point."
+  },
+  "gossip.long_haul": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: long haul",
+   "text": "A long-haul crew came in after nine months out. Two of them are married now. To each other, they think."
+  },
+  "gossip.parts": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: parts",
+   "text": "The spare-parts man has a coupling that fits your ship. He also has one that fits every ship, and it costs more."
+  },
+  "gossip.tip": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: tip",
+   "text": "A pilot leaves a tip in Marks. The barman bites it, shrugs, and pockets it anyway."
+  },
+  "gossip.karaoke": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: karaoke",
+   "text": "Karaoke night was cancelled after the third rendition of the same mining song. The miners call it a protest."
+  },
+  "gossip.delivery": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: delivery",
+   "text": "A courier has been looking for 'the captain with the red hatch' all week. Half the ships at the dock have red hatches now."
+  },
+  "gossip.pilot_exam": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: pilot exam",
+   "text": "The pilot exam has a new question about what to do if your cargo starts talking. The answer is still 'file a form'."
+  },
+  "gossip.garden": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: garden",
+   "text": "Someone grows tomatoes in the airlock between shifts. Security has decided not to know about it."
+  },
+  "gossip.canteen_robot": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: canteen robot",
+   "text": "The canteen robot has started saying 'have a nice day' in a tone that suggests it means something else."
+  },
+  "gossip.sleeper_berths": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: sleeper berths",
+   "text": "Sleeper berths are full again. A miner rented a cupboard and now sublets half of it."
+  },
+  "gossip.fines": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: fines",
+   "text": "Docking fines went up by ten per cent. The sign announcing it cost more than the fines will bring in."
+  },
+  "gossip.old_ship": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: old ship",
+   "text": "An old hauler limps in with three engines out of four. The captain says the fourth is the reliable one."
+  },
+  "gossip.barter": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: barter",
+   "text": "Two crews trade a crate of salt for a crate of fuel and both go away sure they won."
+  },
+  "gossip.broken_lift": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: broken lift",
+   "text": "The lift to the upper deck is broken, so the upper deck has become very exclusive."
+  },
+  "gossip.new_kid": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: new kid",
+   "text": "A new pilot asks where the bathroom is and gets four sets of directions, all wrong, all with love."
+  },
+  "gossip.legion_ad": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: legion ad",
+   "text": "A legion recruiting poster promises adventure, travel and a pension. Someone has written 'pick two' underneath."
+  },
+  "gossip.ore_dust": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: ore dust",
+   "text": "Ore dust in everything again. The barman says the beer has extra minerals and charges for it.",
+   "requires": {
+    "at_type": "AsteroidBase"
+   }
+  },
+  "gossip.drill_bits": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: drill bits",
+   "text": "Drill bits are scarce this month. A mining crew is trying to sharpen the old ones with a song. It is not working.",
+   "requires": {
+    "at_type": "AsteroidBase"
+   }
+  },
+  "gossip.cave_in": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: cave in",
+   "text": "A gallery collapsed on level nine. Nobody hurt. The foreman says the rock got tired of waiting.",
+   "requires": {
+    "at_type": "AsteroidBase"
+   }
+  },
+  "gossip.shift_bell": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: shift bell",
+   "text": "The shift bell rang twice by mistake and half the mine went home. Management is trying to decide whose fault the bell is.",
+   "requires": {
+    "at_type": "AsteroidBase"
+   }
+  },
+  "gossip.outpost_mail": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: outpost mail",
+   "text": "The mail drone came in a week late, carrying birthday cards for last month and a tax notice for next year.",
+   "requires": {
+    "at_type": "DeepSpaceOutpost"
+   }
+  },
+  "gossip.outpost_lights": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: outpost lights",
+   "text": "Outpost power is rationed. The bar runs on candles shaped like the outpost commander.",
+   "requires": {
+    "at_type": "DeepSpaceOutpost"
+   }
+  },
+  "gossip.outpost_shift": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: outpost shift",
+   "text": "The radar watch says it saw something big go past at two in the morning. It did not stop, so it did not need a form.",
+   "requires": {
+    "at_type": "DeepSpaceOutpost"
+   }
+  },
+  "gossip.lonely": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: lonely",
+   "text": "A man at the end of the bar has been posted here for six years. He asks you what the weather is like on planets.",
+   "requires": {
+    "at_type": "DeepSpaceOutpost"
+   }
+  },
+  "gossip.research_grant": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: research grant",
+   "text": "A research team got their grant renewed. They are celebrating with a cake shaped like a confidence interval.",
+   "requires": {
+    "at_type": "ResearchColony"
+   }
+  },
+  "gossip.lab_fridge": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: lab fridge",
+   "text": "Someone ate a sample from the lab fridge. The researchers are less worried about the sample than about the someone.",
+   "requires": {
+    "at_type": "ResearchColony"
+   }
+  },
+  "gossip.thesis": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: thesis",
+   "text": "A doctoral student has been rewriting chapter three since the colony was founded.",
+   "requires": {
+    "at_type": "ResearchColony"
+   }
+  },
+  "gossip.planet_market": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: planet market",
+   "text": "Market day: a fruit seller shouts prices at the haulers, and the haulers shout back lower ones.",
+   "requires": {
+    "at_type": "Planet"
+   }
+  },
+  "gossip.planet_rain": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: planet rain",
+   "text": "It rained real rain on the landing field. Half the dockers went out to stand in it.",
+   "requires": {
+    "at_type": "Planet"
+   }
+  },
+  "gossip.planet_tourists": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: planet tourists",
+   "text": "Tourists from the inner systems are taking pictures of the dock workers. The dock workers are charging.",
+   "requires": {
+    "at_type": "Planet"
+   }
+  }
+ }
+}

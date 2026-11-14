@@ -40,7 +40,9 @@
   "cargo1/frontier.json",
   "cargo1/enclaves.json",
   "cargo1/neons.json",
+  "cargo1/crew.json",
   "cargo1/rumours.json",
+  "cargo1/gossip.json",
   "cargo1/epilogue.json"
  ],
  "stats": {
@@ -93,11 +95,20 @@
   "turns_since_vip": {
    "about": "turns since the last VIP passenger appeared"
   },
+  "crew_size": {
+   "about": "helpers hired (the ship has bunks for four)"
+  },
   "combat_victories.pirate": {
    "about": "battles won against pirate"
   },
   "combat_victories.militia": {
    "about": "battles won against militia"
+  },
+  "combat_victories.raider": {
+   "about": "battles won against raider"
+  },
+  "combat_victories.machine": {
+   "about": "battles won against machine"
   },
   "combat_victories.rogue_captain": {
    "about": "battles won against rogue_captain"
@@ -144,6 +155,17 @@
   },
   "items": {
    "about": "items carried"
+  },
+  "crew": {
+   "about": "helpers aboard",
+   "members": [
+    "loader",
+    "steward",
+    "mechanic",
+    "gunner",
+    "navigator",
+    "broker"
+   ]
   },
   "unlocked_types": {
    "about": "hidden location types revealed",
@@ -596,7 +618,7 @@
      "ch3a"
     ],
     "plot_points": 100,
-    "trade_profit": 600000
+    "trade_profit": 500000
    },
    "next": [],
    "source": "cargo.py StoryManager.__init__ (chapters)",
@@ -614,7 +636,7 @@
    "requires": {
     "buildings.stockmarket": 5,
     "passenger_reputation": 80,
-    "trade_profit": 600000
+    "trade_profit": 500000
    },
    "effects": {
     "money": 1000000,

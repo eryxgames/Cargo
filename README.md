@@ -131,6 +131,7 @@ and how the game works; each location also lists its own commands under the stat
 | `buy` / `sell` | `b` / `s` | Trade goods: `tech/t`, `agri/a` (also `agro`), `salt/s`, `fuel/f` |
 | `travel` | `t` | Move to another location |
 | `port` | `p` | Passengers, VIPs and contracts |
+| `hunt` | `hu` | The bounty board: pick a wanted ship and go after it (uses the turn) |
 | `cantina` | `c` | Rumours, people and quests |
 | `shop` | `sh` | Equipment for the ship |
 | `build` | `bl` | Construct buildings |
@@ -152,7 +153,16 @@ Some commands exist only at certain places (mining at asteroid bases, research a
 A few rules worth knowing:
 - The hold has room for 400 units of each good, and cargo equipment adds room.
 - Trade profit is what you sell for minus what you paid, so selling at a loss counts against you.
-- Fights take money and cargo only when you lose. Combat equipment helps you win or avoid a fight.
+- Between docks you meet a dozen kinds of enemy (scrap skiffs, corsair wings, feral mining drones,
+  a runaway harvester, customs cutters, cultists, legion deserters, motherships) and a dozen
+  situations (distress beacons, derelicts, ion storms, comet tails, a stowaway, a fluencer's yacht).
+  Each offers choices: fight, run, pay, talk, and better ones for the right gear or crew.
+  Fights take money and cargo only when you lose.
+- Cantinas have crew for hire, four bunks: a loader (more hold), a steward (better fares),
+  a mechanic, a gunner, a Solarian navigator and an old broker (less tax).
+- Plot points move the story. They come from doing things: scenes, quests, passengers, good deals,
+  research, first visits, fights won. The status line shows how many the next chapter needs, and
+  `log` shows the rest. Stuck for a while? Have a drink in the cantina.
 - Passenger reputation runs from 0 to 100.
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 

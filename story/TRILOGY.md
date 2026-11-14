@@ -178,9 +178,19 @@ Balance: chapter thresholds now mean something (50 plot points for chapter 2,
 rewards were scaled down. Since 1.2 trade profit is real (sale price minus what
 the goods cost), the hold has a size, fights take money only when they are lost,
 and passenger reputation stops at 100; the trader's chapter asks 150 000 profit
-and the trade ending 600 000. Measured with the bot: traders finish in about
-70 to 230 turns, explorers in 50 to 120, fighters in 330 to 390 (the combat ending
-needs 50 victories).
+and the trade ending 500 000. Plot points come from what the captain does (scenes,
+quests, passengers, good deals, research, first visits, fights won, situations
+handled), not from things that merely happen to the ship. Fighters take bounties
+(`hunt`), so the combat road is no longer a wait for pirates. Measured with the bot:
+every route ends in about 85 to 140 turns.
+
+Between docks: twelve kinds of enemy (scrap skiffs to a pirate dreadnought, feral
+mining drones, a runaway harvester, customs, cultists, legion deserters) and twelve
+situations, each with choices that the right gear or crew improves. Crew for hire
+in cantinas, four bunks: Shunt the loader, Ambrose the steward, Oksana the
+mechanic, Tadeo the gunner, Iolanthe the Solarian navigator and Fenn the broker
+(`cargo1/crew.json`). Forty-odd lines of dock gossip fill the cantina between
+story rumours (`cargo1/gossip.json`).
 
 Rewritten: every chapter and ending text, the passenger and synthetics chains,
 and the ancient scholar (now human). New: the Hansa charter, the samples, the
