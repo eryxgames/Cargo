@@ -8,17 +8,6 @@
   "flag-never-read|cargo1:flag tech_breakthrough|set (by the game) but no node reads it",
   "flag-never-read|cargo1:flag trade_empire|set (by the game) but no node reads it",
   "flag-unused|cargo1:flag galactic_crisis|declared, never set, never read",
-  "flag-unused|cargo1:flag resource_empire|declared, never set, never read",
-  "missing|cargo1:meet.pirate_nemesis|event chain 'pirate_vendetta' is not defined",
-  "place|cargo1:visit.merchant_trader|condition names unknown place 'cantina'",
-  "place|cargo1:visit.merchant_trader|condition names unknown place 'port'",
-  "place|cargo1:visit.vip_passenger|condition names unknown place 'port'",
-  "promise-unpaid|saga:promise the_stranger|made but never paid",
-  "timeline|saga:character captain|timeline places them in cargo2, but no node there uses them",
-  "unreachable|cargo1:meet.system_rebellion|can never happen: the game never produces 'controlled_locations'",
-  "unreachable|cargo1:system_rebellion.1|can never happen: reached only from meet.system_rebellion",
-  "unreachable|cargo1:system_rebellion.2|can never happen: needs system_rebellion.1",
-  "unreachable|cargo1:visit.merchant_trader|can never happen: place port, cantina does not exist",
-  "unreachable|cargo1:visit.vip_passenger|can never happen: place port does not exist"
+  "flag-unused|cargo1:flag resource_empire|declared, never set, never read"
  ]
 }

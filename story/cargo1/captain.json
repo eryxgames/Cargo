@@ -1,0 +1,363 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The captain across the saga: two meetings with an older captain (from Cargo 2 at an outpost, from Cargo 3 at the portal) and the clone. Without an imported record the older captain is never named. With one, the scene uses the record's name: the captain's own name means the same person grown old; another name is the captain the player went on to play in that part, who knew this one.",
+ "arcs": {
+  "saga": {
+   "title": "Saga: the long haul",
+   "order": 0.5
+  }
+ },
+ "characters": {
+  "captain": {
+   "name": "The captain",
+   "saga": true,
+   "about": "the player; see saga.json"
+  },
+  "clone": {
+   "name": "The other captain",
+   "saga": true,
+   "about": "grown by a research colony's insurer from the captain's customs scan; same face, same licence, same debts"
+  }
+ },
+ "flags": {
+  "met_the_stranger": {
+   "about": "the captain spoke with the old hauler at an outpost bar",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "kept_the_pellet": {
+   "about": "the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "heard_the_warning": {
+   "about": "the captain listened to the older captain at the portal",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "closed_the_channel": {
+   "about": "the captain cut the older captain off at the portal",
+   "carries_to": [
+    "cargo3"
+   ]
+  },
+  "scanned_at_customs": {
+   "about": "the captain's customs scan is on file with a research colony's insurer"
+  },
+  "clone_partner": {
+   "about": "the captain and the clone split the routes",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "clone_reported": {
+   "about": "the captain reported the clone to the insurer",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "clone_fight": {
+   "about": "the captain went after the clone"
+  },
+  "clone_let_go": {
+   "about": "the captain beat the clone in a fight and let it run",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {
+  "self.outpost": {
+   "kind": "encounter",
+   "arc": "saga",
+   "status": "draft",
+   "act": 2,
+   "title": "The old hauler",
+   "who": [
+    "captain"
+   ],
+   "as": "older, from Cargo 2",
+   "requires": {
+    "act_min": 2,
+    "at_type": [
+     "DeepSpaceOutpost",
+     "ResearchColony"
+    ]
+   },
+   "chance": 0.2,
+   "text": "In the station bar an old hauler pays for your drink before you have ordered it. The hauler taps the glass twice before drinking, the way you do, and asks after your ship by its real name, the one you have never painted on the hull.",
+   "variants": [
+    {
+     "requires": {
+      "visiting_captain": {
+       "game": "cargo2",
+       "same_name": true
+      }
+     },
+     "text": "In the station bar an old hauler pays for your drink before you have ordered it. The name tag says {visitor.name}. That is your name. The face above it is yours too, with forty more years on it, and it would rather not discuss that."
+    },
+    {
+     "requires": {
+      "visiting_captain": {
+       "game": "cargo2",
+       "same_name": false
+      }
+     },
+     "text": "In the station bar an old hauler pays for your drink before you have ordered it. The name tag says {visitor.name}, {visitor.rank}. You have never met. The hauler talks to you like an old crewmate who owes you money."
+    }
+   ],
+   "choices": [
+    {
+     "id": "ask",
+     "say": "Ask how they know the ship",
+     "next": "self.outpost.advice"
+    },
+    {
+     "id": "drink",
+     "say": "Drink, nod, leave",
+     "effects": {
+      "plot_points": 1
+     }
+    }
+   ],
+   "promises": [
+    "the_stranger"
+   ],
+   "notes": [
+    "outposts and research colonies: explorers rarely stop at outposts"
+   ]
+  },
+  "self.outpost.advice": {
+   "kind": "event",
+   "arc": "saga",
+   "status": "draft",
+   "act": 2,
+   "title": "Paid in advance",
+   "who": [
+    "captain"
+   ],
+   "as": "older, from Cargo 2",
+   "requires": {
+    "done": "self.outpost"
+   },
+   "text": [
+    "'One day you will sell her at Epsilon for less than she is worth,' the old hauler says. 'Pull the navigation computer before you do.'",
+    "Then the hauler leaves. The bartender shows you how the round was paid: a small, heavy pellet stamped with a number. Nobody at the bar knows what it is. You recognise the number. It is your ship's registry."
+   ],
+   "choices": [
+    {
+     "id": "keep",
+     "say": "Buy the pellet from the bartender",
+     "requires": {
+      "money": 500
+     },
+     "effects": {
+      "money": -500,
+      "set": [
+       "met_the_stranger",
+       "kept_the_pellet"
+      ],
+      "plot_points": 3
+     }
+    },
+    {
+     "id": "leave",
+     "say": "Leave it",
+     "effects": {
+      "set": [
+       "met_the_stranger"
+      ],
+      "plot_points": 2
+     }
+    }
+   ]
+  },
+  "self.portal": {
+   "kind": "encounter",
+   "arc": "saga",
+   "status": "draft",
+   "act": 4,
+   "title": "The ship on the far side",
+   "who": [
+    "captain"
+   ],
+   "as": "older, from Cargo 3",
+   "requires": {
+    "done": "stellar_portal"
+   },
+   "text": "A ship is waiting on the far side of the ring. It is your hull, older, patched where yours has not been hit yet. Its captain opens a voice channel with no picture. The voice is yours, worn down. 'When they restart it,' it says, 'make sure it starts from home.'",
+   "variants": [
+    {
+     "requires": {
+      "visiting_captain": {
+       "game": "cargo3",
+       "same_name": true
+      }
+     },
+     "text": "A ship is waiting on the far side of the ring. {visitor.name}, {visitor.rank}, opens a channel, picture and all. It is your face with a scar you have not earned yet. 'When they restart it,' the older you says, 'make sure it starts from home.'"
+    },
+    {
+     "requires": {
+      "visiting_captain": {
+       "game": "cargo3",
+       "same_name": false
+      }
+     },
+     "text": "A ship is waiting on the far side of the ring. {visitor.name}, {visitor.rank}, opens a channel. You have never seen this captain. The captain says your name the way people read names off a memorial, then: 'When they restart it, make sure it starts from home.'"
+    }
+   ],
+   "choices": [
+    {
+     "id": "listen",
+     "say": "Ask what 'it' is",
+     "effects": {
+      "set": [
+       "heard_the_warning"
+      ],
+      "plot_points": 5
+     }
+    },
+    {
+     "id": "close",
+     "say": "Close the channel",
+     "effects": {
+      "set": [
+       "closed_the_channel"
+      ]
+     }
+    }
+   ],
+   "promises": [
+    "the_warning"
+   ]
+  },
+  "clone.scan": {
+   "kind": "beat",
+   "arc": "saga",
+   "status": "draft",
+   "act": 2,
+   "title": "Customs scan",
+   "where": "ResearchColony",
+   "requires": {
+    "at_type": "ResearchColony",
+    "discovered.ResearchColony": 1,
+    "act_min": 2
+   },
+   "chance": 0.3,
+   "text": "Customs at the research colony scans every visitor down to the cell. The form says the scan is for insurance. The small print says the colony's insurer may grow a replacement crew from it if yours is lost. You sign. The alternative is not docking.",
+   "effects": {
+    "set": [
+     "scanned_at_customs"
+    ]
+   }
+  },
+  "clone.bill": {
+   "kind": "event",
+   "arc": "saga",
+   "status": "draft",
+   "act": 3,
+   "title": "A bill from Gamma",
+   "requires": {
+    "flag": "scanned_at_customs",
+    "act_min": 3
+   },
+   "chance": 0.2,
+   "text": "A repair yard at Gamma sends you a bill for work on your ship. Your ship has never been to that yard. The work order is signed with your thumbprint, and the yard notes that you tipped well."
+  },
+  "clone.meet": {
+   "kind": "encounter",
+   "arc": "saga",
+   "status": "draft",
+   "act": 3,
+   "title": "The other captain",
+   "who": [
+    "clone"
+   ],
+   "as": "clone",
+   "where": "Planet",
+   "requires": {
+    "done": "clone.bill",
+    "at_type": "Planet"
+   },
+   "chance": 0.25,
+   "text": [
+    "Two berths down sits a ship of your class with your registry, one digit off.",
+    "Its captain has your face, your licence and, under the insurer's contract, your debts. The clone has paid off more of them than you have."
+   ],
+   "choices": [
+    {
+     "id": "partner",
+     "say": "Split the routes between you",
+     "effects": {
+      "money": 5000,
+      "set": [
+       "clone_partner"
+      ]
+     }
+    },
+    {
+     "id": "report",
+     "say": "Report it to the insurer",
+     "effects": {
+      "plot_points": 2,
+      "set": [
+       "clone_reported"
+      ]
+     }
+    },
+    {
+     "id": "fight",
+     "say": "Settle it in the black",
+     "effects": {
+      "set": [
+       "clone_fight"
+      ]
+     },
+     "next": "rogue_captain.1"
+    }
+   ],
+   "promises": [
+    "the_other_captain"
+   ]
+  }
+ },
+ "amend": {
+  "nodes": {
+   "rogue_captain.1": {
+    "arc": "saga",
+    "status": "draft",
+    "who": [
+     "clone"
+    ],
+    "title": "The other captain: the fight",
+    "requires": {
+     "flag": "clone_fight"
+    },
+    "text": "The clone flies the way you fly. That is the problem.",
+    "notes": [
+     "was: an unused chain with no trigger; now the clone's fight (stage data: enemy_stats)"
+    ]
+   },
+   "rogue_captain.2": {
+    "arc": "saga",
+    "status": "draft",
+    "who": [
+     "clone"
+    ],
+    "title": "The other captain: after",
+    "text": "The other ship breaks off and runs. You know the course it will take, because it is the course you would take. You let it go.",
+    "effects": {
+     "set": [
+      "clone_let_go"
+     ],
+     "code": "{\"victory\": {\"money\": 5000, \"items\": [\"quantum_core\"]}, \"defeat\": {\"damage\": 30}}"
+    }
+   }
+  }
+ }
+}

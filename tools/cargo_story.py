@@ -23,6 +23,10 @@ import story as kit  # noqa: E402
 
 STORY_PATH = os.path.join(ROOT, "story", "cargo1.story.json")
 
+# Hand-written story files merged into the imported one (drafts until the game reads them)
+INCLUDES = ["cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
+            "cargo1/pirates.json", "cargo1/passengers.json", "cargo1/houses.json", "cargo1/frontier.json"]
+
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
 BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
 VICTORY_TYPES = ["total", "pirate", "militia", "rogue_captain", "uprising"]
@@ -94,6 +98,7 @@ def snapshot(game):
                 done.add("%s.%s" % (cid, mid))
     return {
         "turn": game.turn,
+        "player": game.player_name,
         "act": sm.get_chapter_number(),
         "chapter": sm.current_chapter,
         "place": game.current_location.name,
@@ -489,7 +494,7 @@ def import_story(cargo, game):
         "about": "Extracted from cargo.py by tools/cargo_story.py. Until the game reads this file, "
                  "cargo.py is the truth for every node with a 'source'; new content goes in "
                  "the files listed under include.",
-        "include": ["cargo1.drafts.json"],
+        "include": INCLUDES,
         "stats": {k: {"about": v, **({"produced": False} if k in NOT_PRODUCED else {})} for k, v in STATS.items()},
         "sets": {"researched": {"about": "research unlocked", "members": sorted(game.research.research_costs)},
                  "items": {"about": "items carried"},

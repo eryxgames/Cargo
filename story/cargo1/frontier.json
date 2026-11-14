@@ -1,0 +1,200 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The frontier: text for the nine location beats the game only named, the unlock quests, cargo cults and proto-Hatters at the outposts, the ring segments, and the cult capital past the portal. Nothing here is alien: the 'alien' beats become cargo cults and the builders' metal.",
+ "characters": {
+  "grey_hats": {
+   "name": "The Grey Hats",
+   "kind": "human",
+   "about": "an outpost hacker crew; proto-Hatters; clean records for a fee"
+  }
+ },
+ "flags": {
+  "worshipped": {
+   "about": "the Tarnished Gear adopted the captain's ship as a minor relic",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "grey_hats_client": {
+   "about": "the captain paid the Grey Hats to clean a record",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {
+  "hatters.grey": {
+   "kind": "event",
+   "arc": "frontier",
+   "status": "draft",
+   "act": 2,
+   "title": "The Grey Hats",
+   "who": [
+    "grey_hats"
+   ],
+   "where": "DeepSpaceOutpost",
+   "requires": {
+    "at_type": "DeepSpaceOutpost",
+    "act_min": 2
+   },
+   "chance": 0.1,
+   "text": "A crew calling itself the Grey Hats offers to clean your debt record. For a little more they will clean your rivals' records too, by which they mean fill them.",
+   "choices": [
+    {
+     "id": "pay",
+     "say": "Pay for a clean record",
+     "requires": {
+      "money": 3000
+     },
+     "effects": {
+      "money": -3000,
+      "plot_points": 2,
+      "set": [
+       "grey_hats_client"
+      ]
+     }
+    },
+    {
+     "id": "decline",
+     "say": "Keep your record as it is"
+    }
+   ]
+  },
+  "ruins.stator": {
+   "kind": "beat",
+   "arc": "frontier",
+   "status": "draft",
+   "act": 3,
+   "title": "The stator field",
+   "where": "Ancient Ruins Alpha",
+   "requires": {
+    "at": "Ancient Ruins Alpha"
+   },
+   "text": "Out past Sedna the segments hang in a line that bends round the Sun. Each is the size of a hauler. Every eleven hours they turn together, a few degrees, though nothing connects them that your instruments can find.",
+   "effects": {
+    "research_points": 50
+   }
+  },
+  "outpost.beacon": {
+   "kind": "beat",
+   "arc": "frontier",
+   "status": "draft",
+   "act": 4,
+   "title": "The beacon",
+   "where": "Alien Outpost Y",
+   "requires": {
+    "at": "Alien Outpost Y"
+   },
+   "text": "The builders left a beacon on Scholz's Star's track. It points away from every human route, at a patch of sky with nothing in it. Korinek, when you tell her, corrects you: nothing yet.",
+   "effects": {
+    "research_points": 80,
+    "plot_points": 5
+   }
+  },
+  "zeta.cult": {
+   "kind": "beat",
+   "arc": "frontier",
+   "status": "draft",
+   "act": 4,
+   "title": "The waiting city",
+   "where": "Zeta",
+   "requires": {
+    "at": "Zeta",
+    "flag": "stellar_portal"
+   },
+   "text": "Zeta Reticuli is the capital of the Cult of the Broken Machine. Its founders came here because every old story from Earth said somebody would be waiting at Zeta Reticuli. Nobody was. So the cult waits on their behalf, and sells refreshments.",
+   "effects": {
+    "plot_points": 3
+   }
+  }
+ },
+ "amend": {
+  "nodes": {
+   "unlock.AsteroidBase": {
+    "text": "Survey drones report mining in places no claim was ever filed: Tau Ceti's debris disk, the moons of Epsilon Indi's cold giant, the collision belt at Fomalhaut. Somebody is working rock off the books."
+   },
+   "unlock.DeepSpaceOutpost": {
+    "text": "The brown dwarfs between the stars make good fuel stops if somebody guards them: Luhman 16, WISE 0855, Scholz's Star. The outposts want a few escort runs before they open to traffic."
+   },
+   "unlock.ResearchColony": {
+    "text": "Three research colonies need a hauler who understands priority cargo: Nova Labs at Wolf 359, the Quantum Center at YZ Ceti and the Stellar Institute, far out at TRAPPIST-1."
+   },
+   "beat.AsteroidBase.mineral_discovery": {
+    "title": "A seam of heavy metal",
+    "text": "The survey drone finds a seam of iridium and osmium. The base's assayer says it is exactly what haulers would want for coinage, if haulers had coinage. The quartermaster says it is exactly what pays for a new air plant."
+   },
+   "beat.AsteroidBase.pirate_hideout": {
+    "title": "Closed for raiding",
+    "text": "A cave in the rock has been fitted with a docking ring, a bar and a hand-painted sign: CLOSED FOR RAIDING. BACK SOON."
+   },
+   "beat.AsteroidBase.ancient_technology": {
+    "title": "Old metal",
+    "text": "A miner shows you a shard of grey alloy cut from a comet core. It blunted the drill that found it. Under magnification the edges are machined."
+   },
+   "beat.DeepSpaceOutpost.smuggler_network": {
+    "title": "The second price list",
+    "text": "Every outpost has a second price list. This one keeps it printed on the back of the first, to save paper."
+   },
+   "beat.DeepSpaceOutpost.alien_contact": {
+    "title": "First contact",
+    "text": "The outpost belongs to the Order of the Tarnished Gear, a cargo cult founded by the crew of a hauler that broke down here forty years ago. They worship that hauler. They would like to worship yours as well, part-time.",
+    "choices": [
+     {
+      "id": "accept",
+      "say": "Accept the offerings",
+      "effects": {
+       "money": 500,
+       "set": [
+        "worshipped"
+       ]
+      }
+     },
+     {
+      "id": "explain",
+      "say": "Explain how engines work",
+      "effects": {
+       "plot_points": 3
+      }
+     }
+    ],
+    "notes": [
+     "was 'Alien contact' with no text: Cargo has no aliens to contact"
+    ]
+   },
+   "beat.DeepSpaceOutpost.trade_revolution": {
+    "title": "Priced by weight",
+    "text": "The outpost traders have started pricing everything by how much iridium it would buy, by the gram. They call the unit a mark. Nobody owns the idea yet."
+   },
+   "beat.ResearchColony.breakthrough_discovery": {
+    "title": "A date for the metal",
+    "text": "The colony's physicists have dated the builders' alloy by the decay in its lattice. It was last heated about seventy thousand years ago, which is when Scholz's Star passed the Sun."
+   },
+   "beat.ResearchColony.experiment_crisis": {
+    "title": "A humming crate",
+    "text": "An experiment has gone wrong and the colony would like it moved out of the system. It is in a crate. The crate is humming. The colony pays in advance, which is never a good sign."
+   },
+   "beat.ResearchColony.alien_artifacts": {
+    "title": "The builders' metal",
+    "text": "The colony keeps its sample of the alloy in a glass case with a handwritten card: NOT ALIEN. PROBABLY. The second word was added later, in different ink."
+   },
+   "merchant_visit.1": {
+    "status": "draft",
+    "arc": "frontier",
+    "who": [
+     "pilgrims"
+    ],
+    "title": "Relics for sale",
+    "requires": {
+     "done": "beat.DeepSpaceOutpost.alien_contact"
+    },
+    "chance": 0.2,
+    "text": "A trader of the Tarnished Gear sells relics: spare parts from the broken hauler. Most are blessed scrap. One is a fuel pump for your model, out of stock everywhere else in the near systems.",
+    "notes": [
+     "was: an unused chain with no trigger (stage data: duration, offers)"
+    ],
+    "kind": "event"
+   }
+  }
+ }
+}

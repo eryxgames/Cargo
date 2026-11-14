@@ -1,0 +1,260 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Houses and cooperatives: the families that outlive Cargo 1. The mining quest line becomes the Rockwarden cooperative (the wiki's Rockwardens, three generations later in Cargo 3); the research quest line becomes the founding of House Rostrom and the fourth test of the Bekkenheim drive, flown by Dharr Santor. Both quest lines were declared in the game and never offered.",
+ "arcs": {
+  "houses": {
+   "title": "Houses and cooperatives",
+   "order": 2.5
+  }
+ },
+ "characters": {
+  "anselm": {
+   "name": "Anselm Rockwarden",
+   "kind": "human",
+   "saga": true,
+   "about": "three tugs, a grudge against ore brokers; grandfather of Maret Rockwarden"
+  },
+  "ysolde": {
+   "name": "Ysolde van Rostrom",
+   "kind": "human",
+   "saga": true,
+   "about": "junior researcher in Cargo 1; founds House Rostrom (later CONZE, wiki canon)"
+  },
+  "santor": {
+   "name": "Dharr Santor",
+   "kind": "human",
+   "saga": true,
+   "about": "engineer; flies the fourth Bekkenheim test; the drive carries his name"
+  }
+ },
+ "flags": {
+  "rockwarden_share": {
+   "about": "the captain holds a share in the Rockwarden cooperative",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "rockwarden_books": {
+   "about": "the captain kept the cooperative's books while Stonewright flew sublight",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "fourth_test_to_rostrom": {
+   "about": "the captain gave the only recording of the fourth test to Ysolde",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "fourth_test_copy": {
+   "about": "the captain kept a copy of the fourth test recording",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "rostrom_creditor": {
+   "about": "House Rostrom was founded on the captain's loan",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "rostrom_declined": {
+   "about": "the captain refused Ysolde the loan",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {},
+ "amend": {
+  "nodes": {
+   "questline.mining.1": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "anselm"
+    ],
+    "title": "A share in the rock",
+    "requires": {
+     "mining_platforms": 1,
+     "at_type": "AsteroidBase"
+    },
+    "text": "Anselm Rockwarden runs three tugs and a grudge against ore brokers. He offers you a share in his cooperative for one platform's output, paid in rock.",
+    "effects": {
+     "set": [
+      "rockwarden_share"
+     ]
+    }
+   },
+   "questline.mining.2": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "anselm"
+    ],
+    "title": "Stonewright",
+    "requires": {
+     "done": "questline.mining.1",
+     "mining_platforms": 3
+    },
+    "text": "The cooperative buys a hull to live in between claims. Anselm names it Stonewright and asks you to haul the keel plates from Epsilon. 'Rock is patient,' he says. 'Brokers are not. So we will be rock.'",
+    "effects": {
+     "money": 25000
+    }
+   },
+   "questline.mining.3": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "anselm"
+    ],
+    "title": "The long run",
+    "requires": {
+     "done": "questline.mining.2",
+     "act_min": 3
+    },
+    "text": "Anselm takes Stonewright on the sublight run to the Fomalhaut belt: twenty-five light-years, decades for everyone who stays behind, far fewer for the crew. He asks you to keep the cooperative's books until his children can. They are three and five.",
+    "choices": [
+     {
+      "id": "books",
+      "say": "Keep the books",
+      "effects": {
+       "plot_points": 5,
+       "set": [
+        "rockwarden_books"
+       ]
+      }
+     },
+     {
+      "id": "decline",
+      "say": "Wish him luck"
+     }
+    ],
+    "promises": [
+     "the_stonewright"
+    ]
+   },
+   "questline.research.1": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "ysolde"
+    ],
+    "title": "Drive parts for Rostrom",
+    "requires": {
+     "discovered.ResearchColony": 1,
+     "act_min": 2
+    },
+    "text": "Ysolde van Rostrom is a junior researcher with a senior budget problem. She needs Bekkenheim coil sections moved from Nova Labs to the Quantum Center without anyone weighing them.",
+    "effects": {
+     "money": 12000,
+     "research_points": 20
+    }
+   },
+   "questline.research.2": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "ysolde",
+     "santor"
+    ],
+    "title": "The fourth test",
+    "requires": {
+     "done": "questline.research.1",
+     "research_points": 300,
+     "act_min": 2
+    },
+    "text": [
+     "The first three Bekkenheim drive tests destroyed three empty hulls. The fourth has a pilot: Dharr Santor, an engineer who would rather fly it than explain it to the board again. Ysolde asks you to watch from a safe distance and record everything.",
+     "The hull vanishes. Eleven minutes later it is back, slightly off course. Santor climbs out with three weeks of beard and will not say where he has been."
+    ],
+    "choices": [
+     {
+      "id": "give",
+      "say": "Give Ysolde the recording",
+      "effects": {
+       "plot_points": 3,
+       "set": [
+        "fourth_test_to_rostrom"
+       ]
+      }
+     },
+     {
+      "id": "copy",
+      "say": "Give it to her, and keep a copy",
+      "effects": {
+       "research_points": 50,
+       "set": [
+        "fourth_test_copy"
+       ]
+      }
+     }
+    ],
+    "promises": [
+     "the_fourth_test"
+    ]
+   },
+   "questline.research.3": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "ysolde"
+    ],
+    "title": "House Rostrom",
+    "requires": {
+     "done": "questline.research.2",
+     "act_min": 3
+    },
+    "text": "Ysolde buys the drive patents from her own institute with money borrowed from you. She calls the result House Rostrom. You call it a loan.",
+    "choices": [
+     {
+      "id": "lend",
+      "say": "Lend her the money",
+      "requires": {
+       "money": 30000
+      },
+      "effects": {
+       "money": -30000,
+       "set": [
+        "rostrom_creditor"
+       ]
+      }
+     },
+     {
+      "id": "refuse",
+      "say": "Keep your money",
+      "effects": {
+       "set": [
+        "rostrom_declined"
+       ]
+      }
+     }
+    ]
+   },
+   "researcher_exchange.1": {
+    "status": "draft",
+    "arc": "houses",
+    "who": [
+     "ysolde"
+    ],
+    "title": "Logs for credits",
+    "requires": {
+     "done": "questline.research.1"
+    },
+    "chance": 0.2,
+    "text": "A Rostrom recruiter offers research credits for copies of your navigation logs. Only the legs where your instruments misbehaved.",
+    "effects": {
+     "research_points": 40
+    },
+    "notes": [
+     "was: an unused chain with no trigger (stage data: max_points, rate)"
+    ],
+    "kind": "event"
+   }
+  }
+ }
+}

@@ -8,7 +8,14 @@
  },
  "about": "Extracted from cargo.py by tools/cargo_story.py. Until the game reads this file, cargo.py is the truth for every node with a 'source'; new content goes in the files listed under include.",
  "include": [
-  "cargo1.drafts.json"
+  "cargo1/places.json",
+  "cargo1/main.json",
+  "cargo1/captain.json",
+  "cargo1/synthetics.json",
+  "cargo1/pirates.json",
+  "cargo1/passengers.json",
+  "cargo1/houses.json",
+  "cargo1/frontier.json"
  ],
  "stats": {
   "money": {

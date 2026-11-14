@@ -2,33 +2,189 @@
  "format": "storykit-saga",
  "version": 1,
  "title": "The Cargo trilogy",
- "about": "What spans the three games: the parts, the characters who live across them, and the promises one part makes for a later one to keep.",
+ "about": "What spans the three games: the parts, the characters who live across them, and the promises one part makes for a later one to keep. Readable outline: TRILOGY.md. A part marked open is still being written, so what it owes is reported as pending.",
  "parts": [
-  {"game": "cargo1", "title": "CARGO: Space Trading Saga", "file": "cargo1.story.json", "status": "released (1.1.0)"},
-  {"game": "cargo2", "title": "Cargo 2", "file": "cargo2.story.json", "status": "in development; story imported from data/*.yml"},
-  {"game": "cargo3", "title": "Cargo 3", "status": "planned"}
+  {
+   "game": "cargo1",
+   "title": "CARGO: Space Trading Saga",
+   "file": "cargo1.story.json",
+   "status": "released (1.1.0); new arcs drafted in cargo1/",
+   "era": "about 2420: the Hansa, the first legion, the first node"
+  },
+  {
+   "game": "cargo2",
+   "title": "Cargo 2",
+   "file": "cargo2.story.json",
+   "status": "in development; story imported from data/*.yml",
+   "open": true,
+   "era": "about 40 years later: the Mandate, the Concord's houses and gates, the Binary Dawn"
+  },
+  {
+   "game": "cargo3",
+   "title": "Cargo 3",
+   "status": "planned",
+   "open": true,
+   "era": "about 110 years after Cargo 1, just after the Great Debacle: Project ERYX and the Gyrotron restart"
+  }
  ],
  "characters": {
   "captain": {
    "name": "The captain",
-   "about": "The player's captain. The captain's record (export / import) carries them between the parts; a later part's record lets an earlier part show the captain's future self.",
+   "about": "The player's captain. Carried between parts by the captain record. An earlier part shows a later part's captain as an older stranger: unnamed without a record, named from the record with one (the same person if the name matches, otherwise the captain the player went on to play).",
    "timeline": [
-    {"game": "cargo1", "as": "the player; meets their future self (drafts)"},
-    {"game": "cargo2", "as": "the player, decades later (to be decided)"},
-    {"game": "cargo3", "as": "the player at the end of the saga (to be decided)"}
+    {
+     "game": "cargo1",
+     "as": "the player; meets an older captain at an outpost (Cargo 2's) and past the portal (Cargo 3's); meets a clone"
+    },
+    {
+     "game": "cargo2",
+     "as": "the player, about forty years on (less, with dilation); or an old NPC if the player starts a new captain"
+    },
+    {
+     "game": "cargo3",
+     "as": "the player at the restart, or the name on a memorial"
+    }
+   ]
+  },
+  "clone": {
+   "name": "The other captain",
+   "about": "Grown from the captain's customs scan by a research colony's insurer.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "partner, rival or runaway"
+    },
+    {
+     "game": "cargo2",
+     "as": "the other hauler with the captain's name"
+    }
+   ]
+  },
+  "unit113": {
+   "name": "Curator Unit 113",
+   "about": "The first neurodroid to refuse an order. Machines do not age; they fork.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "the captain's guild; the first node"
+    },
+    {
+     "game": "cargo2",
+     "as": "a node of the Binary Dawn, remembering what the captain chose"
+    },
+    {
+     "game": "cargo3",
+     "as": "unchanged, several times over"
+    }
+   ]
+  },
+  "pirate_captain": {
+   "name": "Hedda Mraz",
+   "about": "Pirate with a count of grudges.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "the vendetta"
+    },
+    {
+     "game": "cargo2",
+     "as": "founder of the Void Angels free company, if spared"
+    }
+   ]
+  },
+  "anselm": {
+   "name": "Anselm Rockwarden",
+   "about": "Founder of the Rockwarden cooperative; grandfather of Maret Rockwarden (wiki canon).",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "the cooperative, Stonewright's first captain"
+    },
+    {
+     "game": "cargo3",
+     "as": "a name on Stonewright's keel; Maret Rockwarden commands"
+    }
+   ]
+  },
+  "ysolde": {
+   "name": "Ysolde van Rostrom",
+   "about": "Founder of House Rostrom (wiki: CONZE Ysolde van Rostrom, Year of Foundation).",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "junior researcher, then founder"
+    },
+    {
+     "game": "cargo2",
+     "as": "head of House Rostrom, old and dilated"
+    }
+   ]
+  },
+  "santor": {
+   "name": "Dharr Santor",
+   "about": "Flew the fourth Bekkenheim test and came back eleven minutes later with three weeks of beard.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "test pilot"
+    },
+    {
+     "game": "cargo2",
+     "as": "the name on the drive; possibly the man himself"
+    }
    ]
   },
   "ancient_scholar": {
-   "name": "Ancient Scholar",
-   "about": "An alien scholar of the sector's past. Present in both existing games; a candidate for the character who links all three.",
+   "name": "Matylda Korinek",
+   "about": "Archaeophysicist; first to say the builders' metal was a ring around our own Sun.",
    "timeline": [
-    {"game": "cargo1", "as": "passenger who starts the 'ancient mysteries' chain"},
-    {"game": "cargo2", "as": "met in ports (characters.yml)"}
+    {
+     "game": "cargo1",
+     "as": "the samples, the segment at Scholz's Star"
+    },
+    {
+     "game": "cargo2",
+     "as": "old, still right (characters.yml has an 'ancient scholar' to rewrite)"
+    },
+    {
+     "game": "cargo3",
+     "as": "her notes, or her upload"
+    }
    ]
   }
  },
  "promises": {
-  "the_warning": {"about": "What the captain's future self warns of at the Stellar Portal. DRAFT: to be decided.", "pay_by": "cargo3"},
-  "the_stranger": {"about": "Who the old hauler at the outpost really is. DRAFT: to be decided.", "pay_by": "cargo2"}
+  "the_seed": {
+   "about": "What the captain did when Unit 113 refused order 4471. The Collective remembers.",
+   "pay_by": "cargo2"
+  },
+  "the_stranger": {
+   "about": "Who the old hauler at the outpost was, and the pellet stamped with the captain's registry: a Hansa Mark from before there were any.",
+   "pay_by": "cargo2"
+  },
+  "the_first_mark": {
+   "about": "The charter and the first Mark. Who signed first decides how the Hansa treats the captain.",
+   "pay_by": "cargo2"
+  },
+  "the_fourth_test": {
+   "about": "Where Dharr Santor spent three weeks in eleven minutes: the first person displaced in time, and why the drive bears his name.",
+   "pay_by": "cargo2"
+  },
+  "the_other_captain": {
+   "about": "The clone and what became of it.",
+   "pay_by": "cargo2"
+  },
+  "the_heading": {
+   "about": "The course home from Scholz's Star, filed and unread for forty years. Cargo 2 opens the file; Cargo 3 flies it.",
+   "pay_by": "cargo2"
+  },
+  "the_warning": {
+   "about": "'Make sure it starts from home': the Gyrotron must be restarted from Sol, not from a faction's end of the ring.",
+   "pay_by": "cargo3"
+  },
+  "the_stonewright": {
+   "about": "Stonewright comes back from the sublight run with Anselm's grandchild in command.",
+   "pay_by": "cargo3"
+  }
  }
 }

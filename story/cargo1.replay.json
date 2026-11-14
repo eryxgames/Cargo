@@ -773,44 +773,71 @@
   },
   "meet.system_rebellion": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 199.0,
+    "first": 164,
+    "last": 222
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 28,
+    "last": 36
    },
    "discovery2": {
     "share": 0.0
    },
    "trade": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 29.5,
+    "first": 27,
+    "last": 37
    }
   },
   "system_rebellion.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 199.0,
+    "first": 164,
+    "last": 222
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 28,
+    "last": 36
    },
    "discovery2": {
     "share": 0.0
    },
    "trade": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 29.5,
+    "first": 27,
+    "last": 37
    }
   },
   "system_rebellion.2": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 199.0,
+    "first": 164,
+    "last": 222
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 28,
+    "last": 36
    },
    "discovery2": {
     "share": 0.0
    },
    "trade": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 29.5,
+    "first": 27,
+    "last": 37
    }
   },
   "meet.ancient_mysteries": {
@@ -849,13 +876,22 @@
   },
   "rogue_captain.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 135.0,
+    "first": 120,
+    "last": 138
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 35.5,
+    "first": 31,
+    "last": 38
    },
    "discovery2": {
-    "share": 0.0
+    "share": 0.5,
+    "median": 76.5,
+    "first": 60,
+    "last": 93
    },
    "trade": {
     "share": 0.0
@@ -863,13 +899,22 @@
   },
   "rogue_captain.2": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 135.0,
+    "first": 120,
+    "last": 138
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 35.5,
+    "first": 31,
+    "last": 38
    },
    "discovery2": {
-    "share": 0.0
+    "share": 0.5,
+    "median": 76.5,
+    "first": 60,
+    "last": 93
    },
    "trade": {
     "share": 0.0
@@ -877,27 +922,55 @@
   },
   "merchant_visit.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 32.0,
+    "first": 23,
+    "last": 42,
+    "expected_wait": 5.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 50.0,
+    "first": 28,
+    "last": 52,
+    "expected_wait": 5.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 40.5,
+    "first": 35,
+    "last": 67,
+    "expected_wait": 5.0
    },
    "trade": {
-    "share": 0.0
+    "share": 0.75,
+    "median": 42,
+    "first": 23,
+    "last": 45,
+    "expected_wait": 5.0
    }
   },
   "researcher_exchange.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 32.0,
+    "first": 23,
+    "last": 42,
+    "expected_wait": 5.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36,
+    "expected_wait": 5.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 40.5,
+    "first": 35,
+    "last": 67,
+    "expected_wait": 5.0
    },
    "trade": {
     "share": 0.0
@@ -1079,30 +1152,62 @@
   },
   "visit.merchant_trader": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0,
+    "expected_wait": 3.3
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0,
+    "expected_wait": 3.3
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0,
+    "expected_wait": 3.3
    },
    "trade": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0,
+    "expected_wait": 3.3
    }
   },
   "visit.vip_passenger": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 98.0,
+    "first": 75,
+    "last": 132,
+    "expected_wait": 5.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 23.0,
+    "first": 14,
+    "last": 29,
+    "expected_wait": 5.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 0.25,
+    "median": 94,
+    "first": 94,
+    "last": 94,
+    "expected_wait": 5.0
    },
    "trade": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 24.5,
+    "first": 16,
+    "last": 34,
+    "expected_wait": 5.0
    }
   },
   "visit.neurodroid_leader": {
@@ -1498,10 +1603,16 @@
     "share": 0.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 77.5,
+    "first": 72,
+    "last": 93
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 102.0,
+    "first": 81,
+    "last": 114
    },
    "trade": {
     "share": 0.0
@@ -1537,13 +1648,19 @@
   },
   "questline.combat.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 80.0,
+    "first": 73,
+    "last": 85
    },
    "discovery": {
     "share": 0.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 98.5,
+    "first": 59,
+    "last": 107
    },
    "trade": {
     "share": 0.0
@@ -1551,13 +1668,19 @@
   },
   "questline.combat.2": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 92.5,
+    "first": 73,
+    "last": 128
    },
    "discovery": {
     "share": 0.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 0.75,
+    "median": 105,
+    "first": 59,
+    "last": 107
    },
    "trade": {
     "share": 0.0
@@ -1565,13 +1688,19 @@
   },
   "questline.combat.3": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 134.5,
+    "first": 120,
+    "last": 138
    },
    "discovery": {
     "share": 0.0
    },
    "discovery2": {
-    "share": 0.0
+    "share": 0.75,
+    "median": 106,
+    "first": 60,
+    "last": 108
    },
    "trade": {
     "share": 0.0
@@ -1579,13 +1708,22 @@
   },
   "questline.research.1": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 32.0,
+    "first": 23,
+    "last": 42
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 40.5,
+    "first": 35,
+    "last": 67
    },
    "trade": {
     "share": 0.0
@@ -1593,13 +1731,22 @@
   },
   "questline.research.2": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 32.0,
+    "first": 23,
+    "last": 42
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 41.0,
+    "first": 29,
+    "last": 50
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 40.5,
+    "first": 35,
+    "last": 67
    },
    "trade": {
     "share": 0.0
@@ -1607,33 +1754,71 @@
   },
   "questline.research.3": {
    "combat": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 134.5,
+    "first": 120,
+    "last": 138
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 41.0,
+    "first": 29,
+    "last": 50
    },
    "discovery2": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 99.5,
+    "first": 60,
+    "last": 108
    },
    "trade": {
     "share": 0.0
    }
   },
-  "echo.portal": {
+  "hansa.charter": {
    "combat": {
     "share": 0.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 34.5,
+    "first": 31,
+    "last": 36
    },
    "discovery2": {
     "share": 0.0
    },
    "trade": {
+    "share": 1.0,
+    "median": 34.0,
+    "first": 31,
+    "last": 37
+   }
+  },
+  "trail.samples": {
+   "combat": {
+    "share": 1.0,
+    "median": 134.5,
+    "first": 120,
+    "last": 138
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 99.5,
+    "first": 60,
+    "last": 108
+   },
+   "trade": {
     "share": 0.0
    }
   },
-  "echo.outpost": {
+  "self.outpost": {
    "combat": {
     "share": 1.0,
     "median": 33.0,
@@ -1642,7 +1827,11 @@
     "expected_wait": 5.0
    },
    "discovery": {
-    "share": 0.0
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36,
+    "expected_wait": 5.0
    },
    "discovery2": {
     "share": 1.0,
@@ -1657,6 +1846,388 @@
     "first": 42,
     "last": 42,
     "expected_wait": 5.0
+   }
+  },
+  "self.outpost.advice": {
+   "combat": {
+    "share": 1.0,
+    "median": 33.0,
+    "first": 24,
+    "last": 43
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 41.5,
+    "first": 36,
+    "last": 68
+   },
+   "trade": {
+    "share": 0.25,
+    "median": 42,
+    "first": 42,
+    "last": 42
+   }
+  },
+  "self.portal": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "clone.scan": {
+   "combat": {
+    "share": 1.0,
+    "median": 40.0,
+    "first": 32,
+    "last": 47,
+    "expected_wait": 3.3
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36,
+    "expected_wait": 3.3
+   },
+   "discovery2": {
+    "share": 0.75,
+    "median": 43,
+    "first": 42,
+    "last": 104,
+    "expected_wait": 3.3
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "clone.bill": {
+   "combat": {
+    "share": 1.0,
+    "median": 134.5,
+    "first": 120,
+    "last": 138,
+    "expected_wait": 5.0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 33.5,
+    "first": 29,
+    "last": 36,
+    "expected_wait": 5.0
+   },
+   "discovery2": {
+    "share": 0.75,
+    "median": 93,
+    "first": 60,
+    "last": 106,
+    "expected_wait": 5.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "clone.meet": {
+   "combat": {
+    "share": 1.0,
+    "median": 135.0,
+    "first": 120,
+    "last": 138,
+    "expected_wait": 4.0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 35.5,
+    "first": 31,
+    "last": 38,
+    "expected_wait": 4.0
+   },
+   "discovery2": {
+    "share": 0.5,
+    "median": 76.5,
+    "first": 60,
+    "last": 93,
+    "expected_wait": 4.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "seed.refusal": {
+   "combat": {
+    "share": 1.0,
+    "median": 41.0,
+    "first": 23,
+    "last": 47,
+    "expected_wait": 6.7
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 41.5,
+    "first": 35,
+    "last": 68,
+    "expected_wait": 6.7
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "seed.terms": {
+   "combat": {
+    "share": 1.0,
+    "median": 41.0,
+    "first": 23,
+    "last": 47
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 41.5,
+    "first": 35,
+    "last": 68
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "harvest.shaman": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "node.first": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "vendetta.bounty": {
+   "combat": {
+    "share": 1.0,
+    "median": 92.5,
+    "first": 73,
+    "last": 128
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.75,
+    "median": 105,
+    "first": 54,
+    "last": 107
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "vendetta.convoys": {
+   "combat": {
+    "share": 1.0,
+    "median": 142.0,
+    "first": 126,
+    "last": 155
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "vendetta.terms": {
+   "combat": {
+    "share": 1.0,
+    "median": 150.5,
+    "first": 138,
+    "last": 173
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "legion.offer": {
+   "combat": {
+    "share": 1.0,
+    "median": 134.5,
+    "first": 120,
+    "last": 138
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 99.5,
+    "first": 60,
+    "last": 108
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "pass.deacon": {
+   "combat": {
+    "share": 1.0,
+    "median": 56.0,
+    "first": 46,
+    "last": 146,
+    "expected_wait": 5.0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 23.0,
+    "first": 13,
+    "last": 32,
+    "expected_wait": 5.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 66.5,
+    "first": 35,
+    "last": 74,
+    "expected_wait": 5.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 22.5,
+    "first": 14,
+    "last": 32,
+    "expected_wait": 5.0
+   }
+  },
+  "pass.pilgrims": {
+   "combat": {
+    "share": 1.0,
+    "median": 33.0,
+    "first": 24,
+    "last": 43,
+    "expected_wait": 4.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 41.5,
+    "first": 36,
+    "last": 68,
+    "expected_wait": 4.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "hatters.grey": {
+   "combat": {
+    "share": 1.0,
+    "median": 33.0,
+    "first": 24,
+    "last": 43,
+    "expected_wait": 10.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 41.5,
+    "first": 36,
+    "last": 68,
+    "expected_wait": 10.0
+   },
+   "trade": {
+    "share": 0.25,
+    "median": 42,
+    "first": 42,
+    "last": 42,
+    "expected_wait": 10.0
+   }
+  },
+  "ruins.stator": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "outpost.beacon": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "zeta.cult": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
    }
   }
  },

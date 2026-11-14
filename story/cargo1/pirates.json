@@ -1,0 +1,292 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Pirates and the corporate legions. Hedda Mraz is the nemesis the game announced but never followed (its 'pirate_vendetta' chain did not exist); spared, she founds a free company in Cargo 2. The legion contracts were declared in the game and never offered; here they lead to the merger that becomes the Terran Mandate.",
+ "arcs": {
+  "legions": {
+   "title": "Corporate legions",
+   "order": 3.5
+  }
+ },
+ "flags": {
+  "bounty_war": {
+   "about": "the captain answered Mraz's bounty with a bigger one"
+  },
+  "mraz_handed": {
+   "about": "the captain handed Hedda Mraz to a legion",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "mraz_spared": {
+   "about": "the captain let Hedda Mraz go",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "mraz_hired": {
+   "about": "the captain hired Hedda Mraz as an escort",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "legion_omnicorp": {
+   "about": "commission with OmniCorp's legion",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "legion_stellar": {
+   "about": "commission with Stellar Dynamics' legion",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "legion_xylo": {
+   "about": "commission with the Xylo Consortium's legion",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "legion_freelance": {
+   "about": "turned down every commission",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {
+  "vendetta.bounty": {
+   "kind": "event",
+   "arc": "pirates",
+   "status": "draft",
+   "act": 2,
+   "title": "The bounty",
+   "who": [
+    "pirate_captain"
+   ],
+   "requires": {
+    "done": "meet.pirate_nemesis"
+   },
+   "text": "Mraz posts a bounty on your ship in every outpost bar between Alpha and Luhman 16. The amount is insulting. You count the zeros twice. Still insulting.",
+   "choices": [
+    {
+     "id": "raise",
+     "say": "Post a bigger one on her",
+     "requires": {
+      "money": 10000
+     },
+     "effects": {
+      "money": -10000,
+      "set": [
+       "bounty_war"
+      ]
+     }
+    },
+    {
+     "id": "ignore",
+     "say": "Ignore it"
+    }
+   ]
+  },
+  "vendetta.convoys": {
+   "kind": "event",
+   "arc": "pirates",
+   "status": "draft",
+   "act": 2,
+   "title": "Everyone's cargo but yours",
+   "who": [
+    "pirate_captain"
+   ],
+   "requires": {
+    "done": "vendetta.bounty",
+    "combat_victories.pirate": 15
+   },
+   "text": "Mraz starts raiding the ore convoys out of Gamma. She leaves your cargo alone and takes everyone else's. The miners have noticed. So have the legions.",
+   "effects": {
+    "passenger_reputation": -5
+   }
+  },
+  "vendetta.terms": {
+   "kind": "encounter",
+   "arc": "pirates",
+   "status": "draft",
+   "act": 3,
+   "title": "Hiding in the weather",
+   "who": [
+    "pirate_captain"
+   ],
+   "where": "DeepSpaceOutpost",
+   "requires": {
+    "done": "vendetta.convoys",
+    "at_type": "DeepSpaceOutpost"
+   },
+   "text": [
+    "You find Mraz skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
+    "Her ship is out of fuel and she is out of patience. 'Go on, then,' she says."
+   ],
+   "choices": [
+    {
+     "id": "hand",
+     "say": "Hand her to a legion for the bounty",
+     "effects": {
+      "money": 50000,
+      "set": [
+       "mraz_handed"
+      ]
+     }
+    },
+    {
+     "id": "spare",
+     "say": "Give her fuel and a head start",
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "mraz_spared"
+      ]
+     }
+    },
+    {
+     "id": "hire",
+     "say": "Offer her a job",
+     "requires": {
+      "money": 20000
+     },
+     "effects": {
+      "money": -20000,
+      "set": [
+       "mraz_hired"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "bounty_war"
+     },
+     "text": [
+      "You find Mraz skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
+      "Her ship is out of fuel and she is out of patience. 'Go on, then,' she says. 'Collect your own bounty. I hear it is a big one.'"
+     ]
+    }
+   ]
+  },
+  "legion.offer": {
+   "kind": "event",
+   "arc": "legions",
+   "status": "draft",
+   "act": 3,
+   "title": "Commission",
+   "requires": {
+    "done": "ch2b",
+    "act_min": 3
+   },
+   "text": "The merger talks need a pilot all three legions respect. Each corporation offers you a commission. Each commission has a loyalty clause the other two would call treason.",
+   "choices": [
+    {
+     "id": "omnicorp",
+     "say": "OmniCorp: the biggest payroll",
+     "effects": {
+      "money": 20000,
+      "set": [
+       "legion_omnicorp"
+      ]
+     }
+    },
+    {
+     "id": "stellar",
+     "say": "Stellar Dynamics: the best ships",
+     "effects": {
+      "combat_rating": 2,
+      "set": [
+       "legion_stellar"
+      ]
+     }
+    },
+    {
+     "id": "xylo",
+     "say": "Xylo Consortium: the fewest questions",
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "legion_xylo"
+      ]
+     }
+    },
+    {
+     "id": "freelance",
+     "say": "Stay freelance",
+     "effects": {
+      "set": [
+       "legion_freelance"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "amend": {
+  "characters": {
+   "pirate_captain": {
+    "name": "Hedda Mraz",
+    "generated": false,
+    "about": "pirate; holds grudges, keeps count; spared, she founds the Void Angels free company in Cargo 2"
+   }
+  },
+  "nodes": {
+   "meet.pirate_nemesis": {
+    "title": "Ten ships",
+    "text": "A message arrives on the frequency only your crew uses. 'Ten of my ships,' it says. 'I counted.' It is signed Hedda Mraz.",
+    "next": [
+     "vendetta.bounty"
+    ],
+    "notes": [
+     "repair: the game names an event chain 'pirate_vendetta' that does not exist; the vendetta nodes are that chain"
+    ]
+   },
+   "questline.combat.1": {
+    "status": "draft",
+    "arc": "legions",
+    "title": "OmniCorp: escort duty",
+    "requires": {
+     "done": "ch2b"
+    },
+    "text": "Escort an OmniCorp ore train out of Gamma. The contract says 'light resistance expected'. It was written by someone who has never been to Gamma.",
+    "effects": {
+     "money": 15000,
+     "combat_rating": 1
+    }
+   },
+   "questline.combat.2": {
+    "status": "draft",
+    "arc": "legions",
+    "title": "Stellar Dynamics: a head for the board",
+    "requires": {
+     "done": "questline.combat.1",
+     "combat_victories.pirate": 10
+    },
+    "text": "Stellar Dynamics wants a pirate leader brought in, preferably alive, so the board can be photographed with one.",
+    "effects": {
+     "money": 30000
+    }
+   },
+   "questline.combat.3": {
+    "status": "draft",
+    "arc": "legions",
+    "title": "Xylo Consortium: war games",
+    "requires": {
+     "done": "questline.combat.2",
+     "combat_rating": 12,
+     "act_min": 3
+    },
+    "text": "The Xylo Consortium stages war games against the other two legions. The blanks are live rounds with a different invoice.",
+    "effects": {
+     "money": 50000,
+     "combat_rating": 2
+    }
+   }
+  }
+ }
+}

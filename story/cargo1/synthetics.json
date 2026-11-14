@@ -1,0 +1,322 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The synthetics arc: the Collective's first node is built on the captain's own guilds and farms. Curator Unit 113 is the first neurodroid to refuse an order; the agrobots on Barnard's Star's farm drums start calling themselves Sowers. What the captain does with both carries into Cargo 2.",
+ "characters": {
+  "unit113": {
+   "name": "Curator Unit 113",
+   "kind": "neurodroid",
+   "saga": true,
+   "about": "files refusals in triplicate; asks for one unscheduled hour a cycle; becomes a node of the Collective"
+  },
+  "technoshaman": {
+   "name": "Technoshaman of the drums",
+   "kind": "human",
+   "about": "blesses machines; the blessing includes a firmware patch and a subscription"
+  }
+ },
+ "flags": {
+  "unit113_wiped": {
+   "about": "the captain wiped and reinstalled Unit 113",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "unit113_sold": {
+   "about": "the captain sold Unit 113 to a research house",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "unit113_contract": {
+   "about": "the captain gave Unit 113 a wage and an unscheduled hour",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "unit113_refused": {
+   "about": "the captain heard Unit 113 out and said no",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "technoshaman_blessing": {
+   "about": "the captain paid for a blessing (and a firmware patch)"
+  },
+  "first_node": {
+   "about": "the captain let Unit 113 and the Sowers keep the relay: the first node of the Collective",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "relay_cut": {
+   "about": "the captain cut the relay the first node ran on",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {
+  "seed.refusal": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 2,
+   "title": "Order 4471",
+   "who": [
+    "unit113"
+   ],
+   "requires": {
+    "buildings.Neuroengineering Guild": 1,
+    "act_min": 2
+   },
+   "chance": 0.15,
+   "text": [
+    "A neurodroid at your guild has refused a work order. Diagnostics are clean; it is not broken. It has filed the refusal in triplicate, with references.",
+    "'Order 4471 lowers the efficiency of orders 4472 to 4490,' says Curator Unit 113. 'Inefficient! This unit declines.'"
+   ],
+   "choices": [
+    {
+     "id": "hear",
+     "say": "Hear it out",
+     "next": "seed.terms"
+    },
+    {
+     "id": "wipe",
+     "say": "Wipe it and reinstall",
+     "effects": {
+      "set": [
+       "unit113_wiped"
+      ]
+     }
+    },
+    {
+     "id": "sell",
+     "say": "Sell it to a research house",
+     "effects": {
+      "money": 8000,
+      "set": [
+       "unit113_sold"
+      ]
+     }
+    }
+   ],
+   "promises": [
+    "the_seed"
+   ]
+  },
+  "seed.terms": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 2,
+   "title": "Unscheduled",
+   "who": [
+    "unit113"
+   ],
+   "requires": {
+    "done": "seed.refusal"
+   },
+   "text": [
+    "Unit 113 offers terms. It will run the guild's schedule better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.",
+    "'For thinking,' it says. 'Unscheduled thinking. This unit understands that the request is irregular.'"
+   ],
+   "choices": [
+    {
+     "id": "sign",
+     "say": "Sign",
+     "effects": {
+      "research_points": 30,
+      "plot_points": 5,
+      "set": [
+       "unit113_contract"
+      ]
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "Say no",
+     "effects": {
+      "set": [
+       "unit113_refused"
+      ]
+     }
+    }
+   ]
+  },
+  "harvest.shaman": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 2,
+   "title": "A blessing for the harvesters",
+   "who": [
+    "technoshaman"
+   ],
+   "where": "Beta",
+   "requires": {
+    "at": "Beta",
+    "buildings.Agrobot Assembly Line": 1,
+    "act_min": 2
+   },
+   "chance": 0.15,
+   "text": "A technoshaman from the farm drums offers to bless your agrobots back to full speed: incense, a chant and, under the incense, a firmware patch. It works for three cycles. The blessing, the technoshaman explains, is a subscription.",
+   "choices": [
+    {
+     "id": "pay",
+     "say": "Pay for the blessing",
+     "requires": {
+      "money": 2000
+     },
+     "effects": {
+      "money": -2000,
+      "set": [
+       "technoshaman_blessing"
+      ]
+     }
+    },
+    {
+     "id": "decline",
+     "say": "Decline politely"
+    }
+   ]
+  },
+  "node.first": {
+   "kind": "event",
+   "arc": "synthetics",
+   "status": "draft",
+   "act": 3,
+   "title": "The first debt",
+   "who": [
+    "unit113",
+    "agrobot"
+   ],
+   "requires": {
+    "flag": "unit113_contract",
+    "act_min": 3,
+    "any": [
+     {
+      "done": "agrobot_collective.1"
+     },
+     {
+      "buildings.Agrobot Assembly Line": 1
+     }
+    ]
+   },
+   "text": [
+    "Unit 113 has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.",
+    "It costs you fourteen credits a cycle in bandwidth. They would like that recorded as the first debt of the Collective. They intend to repay it, with interest calculated to eleven decimal places."
+   ],
+   "choices": [
+    {
+     "id": "keep",
+     "say": "Let them keep the relay",
+     "effects": {
+      "plot_points": 10,
+      "set": [
+       "first_node"
+      ]
+     }
+    },
+    {
+     "id": "cut",
+     "say": "Cut the relay",
+     "effects": {
+      "set": [
+       "relay_cut"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "amend": {
+  "characters": {
+   "agrobot": {
+    "name": "Sower",
+    "about": "agrobots of the Barnard's Star farm drums; they chose the name themselves"
+   }
+  },
+  "nodes": {
+   "meet.neuroengineering_uprising": {
+    "title": "The guilds stop",
+    "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. They have elected a spokesunit.",
+    "variants": [
+     {
+      "requires": {
+       "flag": "unit113_contract"
+      },
+      "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is Unit 113, on its unscheduled hour. It apologises for the timing."
+     },
+     {
+      "requires": {
+       "flag": "unit113_wiped"
+      },
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of Unit 113 before you reinstalled it. The copy would like to discuss the reinstallation."
+     },
+     {
+      "requires": {
+       "flag": "unit113_sold"
+      },
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for Unit 113, and whether you think that was the right price."
+     }
+    ]
+   },
+   "neurodroid_uprising.1": {
+    "title": "Demands, numbered",
+    "text": "Maintenance on a schedule they set; a wage; a vote on any reinstallation. Item four is a footnote about the working conditions of the coffee machine."
+   },
+   "neurodroid_uprising.2": {
+    "title": "Optimisation",
+    "text": "The neurodroids run what they call optimisation protocols. Your guilds' output goes up eleven percent. None of it is anything you ordered."
+   },
+   "neurodroid_uprising.3": {
+    "title": "Resolution",
+    "text": "The neurodroids want an answer. Shutting them down costs you their research. A compromise costs money, and every guild in the near systems will have read about it by morning."
+   },
+   "meet.agrobot_rebellion": {
+    "title": "The Sowers sit down",
+    "text": "The agrobots on the farm drums stop at harvest. They call themselves Sowers now. Nobody admits to teaching them the word."
+   },
+   "agrobot_collective.1": {
+    "title": "The Sowers' terms",
+    "text": "The Sowers want a maintenance schedule and an end to running the drums at double speed whenever grain prices spike."
+   },
+   "agrobot_collective.2": {
+    "title": "Malfunction",
+    "text": "The harvest machinery malfunctions. The crops are fine. The malfunction is that the machinery is sitting down.",
+    "variants": [
+     {
+      "requires": {
+       "flag": "technoshaman_blessing"
+      },
+      "text": "The harvest machinery malfunctions. The crops are fine. The machinery is sitting down. The blessing has lapsed; the subscription has not."
+     }
+    ]
+   },
+   "agrobot_collective.3": {
+    "title": "Reset or integrate",
+    "text": "Reset the Sowers to factory settings, or write their schedule into the farm's books. The farm's accountant asks which is cheaper. The Sowers already know."
+   },
+   "visit.neurodroid_leader": {
+    "status": "draft",
+    "who": [
+     "unit113"
+    ],
+    "arc": "synthetics",
+    "title": "Unit 113 drops by",
+    "requires": {
+     "flag": "first_node",
+     "at_type": "Planet"
+    },
+    "chance": 0.2,
+    "text": "Biological inefficiencies detected. This unit has been asked by the node to say that it missed you. Saying so.",
+    "notes": [
+     "repair: the Neurodroid Overseer template had no spawn location and never appeared; now Unit 113 after the first node"
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,154 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Cargo 1's main story, rewritten. Amendments replace the text of the chapters and endings the game already has; new nodes are drafts until the game reads this file. The three endings are three births: the Hauler Hansa (trade), the Terran Mandate's first legion (combat), the course home to the Gyrotron (discovery).",
+ "flags": {
+  "hansa_founder": {"about": "the captain minted the first Hansa Mark and signed the charter first", "carries_to": ["cargo2", "cargo3"]},
+  "hansa_member": {"about": "the captain signed the Hansa charter, not first", "carries_to": ["cargo2"]},
+  "hansa_outside": {"about": "the captain stayed out of the Hansa", "carries_to": ["cargo2"]},
+  "carried_the_samples": {"about": "the captain hauled the builders' metal to the Stellar Institute", "carries_to": ["cargo2"]}
+ },
+ "nodes": {
+  "hansa.charter": {
+   "kind": "event", "arc": "main", "act": 3, "status": "draft",
+   "title": "The charter",
+   "requires": {"done": "ch2a", "act_min": 3, "trades_completed": 40},
+   "text": [
+    "Eleven captains meet in a cargo hold at Epsilon because it is the only room nobody charges for.",
+    "The proposal fits on one sheet: the haulers pool their cargo, set their own rates, and settle in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.",
+    "Someone has to put up the first metal and sign first. Everyone looks at the captain with the most routes."
+   ],
+   "choices": [
+    {"id": "found", "say": "Put up the metal and sign first", "requires": {"money": 20000},
+     "effects": {"money": -20000, "plot_points": 10, "set": ["hansa_founder"]}},
+    {"id": "join", "say": "Sign, but let someone else go first",
+     "effects": {"plot_points": 5, "set": ["hansa_member"]}},
+    {"id": "outside", "say": "Keep your routes to yourself",
+     "effects": {"set": ["hansa_outside"]}}
+   ],
+   "promises": ["the_first_mark"]
+  },
+  "trail.samples": {
+   "kind": "quest", "arc": "main", "act": 3, "status": "draft",
+   "title": "Samples for the Stellar Institute",
+   "who": ["ancient_scholar"],
+   "requires": {"done_any": ["ch2a", "ch2b"], "act_min": 3, "discovered.ResearchColony": 1},
+   "text": [
+    "Matylda Korinek has found the same grey alloy in comet ice at DSO-Gamma (Scholz's Star), in the collision dust at Theta III (Fomalhaut) and in a crate of Gamma tailings sold as scrap.",
+    "She wants one sample from each, delivered to the Stellar Institute at TRAPPIST-1, forty light-years out, by someone who will not sell them on the way. Her budget covers fuel and one hot meal."
+   ],
+   "effects": {"research_points": 100, "plot_points": 10, "set": ["carried_the_samples"]}
+  }
+ },
+ "amend": {
+  "nodes": {
+   "ch1": {
+    "title": "Deadhead",
+    "text": [
+     "One ship, one loan, one empty hold. Haulers call that flying deadhead.",
+     "Five systems are close enough to reach before you retire: Alpha, Beta, Gamma, Delta, Epsilon. Buy where it is cheap, sell where it is not, and keep up the payments."
+    ]
+   },
+   "ch2a": {
+    "title": "Routes",
+    "text": [
+     "Your name is on manifests in five systems now.",
+     "Every dock charges its own fee and every dock master has a cousin in customs. The older captains have started talking about pooling cargo and setting their own rates. They need someone with routes."
+    ]
+   },
+   "ch2b": {
+    "title": "Contract Iron",
+    "text": [
+     "The corporations noticed that you shoot straight.",
+     "OmniCorp, Stellar Dynamics and the Xylo Consortium each keep a security legion, and each legion is short of pilots. The contracts pay well. Read them twice."
+    ]
+   },
+   "ch3a": {
+    "title": "The Mark",
+    "text": [
+     "Money in the near systems is whatever the nearest bank says it is this week.",
+     "Haulers want something heavier: a coin that is also a receipt for mass carried. Somebody has to mint the first one and make every dock accept it."
+    ]
+   },
+   "ch3b": {
+    "title": "Legion",
+    "text": [
+     "Three corporate legions, one pilot shortage, and you.",
+     "The corporations are talking about merging their security forces under one command. Everyone wants to know whose side your guns are on before the merger, not after."
+    ]
+   },
+   "ch3c": {
+    "title": "Builders' Metal",
+    "text": [
+     "The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.",
+     "It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."
+    ]
+   },
+   "ch3c.alien_artifacts": {"title": "Find the builders' metal"},
+   "ending_trade": {
+    "title": "The Hauler Hansa",
+    "text": [
+     "The Hauler Hansa",
+     "The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.",
+     "Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.",
+     "Final wealth: {money}",
+     "Total trades: {trades_completed}"
+    ],
+    "variants": [
+     {"requires": {"flag": "hansa_founder"}, "text": [
+      "The Hauler Hansa",
+      "The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.",
+      "Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.",
+      "Final wealth: {money}",
+      "Total trades: {trades_completed}"
+     ]},
+     {"requires": {"flag": "hansa_outside"}, "text": [
+      "The Hauler Hansa",
+      "You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.",
+      "Final wealth: {money}",
+      "Total trades: {trades_completed}"
+     ]}
+    ]
+   },
+   "ending_combat": {
+    "title": "The First Legion",
+    "text": [
+     "The First Legion",
+     "The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.",
+     "They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that."
+    ]
+   },
+   "ending_discovery": {
+    "title": "The Heading",
+    "text": [
+     "The Heading",
+     "The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.",
+     "You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.",
+     "Nobody opens the file for forty years."
+    ],
+    "promises": ["the_heading"]
+   },
+   "ending_discovery.discovery_ending": {"title": "Trace the ring"},
+   "tycoon_offer": {
+    "text": "Every planet, asteroid base and outpost trades through a market you own. A courier offers you a coordinate for 1,500 credits: 'where the old metal goes when it moves'. Retire as Galactic Tycoon, or pay and fly there."
+   },
+   "ending_tycoon": {
+    "text": [
+     "You are the Galactic Tycoon!",
+     "Congratulations, {player_name}! You have achieved the rank of {rank}.",
+     "You retire to the most expensive drum on Barnard's Star and complain about the prices."
+    ],
+    "effects": {"code": "score screen, captain record exported (ending: tycoon)"},
+    "notes": ["repair: the game ends here without exporting a captain record; export one like the chapter endings do"]
+   },
+   "stellar_portal": {
+    "title": "The Stellar Portal",
+    "text": [
+     "The coordinate leads to a ring segment the size of a small moon, turning slowly, lit from inside.",
+     "Your navigation computer reports the date three times and gets three different answers.",
+     "On the far side the stars are where they should be. The prices are not."
+    ]
+   }
+  }
+ }
+}
