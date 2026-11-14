@@ -1,0 +1,500 @@
+"""Playthrough bot: plays cargo.py through its real commands until an ending.
+
+It reads the game's state to decide (like a player reading the screen) but acts
+only by answering the game's own prompts, so every step is something a player
+can type.
+
+usage: bot.py cargo.py <path: trade|combat|discovery> <seed> [max_turns] [--verbose]
+"""
+import sys, os, io, json, random, shutil, traceback, tempfile, builtins, collections
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import headless
+
+path, goal, seed = sys.argv[1], sys.argv[2], int(sys.argv[3])
+max_turns = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4].isdigit() else 3000
+verbose = "--verbose" in sys.argv
+save_every = 0
+for a in sys.argv:
+    if a.startswith("--save-every="):
+        save_every = int(a.split("=")[1])
+
+home = tempfile.mkdtemp(prefix="cargo-bot-")
+os.environ["CARGO_HOME"] = home
+size = os.terminal_size((80, 40))
+shutil.get_terminal_size = lambda fallback=(80, 24): size
+cargo = headless.load(path)
+headless.patch(cargo, headless.IO())
+random.seed(seed)
+rng = random.Random(seed * 7 + 1)
+
+PATH_CHOICE = {   # which follow-up chapter to pick, by goal
+    "trade": ["ch2a", "ch3a", "ending_trade"],
+    "combat": ["ch2b", "ch3b", "ending_combat"],
+    "discovery": ["ch2a", "ch3c", "ending_discovery"],
+    "discovery2": ["ch2b", "ch3c", "ending_discovery"],
+}[goal]
+
+
+class Done(Exception):
+    pass
+
+
+class Bot:
+    def __init__(self):
+        self.game = None
+        self.ctx = None            # (prompt, options) while validate_input is asking
+        self.qty = False
+        self.turn_seen = -1
+        self.flags = set()
+        self.item = None
+        self.upgrade = None
+        self.building = None
+        self.research = None
+        self.dest = None
+        self.cost = collections.defaultdict(float)   # average price paid per item
+        self.sell_at = {}
+        self.unknown = collections.Counter()
+        self.inputs = 0
+        self.stall = 0
+        self.last_progress = (0, None)
+        self.log = []
+        self.pax_dest = None
+        self.port_step = None
+        self.loads = 0
+        self.reload_step = None
+        self.reload_turn = -1
+
+    # ---- helpers -----------------------------------------------------
+    def need(self):
+        """Open requirement keys of the current chapter and of the wanted next chapter."""
+        g = self.game
+        sm = g.story_manager
+        ch = sm.chapters[sm.current_chapter]
+        reqs = []
+        for m in ch.milestones.values():
+            if not m.completed:
+                reqs.append(m.requirements)
+        reqs.append(ch.requirements)
+        for nid in ch.next_chapters:
+            if nid in PATH_CHOICE:
+                reqs.append(sm.chapters[nid].requirements)
+        out = {}
+        for r in reqs:
+            for k, v in r.items():
+                if not cargo.MilestoneRequirements._check_single_requirement(k, v, g):
+                    out.setdefault(k, v)
+        return out
+
+    def prices(self, loc, item):
+        if not loc.can_trade(item):
+            return None
+        if item in ("salt", "fuel") and not any(p["type"] == item for p in loc.mining_platforms):
+            return None
+        p = loc.market.get(item, 0)
+        return p if p and p > 0 else None
+
+    def best_trade(self):
+        g = self.game
+        here = g.current_location
+        best = None
+        for item in ("tech", "agri", "salt", "fuel"):
+            buy = self.prices(here, item)
+            if not buy:
+                continue
+            for loc in g.locations:
+                if loc is here:
+                    continue
+                sell = self.prices(loc, item)
+                if not sell:
+                    continue
+                margin = sell * 0.9 - buy * 1.1
+                if margin > 0 and (best is None or margin / buy > best[0]):
+                    best = (margin / buy, item, loc.name)
+        return best
+
+    def best_sale_elsewhere(self, item):
+        g = self.game
+        best = None
+        for loc in g.locations:
+            if loc is g.current_location:
+                continue
+            p = self.prices(loc, item)
+            if p and (best is None or p > best[0]):
+                best = (p, loc.name)
+        return best
+
+    # ---- main menu ---------------------------------------------------
+    def main_action(self, options):
+        g = self.game
+        ship = g.ship
+        here = g.current_location
+        if g.turn != self.turn_seen:
+            self.turn_seen = g.turn
+            self.flags = set()
+        need = self.need()
+
+        # every so often: save under a name, then load that save and play on from it
+        if self.reload_step == "load" and "load" in options:
+            self.reload_step = None
+            return "load"
+        if save_every and g.turn and g.turn % save_every == 0 and g.turn != self.reload_turn and "save" in options:
+            self.reload_turn = g.turn
+            self.reload_step = "load"
+            return "save"
+
+        if "repair" in options and ship.damage >= 20 and "repair" not in self.flags:
+            self.flags.add("repair")
+            if ship.money >= ship.damage * 10:
+                return "r"
+
+        # sell what we carry when this is the planned market or a profitable one
+        for item in ("tech", "agri", "salt", "fuel"):
+            if ship.cargo[item] > 0 and ("sell", item) not in self.flags:
+                price = self.prices(here, item)
+                if price is None:
+                    continue
+                planned = self.sell_at.get(item) == here.name
+                better = self.best_sale_elsewhere(item)
+                if planned or price >= self.cost[item] * 1.08 or better is None or price >= better[0]:
+                    self.flags.add(("sell", item))
+                    self.item = item
+                    return "s"
+
+        # passengers
+        if "port" in options and "port" not in self.flags and goal in ("trade", "discovery") and \
+                ("passengers_transported" in need or "passenger_reputation" in need or
+                 any(m.passengers for m in getattr(ship, "passenger_modules", []))):
+            self.flags.add("port")
+            self.port_step = "start"
+            return "p"
+
+        # stock markets
+        want_sm = need.get("buildings_built", {}).get("stockmarket") if isinstance(need.get("buildings_built"), dict) else None
+        if want_sm and "build" in options and "build" not in self.flags and "stockmarket" not in here.buildings:
+            cost = 5000 * (here.buildings.count("stockmarket") + 1)
+            if ship.money >= cost * 2:
+                self.flags.add("build")
+                self.building = "stockmarket"
+                return "bl"
+        want_ng = need.get("buildings_built", {}).get("Neuroengineering Guild") if isinstance(need.get("buildings_built"), dict) else None
+        if want_ng and "build" in options and "build" not in self.flags:
+            if ship.money >= 7000 * (here.buildings.count("Neuroengineering Guild") + 1) * 2:
+                self.flags.add("build")
+                self.building = "neuroengineering"
+                return "bl"
+
+        # a mine, when the story needs Asteroid Bases and they are not open yet
+        wanted_locs = need.get("locations_discovered")
+        if isinstance(wanted_locs, dict) and "AsteroidBase" in wanted_locs and \
+                "AsteroidBase" not in g.unlocked_location_types and \
+                not any(l.mining_platforms for l in g.locations):
+            if here.mineral_deposits:
+                if "mine" in options and "mine" not in self.flags and ship.money >= 10000:
+                    self.flags.add("mine")
+                    return "m"
+            elif "action" in options and "geoscan" not in self.flags and ship.research_points >= 75:
+                self.flags.add("geoscan")
+                self.research = "geoscan"
+                return "a"
+
+        # research
+        want_res = [r for r in need.get("research_unlocked", []) if r not in g.research.unlocked_options]
+        if goal.startswith("discovery") or want_res:
+            todo = want_res or [r for r in g.research.research_costs if r not in g.research.unlocked_options]
+            todo = [r for r in todo if ship.research_points >= g.research.research_costs.get(r, 10 ** 9)]
+            if todo and "action" in options and "research" not in self.flags:
+                self.flags.add("research")
+                self.research = todo[0]
+                return "a"
+
+        # ship upgrades: attack decides every fight (attack must exceed the enemy's defence,
+        # which goes up to 6), defence only reduces damage
+        if "upgrade" in options and "upgrade" not in self.flags:
+            cap = 12 if (goal == "combat" or "combat_rating" in need) else 7
+            order = []
+            if ship.attack < 3:
+                order = [("attack", 1.15)]
+            elif ship.defense < 3:
+                order = [("defense", 1.5)]
+            elif ship.attack < 7:
+                order = [("attack", 1.6), ("defense", 4)]
+            else:
+                order = [("defense", 3), ("speed", 4), ("attack", 4)]
+            for prop, reserve in order:
+                stat = getattr(ship, prop)
+                if stat < cap and ship.money >= ship.upgrade_costs[prop] * reserve:
+                    self.flags.add("upgrade")
+                    self.upgrade = prop
+                    return "u"
+
+        # buy for the best route and go
+        if "buy" not in self.flags:
+            self.flags.add("buy")
+            trade = self.best_trade()
+            if trade and ship.money >= 50:
+                _, item, dest = trade
+                self.item = item
+                self.dest = dest
+                self.sell_at[item] = dest
+                self.buy_price = self.prices(here, item)
+                return "b"
+
+        if "travel" not in self.flags:
+            self.flags.add("travel")
+            dest = None
+            # places the story asks us to find come first
+            wanted = need.get("locations_discovered")
+            if isinstance(wanted, dict):
+                for loc in g.locations:
+                    if loc.location_type in wanted and loc.name not in g.discovered_locations and loc is not here \
+                            and g.count_discovered(loc.location_type) < wanted[loc.location_type]:
+                        dest = loc.name
+                        break
+            # then a passenger destination, then unexplored places, then the trade plan
+            if dest is None and self.pax_dest and self.pax_dest != here.name:
+                dest = self.pax_dest
+            if dest is None:
+                carried = [i for i in ship.cargo if ship.cargo[i] > 0 and self.sell_at.get(i) and self.sell_at[i] != here.name]
+                if carried:
+                    dest = self.sell_at[carried[0]]
+            if dest is None:
+                unknown = [l.name for l in g.locations if l.name not in g.known_locations]
+                if unknown:
+                    dest = rng.choice(unknown)
+            if dest is None and self.dest and self.dest != here.name:
+                dest = self.dest
+            if dest is None:
+                others = [l.name for l in g.locations if l is not here]
+                dest = rng.choice(others) if others else None
+            if dest:
+                self.travel_to = dest
+                return "t"
+        return "e"
+
+    # ---- answering prompts ---------------------------------------------
+    def answer(self, tail):
+        g = self.game
+        self.inputs += 1
+        if self.ctx is not None:
+            prompt, options = self.ctx
+            self.ctx = None
+            options = list(options)
+            p = prompt.lower()
+            if "end" in options and "buy" in options:
+                return self.main_action(options)
+            if p.startswith("choose item (tech"):
+                return self.item
+            if "property to upgrade" in p:
+                return self.upgrade
+            if "building type" in p:
+                return self.building
+            if "choose your path" in p:
+                sm = g.story_manager
+                ch = sm.chapters[sm.current_chapter]
+                avail = ch.get_next_chapters(g)
+                for i, c in enumerate(avail, 1):
+                    if c.id in PATH_CHOICE:
+                        return str(i)
+                return ""          # wait for the wanted path to open
+            if "do you want to resign" in p or "are you sure" in p or "play again" in p:
+                return "no"
+            if "choose action type" in p:           # research/actions menu
+                if self.research == "geoscan":
+                    self.research = None
+                    return "geoscan"
+                if self.research:
+                    return "research"
+                return "back"
+            if "mining options" in p:
+                return "build"
+            if "choose deposit type" in p:
+                return options[0]
+            if "choose research option" in p:
+                r, self.research = self.research, None
+                return r if r in options else ""
+            if "modules" in options and "board" in options:      # port menu
+                return self.port_action()
+            if "module number to buy" in p:
+                if self.port_step == "buy_module":
+                    self.port_step = "bought"
+                    ids = [o for o in options if o != "back"]
+                    mods = g.port_system.available_modules
+                    afford = [i for i in ids if mods[i]["cost"] <= g.ship.money * 0.5]
+                    if afford:
+                        return min(afford, key=lambda i: mods[i]["cost"])
+                return "back"
+            if "choose action (1/2/3)" in p or "choose action" in p or "your response" in p:
+                self.unknown[("choice", tuple(options)[:6])] += 1
+                return options[0] if options else ""
+            if "0 to leave" in p:
+                return "0"
+            if "none" in options:
+                return "none"
+            if "back" in options:
+                return "back"
+            self.unknown[("prompt", prompt[:50])] += 1
+            return ""
+        if self.qty:
+            self.qty = False
+            return "max"
+        t = tail.lower()
+        if "save as" in t:
+            return "botsave"
+        if "type a number to load it" in t:
+            return "1"
+        if "choose a location to travel to" in t or "enter location name" in t or "enter the number or name" in t:
+            return self.travel_to
+        if "select passengers" in t:
+            if self.port_step == "board":
+                self.port_step = "boarding"
+                return "a"
+            return ""
+        if "choose destination number" in t:
+            loc = g.current_location.name
+            waiting = g.port_system.waiting_passengers.get(loc, [])
+            dests = sorted(set(p.destination for p in waiting))
+            if not dests:
+                return "0"
+            counts = [sum(1 for p in waiting if p.destination == d) for d in dests]
+            i = max(range(len(dests)), key=lambda k: counts[k])
+            self.pax_dest = dests[i]
+            return str(i + 1)
+        if "choose module number" in t:
+            return "a"
+        if "press enter" in t:
+            return ""
+        self.unknown[("raw", t.strip().splitlines()[-1][:50] if t.strip() else "")] += 1
+        return ""
+
+    def port_action(self):
+        g = self.game
+        ship = g.ship
+        mods = getattr(ship, "passenger_modules", [])
+        here = g.current_location.name
+        if self.port_step == "start":
+            if any(p.destination == here for m in mods for p in m.passengers):
+                self.port_step = "unloaded"
+                if self.pax_dest == here:
+                    self.pax_dest = None
+                return "u"
+            self.port_step = "unloaded"
+        if self.port_step == "unloaded":
+            if sum(m.capacity for m in mods) < 6 and ship.money > 4000:
+                self.port_step = "buy_module"
+                return "m"
+            self.port_step = "bought"
+        if self.port_step == "bought":
+            free = sum(m.capacity - len(m.passengers) for m in mods)
+            aboard = sum(len(m.passengers) for m in mods)
+            if free > 0 and aboard == 0 and g.port_system.waiting_passengers.get(here):
+                self.port_step = "board"
+                return "b"
+            self.port_step = "done"
+        return "back"
+
+
+bot = Bot()
+out = io.StringIO()
+real = sys.stdout
+sys.stdout = out
+
+
+def fake_input(prompt=""):
+    text = out.getvalue()
+    tail = text[-600:]
+    if len(text) > 200000:
+        out.seek(0)
+        out.truncate(0)
+    g = bot.game
+    if g is not None:
+        if g.turn >= max_turns:
+            raise Done("max turns")
+        if getattr(g, "ending_reached", None):
+            raise Done("ending")
+        prog = (g.turn, g.story_manager.current_chapter)
+        if prog == bot.last_progress:
+            bot.stall += 1
+            if bot.stall > 400:
+                raise Done("stalled: no turn passes (last prompt tail: %r)" % tail[-160:])
+        else:
+            bot.stall = 0
+            bot.last_progress = prog
+    a = bot.answer(tail)
+    if verbose:
+        real.write("turn %s ch %s $%s -> %r\n" % (g.turn if g else "-", g.story_manager.current_chapter if g else "-",
+                                                 int(g.ship.money) if g else "-", a))
+    return a if a is not None else ""
+
+
+builtins.input = fake_input
+orig_vi = cargo.Game.validate_input
+orig_vq = cargo.Game.validate_quantity_input
+
+
+def vi(self, default_prompt, valid_options, prompt=None):
+    bot.game = self
+    bot.ctx = (prompt or default_prompt, valid_options)
+    return orig_vi(self, default_prompt, valid_options, prompt)
+
+
+def vq(self, prompt):
+    bot.qty = True
+    return orig_vq(self, prompt)
+
+
+cargo.Game.validate_input = vi
+cargo.Game.validate_quantity_input = vq
+
+result = {"goal": goal, "seed": seed}
+history = []
+try:
+    bot.ctx = None
+    answers = iter(["2", "Bot %s %d" % (goal, seed)])
+    builtins.input = lambda prompt="": next(answers)
+    game = cargo.Game()
+    builtins.input = fake_input
+    bot.game = game
+    while True:
+        try:
+            game.play()
+            result["end"] = "game over (play returned)"
+            break
+        except cargo.SwitchGame as sw:
+            game = sw.game
+            bot.game = game
+            bot.loads += 1
+        except Done as d:
+            result["end"] = str(d)
+            # after a save, reload it and continue (exercises save/load mid-game)
+            break
+        except SystemExit:
+            result["end"] = "exit"
+            break
+except Exception:
+    result["traceback"] = traceback.format_exc()[-1800:]
+finally:
+    sys.stdout = real
+    shutil.rmtree(home, ignore_errors=True)
+
+g = bot.game
+if g is not None:
+    sm = g.story_manager
+    result.update({
+        "turn": g.turn, "chapter": sm.current_chapter, "completed": sorted(sm.completed_chapters),
+        "ending": getattr(g, "ending_reached", None), "money": int(g.ship.money),
+        "plot_points": sm.plot_points, "trades": g.trades_completed,
+        "victories": g.ship.combat_victories.get("total"), "defeats": g.ship.combat_defeats.get("total"),
+        "rating": g.ship.attack + g.ship.defense + g.ship.speed, "damage": g.ship.damage,
+        "rp": g.ship.research_points, "research": sorted(g.research.unlocked_options),
+        "pax": g.reputation_manager.total_passengers, "pax_rep": g.ship.passenger_reputation,
+        "trade_profit": int(sum(g.ship.trade_profits.values())),
+        "stockmarkets": sum(1 for l in g.locations for b in l.buildings if b == "stockmarket"),
+        "locations": len(g.locations), "known": len(g.known_locations),
+        "open_requirements": {k: (v if not callable(v) else "fn") for k, v in bot.need().items()} if not result.get("traceback") else None,
+        "inputs": bot.inputs, "loads": bot.loads,
+        "discovered": sorted(g.discovered_locations), "all_locations": [(l.name, l.location_type) for l in g.locations],
+        "here": g.current_location.name, "travel_to": getattr(bot, "travel_to", None),
+        "active_quests": [q.name for q in g.quest_system.active_quests][:8],
+        "unknown_prompts": [[list(map(str, k)), n] for k, n in bot.unknown.most_common(8)],
+    })
+print(json.dumps(result, ensure_ascii=False, default=str))
