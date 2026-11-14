@@ -9,6 +9,7 @@ The page needs nothing but a browser.
 """
 import datetime
 import json
+import re
 import os
 import sys
 
@@ -20,10 +21,35 @@ STYLE_NAMES = {"trade": "Trader", "combat": "Fighter", "discovery": "Explorer vi
                "discovery2": "Explorer via combat"}
 
 
+PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)(?:\.([a-z_]+))?\}")
+
+
+def named(value, characters):
+    """Text as a reader of the map should see it: {pirate_captain} -> Hedda Mraz."""
+    if isinstance(value, list):
+        return [named(v, characters) for v in value]
+    if not isinstance(value, str):
+        return value
+
+    def swap(match):
+        info = characters.get(match.group(1))
+        if info is None:
+            return match.group(0)
+        return str(info.get(match.group(2) or "name", match.group(0)))
+    return PLACEHOLDER.sub(swap, value)
+
+
 def game_payload(gid, story, reach, items, replay):
     nodes = {}
+    chars = story["characters"]
     for nid, node in story["nodes"].items():
         entry = {k: v for k, v in node.items() if k not in ("source_code",)}
+        entry["title"] = named(entry.get("title"), chars)
+        entry["text"] = named(entry.get("text"), chars)
+        if entry.get("variants"):
+            entry["variants"] = [dict(v, text=named(v.get("text"), chars)) for v in entry["variants"]]
+        if entry.get("choices"):
+            entry["choices"] = [dict(c, say=named(c.get("say"), chars)) for c in entry["choices"]]
         entry["act_"] = kit.act_of(story, nid)
         entry["reach"] = reach.get(nid, "yes")
         entry["why"] = reach.why.get(nid, "")

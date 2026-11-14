@@ -58,6 +58,15 @@ def replay_one(story, trace, preds):
         state.done = game_done | sim_done
         state.flags |= {f for n in sim_done for f in kit.flags_set(nodes[n])}
 
+        # a runtime that plays the story itself: its verdicts, on the state it judged
+        moment = snap.get("moment")
+        if moment:
+            judged = kit.State.from_snapshot(moment["state"])
+            for nid, verdict in moment["verdicts"].items():
+                if nid in nodes and kit.check(nodes[nid].get("requires"), judged, unknown="fail") != verdict:
+                    mismatches.append({"turn": snap.get("turn"), "node": nid, "game": verdict,
+                                       "story": not verdict, "where": "story runtime"})
+
         # the game's own verdicts against the file's
         for nid, verdict in (snap.get("verdicts") or {}).items():
             if verdict is None or nid not in nodes:

@@ -172,7 +172,7 @@ th { font: 600 12.5px var(--body); color: var(--muted); }
 <script>
 const DATA = JSON.parse(document.getElementById('data').textContent);
 const NS = 'http://www.w3.org/2000/svg';
-const KIND_LABEL = {chapter: 'Chapter', ending: 'Ending', milestone: 'Milestone', encounter: 'Encounter', stage: 'Chain stage',
+const KIND_LABEL = {intro: 'Intro', epilogue: 'Epilogue', rumour: 'Rumour', chapter: 'Chapter', ending: 'Ending', milestone: 'Milestone', encounter: 'Encounter', stage: 'Chain stage',
   quest: 'Quest', unlock: 'Unlock', event: 'Event', beat: 'Story beat'};
 const STYLE_ORDER = ['trade', 'discovery', 'discovery2', 'combat'];
 const state = { game: null, mode: null, char: '', q: '', unused: false, drafts: true, sel: null };

@@ -24,13 +24,16 @@ CORE_CONDITIONS = {
     "at", "at_type",                # where the player is
     "has",                          # members of a declared set (items, research ...)
     "visiting_captain",             # a captain record from another part of the saga
+    "player_origin",                # the record of the captain the player is playing as
+    "venue",                        # a place inside a location the player is visiting (port, cantina)
     "code",                         # opaque: game code the tools cannot read
 }
 
 # Effect keys every game understands (anything else must be a declared stat or effect)
-CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "code"}
+CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "reveal", "code"}
 
-NODE_KINDS = {"chapter", "milestone", "ending", "quest", "event", "encounter", "stage", "unlock", "beat"}
+NODE_KINDS = {"chapter", "milestone", "ending", "quest", "event", "encounter", "stage", "unlock", "beat",
+              "intro", "epilogue", "rumour"}
 
 
 class StoryError(Exception):
@@ -43,6 +46,7 @@ def _read_json(path):
 
 
 AMENDABLE = ("nodes", "characters", "flags", "places", "arcs")
+NAME_FIELDS = ("name", "short", "full", "title")      # how a character is called in text
 
 
 def load(path):
@@ -79,6 +83,20 @@ def load(path):
         before = {k: entry.get(k) for k in changes if k in entry}
         entry.update(changes)
         entry.setdefault("amended", []).append({"file": include, "fields": sorted(changes), "was": before})
+    # Characters who live across the saga are named once, in the saga file.
+    if data.get("saga"):
+        saga = _read_json(os.path.join(base, data["saga"]))
+        for cid, info in saga.get("characters", {}).items():
+            here = data["characters"].get(cid)
+            if here is None:
+                continue
+            for field in NAME_FIELDS:
+                if field in info:
+                    if field in here:
+                        raise StoryError("character %r: %s is set in %s and in the saga file; keep it in one place"
+                                         % (cid, field, path))
+                    here[field] = info[field]
+            here["saga"] = True
     data["path"] = path
     return data
 
@@ -120,7 +138,7 @@ class State:
     """
 
     def __init__(self, stats=None, sets=None, flags=None, done=None, act=1, turn=0,
-                 place=None, place_type=None, visitors=None, player=None):
+                 place=None, place_type=None, visitors=None, player=None, venue=None, origin=None):
         self.stats = dict(stats or {})
         self.sets = {k: set(v) for k, v in (sets or {}).items()}
         self.flags = set(flags or ())
@@ -131,12 +149,14 @@ class State:
         self.place_type = place_type
         self.visitors = list(visitors or [])
         self.player = player
+        self.venue = venue
+        self.origin = origin
 
     @classmethod
     def from_snapshot(cls, snap):
         return cls(snap.get("stats"), snap.get("sets"), snap.get("flags"), snap.get("done"),
                    snap.get("act", 1), snap.get("turn", 0), snap.get("place"), snap.get("place_type"),
-                   snap.get("visitors"), snap.get("player"))
+                   snap.get("visitors"), snap.get("player"), snap.get("venue"), snap.get("origin"))
 
 
 def _threshold(value, wanted):
@@ -193,6 +213,10 @@ def check(cond, state, unknown="fail"):
             ok = all(set(as_list(items)) <= state.sets.get(name, set()) for name, items in want.items())
         elif key == "visiting_captain":
             ok = any(visitor_matches(v, want, state.player) for v in state.visitors)
+        elif key == "player_origin":
+            ok = state.origin is not None and visitor_matches(state.origin, want)
+        elif key == "venue":
+            ok = state.venue in as_list(want)
         elif key == "code":
             if unknown == "raise":
                 raise StoryError("opaque condition: %s" % want)
@@ -222,6 +246,20 @@ def visitor_matches(record, want, player=None):
     if want.get("flag") and want["flag"] not in story.get("flags", []):
         return False
     return True
+
+
+def texts_of(node):
+    """Every piece of text a node shows: title, text, variants, choices."""
+    out = []
+    for value in [node.get("title")] + as_list(node.get("text")):
+        if isinstance(value, str):
+            out.append(value)
+    for variant in node.get("variants") or []:
+        out.extend(t for t in as_list(variant.get("text")) if isinstance(t, str))
+    for choice in node.get("choices") or []:
+        if isinstance(choice.get("say"), str):
+            out.append(choice["say"])
+    return out
 
 
 def walk_condition(cond, visit, path=()):

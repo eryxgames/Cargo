@@ -45,9 +45,9 @@ everything against those declarations.
 
 | Field | Meaning |
 | --- | --- |
-| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat` |
+| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat`; `intro` (the first scene of a new game: the first whose `requires` holds), `epilogue` (a line shown after any ending when its `requires` holds), `rumour` (a line overheard in a cantina) |
 | `arc` | lane on the map |
-| `title`, `text` | text is a string or a list of lines; `{name}` placeholders are filled by the game |
+| `title`, `text` | text is a string or a list of lines; `{placeholders}` are filled when shown (see Names) |
 | `variants` | `[{"requires": {...}, "text": "..."}]` or `[{"when": "alternate", "text": "..."}]`: other text for other circumstances |
 | `requires` | condition (below); for a chapter, a milestone or a stage it is checked once its parent or predecessor allows |
 | `effects` | effects (below) when it happens |
@@ -62,7 +62,8 @@ everything against those declarations.
 | `repeat` | `true`, or `{"cooldown": turns}`; default: happens once |
 | `promises`, `pays` | saga promises this node makes or pays off |
 | `status` | `draft` (written, not in the game yet), `unused` (in the game's data, nothing starts it); default live |
-| `handled_by` | the game code that shows this content (so it is not reported as empty) |
+| `handled_by` | the game code that runs this node (a runtime that plays the story leaves it to the game) |
+| `sound` | a sound cue name; played if the game has a sound kit |
 | `source`, `notes` | where an imported node came from; free notes |
 
 ## Conditions
@@ -77,6 +78,8 @@ An object is "all of these". Keys:
 | `act_min`, `act_max`, `turn_min`, `turn_max` | the act or turn is in range |
 | `at`, `at_type` | the player is at this place, or a place of this type |
 | `has` | `{"researched": ["telemetry"]}`: the set holds these members |
+| `player_origin` | `{"game": "cargo2", "ending": "trade"}`: the player is playing as a captain from that record; `{}` any record |
+| `venue` | the player is visiting this place inside a location (`port`, `cantina`), declared as a place of kind `venue` |
 | `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x", "same_name": true}`: a captain record from that part has been imported; `same_name` true when it carries the current captain's name, false when another |
 | `all`, `any`, `not` | combine conditions |
 | `code` | opaque game code; the tools report it and cannot judge it |
@@ -85,7 +88,28 @@ An object is "all of these". Keys:
 
 Any declared stat adds the value (`"money": -1500`). `set` and `clear` take flags,
 `give` adds members to sets (`{"items": ["navcomp"]}`), `start` starts nodes,
-`spawn` brings in a character, `code` names game code.
+`spawn` brings in a character, `reveal` puts places on the map (a place may say
+how to build it under `made`), `code` names game code.
+
+## How a game plays the nodes
+
+A runtime (Cargo 1 has one inside `cargo.py`) looks once per turn and place. A node
+plays when its `requires` hold, its `chance` is rolled, and it is not done (or it
+`repeat`s and its cooldown is over). A node another node leads to through `next`
+plays on a later turn than that node; a node reached through a choice's `next` plays
+at once, and only after that choice. At most two scenes play at one moment; the rest
+wait. A `{"code": ...}` condition never holds in a runtime: write the story in the
+game's declared stats instead.
+
+## Names
+
+A character is named in one place: its story file, or the saga file if it lives in
+more than one part (a story file says `"saga": "saga.json"` to take names from it,
+and may not repeat them). Characters have `name` and may have `short`, `full` and
+`title`. Texts say `{pirate_captain}` or `{pirate_captain.short}`, so renaming a
+character renames it everywhere. The validator warns when a text writes out a name
+that has a `short`, and, in a story that lists its `placeholders` (the game values
+it can fill, like `money` or `visitor.name`), reports any other placeholder.
 
 ## Saga file
 

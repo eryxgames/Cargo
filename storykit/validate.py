@@ -11,6 +11,7 @@ Warnings are content a player can never see, or flags nobody uses.
 Notes are facts worth knowing (empty beats, unused content, opaque conditions).
 """
 import json
+import re
 import os
 import sys
 
@@ -75,7 +76,7 @@ def check_story(story, report, saga=None):
         for cond in kit.node_conditions(node):
             def visit(key, want, path, nid=nid):
                 if key in kit.CORE_CONDITIONS:
-                    if key in ("at", "at_type"):
+                    if key in ("at", "at_type", "venue"):
                         for p in kit.as_list(want):
                             if p not in places:
                                 report.error("place", where(nid), "condition names unknown place %r" % p)
@@ -107,9 +108,44 @@ def check_story(story, report, saga=None):
                         for name in value:
                             if name not in sets:
                                 report.error("set", where(nid), "unknown set %r" % name)
+                    if key == "reveal":
+                        for name in kit.as_list(value):
+                            if name not in places:
+                                report.error("place", where(nid), "reveals unknown place %r" % name)
                     continue
                 if key not in stats and key not in effects_vocab:
                     report.error("effect", where(nid), "unknown effect or stat %r" % key)
+
+    # ---- names and placeholders ------------------------------------------------
+    # A character is named in one place (its story file or the saga file); texts
+    # say {id} or {id.short}, so a renamed character is renamed everywhere.
+    allowed = set(story.get("placeholders", []))
+    check_placeholders = "placeholders" in story       # a game that declares its placeholders
+    literal = []
+    for cid, info in characters.items():
+        if info.get("short"):
+            for field in kit.NAME_FIELDS:
+                if info.get(field) and info[field][:1].isupper() and len(info[field]) > 2:
+                    literal.append((info[field], cid, field))
+    literal.sort(key=lambda item: -len(item[0]))
+    for nid, node in nodes.items():
+        for text in kit.texts_of(node):
+            for head, field in re.findall(r"\{([a-z_][a-z0-9_]*)(?:\.([a-z_]+))?\}", text):
+                ref = head + ("." + field if field else "")
+                if head in characters:
+                    if field and field not in characters[head]:
+                        report.error("placeholder", where(nid), "{%s}: %s has no %s" % (ref, head, field))
+                elif check_placeholders and ref not in allowed:
+                    report.error("placeholder", where(nid), "{%s} is neither a character nor a game value" % ref)
+            bare = re.sub(r"\{[^}]*\}", "", text)
+            for name, cid, field in literal:
+                if re.search(r"(?<![\w])" + re.escape(name) + r"(?![\w])", bare):
+                    report.warn("name-in-text", where(nid), "writes %r; use {%s%s}" % (
+                        name, cid, "" if field == "name" else "." + field))
+                    break
+    for cid, info in story["characters"].items():
+        if not info.get("name") and not info.get("generated"):
+            report.warn("character-name", "%s:character %s" % (gid, cid), "has no name (story file or saga file)")
 
     # ---- flags ----------------------------------------------------------------
     read, written = {}, {}
@@ -287,7 +323,8 @@ def reachable(story):
                         lv = [level.get(g, "no") for g in gifts.get((name, item), [])]
                         if "yes" not in lv:
                             worse("opaque" if "opaque" in lv else "no", "%s %r can never be had" % (name, item))
-            elif key in ("turn_min", "turn_max", "act_max", "not_flag", "not_done", "visiting_captain"):
+            elif key in ("turn_min", "turn_max", "act_max", "not_flag", "not_done", "visiting_captain",
+                         "player_origin", "venue"):
                 return
             elif key in stats and stats[key].get("produced") is False:
                 worse("no", "the game never produces %r" % key)
