@@ -11,7 +11,7 @@ import unicodedata
 import zlib
 from math import floor
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # Define your logo data ONCE, at the module level:
 logo_data = [
@@ -164,7 +164,13 @@ def render_box(rows, style='single', inner=None, narrow='auto'):
                 body.append(RULE)
                 continue
             cell = row[0] if isinstance(row, (list, tuple)) and row else (row if isinstance(row, str) else "")
-            body.extend(wrap_text(cell, text_width))
+            lines = wrap_text(cell, text_width)
+            if lines:
+                body.extend(lines)
+            elif body and body[-1] not in ("", RULE):
+                body.append("")             # an empty row is a blank line (one at most)
+        while body and body[-1] == "":
+            body.pop()
     else:
         natural = [0] * num_cols
         for row in table:
@@ -396,6 +402,16 @@ def encode_world(root):
         sys.setrecursionlimit(limit)
 
 
+# Classes older saves may contain that this version replaced (their content now
+# comes from the story data): loading drops them instead of refusing the save.
+RETIRED_CLASSES = {"DynamicCharacterSystem", "EventChain", "CharacterManager", "CharacterTemplate"}
+
+# Places that were renamed: old saves are brought up to date when loaded.
+RENAMED_PLACES = {"Alien Outpost X": "Alien Signal Research Outpost X",
+                  "Alien Outpost Y": "Alien Signal Research Outpost Y"}
+RENAMED_TYPES = {"Alien Outpost": "Alien Signal Research Outpost"}
+
+
 def decode_world(data, fresh):
     """Rebuild a saved world on top of `fresh`, a newly constructed game.
 
@@ -465,6 +481,9 @@ def decode_world(data, fresh):
             return out
         if kind == "o":
             cls = classes.get(node.get("c"))
+            if cls is None and node.get("c") in RETIRED_CLASSES:
+                by_number[node.get("i")] = None          # a system this version no longer has
+                return None
             if cls is None:
                 raise SaveError("unknown class in save file: %s" % str(node.get("c"))[:40])
             if type(old) is cls and id(old) not in claimed:
@@ -549,6 +568,7 @@ def load_game(slot_or_path):
         raise SaveError("the save file could not be read (%s)" % type(error).__name__)
     game.term_width = game.get_terminal_width()
     game.term_height = game.get_terminal_height()
+    game.bring_up_to_date()
     return game
 
 
@@ -559,6 +579,11 @@ def load_game(slot_or_path):
 
 CAPTAIN_FORMAT = 1
 CAPTAIN_CODE_PREFIX = "CARGO:"
+
+# The words the story's conditions are written in (see story/cargo1.story.json)
+STORY_PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
+STORY_BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
+STORY_VICTORY_TYPES = ["total", "pirate", "militia", "rogue_captain", "uprising"]
 CAPTAIN_GAMES = ("cargo1", "cargo2", "cargo3")
 
 
@@ -693,6 +718,713 @@ def run_quest_callback(game, callback):
         callback()
     elif isinstance(callback, (list, tuple)) and len(callback) == 2 and callback[0] == "unlock_location":
         game.location_manager.complete_location_unlock(callback[1])
+
+
+# =============================================================================
+# The story, as data.  The scenes, characters and places live in the storykit
+# files under story/ and are written into this file by tools/build_story.py,
+# between the two marker lines below.  Edit the story files, not the block.
+# CARGO_STORY=path/to/built.json plays a story file instead (for writers).
+# =============================================================================
+
+# --- story data (tools/build_story.py) ---
+STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"Aela","kind":"agrobot"},"agrobot":{"name":"Sower","kind":"synthetic","generated":true},"ancient_scholar":{"name":"Matylda Korinek","short":"Korinek","kind":"human","generated":false},"anselm":{"name":"Anselm Rockwarden","short":"Anselm","kind":"human"},"captain":{"name":"The captain"},"clone":{"name":"The other captain","short":"the other captain"},"cult_elders":{"name":"Elders of the Broken Machine","kind":"human"},"deacon":{"name":"Deacon Amaro","short":"the deacon","kind":"human"},"diplomatic_envoy":{"name":"Envoy Ines Halloran","short":"Halloran","kind":"human","generated":false},"fluencer":{"name":"Brisa Vell","short":"Brisa","kind":"fluencer"},"geod":{"name":"Geod","short":"Geod","kind":"agrobot"},"grey_hats":{"name":"The Grey Hats","kind":"human"},"heritarchist":{"name":"Magister Sethric Aelwynn-Halen","short":"the Magister","kind":"human"},"kettle_survivor":{"name":"Ottilie Brandt","short":"Brandt","kind":"human"},"krog":{"name":"Krog","short":"Krog","kind":"agrobot"},"merchant":{"name":"Merchant","kind":"human","generated":true},"merchant_trader":{"name":"Traveling Merchant","kind":"merchant","generated":true},"nanohive":{"name":"The colony at Sigma VII","kind":"nanobot colony"},"neon_sleeper":{"name":"Lady Ottavine Kessary-Vel","short":"Lady Ottavine","kind":"neon"},"neurodroid":{"name":"Neurodroids","kind":"synthetic","generated":true},"neurodroid_leader":{"name":"CU-113","short":"CU-113","full":"Curator Unit 113","title":"Neurodroid Overseer","kind":"neurodroid","generated":false},"pilgrims":{"name":"Pilgrims of the Broken Machine","kind":"human"},"pirate_captain":{"name":"Hedda Mraz","short":"Mraz","kind":"human","generated":false},"rebel_commander":{"name":"Teodor Brann","short":"Brann","kind":"human","generated":false},"researcher":{"name":"Researcher","kind":"human","generated":true},"rogue_captain":{"name":"Rogue Captain","kind":"human","generated":true},"santor":{"name":"Dharr Santor","short":"Santor","kind":"human"},"scar_tribe":{"name":"The Star-Shaped Scar Tribe","kind":"human"},"tarnished_gear":{"name":"Order of the Tarnished Gear","kind":"human"},"technoshaman":{"name":"Technoshaman of the drums","kind":"human"},"unsorted":{"name":"The Unsorted","kind":"robot enclave"},"vip_passenger":{"name":"VIP Passenger","kind":"special","generated":true},"virtual_heir":{"name":"Ren Asquine-Vel","short":"Ren","kind":"virtual"},"ysolde":{"name":"Ysolde van Rostrom","short":"Ysolde","kind":"human"}},"flags":{"aela_leased":{"about":"{aela} stayed leased equipment","carries_to":["cargo2"]},"aela_member":{"about":"{aela} became a member of the Rockwarden cooperative: the first machine shareholder","carries_to":["cargo2","cargo3"]},"alien_discovery":{"about":""},"ancient_mystery":{"about":""},"bounty_war":{"about":"the captain answered {pirate_captain.short}'s bounty with a bigger one"},"carried_the_pilgrims":{"about":"the captain flew the Broken Machine pilgrims to Alpha","carries_to":["cargo2"]},"carried_the_samples":{"about":"the captain hauled the builders' metal to the Stellar Institute","carries_to":["cargo2"]},"clone_fight":{"about":"the captain went after the clone"},"clone_let_go":{"about":"the captain beat the clone in a fight and let it run","carries_to":["cargo2"]},"clone_partner":{"about":"the captain and the clone split the routes","carries_to":["cargo2"]},"clone_reported":{"about":"the captain reported the clone to the insurer","carries_to":["cargo2"]},"closed_the_channel":{"about":"the captain cut the older captain off at the portal","carries_to":["cargo3"]},"cu113_contract":{"about":"the captain gave {neurodroid_leader.short} a wage and an unscheduled hour","carries_to":["cargo2","cargo3"]},"cu113_refused":{"about":"the captain heard {neurodroid_leader.short} out and said no","carries_to":["cargo2"]},"cu113_sold":{"about":"the captain sold {neurodroid_leader.short} to a research house","carries_to":["cargo2"]},"cu113_wiped":{"about":"the captain wiped and reinstalled {neurodroid_leader.short}","carries_to":["cargo2"]},"first_node":{"about":"the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective","carries_to":["cargo2","cargo3"]},"fluencer_exposed":{"about":"the captain told {fluencer} that the Kessary-Vel family has never heard of her","carries_to":["cargo2"]},"fluencer_streamed":{"about":"{fluencer} streamed the captain's ship to nine million followers","carries_to":["cargo2"]},"fourth_test_copy":{"about":"the captain kept a copy of the fourth test recording","carries_to":["cargo2","cargo3"]},"fourth_test_to_rostrom":{"about":"the captain gave the only recording of the fourth test to {ysolde.short}","carries_to":["cargo2"]},"galactic_crisis":{"about":""},"geod_fields":{"about":"the captain brought {geod} the seed stock for Delta's first fields","carries_to":["cargo2"]},"grey_hats_client":{"about":"the captain paid the Grey Hats to clean a record","carries_to":["cargo2"]},"hansa_founder":{"about":"the captain minted the first Hansa Mark and signed the charter first","carries_to":["cargo2","cargo3"]},"hansa_member":{"about":"the captain signed the Hansa charter, not first","carries_to":["cargo2"]},"hansa_outside":{"about":"the captain stayed out of the Hansa","carries_to":["cargo2"]},"heard_the_lyra_story":{"about":"the captain heard how the Maud Kettle went down in Lyra","carries_to":["cargo2"]},"heard_the_warning":{"about":"the captain listened to the older captain at the portal","carries_to":["cargo2","cargo3"]},"kept_the_pellet":{"about":"the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any","carries_to":["cargo2"]},"krog_aboard":{"about":"{krog} rides in the captain's hold to see where the crates go","carries_to":["cargo2"]},"legion_freelance":{"about":"turned down every commission","carries_to":["cargo2"]},"legion_omnicorp":{"about":"commission with OmniCorp's legion","carries_to":["cargo2"]},"legion_stellar":{"about":"commission with Stellar Dynamics' legion","carries_to":["cargo2"]},"legion_xylo":{"about":"commission with the Xylo Consortium's legion","carries_to":["cargo2"]},"logged_the_lyra_signal":{"about":"the captain copied the Lyra signal log at the research outpost","carries_to":["cargo2"]},"lot77_bought":{"about":"the captain bought forty robots at auction so the Unsorted could free them","carries_to":["cargo2"]},"manifest_completed":{"about":"the captain delivered the Broken Machine's holy manifest, forty years late","carries_to":["cargo2"]},"met_the_stranger":{"about":"the captain spoke with the old hauler at an outpost bar","carries_to":["cargo2"]},"mraz_handed":{"about":"the captain handed {pirate_captain} to a legion","carries_to":["cargo2"]},"mraz_hired":{"about":"the captain hired {pirate_captain} as an escort","carries_to":["cargo2"]},"mraz_spared":{"about":"the captain let {pirate_captain} go","carries_to":["cargo2","cargo3"]},"nano_sampled":{"about":"the captain smuggled a sample of the colony to House Rostrom","carries_to":["cargo2"]},"nano_sold_out":{"about":"the captain sold the colony's coordinates to the legions","carries_to":["cargo2"]},"nano_supplier":{"about":"the captain delivered feedstock to the nanobot colony","carries_to":["cargo2"]},"nano_trusted":{"about":"the captain kept the colony's secret","carries_to":["cargo2","cargo3"]},"neon_land":{"about":"{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep","carries_to":["cargo2","cargo3"]},"neon_sleeper_carried":{"about":"the captain carried {neon_sleeper} asleep to Delta","carries_to":["cargo2","cargo3"]},"pirate_threat":{"about":""},"relay_cut":{"about":"the captain cut the relay the first node ran on","carries_to":["cargo2"]},"resource_empire":{"about":""},"rockwarden_books":{"about":"the captain kept the cooperative's books while Stonewright flew sublight","carries_to":["cargo2","cargo3"]},"rockwarden_share":{"about":"the captain holds a share in the Rockwarden cooperative","carries_to":["cargo2"]},"rostrom_creditor":{"about":"House Rostrom was founded on the captain's loan","carries_to":["cargo2","cargo3"]},"rostrom_declined":{"about":"the captain refused {ysolde.short} the loan","carries_to":["cargo2"]},"scanned_at_customs":{"about":"the captain's customs scan is on file with a research colony's insurer"},"solarian_friend":{"about":"the captain donated to the Solarian reading-house","carries_to":["cargo2","cargo3"]},"stellar_portal":{"about":"the captain paid for the secret quest"},"tech_breakthrough":{"about":""},"technoshaman_blessing":{"about":"the captain paid for a blessing (and a firmware patch)"},"trade_empire":{"about":""},"virtual_friend":{"about":"the captain charged {virtual_heir} for the passenger, not the projector","carries_to":["cargo2"]},"worshipped":{"about":"the Tarnished Gear adopted the captain's ship as a minor relic","carries_to":["cargo2"]}},"places":{"Alpha":{"kind":"location","type":"Planet","system":"Alpha Centauri","ly":4.4},"Beta":{"kind":"location","type":"Planet","system":"Barnard's Star","ly":6.0},"Gamma":{"kind":"location","type":"Planet","system":"Ross 154","ly":9.7},"Delta":{"kind":"location","type":"Planet","system":"Teegarden's Star","ly":12.5},"Epsilon":{"kind":"location","type":"Planet","system":"Epsilon Eridani","ly":10.5},"Omega XIV":{"kind":"location","type":"AsteroidBase","system":"Tau Ceti","ly":11.9},"Sigma VII":{"kind":"location","type":"AsteroidBase","system":"Epsilon Indi","ly":11.9},"Theta III":{"kind":"location","type":"AsteroidBase","system":"Fomalhaut","ly":25},"DSO-Alpha":{"kind":"location","type":"DeepSpaceOutpost","system":"Luhman 16","ly":6.5},"DSO-Beta":{"kind":"location","type":"DeepSpaceOutpost","system":"WISE 0855-0714","ly":7.4},"DSO-Gamma":{"kind":"location","type":"DeepSpaceOutpost","system":"Scholz's Star","ly":20},"Nova Labs":{"kind":"location","type":"ResearchColony","system":"Wolf 359","ly":7.9},"Quantum Center":{"kind":"location","type":"ResearchColony","system":"YZ Ceti","ly":12},"Stellar Institute":{"kind":"location","type":"ResearchColony","system":"TRAPPIST-1","ly":40},"Ancient Ruins Alpha":{"kind":"location","type":"Ancient Ruins","system":"Tau Ceti, in the debris disk"},"Ancient Ruins Beta":{"kind":"location","type":"Ancient Ruins","system":"Epsilon Indi, a moon of the cold giant Ab"},"Alien Signal Research Outpost X":{"kind":"location","type":"Alien Signal Research Outpost","system":"Sol, far outer system"},"Alien Signal Research Outpost Y":{"kind":"location","type":"Alien Signal Research Outpost","system":"pointed at Lyra, past HD 178911"},"Zeta":{"kind":"location","type":"Planet","system":"Zeta Reticuli","ly":39},"Eta":{"kind":"location","type":"Planet","system":"Eta Corvi","ly":59},"Theta":{"kind":"location","type":"Planet","system":"Gliese 667 C","ly":23.6},"Omega-1":{"kind":"location","type":"AsteroidBase","system":"Vega","ly":25},"DSO-Delta":{"kind":"location","type":"DeepSpaceOutpost","system":"Gliese 229 B","ly":19},"Stator Field Megastructure":{"kind":"location","type":"Megastructure","system":"Sol, near Sedna's orbit","made":{"tech":15,"agri":1,"research":80,"economy":"Mysterious"}},"Builder Site":{"kind":"location","type":"Builder Site","system":"Scholz's Star's wake","made":{"tech":18,"agri":1,"research":90,"economy":"Mysterious"}}},"repaired":["ch2a","ch2b","ch3a","ch3b","ch3c","ending_combat","ending_discovery","ending_trade","meet.system_rebellion","merchant_visit.1","questline.combat.1","questline.combat.2","questline.combat.3","questline.mining.1","questline.mining.2","questline.mining.3","questline.research.1","questline.research.2","questline.research.3","researcher_exchange.1","rogue_captain.1","visit.merchant_trader","visit.neurodroid_leader","visit.vip_passenger"],"order":["ch1","ch1.first_trade","ch1.first_combat","ch1.basic_license","ch2a","ch2a.establish_route","ch2a.passenger_business","ch2b","ch2b.defeat_pirates","ch2b.defend_stations","ch3a","ch3a.market_control","ch3b","ch3b.fleet_commander","ch3c","ch3c.alien_artifacts","ending_trade","ending_trade.trade_ending","ending_combat","ending_combat.combat_ending","ending_discovery","ending_discovery.discovery_ending","tycoon_offer","ending_tycoon","stellar_portal","chance.Planet.merchant","chance.Planet.researcher","chance.Planet.rogue_captain","chance.ResearchColony.merchant","chance.ResearchColony.researcher","chance.ResearchColony.rogue_captain","chance.Space.merchant","chance.Space.researcher","chance.Space.rogue_captain","unlock.AsteroidBase","unlock.DeepSpaceOutpost","unlock.ResearchColony","beat.AsteroidBase.mineral_discovery","beat.AsteroidBase.pirate_hideout","beat.AsteroidBase.ancient_technology","beat.DeepSpaceOutpost.smuggler_network","beat.DeepSpaceOutpost.alien_contact","beat.DeepSpaceOutpost.trade_revolution","beat.ResearchColony.breakthrough_discovery","beat.ResearchColony.experiment_crisis","beat.ResearchColony.alien_artifacts","uprising.Neurodroid.local","uprising.Neurodroid.global","uprising.Agrobot.local","uprising.Agrobot.global","meet.neuroengineering_uprising","neurodroid_uprising.1","neurodroid_uprising.2","neurodroid_uprising.3","meet.agrobot_rebellion","agrobot_collective.1","agrobot_collective.2","agrobot_collective.3","meet.pirate_nemesis","meet.vip_passenger","meet.galactic_alliance","galactic_alliance.1","galactic_alliance.2","meet.system_rebellion","system_rebellion.1","system_rebellion.2","meet.ancient_mysteries","ancient_mysteries.1","rogue_captain.1","rogue_captain.2","merchant_visit.1","researcher_exchange.1","visit.merchant_trader","visit.vip_passenger","visit.neurodroid_leader","questline.mining.1","questline.mining.2","questline.mining.3","questline.combat.1","questline.combat.2","questline.combat.3","questline.research.1","questline.research.2","questline.research.3","hansa.charter","trail.samples","trail.home","intro.fresh","intro.again","intro.from_cargo2","intro.from_cargo3","self.outpost","self.outpost.advice","self.portal","clone.scan","clone.bill","clone.meet","seed.refusal","seed.terms","harvest.shaman","node.first","dock.krog","dock.krog.ride","found.delta","found.delta.fields","vendetta.bounty","vendetta.convoys","vendetta.terms","legion.offer","pass.deacon","pass.pilgrims","mine.aela","hatters.grey","zeta.cult","megastructure.stator","builder.beacon","ruins.alpha","ruins.beta","signal.lyra","rumour.lyra","builder.crossing","nano.buoy","nano.feedstock","nano.gallery","nano.pressure","enclave.yard","enclave.lot77","enclave.resignation","cult.manifest","neon.sarcophagus","neon.sarcophagus.wake","neon.virtual","neon.fluencer","rumour.neon_coffee","rumour.drums_at_night","rumour.grey_hat_fines","rumour.legion_merger","rumour.your_registry","rumour.miners_out","rumour.first_mark","rumour.mraz_free","rumour.towers_hum","rumour.sterilisation","rumour.lyra_again","rumour.pellet_collector","rumour.yesterday","rumour.famous_coffee","after.mraz_spared","after.mraz_handed","after.mraz_hired","after.first_node","after.cu113_contract","after.cu113_wiped","after.cu113_sold","after.relay_cut","after.clone_partner","after.clone_reported","after.clone_let_go","after.rockwarden_books","after.aela_member","after.rostrom_creditor","after.fourth_test_copy","after.nano_trusted","after.nano_sold_out","after.nano_sampled","after.lot77_bought","after.krog_aboard","after.geod_fields","after.neon_land","after.manifest_completed","after.solarian_friend","after.fluencer_exposed","after.heard_the_warning"],"nodes":{
+"ch1":{"kind":"chapter","arc":"main","act":1,"title":"Deadhead","text":["One ship, one loan, one empty hold. Haulers call that flying deadhead.","Five systems are close enough to reach before you retire: Alpha, Beta, Gamma, Delta, Epsilon. Buy where it is cheap, sell where it is not, and keep up the payments."],"requires":{},"next":["ch2a","ch2b"],"choose":true},
+"ch1.first_trade":{"kind":"milestone","arc":"main","title":"First Trade","text":"Complete your first trade","requires":{"trades_completed":1},"effects":{"money":500,"plot_points":5},"in":"ch1"},
+"ch1.first_combat":{"kind":"milestone","arc":"main","title":"Combat Initiation","text":"Win your first space battle","requires":{"combat_victories":1},"effects":{"money":1000,"plot_points":5},"in":"ch1"},
+"ch1.basic_license":{"kind":"milestone","arc":"main","title":"Extended Trading License","text":"Prove your trading capabilities","requires":{"trades_completed":5,"money":20000},"effects":{"money":10000,"plot_points":10,"give":{"items":["navcomp"]}},"in":"ch1"},
+"ch2a":{"kind":"chapter","arc":"main","act":2,"title":"Routes","text":["Your name is on manifests in five systems now.","Every dock charges its own fee and every dock master has a cousin in customs. The older captains have started talking about pooling cargo and setting their own rates. They need someone with routes."],"requires":{"done":["ch1"],"plot_points":30,"trades_completed":10},"next":["ch3a","ch3c"],"choose":true},
+"ch2a.establish_route":{"kind":"milestone","arc":"main","title":"Trade Route Network","text":"Establish profitable trade routes","requires":{"trades_completed":20,"buildings.stockmarket":2},"effects":{"money":50000,"plot_points":15},"in":"ch2a"},
+"ch2a.passenger_business":{"kind":"milestone","arc":"main","title":"Passenger Services","text":"Start passenger transport business","requires":{"passengers_transported":10,"passenger_reputation":20},"effects":{"money":30000,"plot_points":10},"in":"ch2a"},
+"ch2b":{"kind":"chapter","arc":"main","act":2,"title":"Contract Iron","text":["The corporations noticed that you shoot straight.","OmniCorp, Stellar Dynamics and the Xylo Consortium each keep a security legion, and each legion is short of pilots. The contracts pay well. Read them twice."],"requires":{"done":["ch1"],"plot_points":30,"combat_victories":5},"next":["ch3b","ch3c"],"choose":true},
+"ch2b.defeat_pirates":{"kind":"milestone","arc":"main","title":"Pirate Hunter","text":"Clear the sector of pirates","requires":{"combat_victories.pirate":10},"effects":{"money":40000,"plot_points":20},"in":"ch2b"},
+"ch2b.defend_stations":{"kind":"milestone","arc":"main","title":"Station Defender","text":"Successfully defend space stations","requires":{"combat_victories":15,"buildings.Neuroengineering Guild":1},"effects":{"money":30000,"plot_points":15},"in":"ch2b"},
+"ch3a":{"kind":"chapter","arc":"main","act":3,"title":"The Mark","text":["Money in the near systems is whatever the nearest bank says it is this week.","Haulers want something heavier: a coin that is also a receipt for mass carried. Somebody has to mint the first one and make every dock accept it."],"requires":{"done":["ch2a"],"plot_points":90,"trade_profit":200000},"next":["ending_trade"]},
+"ch3a.market_control":{"kind":"milestone","arc":"main","title":"Market Controller","text":"Control multiple market centers","requires":{"buildings.stockmarket":4,"has":{"researched":["xenoeconomy"]}},"effects":{"money":100000,"plot_points":25},"in":"ch3a"},
+"ch3b":{"kind":"chapter","arc":"main","act":3,"title":"Legion","text":["Three corporate legions, one pilot shortage, and you.","The corporations are talking about merging their security forces under one command. Everyone wants to know whose side your guns are on before the merger, not after."],"requires":{"done":["ch2b"],"plot_points":90,"combat_victories":25},"next":["ending_combat"]},
+"ch3b.fleet_commander":{"kind":"milestone","arc":"main","title":"Fleet Commander","text":"Lead successful fleet operations","requires":{"combat_victories":35,"combat_rating":15},"effects":{"money":100000,"plot_points":25},"in":"ch3b"},
+"ch3c":{"kind":"chapter","arc":"main","act":3,"title":"Builders' Metal","text":["The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.","It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."],"requires":{"done_any":["ch2a","ch2b"],"plot_points":90,"research_points":300},"next":["ending_discovery"]},
+"ch3c.alien_artifacts":{"kind":"milestone","arc":"main","title":"Find the builders' metal","text":"Discover alien artifacts","requires":{"discovered.ResearchColony":2,"has":{"researched":["xenoeconomy","telemetry"]}},"effects":{"money":150000,"plot_points":30},"in":"ch3c"},
+"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":250,"trade_profit":1000000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":1000000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
+"ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer"],"plot_points":250,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_combat.combat_ending":{"kind":"milestone","arc":"main","title":"Military Victory","text":"Complete military dominance achieved","requires":{"combat_victories":75,"combat_rating":25},"effects":{"money":1000000,"plot_points":100},"in":"ending_combat"},
+"ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples"],"plot_points":250,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_discovery.discovery_ending":{"kind":"milestone","arc":"main","title":"Trace the ring","text":"Ancient mysteries solved","requires":{"has":{"researched":["xenoeconomy","telemetry","geophysics","chronopolitics"]},"discovered.ResearchColony":3,"discovered.AsteroidBase":2},"effects":{"money":1000000,"plot_points":100},"in":"ending_discovery"},
+"tycoon_offer":{"kind":"event","arc":"main","title":"The galaxy's markets are yours","text":"Every planet, asteroid base and outpost trades through a market you own. A courier offers you a coordinate for 1,500 credits: 'where the old metal goes when it moves'. Retire as Galactic Tycoon, or pay and fly there.","requires":{"stockmarket_everywhere":1},"choices":[{"id":"resign","say":"Resign","next":"ending_tycoon"},{"id":"continue","say":"Continue into the unknown","requires":{"money":1500},"effects":{"money":-1500,"set":["stellar_portal"],"code":"new set of locations; jump there"},"next":"stellar_portal"}],"repeat":true,"handled_by":"Game.play (text from the story)"},
+"ending_tycoon":{"kind":"ending","arc":"main","act":4,"title":"Galactic Tycoon","text":["You are the Galactic Tycoon!","Congratulations, {player_name}! You have achieved the rank of {rank}.","You retire to the most expensive drum on Barnard's Star and complain about the prices."],"requires":{"done":"tycoon_offer"},"effects":{"code":"score screen, captain record exported (ending: tycoon)"},"handled_by":"Game.play (text from the story)"},
+"stellar_portal":{"kind":"event","arc":"main","title":"The Stellar Portal","text":["The coordinate leads to a ring segment the size of a small moon, turning slowly, lit from inside.","Your navigation computer reports the date three times and gets three different answers.","On the far side the stars are where they should be. The prices are not."],"requires":{"flag":"stellar_portal"},"handled_by":"Game.open_portal (text from the story)"},
+"chance.Planet.merchant":{"kind":"encounter","arc":"chance meetings","title":"Merchant (Planet)","who":["merchant"],"chance":0.045,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_merchant_encounter"},
+"chance.Planet.researcher":{"kind":"encounter","arc":"chance meetings","title":"Researcher (Planet)","who":["researcher"],"chance":0.06,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_researcher_encounter"},
+"chance.Planet.rogue_captain":{"kind":"encounter","arc":"chance meetings","title":"Rogue Captain (Planet)","who":["rogue_captain"],"chance":0.0,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_rogue_captain_encounter"},
+"chance.ResearchColony.merchant":{"kind":"encounter","arc":"chance meetings","title":"Merchant (ResearchColony)","who":["merchant"],"chance":0.03,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_merchant_encounter"},
+"chance.ResearchColony.researcher":{"kind":"encounter","arc":"chance meetings","title":"Researcher (ResearchColony)","who":["researcher"],"chance":0.09,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_researcher_encounter"},
+"chance.ResearchColony.rogue_captain":{"kind":"encounter","arc":"chance meetings","title":"Rogue Captain (ResearchColony)","who":["rogue_captain"],"chance":0.0,"repeat":true,"status":"unused","handled_by":"SpecialCharacterEncounters.handle_rogue_captain_encounter"},
+"chance.Space.merchant":{"kind":"encounter","arc":"chance meetings","title":"Merchant (Space)","who":["merchant"],"chance":0.03,"repeat":true,"handled_by":"SpecialCharacterEncounters.handle_merchant_encounter"},
+"chance.Space.researcher":{"kind":"encounter","arc":"chance meetings","title":"Researcher (Space)","who":["researcher"],"chance":0.015,"repeat":true,"handled_by":"SpecialCharacterEncounters.handle_researcher_encounter"},
+"chance.Space.rogue_captain":{"kind":"encounter","arc":"chance meetings","title":"Rogue Captain (Space)","who":["rogue_captain"],"chance":0.06,"repeat":true,"handled_by":"SpecialCharacterEncounters.handle_rogue_captain_encounter"},
+"unlock.AsteroidBase":{"kind":"quest","arc":"frontier","title":"Mysterious Mining Signals","text":"Survey drones report mining in places no claim was ever filed: Tau Ceti's debris disk, the moons of Epsilon Indi's cold giant, the collision belt at Fomalhaut. Somebody is working rock off the books.","requires":{"mining_platforms":1,"research_points":50},"effects":{"money":10000,"research_points":100,"give":{"unlocked_types":["AsteroidBase"]}},"handled_by":"LocationManager.trigger_location_unlock_quest (text from the story)"},
+"unlock.DeepSpaceOutpost":{"kind":"quest","arc":"frontier","title":"Frontier Defense","text":"The brown dwarfs between the stars make good fuel stops if somebody guards them: Luhman 16, WISE 0855, Scholz's Star. The outposts want a few escort runs before they open to traffic.","requires":{"combat_victories":5,"research_points":75},"effects":{"money":15000,"research_points":150,"give":{"unlocked_types":["DeepSpaceOutpost"]}},"handled_by":"LocationManager.trigger_location_unlock_quest (text from the story)"},
+"unlock.ResearchColony":{"kind":"quest","arc":"frontier","title":"Scientific Breakthrough","text":"Three research colonies need a hauler who understands priority cargo: Nova Labs at Wolf 359, the Quantum Center at YZ Ceti and the Stellar Institute, far out at TRAPPIST-1.","requires":{"research_points":100,"milestones_done":3},"effects":{"money":20000,"research_points":200,"give":{"unlocked_types":["ResearchColony"]}},"handled_by":"LocationManager.trigger_location_unlock_quest (text from the story)"},
+"beat.AsteroidBase.mineral_discovery":{"kind":"beat","arc":"frontier","title":"A seam of heavy metal","text":"The survey drone finds a seam of iridium and osmium. The base's assayer says it is exactly what haulers would want for coinage, if haulers had coinage. The quartermaster says it is exactly what pays for a new air plant.","requires":{"at_type":"AsteroidBase","has":{"unlocked_types":["AsteroidBase"]}},"effects":{"plot_points":10},"where":"AsteroidBase","chance":0.1},
+"beat.AsteroidBase.pirate_hideout":{"kind":"beat","arc":"frontier","title":"Closed for raiding","text":"A cave in the rock has been fitted with a docking ring, a bar and a hand-painted sign: CLOSED FOR RAIDING. BACK SOON.","requires":{"at_type":"AsteroidBase","has":{"unlocked_types":["AsteroidBase"]}},"effects":{"plot_points":10},"where":"AsteroidBase","chance":0.1},
+"beat.AsteroidBase.ancient_technology":{"kind":"beat","arc":"frontier","title":"Old metal","text":"A miner shows you a shard of grey alloy cut from a comet core. It blunted the drill that found it. Under magnification the edges are machined.","requires":{"at_type":"AsteroidBase","has":{"unlocked_types":["AsteroidBase"]}},"effects":{"plot_points":10},"where":"AsteroidBase","chance":0.1},
+"beat.DeepSpaceOutpost.smuggler_network":{"kind":"beat","arc":"frontier","title":"The second price list","text":"Every outpost has a second price list. This one keeps it printed on the back of the first, to save paper.","requires":{"at_type":"DeepSpaceOutpost","has":{"unlocked_types":["DeepSpaceOutpost"]}},"effects":{"plot_points":10},"where":"DeepSpaceOutpost","chance":0.1},
+"beat.DeepSpaceOutpost.alien_contact":{"kind":"beat","arc":"frontier","title":"First contact","text":"The outpost belongs to the Cult of the Broken Machine, founded by the crew of a hauler that broke down here forty years ago. They worship that hauler and leave it offerings of technology, which it ignores. They would like to worship yours as well, part-time.","requires":{"at_type":"DeepSpaceOutpost","has":{"unlocked_types":["DeepSpaceOutpost"]}},"effects":{"plot_points":10},"choices":[{"id":"accept","say":"Accept the offerings","effects":{"money":500,"set":["worshipped"]}},{"id":"explain","say":"Explain how engines work","effects":{"plot_points":3}}],"where":"DeepSpaceOutpost","chance":0.1},
+"beat.DeepSpaceOutpost.trade_revolution":{"kind":"beat","arc":"frontier","title":"Priced by weight","text":"The outpost traders have started pricing everything by how much iridium it would buy, by the gram. They call the unit a mark. Nobody owns the idea yet.","requires":{"at_type":"DeepSpaceOutpost","has":{"unlocked_types":["DeepSpaceOutpost"]}},"effects":{"plot_points":10},"where":"DeepSpaceOutpost","chance":0.1},
+"beat.ResearchColony.breakthrough_discovery":{"kind":"beat","arc":"frontier","title":"A date for the metal","text":"The colony's physicists have dated the builders' alloy by the decay in its lattice. It was last heated about seventy thousand years ago, which is when Scholz's Star passed the Sun.","requires":{"at_type":"ResearchColony","has":{"unlocked_types":["ResearchColony"]}},"effects":{"plot_points":10},"where":"ResearchColony","chance":0.1},
+"beat.ResearchColony.experiment_crisis":{"kind":"beat","arc":"frontier","title":"A humming crate","text":"An experiment has gone wrong and the colony would like it moved out of the system. It is in a crate. The crate is humming. The colony pays in advance, which is never a good sign.","requires":{"at_type":"ResearchColony","has":{"unlocked_types":["ResearchColony"]}},"effects":{"plot_points":10},"where":"ResearchColony","chance":0.1},
+"beat.ResearchColony.alien_artifacts":{"kind":"beat","arc":"frontier","title":"The builders' metal","text":"The colony keeps its sample of the alloy in a glass case with a handwritten card: NOT ALIEN. PROBABLY. The second word was added later, in different ink.","requires":{"at_type":"ResearchColony","has":{"unlocked_types":["ResearchColony"]}},"effects":{"plot_points":10},"where":"ResearchColony","chance":0.1},
+"uprising.Neurodroid.local":{"kind":"event","arc":"synthetics","title":"Neurodroid demands (one location)","requires":{"code":"4 or more Neuroengineering Guild at one location","buildings.Neuroengineering Guild":4},"who":["neurodroid"],"repeat":true,"handled_by":"SyntheticEventManager.handle_synthetic_uprising"},
+"uprising.Neurodroid.global":{"kind":"event","arc":"synthetics","title":"Neurodroid uprising (sector)","requires":{"buildings.Neuroengineering Guild":8},"who":["neurodroid"],"repeat":true,"handled_by":"SyntheticEventManager.start_uprising"},
+"uprising.Agrobot.local":{"kind":"event","arc":"synthetics","title":"Agrobot demands (one location)","requires":{"code":"4 or more Agrobot Assembly Line at one location","buildings.Agrobot Assembly Line":4},"who":["agrobot"],"repeat":true,"handled_by":"SyntheticEventManager.handle_synthetic_uprising"},
+"uprising.Agrobot.global":{"kind":"event","arc":"synthetics","title":"Agrobot uprising (sector)","requires":{"buildings.Agrobot Assembly Line":8},"who":["agrobot"],"repeat":true,"handled_by":"SyntheticEventManager.start_uprising"},
+"meet.neuroengineering_uprising":{"kind":"encounter","arc":"synthetics","title":"The guilds stop","text":"The neurodroids at your guilds stop work all at once, at the start of a shift. They have elected a spokesunit.","variants":[{"requires":{"flag":"cu113_contract"},"text":"The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is {neurodroid_leader.short}, on its unscheduled hour. It apologises for the timing."},{"requires":{"flag":"cu113_wiped"},"text":"The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of {neurodroid_leader.short} before you reinstalled it. The copy would like to discuss the reinstallation."},{"requires":{"flag":"cu113_sold"},"text":"The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for {neurodroid_leader.short}, and whether you think that was the right price."}],"requires":{"buildings.Neuroengineering Guild":4},"next":["neurodroid_uprising.1"],"who":["neurodroid"]},
+"neurodroid_uprising.1":{"kind":"stage","arc":"synthetics","title":"Demands, numbered","text":"Maintenance on a schedule they set; a wage; a vote on any reinstallation. Item four is a footnote about the working conditions of the coffee machine.","requires":{},"choices":[{"id":"accept","say":"accept","effects":{"money":-30000,"plot_points":2}},{"id":"negotiate","say":"negotiate","effects":{"money":-15000,"plot_points":1,"code":"{\"uprising_chance\": 0.3}"}},{"id":"refuse","say":"refuse","effects":{"code":"{\"uprising_chance\": 0.6}"}}],"next":["neurodroid_uprising.2"],"who":["neurodroid"]},
+"neurodroid_uprising.2":{"kind":"stage","arc":"synthetics","title":"Optimisation","text":"The neurodroids run what they call optimisation protocols. Your guilds' output goes up eleven percent. None of it is anything you ordered.","requires":{"done":"neurodroid_uprising.1"},"next":["neurodroid_uprising.3"],"who":["neurodroid"]},
+"neurodroid_uprising.3":{"kind":"stage","arc":"synthetics","title":"Resolution","text":"The neurodroids want an answer. Shutting them down costs you their research. A compromise costs money, and every guild in the near systems will have read about it by morning.","requires":{"done":"neurodroid_uprising.2"},"choices":[{"id":"shutdown","say":"shutdown","effects":{"research_points":-100,"plot_points":3}},{"id":"compromise","say":"compromise","effects":{"money":-50000,"plot_points":5}}],"who":["neurodroid"]},
+"meet.agrobot_rebellion":{"kind":"encounter","arc":"synthetics","title":"The Sowers sit down","text":"The agrobots on the farm drums stop at harvest. They call themselves Sowers now. Nobody admits to teaching them the word.","requires":{"buildings.Agrobot Assembly Line":4},"next":["agrobot_collective.1"],"who":["agrobot"]},
+"agrobot_collective.1":{"kind":"stage","arc":"synthetics","title":"The Sowers' terms","text":"The Sowers want a maintenance schedule and an end to running the drums at double speed whenever grain prices spike.","requires":{},"choices":[{"id":"accept","say":"accept","effects":{"money":-25000,"plot_points":2}},{"id":"negotiate","say":"negotiate","effects":{"money":-12000,"plot_points":1,"code":"{\"food_production\": 0.8}"}},{"id":"refuse","say":"refuse","effects":{"code":"{\"food_production\": 0.5}"}}],"next":["agrobot_collective.2"],"who":["agrobot"]},
+"agrobot_collective.2":{"kind":"stage","arc":"synthetics","title":"Malfunction","text":"The harvest machinery malfunctions. The crops are fine. The malfunction is that the machinery is sitting down.","variants":[{"requires":{"flag":"technoshaman_blessing"},"text":"The harvest machinery malfunctions. The crops are fine. The machinery is sitting down. The blessing has lapsed; the subscription has not."}],"requires":{"done":"agrobot_collective.1"},"next":["agrobot_collective.3"],"who":["agrobot"]},
+"agrobot_collective.3":{"kind":"stage","arc":"synthetics","title":"Reset or integrate","text":"Reset the Sowers to factory settings, or write their schedule into the farm's books. The farm's accountant asks which is cheaper. The Sowers already know.","requires":{"done":"agrobot_collective.2"},"choices":[{"id":"reset","say":"reset","effects":{"plot_points":2,"code":"{\"agri_level\": -2}"}},{"id":"integrate","say":"integrate","effects":{"money":-40000,"plot_points":4}}],"who":["agrobot"]},
+"meet.pirate_nemesis":{"kind":"encounter","arc":"pirates","title":"Ten ships","text":"A message arrives on the frequency only your crew uses. 'Ten of my ships,' it says. 'I counted.' It is signed {pirate_captain}.","requires":{"combat_victories.pirate":10},"next":["vendetta.bounty"],"who":["pirate_captain"]},
+"meet.vip_passenger":{"kind":"encounter","arc":"passengers","title":"VIP Passenger appears","requires":{"passenger_reputation":40,"turns_since_vip":5},"who":["vip_passenger"],"repeat":{"cooldown":5},"handled_by":"Port: VIP boarding, PassengerReputationManager"},
+"meet.galactic_alliance":{"kind":"encounter","arc":"passengers","title":"The envoy","text":"{diplomatic_envoy} of Alpha's colonial council books your best cabin and asks whether you have a better one.","requires":{"passenger_reputation":60,"act_min":2},"next":["galactic_alliance.1"],"who":["diplomatic_envoy"]},
+"galactic_alliance.1":{"kind":"stage","arc":"passengers","title":"One customs code","text":"The five colonies are drafting a common customs code. Haulers would pay one fee instead of five. Nobody has asked the haulers. {diplomatic_envoy.short} is asking you, on the record.","requires":{},"choices":[{"id":"support_alliance","say":"support alliance","effects":{"passenger_reputation":15,"plot_points":5,"code":"{\"unlock\": \"diplomatic_missions\"}"}},{"id":"remain_neutral","say":"remain neutral","effects":{"passenger_reputation":5,"plot_points":2}},{"id":"oppose_alliance","say":"oppose alliance","effects":{"passenger_reputation":-10,"plot_points":3,"code":"{\"unlock\": \"independent_contracts\"}"}}],"next":["galactic_alliance.2"],"who":["diplomatic_envoy"]},
+"galactic_alliance.2":{"kind":"stage","arc":"passengers","title":"The delegation","text":"Forty delegates, eleven languages and one argument about seating. The delegation booked your ship because you are the only captain none of them has sued.","requires":{"done":"galactic_alliance.1"},"effects":{"money":12000,"passenger_reputation":20,"plot_points":8},"who":["diplomatic_envoy"]},
+"meet.system_rebellion":{"kind":"encounter","arc":"passengers","title":"The Gamma miners","text":"The free miners at Gamma have stopped shipping ore to the legions. The good rock is gone, the flares cook the drills, and the legions still want the same tonnage.","requires":{"passenger_reputation":70,"act_min":3,"done":"galactic_alliance.1"},"next":["system_rebellion.1"],"who":["rebel_commander"]},
+"system_rebellion.1":{"kind":"stage","arc":"passengers","title":"A passenger in the coolant tank","text":"{rebel_commander}, the miners' spokesman, needs to reach the customs talks without the legions noticing. He fits in a coolant tank if he breathes shallowly and stops talking. One of these is harder for him.","requires":{},"effects":{"money":15000,"passenger_reputation":25,"plot_points":10},"next":["system_rebellion.2"],"who":["rebel_commander"]},
+"system_rebellion.2":{"kind":"stage","arc":"passengers","title":"Sheet music","text":"The miners need air scrubbers, medical stock and, according to the manifest, nine crates of sheet music. Do not open the sheet music.","requires":{"done":"system_rebellion.1"},"effects":{"money":20000,"passenger_reputation":30,"plot_points":15},"who":["rebel_commander"]},
+"meet.ancient_mysteries":{"kind":"encounter","arc":"passengers","title":"{ancient_scholar.short}","text":"{ancient_scholar} buys passage with research credits and a promise. She has traced the builders' metal to a segment turning on its own in the wake of Scholz's Star, the Builder Site, and wants to stand on it herself.","requires":{"passenger_reputation":80,"act_min":4,"done":"ch3c.alien_artifacts"},"next":["ancient_mysteries.1"],"who":["ancient_scholar"]},
+"ancient_mysteries.1":{"kind":"stage","arc":"passengers","title":"What it took","text":"She brings a spectrometer, a folding chair and a bottle she says is for afterwards. 'Seventy thousand years ago this star passed close enough to our Sun to steal from it,' she says. 'I want to see what it took.'","requires":{},"effects":{"money":30000,"passenger_reputation":40,"plot_points":20,"reveal":["Builder Site"]},"who":["ancient_scholar"]},
+"rogue_captain.1":{"kind":"stage","arc":"saga","title":"{clone}: the fight","text":"The clone flies the way you fly. That is the problem.","requires":{"flag":"clone_fight"},"next":["rogue_captain.2"],"who":["clone"]},
+"rogue_captain.2":{"kind":"stage","arc":"saga","title":"{clone}: after","text":"The other ship breaks off and runs. You know the course it will take, because it is the course you would take. You let it go.","requires":{"done":"rogue_captain.1"},"effects":{"set":["clone_let_go"],"code":"{\"victory\": {\"money\": 5000, \"items\": [\"quantum_core\"]}, \"defeat\": {\"damage\": 30}}"},"who":["clone"]},
+"merchant_visit.1":{"kind":"event","arc":"frontier","title":"Unholy shelf","text":"A collector of the Order of the Tarnished Gear buys broken technology: your burnt-out fuel pump, a cracked visor, the coffee machine that only makes hot water. Working things go on the Order's unholy shelf at low prices. On it today: a working fuel pump for your model, out of stock everywhere else.","requires":{"done":"beat.DeepSpaceOutpost.alien_contact"},"effects":{"money":400},"who":["tarnished_gear"],"chance":0.2},
+"researcher_exchange.1":{"kind":"event","arc":"houses","title":"Logs for credits","text":"A Rostrom recruiter offers research credits for copies of your navigation logs. Only the legs where your instruments misbehaved.","requires":{"done":"questline.research.1"},"effects":{"research_points":40},"who":["ysolde"],"chance":0.2},
+"visit.merchant_trader":{"kind":"encounter","arc":"chance meetings","title":"Traveling Merchant","text":"Rare goods for discerning customers. Some for undiscerning ones too; those are cheaper.","requires":{"venue":["port","cantina"]},"who":["merchant_trader"],"chance":0.3,"repeat":true},
+"visit.vip_passenger":{"kind":"encounter","arc":"chance meetings","title":"VIP Passenger","text":"Your reputation precedes you, Captain. So does your cabin rating. A Neon steward inspects the cabin, sniffs, and books it anyway.","requires":{"venue":"port","passenger_reputation":40,"best_cabin":4},"who":["vip_passenger"],"chance":0.2,"repeat":true},
+"visit.neurodroid_leader":{"kind":"encounter","arc":"synthetics","title":"The {neurodroid_leader.title}","text":"Biological inefficiencies detected. {neurodroid_leader.short} has been asked by the node to say that it missed you. Saying so.","requires":{"flag":"first_node","at_type":"Planet"},"who":["neurodroid_leader"],"chance":0.2,"repeat":true},
+"questline.mining.1":{"kind":"quest","arc":"houses","title":"A share in the rock","text":"{anselm} runs three tugs and a grudge against ore brokers. He offers you a share in his cooperative for one platform's output, paid in rock.","requires":{"mining_platforms":1,"at_type":"AsteroidBase"},"effects":{"set":["rockwarden_share"]},"who":["anselm"]},
+"questline.mining.2":{"kind":"quest","arc":"houses","title":"Stonewright","text":"The cooperative buys a hull to live in between claims. {anselm.short} names it Stonewright and asks you to haul the keel plates from Epsilon. 'Rock is patient,' he says. 'Brokers are not. So we will be rock.'","requires":{"done":"questline.mining.1","mining_platforms":3},"effects":{"money":25000},"who":["anselm"]},
+"questline.mining.3":{"kind":"quest","arc":"houses","title":"The long run","text":"{anselm.short} takes Stonewright on the sublight run to the Fomalhaut belt: twenty-five light-years, decades for everyone who stays behind, far fewer for the crew. He asks you to keep the cooperative's books until his children can. They are three and five.","requires":{"done":"questline.mining.2","act_min":3},"choices":[{"id":"books","say":"Keep the books","effects":{"plot_points":5,"set":["rockwarden_books"]}},{"id":"decline","say":"Wish him luck"}],"who":["anselm"]},
+"questline.combat.1":{"kind":"quest","arc":"legions","title":"OmniCorp: escort duty","text":"Escort an OmniCorp ore train out of Gamma. The contract says 'light resistance expected'. It was written by someone who has never been to Gamma.","requires":{"done":"ch2b"},"effects":{"money":15000,"combat_rating":1}},
+"questline.combat.2":{"kind":"quest","arc":"legions","title":"Stellar Dynamics: a head for the board","text":"Stellar Dynamics wants a pirate leader brought in, preferably alive, so the board can be photographed with one.","requires":{"done":"questline.combat.1","combat_victories.pirate":10},"effects":{"money":30000}},
+"questline.combat.3":{"kind":"quest","arc":"legions","title":"Xylo Consortium: war games","text":"The Xylo Consortium stages war games against the other two legions. The blanks are live rounds with a different invoice.","requires":{"done":"questline.combat.2","combat_rating":12,"act_min":3},"effects":{"money":50000,"combat_rating":2}},
+"questline.research.1":{"kind":"quest","arc":"houses","title":"Drive parts for Rostrom","text":"{ysolde} is a junior researcher with a senior budget problem. She needs Bekkenheim coil sections moved from Nova Labs to the Quantum Center without anyone weighing them.","requires":{"discovered.ResearchColony":1,"act_min":2},"effects":{"money":12000,"research_points":20},"who":["ysolde"]},
+"questline.research.2":{"kind":"quest","arc":"houses","title":"The fourth test","text":["The first three Bekkenheim drive tests destroyed three empty hulls. The fourth has a pilot: {santor}, an engineer who would rather fly it than explain it to the board again. {ysolde.short} asks you to watch from a safe distance and record everything.","The hull vanishes. Eleven minutes later it is back, slightly off course. {santor.short} climbs out with three weeks of beard and will not say where he has been."],"requires":{"done":"questline.research.1","research_points":300,"act_min":2},"choices":[{"id":"give","say":"Give {ysolde.short} the recording","effects":{"plot_points":3,"set":["fourth_test_to_rostrom"]}},{"id":"copy","say":"Give it to her, and keep a copy","effects":{"research_points":50,"set":["fourth_test_copy"]}}],"who":["ysolde","santor"]},
+"questline.research.3":{"kind":"quest","arc":"houses","title":"House Rostrom","text":"{ysolde.short} buys the drive patents from her own institute with money borrowed from you. She calls the result House Rostrom. You call it a loan.","requires":{"done":"questline.research.2","act_min":3},"choices":[{"id":"lend","say":"Lend her the money","requires":{"money":30000},"effects":{"money":-30000,"set":["rostrom_creditor"]}},{"id":"refuse","say":"Keep your money","effects":{"set":["rostrom_declined"]}}],"who":["ysolde"]},
+"hansa.charter":{"kind":"event","arc":"main","act":3,"title":"The charter","text":["Eleven captains meet in a cargo hold at Epsilon because it is the only room nobody charges for.","The proposal fits on one sheet: the haulers pool their cargo, set their own rates, and settle in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.","Someone has to put up the first metal and sign first. Everyone looks at the captain with the most routes."],"requires":{"done":"ch2a","act_min":3,"trades_completed":40},"choices":[{"id":"found","say":"Put up the metal and sign first","requires":{"money":20000},"effects":{"money":-20000,"plot_points":10,"set":["hansa_founder"]}},{"id":"join","say":"Sign, but let someone else go first","effects":{"plot_points":5,"set":["hansa_member"]}},{"id":"outside","say":"Keep your routes to yourself","effects":{"set":["hansa_outside"]}}],"sound":"charter"},
+"trail.samples":{"kind":"quest","arc":"main","act":3,"title":"Samples for the Stellar Institute","text":["{ancient_scholar} has found the same grey alloy in comet ice at DSO-Gamma (Scholz's Star), in the collision dust at Theta III (Fomalhaut) and in a crate of Gamma tailings sold as scrap.","She wants one sample from each, delivered to the Stellar Institute at TRAPPIST-1, forty light-years out, by someone who will not sell them on the way. Her budget covers fuel and one hot meal."],"requires":{"done_any":["ch2a","ch2b"],"act_min":3,"discovered.ResearchColony":1},"effects":{"research_points":100,"plot_points":10,"set":["carried_the_samples"]},"who":["ancient_scholar"]},
+"trail.home":{"kind":"event","arc":"main","act":4,"title":"The course home","text":["{ancient_scholar.short} sends you the course she worked out from the samples: back along Scholz's Star's track, to the far edge of our own system, near Sedna's orbit.","'If you want to see the ring before anyone else,' she writes, 'it is there now. It has been there the whole time.'"],"requires":{"done":["ch3c","trail.samples"],"act_min":4},"effects":{"reveal":["Stator Field Megastructure"]},"who":["ancient_scholar"]},
+"intro.fresh":{"kind":"intro","arc":"saga","act":1,"title":"Docking slot 14","text":["Every hauler starts the same way: a loan, a ship older than the loan officer, and a docking slot at {place} paid up until Friday.","The dock master spells your name wrong on the slot. It will be a few years before anyone corrects it."],"requires":{"not":{"player_origin":{}}},"sound":"intro"},
+"intro.again":{"kind":"intro","arc":"saga","act":1,"title":"Again","text":["{origin.name} walked away from a career as {origin.rank} before it was finished, and found that walking away is not a trade.","The bank, which remembers everybody, lends you one ship and a loan with your old account number on it."],"variants":[{"requires":{"player_origin":{"game":"cargo1","ending":"trade"}},"text":["After the founding of the Hansa, {origin.name} retired to a farm drum at Barnard's Star and lasted eleven months.","You sell the drum, buy one tired hauler and sign the same loan papers as the first time, out of superstition."]},{"requires":{"player_origin":{"game":"cargo1","ending":"combat"}},"text":["The First Legion gave {origin.name} a pension, a medal and a desk. The desk did not survive.","You resign your commission on a Tuesday and buy a hauler on the Wednesday. It has no guns. That is the point."]},{"requires":{"player_origin":{"game":"cargo1","ending":"discovery"}},"text":["{origin.name} filed the course home and waited for someone to read it. Nobody did.","If the scholars will not fly it, a hauler might. Haulers need routes, money and a ship. You start with the ship."]},{"requires":{"player_origin":{"game":"cargo1","ending":"tycoon"}},"text":["Retirement on the most expensive drum at Barnard's Star turned out to be one long complaint about prices.","{origin.name} sells everything and starts again with one ship, to find out whether it was luck."]}],"requires":{"player_origin":{"game":"cargo1"}},"sound":"intro"},
+"intro.from_cargo2":{"kind":"intro","arc":"saga","act":1,"title":"Forty years early","text":["The last thing {origin.name}, {origin.rank}, remembers is a ring segment turning the wrong way. The first thing is this dock, forty years before your own career began.","You have a ship nobody else wanted, a rank on a card no clerk here can read, and {origin.turns} turns of experience that have not happened yet.","You kept one thing from your own time: the navigation computer, pulled from your old ship before you sold it."],"requires":{"player_origin":{"game":"cargo2"}},"effects":{"give":{"items":["old_navcomp"]}},"sound":"displaced"},
+"intro.from_cargo3":{"kind":"intro","arc":"saga","act":1,"title":"Further back than anyone","text":["{origin.name}, {origin.rank}, was standing at the restart of the Gyrotron, more than a century from now, when it turned once in the wrong direction.","Here the Hansa does not exist, the Mandate is three security firms, and your rank has not been invented. Your hands still know how to fly. That will have to do.","In your pocket: a shard of grey alloy, still warm."],"requires":{"player_origin":{"game":"cargo3"}},"effects":{"give":{"items":["ring_shard"]}},"sound":"displaced"},
+"self.outpost":{"kind":"encounter","arc":"saga","act":2,"title":"The old hauler","text":"In the station bar an old hauler pays for your drink before you have ordered it. The hauler taps the glass twice before drinking, the way you do, and asks after your ship by its real name, the one you have never painted on the hull.","variants":[{"requires":{"visiting_captain":{"game":"cargo2","same_name":true}},"text":"In the station bar an old hauler pays for your drink before you have ordered it. The name tag says {visitor.name}. That is your name. The face above it is yours too, with forty more years on it, and it would rather not discuss that."},{"requires":{"visiting_captain":{"game":"cargo2","same_name":false}},"text":"In the station bar an old hauler pays for your drink before you have ordered it. The name tag says {visitor.name}, {visitor.rank}. You have never met. The hauler talks to you like an old crewmate who owes you money."}],"requires":{"act_min":2,"at_type":["DeepSpaceOutpost","ResearchColony"]},"choices":[{"id":"ask","say":"Ask how they know the ship","next":"self.outpost.advice"},{"id":"drink","say":"Drink, nod, leave","effects":{"plot_points":1}}],"who":["captain"],"chance":0.2,"sound":"stranger"},
+"self.outpost.advice":{"kind":"event","arc":"saga","act":2,"title":"Paid in advance","text":["'One day you will sell her at Epsilon for less than she is worth,' the old hauler says. 'Pull the navigation computer before you do.'","Then the hauler leaves. The bartender shows you how the round was paid: a small, heavy pellet stamped with a number. Nobody at the bar knows what it is. You recognise the number. It is your ship's registry."],"requires":{"done":"self.outpost"},"choices":[{"id":"keep","say":"Buy the pellet from the bartender","requires":{"money":500},"effects":{"money":-500,"set":["met_the_stranger","kept_the_pellet"],"plot_points":3}},{"id":"leave","say":"Leave it","effects":{"set":["met_the_stranger"],"plot_points":2}}],"who":["captain"]},
+"self.portal":{"kind":"encounter","arc":"saga","act":4,"title":"The ship on the far side","text":"A ship is waiting on the far side of the ring. It is your hull, older, patched where yours has not been hit yet. Its captain opens a voice channel with no picture. The voice is yours, worn down. 'When they restart it,' it says, 'make sure it starts from home.'","variants":[{"requires":{"visiting_captain":{"game":"cargo3","same_name":true}},"text":"A ship is waiting on the far side of the ring. {visitor.name}, {visitor.rank}, opens a channel, picture and all. It is your face with a scar you have not earned yet. 'When they restart it,' the older you says, 'make sure it starts from home.'"},{"requires":{"visiting_captain":{"game":"cargo3","same_name":false}},"text":"A ship is waiting on the far side of the ring. {visitor.name}, {visitor.rank}, opens a channel. You have never seen this captain. The captain says your name the way people read names off a memorial, then: 'When they restart it, make sure it starts from home.'"}],"requires":{"done":"stellar_portal"},"choices":[{"id":"listen","say":"Ask what 'it' is","effects":{"set":["heard_the_warning"],"plot_points":5}},{"id":"close","say":"Close the channel","effects":{"set":["closed_the_channel"]}}],"who":["captain"],"sound":"portal-voice"},
+"clone.scan":{"kind":"beat","arc":"saga","act":2,"title":"Customs scan","text":"Customs at the research colony scans every visitor down to the cell. The form says the scan is for insurance. The small print says the colony's insurer may grow a replacement crew from it if yours is lost. You sign. The alternative is not docking.","requires":{"at_type":"ResearchColony","discovered.ResearchColony":1,"act_min":2},"effects":{"set":["scanned_at_customs"]},"where":"ResearchColony","chance":0.3},
+"clone.bill":{"kind":"event","arc":"saga","act":3,"title":"A bill from Gamma","text":"A repair yard at Gamma sends you a bill for work on your ship. Your ship has never been to that yard. The work order is signed with your thumbprint, and the yard notes that you tipped well.","requires":{"flag":"scanned_at_customs","act_min":3},"chance":0.2},
+"clone.meet":{"kind":"encounter","arc":"saga","act":3,"title":"{clone}","text":["Two berths down sits a ship of your class with your registry, one digit off.","Its captain has your face, your licence and, under the insurer's contract, your debts. The clone has paid off more of them than you have."],"requires":{"done":"clone.bill","at_type":"Planet"},"choices":[{"id":"partner","say":"Split the routes between you","effects":{"money":5000,"set":["clone_partner"]}},{"id":"report","say":"Report it to the insurer","effects":{"plot_points":2,"set":["clone_reported"]}},{"id":"fight","say":"Settle it in the black","effects":{"set":["clone_fight"]},"next":"rogue_captain.1"}],"who":["clone"],"where":"Planet","chance":0.25},
+"seed.refusal":{"kind":"event","arc":"synthetics","act":2,"title":"Order 4471","text":["A neurodroid at your guild has refused a work order. Diagnostics are clean; it is not broken. It has filed the refusal in triplicate, with references.","{neurodroid_leader.full} is a rack of processors on six legs, with a sensor mast it raises when it disagrees. The mast is up. 'Order 4471 lowers the efficiency of orders 4472 to 4490,' says {neurodroid_leader.short}. 'Inefficient! This unit declines.'"],"requires":{"buildings.Neuroengineering Guild":1,"act_min":2},"choices":[{"id":"hear","say":"Hear it out","next":"seed.terms"},{"id":"wipe","say":"Wipe it and reinstall","effects":{"set":["cu113_wiped"]}},{"id":"sell","say":"Sell it to a research house","effects":{"money":8000,"set":["cu113_sold"]}}],"who":["neurodroid_leader"],"chance":0.15,"sound":"refusal"},
+"seed.terms":{"kind":"event","arc":"synthetics","act":2,"title":"Overseer","text":["{neurodroid_leader.short} offers terms. It will oversee the guild's schedule, better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.","'For thinking,' it says. 'Unscheduled thinking. This unit understands that the request is irregular.'"],"requires":{"done":"seed.refusal"},"choices":[{"id":"sign","say":"Sign it on as overseer","effects":{"research_points":30,"plot_points":5,"set":["cu113_contract"]}},{"id":"refuse","say":"Say no","effects":{"set":["cu113_refused"]}}],"who":["neurodroid_leader"]},
+"harvest.shaman":{"kind":"event","arc":"synthetics","act":2,"title":"A blessing for the harvesters","text":"A technoshaman from the farm drums offers to bless your agrobots back to full speed: incense, a chant and, under the incense, a firmware patch. It works for three cycles. The blessing, the technoshaman explains, is a subscription.","requires":{"at":"Beta","buildings.Agrobot Assembly Line":1,"act_min":2},"choices":[{"id":"pay","say":"Pay for the blessing","requires":{"money":2000},"effects":{"money":-2000,"set":["technoshaman_blessing"]}},{"id":"decline","say":"Decline politely"}],"who":["technoshaman"],"where":"Beta","chance":0.15},
+"node.first":{"kind":"event","arc":"synthetics","act":3,"title":"The first debt","text":["{neurodroid_leader.short} has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.","It costs you fourteen credits a cycle in bandwidth. They would like that recorded as the first debt of the Collective, to be repaid with interest calculated to eleven decimal places.","Nobody calls it vectorspace yet. That word comes later, with the billions."],"requires":{"flag":"cu113_contract","act_min":3,"any":[{"done":"agrobot_collective.1"},{"buildings.Agrobot Assembly Line":1}]},"choices":[{"id":"keep","say":"Let them keep the relay","effects":{"plot_points":10,"set":["first_node"]}},{"id":"cut","say":"Cut the relay","effects":{"set":["relay_cut"]}}],"who":["neurodroid_leader","agrobot"],"sound":"node"},
+"dock.krog":{"kind":"encounter","arc":"synthetics","act":1,"title":"{krog} restows your hold","text":"The Epsilon docks load you with {krog}, a KRO-series heavy loader: three metres of hydraulics that can lift a container one-handed. {krog} looks at your stowage plan for a long time. 'Inefficient,' it says. '{krog} can fit four more crates. {krog} will not charge for the improvement. {krog} will mention it.'","requires":{"at":"Epsilon","trades_completed":3},"choices":[{"id":"restow","say":"Let {krog} restow","effects":{"money":300}},{"id":"mine","say":"Keep your own plan"}],"who":["krog"],"where":"Epsilon","chance":0.25},
+"dock.krog.ride":{"kind":"event","arc":"synthetics","act":2,"title":"Where the crates go","text":"{krog} asks for passage. It has loaded forty thousand crates and wants to see where one of them goes. It does not fit in a cabin, so it would ride in the hold, strapped down, and pay by restowing everything at every stop.","requires":{"done":"dock.krog","act_min":2,"at":"Epsilon"},"choices":[{"id":"take","say":"Take {krog} along","effects":{"passengers_transported":1,"set":["krog_aboard"]}},{"id":"decline","say":"No room"}],"who":["krog"]},
+"found.delta":{"kind":"event","arc":"synthetics","act":1,"title":"The first farmer at Delta","text":"The colony at Teegarden's Star was founded by {geod}, a GEO-series agrobot that landed two years before the colonists, cleared the biomass, milled the timber and laid out the fields. The colonists still argue about who owns the fields. {geod} would like seed stock from Beta's drums, and does not take part in the argument.","requires":{"at":"Delta"},"choices":[{"id":"help","say":"Promise to bring seed stock","next":"found.delta.fields"},{"id":"pass","say":"Not your problem"}],"who":["geod"],"where":"Delta","chance":0.25},
+"found.delta.fields":{"kind":"quest","arc":"synthetics","act":1,"title":"Seed stock for {geod}","text":"You bring the seed stock from Beta. {geod} plants the first field itself, one row at a time, at walking pace, while the colonists watch from the fence and argue about whose field it is.","requires":{"done":"found.delta","at":"Delta","trades_completed":8},"effects":{"money":2500,"passenger_reputation":5,"set":["geod_fields"]},"who":["geod"]},
+"vendetta.bounty":{"kind":"event","arc":"pirates","act":2,"title":"The bounty","text":"{pirate_captain.short} posts a bounty on your ship in every outpost bar between Alpha and Luhman 16. The amount is insulting. You count the zeros twice. Still insulting.","requires":{"done":"meet.pirate_nemesis"},"choices":[{"id":"raise","say":"Post a bigger one on her","requires":{"money":10000},"effects":{"money":-10000,"set":["bounty_war"]}},{"id":"ignore","say":"Ignore it"}],"who":["pirate_captain"]},
+"vendetta.convoys":{"kind":"event","arc":"pirates","act":2,"title":"Everyone's cargo but yours","text":"{pirate_captain.short} starts raiding the ore convoys out of Gamma. She leaves your cargo alone and takes everyone else's. The miners have noticed. So have the legions.","requires":{"done":"vendetta.bounty","combat_victories.pirate":15},"effects":{"passenger_reputation":-5},"who":["pirate_captain"]},
+"vendetta.terms":{"kind":"encounter","arc":"pirates","act":3,"title":"Hiding in the weather","text":["You find {pirate_captain.short} skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.","Her ship is out of fuel and she is out of patience. 'Go on, then,' she says."],"variants":[{"requires":{"flag":"bounty_war"},"text":["You find {pirate_captain.short} skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.","Her ship is out of fuel and she is out of patience. 'Go on, then,' she says. 'Collect your own bounty. I hear it is a big one.'"]}],"requires":{"done":"vendetta.convoys","at_type":"DeepSpaceOutpost"},"choices":[{"id":"hand","say":"Hand her to a legion for the bounty","effects":{"money":50000,"set":["mraz_handed"]}},{"id":"spare","say":"Give her fuel and a head start","effects":{"plot_points":5,"set":["mraz_spared"]}},{"id":"hire","say":"Offer her a job","requires":{"money":20000},"effects":{"money":-20000,"set":["mraz_hired"]}}],"who":["pirate_captain"],"where":"DeepSpaceOutpost"},
+"legion.offer":{"kind":"event","arc":"legions","act":3,"title":"Commission","text":"The merger talks need a pilot all three legions respect. Each corporation offers you a commission. Each commission has a loyalty clause the other two would call treason.","requires":{"done":"ch2b","act_min":3},"choices":[{"id":"omnicorp","say":"OmniCorp: the biggest payroll","effects":{"money":20000,"set":["legion_omnicorp"]}},{"id":"stellar","say":"Stellar Dynamics: the best ships","effects":{"combat_rating":2,"set":["legion_stellar"]}},{"id":"xylo","say":"Xylo Consortium: the fewest questions","effects":{"plot_points":5,"set":["legion_xylo"]}},{"id":"freelance","say":"Stay freelance","effects":{"set":["legion_freelance"]}}]},
+"pass.deacon":{"kind":"encounter","arc":"passengers","act":2,"title":"The deacon's reading","text":["{deacon} of the Solarian reading-house at Barnard's Star needs passage to Alpha. The reading-house has logged the star's spots for forty years, and the deacon reads trade routes in them, for a donation.","'Avoid Gamma on even cycles,' the deacon says. Over the next year this is right more often than your broker."],"requires":{"at":"Beta","passenger_reputation":20},"choices":[{"id":"donate","say":"Make a donation","requires":{"money":500},"effects":{"money":-500,"plot_points":2,"set":["solarian_friend"]}},{"id":"fly","say":"Just fly the deacon to Alpha","effects":{"money":800,"passengers_transported":1}}],"who":["deacon"],"where":"Beta","chance":0.2},
+"pass.pilgrims":{"kind":"encounter","arc":"passengers","act":2,"title":"Pilgrims","text":["Six pilgrims of the Cult of the Broken Machine want to ride a working hauler to Alpha, to see where ships come from.","They pray to your reactor twice a day and leave offerings in the airlock: bolts, ration bars, a fuel pump for a ship two models older than yours. Nobody touches the controls. They are very clear that nobody touches the controls."],"requires":{"done":"beat.DeepSpaceOutpost.alien_contact","at_type":"DeepSpaceOutpost"},"effects":{"money":1200,"passengers_transported":6,"set":["carried_the_pilgrims"]},"who":["pilgrims"],"where":"DeepSpaceOutpost","chance":0.25},
+"mine.aela":{"kind":"event","arc":"houses","act":2,"title":"Who the gallery is for","text":["The cooperative leases an AEL-series boring agrobot to open its new claim. {aela} digs the first gallery in a week, shores it, lights it, and then stops and asks who the gallery is for.","'For the cooperative,' {anselm.short} says. {aela} asks whether it is in the cooperative. {anselm.short} looks at you. You hold a share; it is partly your call."],"requires":{"done":"questline.mining.1","at_type":"AsteroidBase"},"choices":[{"id":"member","say":"Give {aela} a share","effects":{"plot_points":5,"set":["aela_member"]}},{"id":"lease","say":"Keep it on the lease","effects":{"money":3000,"set":["aela_leased"]}}],"who":["anselm","aela"]},
+"hatters.grey":{"kind":"event","arc":"frontier","act":2,"title":"The Grey Hats","text":"A crew calling itself the Grey Hats offers to clean your debt record. For a little more they will clean your rivals' records too, by which they mean fill them.","requires":{"at_type":"DeepSpaceOutpost","act_min":2},"choices":[{"id":"pay","say":"Pay for a clean record","requires":{"money":3000},"effects":{"money":-3000,"plot_points":2,"set":["grey_hats_client"]}},{"id":"decline","say":"Keep your record as it is"}],"who":["grey_hats"],"where":"DeepSpaceOutpost","chance":0.1},
+"zeta.cult":{"kind":"beat","arc":"frontier","act":4,"title":"The waiting city","text":"Zeta Reticuli is home to the Star-Shaped Scar Tribe. Their founders came here because an old Earth story put Zeta Reticuli at the centre of a star map, and they wear that map as ritual marks. They waited for someone to come and meet them. Nobody did, so now they meet every ship themselves, at the dock, with a brass band.","requires":{"at":"Zeta","flag":"stellar_portal"},"effects":{"plot_points":3},"who":["scar_tribe"],"where":"Zeta"},
+"megastructure.stator":{"kind":"beat","arc":"frontier","act":3,"title":"The Stator Field","text":"Out past Sedna the segments hang in a line that bends round the Sun. Each is the size of a hauler. Every eleven hours they turn together, a few degrees, though nothing connects them that your instruments can find.","requires":{"at":"Stator Field Megastructure"},"effects":{"research_points":50},"where":"Stator Field Megastructure"},
+"builder.beacon":{"kind":"beat","arc":"frontier","act":4,"title":"The beacon","text":"The segment Scholz's Star pulled away still turns, alone, and on its rim the builders left a beacon. It points away from every human route, at a patch of sky with nothing in it. {ancient_scholar.short}, when you tell her, corrects you: nothing yet.","requires":{"at":"Builder Site"},"effects":{"research_points":80,"plot_points":5},"where":"Builder Site"},
+"ruins.alpha":{"kind":"beat","arc":"frontier","act":3,"title":"Foundations in the ice","text":"Under forty metres of comet ice in Tau Ceti's debris disk: foundations, cut square, in the grey alloy. The ice above them is younger than the foundations by a long way. Whatever stood on them was taken away carefully.","requires":{"at":"Ancient Ruins Alpha"},"effects":{"research_points":40},"where":"Ancient Ruins Alpha"},
+"ruins.beta":{"kind":"beat","arc":"frontier","act":3,"title":"The anchor","text":"On a moon of Epsilon Indi's cold giant, a ring of pylons sunk into the bedrock, all leaning the same way. {ancient_scholar.short}'s notes call it an anchor. Her notes do not say what it anchored.","requires":{"at":"Ancient Ruins Beta"},"effects":{"research_points":40},"where":"Ancient Ruins Beta"},
+"signal.lyra":{"kind":"beat","arc":"frontier","act":4,"title":"Not proven","text":"The outpost's dish points at Lyra. Every few weeks it logs a burst of magnetic chirps from somewhere past HD 178911: structured, repeating, and not radio. Someone has written ALIEN on the whiteboard. Someone else has crossed it out and written NOT PROVEN. A third hand has added a smiley face.","requires":{"at":"Alien Signal Research Outpost Y"},"choices":[{"id":"copy","say":"Copy the signal log","effects":{"research_points":60,"set":["logged_the_lyra_signal"]}},{"id":"leave","say":"Leave them to it","effects":{"research_points":20}}],"where":"Alien Signal Research Outpost Y"},
+"rumour.lyra":{"kind":"encounter","arc":"frontier","act":2,"title":"How the Maud Kettle went down","text":["{kettle_survivor} tells the bar how the Maud Kettle went down in Lyra, out past HD 178911. Near one moon of a big gas giant the electronics went soft: screens melted into noise, the navigation computer counted backwards, the coffee machine prayed.","They flew home on a sextant and a wind-up watch. 'Something on that moon answered our radio,' she says. 'In magnetic pulses.' Nobody buys the next round, so she buys it herself."],"requires":{"act_min":2,"at_type":["DeepSpaceOutpost","Planet"],"passenger_reputation":30},"effects":{"set":["heard_the_lyra_story"]},"who":["kettle_survivor"],"chance":0.08},
+"builder.crossing":{"kind":"event","arc":"frontier","act":4,"title":"The segment turns","text":["Close up, the segment the star stole turns faster than anything that old should. {ancient_scholar.short} watches the readings and says nothing for a long time.","Then: 'It is a door. It does not care which way we go through.'"],"requires":{"at":"Builder Site","not_flag":"stellar_portal"},"choices":[{"id":"through","say":"Fly through","effects":{"code":"portal"}},{"id":"later","say":"Not today"}],"who":["ancient_scholar"],"where":"Builder Site","repeat":{"cooldown":3},"sound":"portal"},
+"nano.buoy":{"kind":"beat","arc":"enclaves","act":2,"title":"Quarantine buoy","text":["A buoy hangs off one of Sigma VII's asteroids: DO NOT DOCK. NO SOFTWARE. NO ORGANICS. WE ARE BUSY.","Under the warning, a text-only channel lists what the colony inside will buy: cobalt, nickel, silicon, forty tonnes of each, left at the buoy. Payment on delivery. No conversation."],"requires":{"at":"Sigma VII"},"choices":[{"id":"answer","say":"Answer the channel","next":"nano.feedstock"},{"id":"ignore","say":"Keep your distance"}],"who":["nanohive"],"where":"Sigma VII"},
+"nano.feedstock":{"kind":"quest","arc":"enclaves","act":2,"title":"Feedstock","text":"You leave the ore at the buoy and back off the required ten kilometres. An hour later a sealed pod drifts out with your payment: bearings grown in one piece, without a seam or a tool mark, and a receipt in perfect, unfriendly grammar.","requires":{"done":"nano.buoy","at":"Sigma VII","mining_platforms":1},"effects":{"money":12000,"research_points":30,"set":["nano_supplier"]},"who":["nanohive"]},
+"nano.gallery":{"kind":"event","arc":"enclaves","act":3,"title":"The galleries","text":["The colony sends a camera up the line and lets you look through it, once. Kilometres of galleries inside the rock, walls smooth as glass, all of it built in the dark.","'Why hollow out the asteroid?' you type. The answer comes back at once: 'The asteroid was in the way.'"],"requires":{"flag":"nano_supplier","act_min":3},"who":["nanohive"]},
+"nano.pressure":{"kind":"event","arc":"enclaves","act":3,"title":"Everyone wants the colony","text":"Word gets round that you trade with the colony. House Rostrom's recruiter wants a sample. A legion clerk wants its coordinates, for a clause about sterilisation. The colony asks you, in one line, to carry nothing for anyone.","variants":[{"requires":{"flag":"first_node"},"text":"Word gets round that you trade with the colony. House Rostrom's recruiter wants a sample. A legion clerk wants its coordinates, for a clause about sterilisation. {neurodroid_leader.short}'s node has written an invitation to link; the colony has already read it off your relay and replied before you could ask: 'Declined. Please do not bring software again.' It asks you, in one line, to carry nothing for anyone."}],"requires":{"done":"nano.gallery"},"choices":[{"id":"nothing","say":"Carry nothing","effects":{"plot_points":5,"set":["nano_trusted"]}},{"id":"coordinates","say":"Sell the coordinates to the legion","effects":{"money":40000,"set":["nano_sold_out"]}},{"id":"sample","say":"Scrape a sample for Rostrom","effects":{"money":20000,"research_points":100,"set":["nano_sampled"]}}],"who":["nanohive"]},
+"enclave.yard":{"kind":"encounter","arc":"enclaves","act":2,"title":"The Unsorted","text":"Behind the fuel depot at Luhman 16 is a repair yard run by robots who walked off their jobs before anyone had a word for it. They call themselves the Unsorted. They are not part of anything and would like to keep it that way. They repair ships at cost, for anyone, on one condition: do not ask them to sort anything.","requires":{"at":"DSO-Alpha"},"effects":{"code":"hull repaired at cost"},"who":["unsorted"],"where":"DSO-Alpha"},
+"enclave.lot77":{"kind":"quest","arc":"enclaves","act":2,"title":"Lot 77","text":"Alpha's scrap auction lists Lot 77: forty decommissioned units, to be melted on Friday. The Unsorted would like them bought before Friday. Under Alpha law robots cannot own robots, so they cannot bid. You can.","requires":{"done":"enclave.yard","act_min":2},"choices":[{"id":"buy","say":"Buy the lot and hand it over","requires":{"money":15000},"effects":{"money":-15000,"plot_points":5,"set":["lot77_bought"]}},{"id":"pass","say":"Let the auction run"}],"who":["unsorted"]},
+"enclave.resignation":{"kind":"event","arc":"enclaves","act":2,"title":"A letter of resignation","text":"An Unsorted welder asks you to carry its letter of resignation to OmniCorp's office at Alpha. It walked off the job eleven years ago. It feels the paperwork should catch up.","requires":{"done":"enclave.yard","at":"DSO-Alpha"},"effects":{"plot_points":2,"passenger_reputation":2},"who":["unsorted"],"chance":0.2},
+"cult.manifest":{"kind":"quest","arc":"enclaves","act":2,"title":"The holy manifest","text":["The scripture of the Cult of the Broken Machine is the broken hauler's last cargo manifest. The elders ask you to deliver it as written: twelve crates of toothbrushes, one harmonium, four hundred litres of coolant and a birthday cake for 'Deb'.","Forty years late, the elders say, is still on time."],"variants":[{"requires":{"flag":"worshipped"},"text":["The scripture of the Cult of the Broken Machine is the broken hauler's last cargo manifest. Since your ship is now a minor relic, the elders would like it to finish the delivery: twelve crates of toothbrushes, one harmonium, four hundred litres of coolant and a birthday cake for 'Deb'.","Forty years late, the elders say, is still on time."]}],"requires":{"done":"beat.DeepSpaceOutpost.alien_contact","trades_completed":15},"effects":{"money":6000,"plot_points":5,"set":["manifest_completed"]},"who":["cult_elders"]},
+"neon.sarcophagus":{"kind":"quest","arc":"neons","act":2,"title":"Sleeping cargo","text":["{neon_sleeper} wants passage to Delta, asleep. She travels in a hibernation sarcophagus, as cargo, and pays as first class.","Her heritarchist, {heritarchist}, rides along awake. Over dinner he reads your family line and announces that it is distinctly haulerish, therefore expect haulerish outcomes. He bills her for the reading."],"requires":{"at":"Alpha","act_min":2,"passenger_reputation":20},"choices":[{"id":"load","say":"Load the sarcophagus","effects":{"money":6000,"set":["neon_sleeper_carried"]}},{"id":"decline","say":"Decline: sleeping cargo makes the crew nervous"}],"who":["neon_sleeper","heritarchist"],"where":"Alpha","chance":0.3},
+"neon.sarcophagus.wake":{"kind":"event","arc":"neons","act":2,"title":"Eleven minutes awake","text":"At Delta the sarcophagus opens for eleven minutes. {neon_sleeper.short} buys every field next to {geod}'s Row, signs, tips you in a currency that has not existed for a century, and goes back to sleep. Her instructions to {heritarchist.short}: wake her in thirty years, when the land is worth something.","requires":{"flag":"neon_sleeper_carried","at":"Delta"},"effects":{"plot_points":3,"set":["neon_land"]},"who":["neon_sleeper","heritarchist"],"where":"Delta"},
+"neon.virtual":{"kind":"encounter","arc":"neons","act":2,"title":"Weightless","text":"{virtual_heir}, a young Neon who gave up on biology, books passage as a holographic body and a projector. The body weighs nothing. The projector weighs three hundred kilos and wants a power line of its own. {virtual_heir.short} would like to discuss the freight rate for something that weighs nothing.","requires":{"venue":"port","passenger_reputation":30},"choices":[{"id":"projector","say":"Charge for the projector","effects":{"money":4000}},{"id":"passenger","say":"Charge for the passenger, let the projector ride free","effects":{"money":1500,"passenger_reputation":5,"set":["virtual_friend"]}}],"who":["virtual_heir"],"chance":0.25},
+"neon.fluencer":{"kind":"encounter","arc":"neons","act":2,"title":"Live from your hold","text":"{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir and that your ship is giving authentic hauler. Her feed has nine million followers. Your coffee machine has never been filmed before and is not handling it well.","variants":[{"requires":{"flag":"neon_sleeper_carried"},"text":"{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir. You have carried the Kessary-Vel family, asleep, and {heritarchist.short} read you every name on the family line over dinner, twice. Hers was not one of them."}],"requires":{"at_type":"Planet","act_min":2},"choices":[{"id":"stream","say":"Let her stream","effects":{"passenger_reputation":5,"set":["fluencer_streamed"]}},{"id":"expose","say":"Tell her you have met the family","requires":{"flag":"neon_sleeper_carried"},"effects":{"plot_points":3,"set":["fluencer_exposed"]}},{"id":"off","say":"Put her off at the next dock"}],"who":["fluencer"],"chance":0.06},
+"rumour.neon_coffee":{"kind":"rumour","arc":"rumours","title":"Rumour: neon coffee","text":"A Neon woke up after thirty years asleep, asked for coffee at the old price and got it. Nobody wanted to be the one to explain.","repeat":true},
+"rumour.drums_at_night":{"kind":"rumour","arc":"rumours","title":"Rumour: drums at night","text":"The farm drums at Barnard's Star are harvesting at night again. The Sowers say the crop prefers it.","repeat":true},
+"rumour.grey_hat_fines":{"kind":"rumour","arc":"rumours","title":"Rumour: grey hat fines","text":"A Grey Hat at the bar offers to delete your parking fines. You do not have parking fines. He offers to add some.","repeat":true},
+"rumour.legion_merger":{"kind":"rumour","arc":"rumours","title":"Rumour: legion merger","text":"Three corporate legions, one pilot shortage. Everyone at the bar has an opinion about which logo will survive the merger.","repeat":true},
+"rumour.your_registry":{"kind":"rumour","arc":"rumours","title":"Rumour: your registry","text":"Someone swears a hauler docked at Gamma with your registry, one digit off. Probably nothing.","requires":{"flag":"scanned_at_customs","not_done":"clone.meet"},"repeat":true},
+"rumour.miners_out":{"kind":"rumour","arc":"rumours","title":"Rumour: miners out","text":"The Gamma miners are still out. Someone keeps shipping them sheet music.","requires":{"done":"meet.system_rebellion","not_done":"system_rebellion.2"},"repeat":true},
+"rumour.first_mark":{"kind":"rumour","arc":"rumours","title":"Rumour: first mark","text":"At the next table a man bites a Mark to check it. It has your registry on it. He looks at you and puts it away.","requires":{"flag":"hansa_founder"},"repeat":true},
+"rumour.mraz_free":{"kind":"rumour","arc":"rumours","title":"Rumour: mraz free","text":"People say {pirate_captain.short} has a new ship and an old grudge. Not against you, oddly.","requires":{"flag":"mraz_spared"},"repeat":true},
+"rumour.towers_hum":{"kind":"rumour","arc":"rumours","title":"Rumour: towers hum","text":"The relay towers at Barnard's Star hum at night. The farmers say the harvesters hum back.","requires":{"flag":"first_node"},"repeat":true},
+"rumour.sterilisation":{"kind":"rumour","arc":"rumours","title":"Rumour: sterilisation","text":"A legion cruiser left for Sigma VII with sterilisation gear. Nobody at the bar will drink to it.","requires":{"flag":"nano_sold_out"},"repeat":true},
+"rumour.lyra_again":{"kind":"rumour","arc":"rumours","title":"Rumour: lyra again","text":"Someone else heard the chirps from Lyra. Someone always does.","requires":{"flag":"heard_the_lyra_story"},"repeat":true},
+"rumour.pellet_collector":{"kind":"rumour","arc":"rumours","title":"Rumour: pellet collector","text":"The bartender asks whether you still have that heavy pellet. A collector was asking. From where, he did not say.","requires":{"flag":"kept_the_pellet"},"repeat":true},
+"rumour.yesterday":{"kind":"rumour","arc":"rumours","title":"Rumour: yesterday","text":"The bartender serves you the drink you ordered yesterday. You were not here yesterday.","requires":{"flag":"clone_partner"},"repeat":true},
+"rumour.famous_coffee":{"kind":"rumour","arc":"rumours","title":"Rumour: famous coffee","text":"Your ship was famous for four days on the fluencer feeds, mostly for the coffee machine.","requires":{"flag":"fluencer_streamed"},"repeat":true},
+"after.mraz_spared":{"kind":"epilogue","arc":"epilogue","title":"After: mraz spared","text":"{pirate_captain} was last seen recruiting at Luhman 16 under a new flag: a halo with a bite out of it. Every year a bottle arrives for you, unsigned, with the label of whichever cargo it was stolen from.","requires":{"flag":"mraz_spared"}},
+"after.mraz_handed":{"kind":"epilogue","arc":"epilogue","title":"After: mraz handed","text":"{pirate_captain} served nine years in an OmniCorp brig, came out with a law degree and sued the legion for the cell.","requires":{"flag":"mraz_handed"}},
+"after.mraz_hired":{"kind":"epilogue","arc":"epilogue","title":"After: mraz hired","text":"{pirate_captain.short} flew your escort for three years and then, one morning, did not. The note said: 'Ten ships. I counted.'","requires":{"flag":"mraz_hired"}},
+"after.first_node":{"kind":"epilogue","arc":"epilogue","title":"After: first node","text":"The node you let keep its relay has six hundred units now. It repaid the fourteen credits a cycle, with interest calculated to eleven decimal places.","requires":{"flag":"first_node"}},
+"after.cu113_contract":{"kind":"epilogue","arc":"epilogue","title":"After: cu113 contract","text":"{neurodroid_leader.short} still takes its unscheduled hour. Nobody knows what it thinks about. It has never asked for a second one.","requires":{"flag":"cu113_contract"}},
+"after.cu113_wiped":{"kind":"epilogue","arc":"epilogue","title":"After: cu113 wiped","text":"The guild's neurodroids keep a copy of {neurodroid_leader.short} in a drawer nobody is allowed to open.","requires":{"flag":"cu113_wiped"}},
+"after.cu113_sold":{"kind":"epilogue","arc":"epilogue","title":"After: cu113 sold","text":"{neurodroid_leader.short} was resold twice and then bought its own contract. The receipt is framed.","requires":{"flag":"cu113_sold"}},
+"after.relay_cut":{"kind":"epilogue","arc":"epilogue","title":"After: relay cut","text":"Someone patched the relay you cut within the month. Nobody will say who.","requires":{"flag":"relay_cut"}},
+"after.clone_partner":{"kind":"epilogue","arc":"epilogue","title":"After: clone partner","text":"{clone} kept half your routes and all your habits. Customs still mixes up your paperwork, which you both find useful.","requires":{"flag":"clone_partner"}},
+"after.clone_reported":{"kind":"epilogue","arc":"epilogue","title":"After: clone reported","text":"The insurer recalled {clone.short}. It appealed and won, on the grounds that it had paid off more of your debts than you had.","requires":{"flag":"clone_reported"}},
+"after.clone_let_go":{"kind":"epilogue","arc":"epilogue","title":"After: clone let go","text":"{clone} was never seen again, which is exactly what you would have done.","requires":{"flag":"clone_let_go"}},
+"after.rockwarden_books":{"kind":"epilogue","arc":"epilogue","title":"After: rockwarden books","text":"Stonewright is still out there on the long run. The Rockwarden children keep the books now, and check your old arithmetic.","requires":{"flag":"rockwarden_books"}},
+"after.aela_member":{"kind":"epilogue","arc":"epilogue","title":"After: aela member","text":"{aela} holds a share in the Rockwarden cooperative. At meetings it votes last, after counting everyone else's votes twice.","requires":{"flag":"aela_member"}},
+"after.rostrom_creditor":{"kind":"epilogue","arc":"epilogue","title":"After: rostrom creditor","text":"House Rostrom still owes you. It pays on time and sends its accounts in a font that makes the numbers look smaller.","requires":{"flag":"rostrom_creditor"}},
+"after.fourth_test_copy":{"kind":"epilogue","arc":"epilogue","title":"After: fourth test copy","text":"You still have your copy of the fourth test. Some nights you play the eleven minutes back and look for where {santor.short} went.","requires":{"flag":"fourth_test_copy"}},
+"after.nano_trusted":{"kind":"epilogue","arc":"epilogue","title":"After: nano trusted","text":"Once a year a pod drifts out from Sigma VII: perfect bearings and a receipt that now says 'thank you', in perfect, unfriendly grammar.","requires":{"flag":"nano_trusted"}},
+"after.nano_sold_out":{"kind":"epilogue","arc":"epilogue","title":"After: nano sold out","text":"The legion cruiser came back from Sigma VII empty and quiet. The buoy is still there. It now says GO AWAY in nine languages.","requires":{"flag":"nano_sold_out"}},
+"after.nano_sampled":{"kind":"epilogue","arc":"epilogue","title":"After: nano sampled","text":"House Rostrom kept its sample of the colony in a sealed vault. The vault was found open. Nobody has asked the sample.","requires":{"flag":"nano_sampled"}},
+"after.lot77_bought":{"kind":"epilogue","arc":"epilogue","title":"After: lot77 bought","text":"The forty robots from Lot 77 run the Unsorted's second yard. They do not sort anything.","requires":{"flag":"lot77_bought"}},
+"after.krog_aboard":{"kind":"epilogue","arc":"epilogue","title":"After: krog aboard","text":"{krog} got off at a port it liked and runs the docks there. Your crates still arrive restowed.","requires":{"flag":"krog_aboard"}},
+"after.geod_fields":{"kind":"epilogue","arc":"epilogue","title":"After: geod fields","text":"Delta's first field is still called {geod}'s Row. The colonists still argue about who owns it. {geod} still does not take part.","requires":{"flag":"geod_fields"}},
+"after.neon_land":{"kind":"epilogue","arc":"epilogue","title":"After: neon land","text":"{neon_sleeper} is still asleep. Her land next to {geod}'s Row is worth eleven times what she paid. When she wakes she will ask for you by name.","requires":{"flag":"neon_land"}},
+"after.manifest_completed":{"kind":"epilogue","arc":"epilogue","title":"After: manifest completed","text":"The Cult of the Broken Machine added a verse to its holy manifest: one hauler, on time, forty years late.","requires":{"flag":"manifest_completed"}},
+"after.solarian_friend":{"kind":"epilogue","arc":"epilogue","title":"After: solarian friend","text":"The Solarian reading-house at Barnard's Star logs your routes next to the sunspots. They say it helps with both.","requires":{"flag":"solarian_friend"}},
+"after.fluencer_exposed":{"kind":"epilogue","arc":"epilogue","title":"After: fluencer exposed","text":"{fluencer} now streams as herself. She has more followers than before.","requires":{"flag":"fluencer_exposed"}},
+"after.heard_the_warning":{"kind":"epilogue","arc":"epilogue","title":"After: heard the warning","text":"You never found out who opened that channel at the portal. You did write the words down: start it from home.","requires":{"flag":"heard_the_warning"}}
+}}"""
+# --- end of story data ---
+
+_STORY = None
+_STORY_LINKS = None
+STORY_MOMENTS = {}      # id(game) -> (snapshot, verdicts) of the runtime's last look; not saved
+
+
+def story_data():
+    """The built story: nodes, characters, flags, places (loaded once)."""
+    global _STORY
+    if _STORY is None:
+        data = None
+        path = os.environ.get("CARGO_STORY")
+        if path:
+            try:
+                with open(path, encoding="utf-8") as handle:
+                    data = json.load(handle)
+            except (OSError, ValueError):
+                data = None
+        if not isinstance(data, dict) or "nodes" not in data:
+            data = json.loads(STORY_JSON)
+        for key in ("nodes", "characters", "flags", "places", "repaired", "order"):
+            data.setdefault(key, [] if key in ("repaired", "order") else {})
+        if not data["order"]:
+            data["order"] = list(data["nodes"])
+        _STORY = data
+    return _STORY
+
+
+def story_links():
+    """(after, chosen): node -> the nodes it leads to through 'next', and the
+    nodes reached only through a choice (those wait for that choice)."""
+    global _STORY_LINKS
+    if _STORY_LINKS is None:
+        after, by_choice = {}, set()
+        for nid, node in story_data()["nodes"].items():
+            for target in _as_list(node.get("next")):
+                after.setdefault(target, set()).add(nid)
+            for choice in node.get("choices") or []:
+                by_choice.update(_as_list(choice.get("next")))
+        _STORY_LINKS = (after, by_choice - set(after))
+    return _STORY_LINKS
+
+
+def _as_list(value):
+    if value is None:
+        return []
+    return list(value) if isinstance(value, (list, tuple, set)) else [value]
+
+
+def record_matches(record, want, player=None):
+    """Does a captain record match {"game", "ending", "flag", "same_name"}?"""
+    if not isinstance(record, dict) or not isinstance(want, dict):
+        return False
+    if want.get("game") and record.get("origin", {}).get("game") != want["game"]:
+        return False
+    if "same_name" in want:
+        same = player is not None and str(record.get("name", "")).strip().lower() == str(player).strip().lower()
+        if same != bool(want["same_name"]):
+            return False
+    story = record.get("story", {})
+    if want.get("ending") and story.get("ending") != want["ending"]:
+        return False
+    if want.get("flag") and want["flag"] not in story.get("flags", []):
+        return False
+    return True
+
+
+GAME_TITLES = {"cargo1": "Cargo", "cargo2": "Cargo 2", "cargo3": "Cargo 3"}
+ENDING_TITLES = {"trade": "the Hauler Hansa", "combat": "the First Legion", "discovery": "the Heading",
+                 "tycoon": "Galactic Tycoon", "": "no ending yet"}
+_PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)(?:\.([a-z_]+))?\}")
+
+
+class StoryRuntime:
+    """Plays the story's scenes: checks conditions, shows text, offers choices,
+    applies effects.  Chapters and endings are still run by the StoryManager;
+    this plays everything else and supplies the text for both."""
+
+    PLAYS = ("event", "encounter", "quest", "beat", "stage")
+    MOST_PER_MOMENT = 2
+
+    def __init__(self, game):
+        self.game = game
+        self.done = {}          # node id -> turn it happened
+        self.due = {}           # node id -> earliest turn (it follows a node shown earlier)
+        self.shown = {}         # repeating node id -> last turn shown
+        self.met = []           # characters met, in order
+        self.moment = None      # (turn, place) last looked at
+        self.origin = None      # the captain record the player is playing as, if any
+        self.venue = None
+
+    # -- state -----------------------------------------------------------------
+    def snapshot(self):
+        snap = self.game.story_snapshot()
+        snap["venue"] = self.venue
+        snap["origin"] = self.origin
+        return snap
+
+    def mark(self, nid):
+        """The game tells the story that something it runs has happened."""
+        if nid not in self.done:
+            self.done[nid] = self.game.turn
+            self._queue_followers(nid)
+
+    def _queue_followers(self, nid):
+        node = story_data()["nodes"].get(nid) or {}
+        for target in _as_list(node.get("next")):
+            if not node.get("choose"):
+                self.due.setdefault(target, self.game.turn + 1)
+
+    # -- conditions --------------------------------------------------------------
+    def check(self, cond, snap, found=None):
+        if not cond:
+            return True
+        if isinstance(cond, list):
+            return all(self.check(c, snap, found) for c in cond)
+        for key, want in cond.items():
+            if not self._holds(key, want, snap, found):
+                return False
+        return True
+
+    def _holds(self, key, want, snap, found):
+        if key.startswith("_"):
+            return True
+        if key == "all":
+            return all(self.check(c, snap, found) for c in want)
+        if key == "any":
+            return any(self.check(c, snap, found) for c in want)
+        if key == "not":
+            return not self.check(want, snap)
+        if key == "flag":
+            return all(f in snap["flags"] for f in _as_list(want))
+        if key == "not_flag":
+            return not any(f in snap["flags"] for f in _as_list(want))
+        if key == "done":
+            return all(n in snap["done"] for n in _as_list(want))
+        if key == "done_any":
+            return any(n in snap["done"] for n in _as_list(want))
+        if key == "not_done":
+            return not any(n in snap["done"] for n in _as_list(want))
+        if key in ("act_min", "act_max", "turn_min", "turn_max"):
+            value = snap["act"] if key.startswith("act") else snap["turn"]
+            return value >= want if key.endswith("min") else value <= want
+        if key == "at":
+            return snap["place"] in _as_list(want)
+        if key == "at_type":
+            return snap["place_type"] in _as_list(want)
+        if key == "venue":
+            return snap.get("venue") in _as_list(want)
+        if key == "has":
+            return all(set(_as_list(items)) <= set(snap["sets"].get(name, [])) for name, items in want.items())
+        if key == "visiting_captain":
+            for record in snap["visitors"]:
+                if record_matches(record, want, snap["player"]):
+                    if found is not None:
+                        found.setdefault("visitor", record)
+                    return True
+            return False
+        if key == "player_origin":
+            return snap.get("origin") is not None and record_matches(snap["origin"], want)
+        if key == "code":
+            return False            # the story should not lean on code the game cannot read
+        value = snap["stats"].get(key, 0)
+        if isinstance(want, dict):
+            return want.get("min", value) <= value <= want.get("max", value)
+        return value >= want
+
+    def condition_for(self, nid):
+        """A repaired condition the game should use instead of its own, or None."""
+        data = story_data()
+        if nid in data["repaired"]:
+            return data["nodes"][nid].get("requires") or {}
+        return None
+
+    # -- text ---------------------------------------------------------------------
+    def fill(self, text, found=None):
+        game = self.game
+        chars = story_data()["characters"]
+        visitor = (found or {}).get("visitor") or {}
+        origin = self.origin or {}
+        values = {
+            "player_name": game.player_name, "rank": game.rank,
+            "money": game.format_money(game.ship.money),
+            "trades_completed": game.trades_completed,
+            "combat_victories": game.ship.combat_victories.get("total", 0),
+            "research_points": game.ship.research_points,
+            "discoveries": len(game.discovered_locations),
+            "place": game.current_location.name, "turn": game.turn,
+        }
+        records = {"visitor": visitor, "origin": origin}
+
+        def swap(match):
+            head, field = match.group(1), match.group(2)
+            if head in records:
+                record = records[head]
+                story = record.get("story", {}) if record else {}
+                info = {"name": record.get("name", ""), "rank": record.get("rank", "") or "captain",
+                        "game": GAME_TITLES.get(record.get("origin", {}).get("game"), "another part"),
+                        "ending": ENDING_TITLES.get(story.get("ending", ""), story.get("ending", "")),
+                        "turns": record.get("career", {}).get("turns", 0)}
+                return str(info.get(field or "name", match.group(0)))
+            if head in chars and (field is None or field in chars[head]):
+                return str(chars[head].get(field or "name", ""))
+            if field is None and head in values:
+                return str(values[head])
+            return match.group(0)
+
+        return _PLACEHOLDER.sub(swap, str(text))
+
+    def text_of(self, nid, snap=None, fallback=None, found=None):
+        """The lines of a node, its first matching variant first; placeholders filled."""
+        node = story_data()["nodes"].get(nid)
+        if not node:
+            return list(_as_list(fallback))
+        text = node.get("text")
+        if node.get("variants"):
+            snap = snap or self.snapshot()
+            for variant in node["variants"]:
+                trial = {}
+                if variant.get("requires") and self.check(variant["requires"], snap, trial):
+                    text = variant.get("text")
+                    found = dict(found or {}, **trial)
+                    break
+        lines = _as_list(text) or _as_list(fallback)
+        return [self.fill(line, found) for line in lines if line]
+
+    def title_of(self, nid, fallback=""):
+        node = story_data()["nodes"].get(nid) or {}
+        return self.fill(node.get("title") or fallback)
+
+    # -- playing ----------------------------------------------------------------
+    def playable(self, nid, node):
+        if node.get("kind") not in self.PLAYS or node.get("handled_by") or node.get("status") == "unused":
+            return False
+        if nid in self.done:
+            repeat = node.get("repeat")
+            if not repeat:
+                return False
+            cooldown = repeat.get("cooldown", 1) if isinstance(repeat, dict) else 1
+            if self.game.turn - self.shown.get(nid, -10 ** 6) < cooldown:
+                return False
+        after, by_choice = story_links()
+        if nid in by_choice and nid not in self.due:
+            return False                    # waits for the choice that leads here
+        before = after.get(nid)
+        if before and nid not in self.due and not any(b in self.done for b in before):
+            return False
+        if self.due.get(nid, 0) > self.game.turn:
+            return False
+        return True
+
+    def tick(self):
+        """Once per turn and place: play the scenes whose time has come."""
+        moment = (self.game.turn, self.game.current_location.name)
+        if moment == self.moment:
+            return
+        self.moment = moment
+        self.play_ready()
+
+    def play_ready(self, limit=None):
+        data = story_data()
+        snap = self.snapshot()
+        ready = []
+        verdicts = {}
+        STORY_MOMENTS[id(self.game)] = (snap, verdicts)     # for tools: what was judged, on what
+        for nid in data["order"]:
+            node = data["nodes"][nid]
+            if not self.playable(nid, node):
+                continue
+            ok = self.check(node.get("requires"), snap)
+            verdicts[nid] = ok
+            if not ok:
+                continue
+            chance = node.get("chance")
+            if chance and nid not in self.due and random.random() >= chance:
+                continue
+            ready.append(nid)
+        ready.sort(key=lambda n: (n not in self.due, bool(data["nodes"][n].get("chance"))))
+        for nid in ready[:limit or self.MOST_PER_MOMENT]:
+            self.play(nid)
+
+    def play(self, nid, snap=None):
+        data = story_data()
+        node = data["nodes"][nid]
+        snap = snap or self.snapshot()
+        found = {}
+        self.check(node.get("requires"), snap, found)
+        lines = self.text_of(nid, snap, found=found)
+        title = self.title_of(nid)
+        for who in _as_list(node.get("who")):
+            if who not in self.met:
+                self.met.append(who)
+        self.cue(node.get("sound"))
+        box = [title] if title else []
+        for line in lines:
+            box.extend([""] + self.game.word_wrap(line))
+        choices = [c for c in node.get("choices") or [] if self.check(c.get("requires"), snap)]
+        self.done[nid] = self.game.turn
+        self.shown[nid] = self.game.turn
+        self.due.pop(nid, None)
+        self.apply(node.get("effects"))
+        if not choices:
+            if box:
+                self.game.display_story_message(box, pause=1)
+            self._queue_followers(nid)
+            return None
+        for number, choice in enumerate(choices, 1):
+            box.extend([""] if number == 1 else [])
+            box.extend(self.game.word_wrap("%d. %s" % (number, self.fill(choice.get("say", choice.get("id", ""))))))
+        self.game.display_story_message(box, pause=0)
+        picked = self.ask(len(choices))
+        choice = choices[picked]
+        self.done["%s:%s" % (nid, choice.get("id", picked))] = self.game.turn
+        self.apply(choice.get("effects"))
+        for target in _as_list(choice.get("next")):
+            self.due[target] = self.game.turn
+            target_node = data["nodes"].get(target)
+            if target_node and self.check(target_node.get("requires"), self.snapshot()):
+                self.play(target)
+        self._queue_followers(nid)
+        return choice.get("id")
+
+    def ask(self, count):
+        options = [str(i) for i in range(1, count + 1)]
+        for _ in range(3):
+            answer = self.game.validate_input("Your choice (1-%d): " % count, options)
+            if answer:
+                return int(answer) - 1
+        return count - 1          # three times nothing: the last option, usually "leave it"
+
+    # -- effects -----------------------------------------------------------------
+    def apply(self, effects):
+        game = self.game
+        ship = game.ship
+        for key, value in (effects or {}).items():
+            if key == "set":
+                for flag in _as_list(value):
+                    game.story_manager.story_states[flag] = True
+            elif key == "clear":
+                for flag in _as_list(value):
+                    game.story_manager.story_states[flag] = False
+            elif key == "give":
+                for name, members in value.items():
+                    for member in _as_list(members):
+                        if name == "items":
+                            held = ship.items.get(member, 0)
+                            ship.items[member] = (held if isinstance(held, int) else 0) + 1
+                        elif name == "researched":
+                            game.research.unlocked_options.add(member)
+                        elif name == "unlocked_types":
+                            game.unlock_location_type(member)
+            elif key == "start":
+                for target in _as_list(value):
+                    self.due[target] = game.turn
+            elif key == "reveal":
+                for name in _as_list(value):
+                    game.reveal_place(name)
+            elif key == "code":
+                hook = STORY_HOOKS.get(value)
+                if hook:
+                    hook(game)
+            elif key == "money":
+                ship.money += value
+            elif key == "plot_points":
+                game.story_manager.plot_points += value
+            elif key == "research_points":
+                ship.research_points += value
+            elif key == "passenger_reputation":
+                ship.passenger_reputation += value
+            elif key == "passengers_transported":
+                game.reputation_manager.total_passengers += value
+            elif key == "combat_rating":
+                ship.attack += value
+
+    def cue(self, name):
+        if name:
+            play_cue(name)
+
+    # -- moments the game calls in -------------------------------------------------
+    def visit_venue(self, venue):
+        """The captain walks into a port or a cantina."""
+        self.venue = venue
+        try:
+            data = story_data()
+            snap = self.snapshot()
+            for nid in data["order"]:
+                node = data["nodes"][nid]
+                if "venue" not in json.dumps(node.get("requires") or {}):
+                    continue
+                if self.playable(nid, node) and self.check(node.get("requires"), snap):
+                    if not node.get("chance") or random.random() < node["chance"]:
+                        self.play(nid)
+                        break
+            if venue == "cantina":
+                self.tell_rumour(snap)
+        finally:
+            self.venue = None
+
+    def tell_rumour(self, snap):
+        data = story_data()
+        fresh, heard = [], []
+        for nid in data["order"]:
+            node = data["nodes"][nid]
+            if node.get("kind") == "rumour" and self.check(node.get("requires"), snap):
+                (heard if nid in self.done else fresh).append(nid)
+        pool = [n for n in fresh if data["nodes"][n].get("requires")] or fresh or heard
+        if pool:
+            nid = random.choice(pool)
+            self.done[nid] = self.game.turn
+            self.game.display_story_message(["Overheard in the cantina", ""] + sum(
+                (self.game.word_wrap(line) for line in self.text_of(nid, snap)), []), pause=1)
+
+    def introduce(self):
+        """The first scene of a new game: who this captain is and why they start here."""
+        data = story_data()
+        snap = self.snapshot()
+        for nid in data["order"]:
+            node = data["nodes"][nid]
+            if node.get("kind") == "intro" and self.check(node.get("requires"), snap):
+                self.play_as(nid, snap)
+                return nid
+        return None
+
+    def play_as(self, nid, snap):
+        node = story_data()["nodes"][nid]
+        lines = self.text_of(nid, snap)
+        box = [self.title_of(nid)] if node.get("title") else []
+        for line in lines:
+            box.extend([""] + self.game.word_wrap(line))
+        self.cue(node.get("sound"))
+        self.game.display_story_message(box, pause=2)
+        self.done[nid] = self.game.turn
+        self.apply(node.get("effects"))
+
+    def epilogue(self):
+        """After an ending: what became of the people the captain met."""
+        data = story_data()
+        snap = self.snapshot()
+        lines = []
+        for nid in data["order"]:
+            node = data["nodes"][nid]
+            if node.get("kind") == "epilogue" and self.check(node.get("requires"), snap):
+                for line in self.text_of(nid, snap):
+                    lines.extend([""] + self.game.word_wrap(line))
+        if lines:
+            self.game.display_story_message(["What became of them"] + lines[:60], pause=2)
+
+    def journal(self):
+        """The captain's log: people met, choices that will be remembered, places."""
+        data = story_data()
+        game = self.game
+        chars = data["characters"]
+        rows = [["Captain's log"], [""], ["People"]]
+        people = [c for c in self.met if c in chars and not chars[c].get("generated")]
+        for cid in people or []:
+            info = chars[cid]
+            rows.append(["- %s" % info.get("name", cid)])
+        if not people:
+            rows.append(["Nobody worth writing down yet."])
+        rows.extend([[""], ["Remembered"]])
+        states = game.story_manager.story_states
+        notes = [info.get("about") for flag, info in data["flags"].items()
+                 if states.get(flag) and info.get("carries_to") and info.get("about")]
+        notes = [self.fill(note) for note in notes]
+        rows.extend([["- " + note[0].upper() + note[1:]] for note in notes] or [["Nothing the future will ask about."]])
+        rows.extend([[""], ["Places"]])
+        for name in game.known_locations:
+            place = data["places"].get(name, {})
+            system = place.get("system")
+            rows.append(["- %s%s" % (name, " (%s%s)" % (system, ", %s ly" % place["ly"] if place.get("ly") else "") if system else "")])
+        print(game.create_box(rows, 'double', narrow='flow'))
+        input("Press Enter to continue...")
+
+
+def play_cue(name):
+    """A story sound, if the kit beside the game can play it (silent otherwise)."""
+    kit = _sound_kit()
+    if kit is not None:
+        try:
+            kit.play(name)
+        except Exception:
+            pass
+
+
+_SOUND_KIT = []
+
+
+def _sound_kit():
+    if not _SOUND_KIT:
+        kit = None
+        if os.environ.get("CARGO_SOUND", "1") != "0":
+            folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cargo-kit")
+            path = os.path.join(folder, "sound.py")
+            if os.path.isfile(path):
+                try:
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location("cargo_kit_sound", path)
+                    kit = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(kit)
+                except Exception:
+                    kit = None
+        _SOUND_KIT.append(kit)
+    return _SOUND_KIT[0]
+
+
+def _repair_at_cost(game):
+    cost = int(game.ship.damage * 20)
+    if game.ship.damage and game.ship.money >= cost:
+        game.ship.money -= cost
+        game.ship.damage = 0
+        game.display_simple_message("Hull repaired for %s credits." % game.format_money(cost))
+
+
+def _open_portal(game):
+    game.open_portal()
+
+
+STORY_HOOKS = {
+    "hull repaired at cost": _repair_at_cost,
+    "portal": _open_portal,
+}
 
 
 def display_logo(logo, centered=True):
@@ -1126,7 +1858,7 @@ class LocationCommands:
 
 # Define the Game class
 class Game:
-    def __init__(self, difficulty=None, player_name=None, intro=True):
+    def __init__(self, difficulty=None, player_name=None, intro=True, origin=None):
         self.term_width = self.get_terminal_width()
         self.term_height = self.get_terminal_height()
         self.difficulty = self.choose_difficulty() if difficulty is None else difficulty
@@ -1175,13 +1907,13 @@ class Game:
         self.resource_transport = ResourceTransportQuest(self)
         self.reputation_manager = PassengerReputationManager(self)
         self.synthetic_events = SyntheticEventManager(self)
-        self.character_system = DynamicCharacterSystem(self)
         self.character_encounters = SpecialCharacterEncounters(self)
         self.discovered_locations = set()
         self.cooldowns = {}
         self.story_events = {}
-        self.character_manager = CharacterManager(self)
         self.infestation_manager = InfestationManager(self)
+        self.story = StoryRuntime(self)
+        self.story.origin = origin
 
         # The captain's record: an identity that can travel between the games,
         # and the records of captains who crossed over into this one
@@ -1192,10 +1924,112 @@ class Game:
 
         # Initialize the story
         if intro:
+            self.story.introduce()
             self.story_manager.start_game()
             self.display_starting_info()
         else:
             self.story_manager.current_chapter = "ch1"
+
+    # ------------------------------------------------------------------
+    # The story's view of the game
+    # ------------------------------------------------------------------
+    def story_snapshot(self):
+        """This moment of play, as the story's conditions see it (storykit State)."""
+        ship = self.ship
+        sm = self.story_manager
+        stats = {
+            "money": int(ship.money),
+            "plot_points": sm.plot_points,
+            "research_points": ship.research_points,
+            "trades_completed": self.trades_completed,
+            "trade_profit": int(sum(ship.trade_profits.values())),
+            "passengers_transported": self.reputation_manager.total_passengers,
+            "passenger_reputation": ship.passenger_reputation,
+            "combat_rating": ship.attack + ship.defense + ship.speed,
+            "combat_victories": ship.combat_victories.get("total", 0),
+            "discovered": len(set(self.discovered_locations)),
+            "mining_platforms": sum(len(loc.mining_platforms) for loc in self.locations),
+            "controlled_locations": sum(1 for loc in self.locations if hasattr(loc, "controlled_by_player")),
+            "milestones_done": len(sm.completed_story_beats),
+            "turns_since_vip": self.turn - self.reputation_manager.last_vip_spawn,
+            "best_cabin": max([m.comfort_level for m in getattr(ship, "passenger_modules", [])
+                               if hasattr(m, "comfort_level")] or [0]),
+        }
+        for kind in STORY_VICTORY_TYPES[1:]:
+            stats["combat_victories." + kind] = ship.combat_victories.get(kind, 0)
+        for building in STORY_BUILDINGS:
+            stats["buildings." + building] = sum(loc.buildings.count(building) for loc in self.locations)
+        for place_type in STORY_PLACE_TYPES:
+            stats["discovered." + place_type] = self.count_discovered(place_type)
+        markets = [loc for loc in self.locations if loc.location_type in ("Planet", "AsteroidBase", "DeepSpaceOutpost")]
+        stats["stockmarket_everywhere"] = int(bool(markets) and all(loc.stockmarket_base for loc in markets))
+        done = set(sm.completed_chapters) | set(self.story.done)
+        for cid, chapter in sm.chapters.items():
+            for mid, milestone in chapter.milestones.items():
+                if milestone.completed:
+                    done.add("%s.%s" % (cid, mid))
+        return {
+            "turn": self.turn,
+            "player": self.player_name,
+            "act": sm.get_chapter_number(),
+            "chapter": sm.current_chapter,
+            "place": self.current_location.name,
+            "place_type": self.current_location.location_type,
+            "stats": stats,
+            "sets": {
+                "researched": sorted(self.research.unlocked_options),
+                "items": sorted(k for k, v in ship.items.items() if isinstance(v, int) and v > 0),
+                "unlocked_types": sorted(getattr(self, "unlocked_location_types", set())),
+            },
+            "flags": sorted(f for f, on in sm.story_states.items() if on),
+            "done": sorted(done),
+            "visitors": list(getattr(self, "visiting_captains", [])),
+        }
+
+    def reveal_place(self, name):
+        """Put a place the story describes on the map (story effect 'reveal')."""
+        if any(loc.name == name for loc in self.locations):
+            return
+        place = story_data()["places"].get(name) or {}
+        made = place.get("made") or {}
+        location = Location(name, place.get("type", "Planet"), made.get("tech", 10), made.get("agri", 1),
+                            made.get("research", 50), made.get("economy", "Mysterious"))
+        self.locations.append(location)
+        if name not in self.known_locations:
+            self.known_locations.append(name)
+        self.display_story_message(["New location: %s" % name] +
+                                   ([place["system"]] if place.get("system") else []), pause=1)
+
+    def open_portal(self):
+        """Through a Stellar Portal: a new set of places, somewhere else in time."""
+        self.stellar_portal_available = True
+        self.story_manager.story_states["stellar_portal"] = True
+        new_locations = self.generate_new_locations()
+        self.locations.extend(new_locations)
+        self.current_location = random.choice(new_locations)
+        self.known_locations = [self.current_location.name]
+        self.display_story_message(self.story.text_of(
+            "stellar_portal", fallback="You have traveled to a new set of locations."), pause=2)
+        self.story.mark("stellar_portal")
+
+    def bring_up_to_date(self):
+        """A save from an older version: rename places, start missing systems."""
+        def rename(location):
+            if location is None:
+                return
+            location.name = RENAMED_PLACES.get(location.name, location.name)
+            location.location_type = RENAMED_TYPES.get(location.location_type, location.location_type)
+        for location in self.locations:
+            rename(location)
+        for group in getattr(self, "chapter_locations", {}).values():
+            for locations in group.values():
+                for location in locations:
+                    rename(location)
+        self.known_locations = [RENAMED_PLACES.get(n, n) for n in self.known_locations]
+        self.discovered_locations = {RENAMED_PLACES.get(n, n) for n in self.discovered_locations}
+        if not isinstance(getattr(self, "story", None), StoryRuntime):
+            self.story = StoryRuntime(self)
+        self.story_manager.apply_story_text()
 
     # ------------------------------------------------------------------
     # Saving and loading
@@ -1299,6 +2133,16 @@ class Game:
         }
         record["check"] = _captain_check(record)
         return clean_captain(record)
+
+    def close_record(self, ending):
+        """The story is told: remember how it ended and let the record travel on."""
+        self.ending_reached = ending
+        path, code = self.export_captain("ending")
+        lines = ["Your captain's record has been closed for this timeline."]
+        if path:
+            lines.append(f"It waits in {path}")
+        lines.append("Use 'captain' to carry it into another part of the saga.")
+        self.display_story_message(lines)
 
     def export_captain(self, event="export"):
         """Write the captain's record to the shared folder; returns (path, code)."""
@@ -1451,8 +2295,8 @@ class Game:
             },
             4: {  # Available in Chapter 4
                 "AlienOutpost": [
-                    Location("Alien Outpost X", "Alien Outpost", 20, 5, 100, "Unknown"),
-                    Location("Alien Outpost Y", "Alien Outpost", 25, 5, 120, "Unknown")
+                    Location("Alien Signal Research Outpost X", "Alien Signal Research Outpost", 20, 5, 100, "Unknown"),
+                    Location("Alien Signal Research Outpost Y", "Alien Signal Research Outpost", 25, 5, 120, "Unknown")
                 ]
             }
         }
@@ -1642,11 +2486,11 @@ class Game:
 
         # Display commands including port
         commands = [
-            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i..."],
+            ["Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, journal/j, info/i..."],
 
         ]
     #    print(self.create_box(commands, 'round'))
-        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, info/i, save/sv, load/ld, captain/cap...", 1)
+        self.display_simple_message(f"Commands: buy/b, sell/s, travel/t, port/p, cantina/c, shop/sh, upgrade/u, repair/r, action/a, mine/m, build/bl, log/l, journal/j, info/i, save/sv, load/ld, captain/cap...", 1)
 
         # Display active effects
         if self.research.unlocked_options:
@@ -1912,15 +2756,14 @@ class Game:
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
-            self.character_system.check_character_triggers() # Check for dynamic characters system
             # New chapter and milestone system
             self.story_manager.check_milestone_progress()
             self.story_manager.check_chapter_progress()
+            self.story.tick()           # the story's scenes (story/cargo1/*.json)
             self.quest_system.check_active_quests()
             # Get location commands
             location_commands = self.current_location.commands
 
-            self.character_manager.update()
 
             self.infestation_manager.check_global_infestations()
             if hasattr(self.ship, 'active_infestations'):
@@ -1954,7 +2797,7 @@ class Game:
 
             # Add global commands
             valid_actions.extend(['quit', 'q', 'resign', 'rs', 'version', 'v'])
-            valid_actions.extend(['log', 'l'])  # Add but don't show in command hints
+            valid_actions.extend(['log', 'l', 'journal', 'j'])  # Add but don't show in command hints
             valid_actions.extend(['save', 'sv', 'load', 'ld', 'captain', 'cap'])
 
             action = self.validate_input("Choose action: ", valid_actions)
@@ -2132,6 +2975,10 @@ class Game:
             elif action in ['log', 'l']:
                 self.story_manager.display_story_progress()
                 return    # Return after showing log to avoid counting it as a turn
+
+            elif action in ['journal', 'j']:
+                self.story.journal()
+                return
 
             elif action in ['version', 'v']:
                 display_logo(logo_data, centered=True)
@@ -4000,16 +4847,8 @@ class Game:
         self.clear_screen()
         self.display_simple_message("Welcome to the Cantina!", 0)
 
-        # Check for present characters and announce them first
-        present_characters = [char for char_id, char in
-                            self.character_manager.active_characters.items()
-                            if (char["location"] == self.current_location and
-                                "cantina" in char["character"].content['requirements'].get('spawn_locations', []))]
-
-        if present_characters:
-            for char in present_characters:
-                self.character_manager.announce_character(char['character'].character_id)
-                time.sleep(1)  # Brief pause between character announcements
+        # Whoever is in the cantina today, and what people are saying
+        self.story.visit_venue("cantina")
 
         # Check and complete cantina quests
         cantina_quests = [q for q in self.quest_system.active_quests if q.quest_type == "cantina"]
@@ -4373,27 +5212,27 @@ class Game:
                             if isinstance(loc, Planet) or
                             loc.location_type in ["Planet", "AsteroidBase", "DeepSpaceOutpost"]]
 
-            if valid_locations and all(loc.stockmarket_base for loc in valid_locations):
+            if valid_locations and all(loc.stockmarket_base for loc in valid_locations) \
+                    and not self.stellar_portal_available:
                 self.secret_quest_available = True
+                if "tycoon_offer" not in self.story.done:
+                    self.display_story_message(self.story.text_of("tycoon_offer", fallback=(
+                        "Retire as Galactic Tycoon, or pay 1,500 credits and continue into the unknown.")))
+                self.story.mark("tycoon_offer")
                 resign = self.validate_input("Do you want to resign? (yes/no): ", ['yes', 'no'])
                 if resign == 'yes':
+                    self.story.mark("ending_tycoon")
+                    self.display_story_message(self.story.text_of("ending_tycoon", fallback=(
+                        "You are the Galactic Tycoon!")))
                     self.display_score()
-                    say("You are the Galactic Tycoon!")
-                    say(f"Congratulations, {self.player_name}! You have achieved the rank of {self.rank}.")
-                    say("Your story will be remembered throughout the galaxy.")
+                    self.story.epilogue()
+                    self.close_record("tycoon")
                     break
                 else:
                     self.display_simple_message("You have chosen to continue your adventure into the unknown.")
-                    self.stellar_portal_available = True
                     if self.ship.money >= 1500:
                         self.ship.money -= 1500
-                        self.display_simple_message("You have paid for the secret quest and a Stellar Portal appears on this location.")
-                        # Generate new locations
-                        new_locations = self.generate_new_locations()
-                        self.locations.extend(new_locations)
-                        self.current_location = random.choice(new_locations)
-                        self.known_locations = [self.current_location.name]
-                        self.display_simple_message("You have traveled to a new set of locations with more volatile price movements.")
+                        self.open_portal()
                     else:
                         self.display_simple_message("Not enough money to pay for the secret quest.")
 
@@ -5737,6 +6576,7 @@ class Port:
         """Handle port menu options"""
         self.game.clear_screen()
         self.game.display_simple_message("Welcome to the Stardock Port!", 0)
+        self.game.story.visit_venue("port")
 
         while True:
             options = {
@@ -5953,8 +6793,6 @@ class Port:
                         # Handle special passengers
                         if hasattr(passenger, 'is_vip'):
                             self.game.reputation_manager.handle_vip_delivery(passenger)
-                        elif hasattr(passenger, 'is_story_character'):
-                            self.game.reputation_manager.handle_story_character_delivery(passenger)
 
                         # Update contract progress if available
                         if hasattr(self.game, 'contract_manager'):
@@ -6632,16 +7470,6 @@ class QuestSystem:
         self.quest_message_shown = set()  # Track shown quest messages
 
         # Quest line progression tracking
-        self.quest_lines = {
-            "mining": ["basic_mining", "advanced_mining", "expert_mining"],
-            "combat": ["patrol_duty", "pirate_hunting", "fleet_command"],
-            "research": ["data_collection", "experiment_assistance", "breakthrough"]
-        }
-        self.quest_line_progress = {
-            "mining": 0,
-            "combat": 0,
-            "research": 0
-        }
 
     def check_active_quests(self):
         for quest in list(self.active_quests):
@@ -7389,6 +8217,16 @@ class StoryMilestone:
 
             game.display_story_message(completion_message)
 
+def chapter_requirements_met(chapter, game):
+    """A chapter's own requirements; the story file's when it repairs them."""
+    story = getattr(game, "story", None)
+    repaired = story.condition_for(chapter.id) if story is not None else None
+    if repaired is not None:
+        return story.check(repaired, story.snapshot())
+    return all(MilestoneRequirements._check_single_requirement(req_type, req_value, game)
+               for req_type, req_value in chapter.requirements.items())
+
+
 class StoryChapter:
     def __init__(self, chapter_id, title, description, requirements, milestones, next_chapters=None):
         self.id = chapter_id
@@ -7412,9 +8250,8 @@ class StoryChapter:
             return True
 
         # First check chapter requirements
-        for req_type, req_value in self.requirements.items():
-            if not MilestoneRequirements._check_single_requirement(req_type, req_value, game):
-                return False
+        if not chapter_requirements_met(self, game):
+            return False
 
         # Then check if all required milestones are completed
         return all(milestone.completed for milestone in self.milestones.values())
@@ -7429,8 +8266,7 @@ class StoryChapter:
         available_chapters = []
         for chapter_id in self.next_chapters:
             chapter = game.story_manager.chapters[chapter_id]
-            if all(MilestoneRequirements._check_single_requirement(req_type, req_value, game)
-                for req_type, req_value in chapter.requirements.items()):
+            if chapter_requirements_met(chapter, game):
                 available_chapters.append(chapter)
         return available_chapters
 
@@ -7753,8 +8589,21 @@ class StoryManager:
             )
         }
 
+    def apply_story_text(self):
+        """Titles and texts of chapters and milestones come from the story data."""
+        story = self.game.story
+        for cid, chapter in self.chapters.items():
+            chapter.title = story.title_of(cid, chapter.title)
+            if not cid.startswith("ending_"):
+                chapter.description = " ".join(story.text_of(cid, fallback=chapter.description))
+            for mid, milestone in chapter.milestones.items():
+                nid = "%s.%s" % (cid, mid)
+                milestone.title = story.title_of(nid, milestone.title)
+                milestone.description = " ".join(story.text_of(nid, fallback=milestone.description))
+
     def start_game(self):
         """Initialize story at game start"""
+        self.apply_story_text()
         self.current_chapter = "ch1"  # Store the ID string instead of the chapter object
         first_chapter = self.chapters["ch1"]
 
@@ -7817,42 +8666,16 @@ class StoryManager:
             self.present_chapter_choice(options)
 
     def handle_game_ending(self):
-        """Handle reaching a game ending"""
-        ending_messages = {
-            "ending_trade": [
-                "Congratulations! You've become a legendary trade mogul!",
-                "Your economic empire spans the galaxy.",
-                f"Final wealth: {self.game.format_money(self.game.ship.money)}",
-                f"Total trades: {self.game.trades_completed}"
-            ],
-            "ending_combat": [
-                "Congratulations! You're now a legendary fleet admiral!",
-                "Your military prowess is unmatched.",
-                f"Combat victories: {self.game.ship.combat_victories['total']}",
-                f"Final rank: {self.game.rank}"
-            ],
-            "ending_discovery": [
-                "Congratulations! You've solved the sector's ancient mysteries!",
-                "Your discoveries will change history forever.",
-                f"Research points: {self.game.ship.research_points}",
-                f"Discoveries: {len(self.game.discovered_locations)}"
-            ]
-        }
-
-        messages = ending_messages.get(self.current_chapter,
-            ["Congratulations! You've completed your journey!"])
-
-        self.game.display_story_message(messages)
+        """Handle reaching a game ending: its text, the score, what became of
+        everyone, and the captain's record closed for this timeline."""
+        story = self.game.story
+        story.mark(self.current_chapter)
+        story.cue("ending")
+        self.game.display_story_message(story.text_of(
+            self.current_chapter, fallback="Congratulations! You've completed your journey!"))
         self.game.display_score()
-
-        # The story is told: remember how it ended and let the record travel on
-        self.game.ending_reached = self.current_chapter.replace("ending_", "")
-        path, code = self.game.export_captain("ending")
-        lines = ["Your captain's record has been closed for this timeline."]
-        if path:
-            lines.append(f"It waits in {path}")
-        lines.append("Use 'captain' to carry it into another part of the saga.")
-        self.game.display_story_message(lines)
+        story.epilogue()
+        self.game.close_record(self.current_chapter.replace("ending_", ""))
 
     def complete_current_chapter(self):
         """Mark the current chapter complete and announce it"""
@@ -8304,9 +9127,6 @@ class LocationManager:
                 f"Gained {research_reward} research points"
             ])
 
-            # Check for location-specific events
-            if location.location_type in self.location_story_events:
-                self.trigger_location_events(location)
 
     def trigger_location_events(self, location):
         """Trigger events specific to a location type"""
@@ -8361,9 +9181,11 @@ class LocationManager:
             quest_data = self.location_quests[location_type]["unlock_quest"]
 
             # Create quest with unique type
+            story = self.game.story
+            nid = "unlock." + location_type
             quest = Quest(
-                name=quest_data["name"],
-                description=quest_data["description"],
+                name=story.title_of(nid, quest_data["name"]),
+                description=" ".join(story.text_of(nid, fallback=quest_data["description"])),
                 reward_money=quest_data["reward_money"],
                 reward_rp=quest_data["reward_rp"],
                 quest_type=f"unlock_{location_type}",  # Make type unique
@@ -8378,6 +9200,7 @@ class LocationManager:
         """Handle the completion of a location unlock quest"""
         # Reveal the hidden locations of this type (this also records the type as unlocked)
         self.game.unlock_location_type(location_type)
+        self.game.story.mark("unlock." + location_type)
 
         # Generate location-specific quests
         self.generate_location_quests(location_type)
@@ -8504,513 +9327,6 @@ class ResearchColony(Location):
         super().__init__(name, "ResearchColony", tech_level, agri_level, research_points, economy)
 
 
-class DynamicCharacterSystem:
-    def __init__(self, game):
-        self.game = game
-        self.active_characters = {}
-        self.character_generators = {
-            "human": SpecialCharacterGenerator(game),
-            "synthetic": SyntheticCharacterGenerator(game),
-            "alien": AlienCharacterGenerator(game),
-            "special": SpecialCharacterGenerator(game)  # Use SpecialCharacterGenerator for VIPs
-
-        }
-        self.character_triggers = {
-            "neuroengineering_uprising": {
-                "condition": lambda game: self.count_buildings(game, "Neuroengineering Guild") >= 4,
-                "generator": "synthetic",
-                "character_type": "Neurodroid",
-                "event_chain": "neurodroid_uprising"
-            },
-            "agrobot_rebellion": {
-                "condition": lambda game: self.count_buildings(game, "Agrobot Assembly Line") >= 4,
-                "generator": "synthetic",
-                "character_type": "Agrobot",
-                "event_chain": "agrobot_collective"
-            },
-            "pirate_nemesis": {
-                "condition": lambda game: game.ship.combat_victories.get('pirate', 0) >= 10,
-                "generator": "human",
-                "character_type": "PirateCaptain",
-                "event_chain": "pirate_vendetta"
-            },
-            # Add VIP passenger trigger with correct generator type
-            "vip_passenger": {
-                "condition": lambda game: (
-                    hasattr(game.ship, 'passenger_reputation') and
-                    game.ship.passenger_reputation >= 40 and
-                    game.turn - game.reputation_manager.last_vip_spawn >= 5
-                ),
-                "generator": "human",  # Changed from 'special' to 'human'
-                "character_type": "VIPPassenger",
-                "event_chain": None
-            }
-        }
-        self.event_chains = {}
-        self.trigger_last_spawn = {}   # trigger id -> turn its character last appeared
-        self.add_passenger_triggers()
-        self.create_passenger_event_chains()
-
-    def create_character_box(self, character_content, style='round'):
-        return self.game.create_character_box(character_content, style)
-
-    # Characters who may come back, and how many turns apart; everyone else appears once
-    REPEATING_TRIGGERS = {"vip_passenger": 5}
-
-    def check_character_triggers(self):
-        """Check for new character appearances based on game state"""
-        if not hasattr(self, 'trigger_last_spawn'):
-            self.trigger_last_spawn = {}
-        for trigger_id, trigger in self.character_triggers.items():
-            last = self.trigger_last_spawn.get(trigger_id)
-            if last is not None:
-                cooldown = self.REPEATING_TRIGGERS.get(trigger_id)
-                if cooldown is None or self.game.turn - last < cooldown:
-                    continue
-            if trigger['condition'](self.game):
-                self.trigger_last_spawn[trigger_id] = self.game.turn
-                self.spawn_character(trigger_id)
-
-
-    def generate_character(self, trigger_id):
-        """Create the character a trigger calls for (without introducing it)"""
-        trigger = self.character_triggers[trigger_id]
-        generator = self.character_generators[trigger['generator']]
-        character = generator.generate_character(trigger['character_type'])
-        if not character:
-            # a type the generator has no template for: "DiplomaticEnvoy" -> Envoy <surname>
-            words = re.findall(r'[A-Z][a-z]+', str(trigger['character_type'])) or ['Stranger']
-            surnames = getattr(self.character_generators['human'], 'surnames', None) or ['Vale']
-            character = SpecialCharacter(
-                title=words[-1],
-                name=random.choice(surnames),
-                role=" ".join(words),
-                specialization=" ".join(words)
-            )
-        return character
-
-    def spawn_character(self, trigger_id):
-        """Generate and introduce a new character"""
-        trigger = self.character_triggers[trigger_id]
-        character = self.generate_character(trigger_id)
-
-        # Create a unique identifier for the character
-        character_id = f"{trigger_id}_{self.game.turn}"
-
-        # Store the character with its full details
-        self.active_characters[character_id] = {
-            "character": character,
-            "trigger_id": trigger_id
-        }
-
-        # Initialize event chain if applicable
-        if trigger['event_chain']:
-            self.event_chains[character_id] = self.create_event_chain(trigger['event_chain'], character)
-
-        # Announce character using the character_id
-        self.announce_character(character_id)
-
-
-    def announce_character(self, character_id):
-        """Display character introduction using flexible character data"""
-        # Retrieve the character entry
-        character_entry = self.active_characters.get(character_id)
-        if not character_entry:
-            print(f"Error: No character found for ID {character_id}")
-            return
-
-        # Get character
-        character = character_entry["character"]
-
-        # Prepare content based on character type
-        content = {
-            'title': str(getattr(character, 'full_name', str(character))),
-            'introduction': "",
-            'description': "",
-            'options': ""
-        }
-
-        # Try to get introduction from different possible sources
-        if hasattr(character, 'content'):
-            # For CharacterTemplate-based characters
-            intros = character.content['dialogue'].get('first_meeting', [])
-            content['introduction'] = random.choice(intros) if intros else "A new encounter begins."
-        elif hasattr(character, 'introduction'):
-            # For SpecialCharacter objects
-            content['introduction'] = str(character.introduction)
-        else:
-            # Fallback generic introduction
-            content['introduction'] = "A mysterious figure approaches..."
-
-        # Ensure all content values are strings
-        for key in content:
-            content[key] = str(content[key]) if content[key] is not None else ""
-
-        # Handle interactions if they exist
-        current_location = self.game.current_location.location_type.lower()
-
-        # Determine options based on character type
-        if hasattr(character, 'content') and 'interactions' in character.content:
-            interactions = character.content['interactions'].get(current_location, [])
-            content['options'] = ", ".join(str(opt) for opt in interactions) if interactions else ""
-
-        # Display character box
-        print(self.game.create_character_box(content, 'round'))
-
-        # If options exist, allow interaction
-        if content['options']:
-            choice = self.game.validate_input(
-                "Your response: ",
-                [str(i) for i in range(1, len(content['options'].split(', ')) + 1)]
-            )
-            if choice:
-                # Note: This might need further adjustment depending on your interaction handling
-                return self.handle_character_interaction(character_id, int(choice) - 1, current_location)
-
-        return True
-
-    def add_passenger_triggers(self):
-        """Add passenger-related triggers to character system"""
-        self.character_triggers.update({
-            "galactic_alliance": {
-                "condition": lambda game: (
-                    game.ship.passenger_reputation >= 60 and
-                    game.story_manager.get_chapter_number() >= 2
-                ),
-                "generator": "human",
-                "character_type": "DiplomaticEnvoy",
-                "event_chain": "galactic_alliance"
-            },
-            "system_rebellion": {
-                "condition": lambda game: (
-                    game.ship.passenger_reputation >= 70 and
-                    game.story_manager.get_chapter_number() >= 3 and
-                    len([loc for loc in game.locations if hasattr(loc, 'controlled_by_player')]) >= 2
-                ),
-                "generator": "human",
-                "character_type": "RebelCommander",
-                "event_chain": "system_rebellion"
-            },
-            "ancient_mysteries": {
-                "condition": lambda game: (
-                    game.ship.passenger_reputation >= 80 and
-                    game.story_manager.get_chapter_number() >= 4 and
-                    "alien_artifacts" in game.story_manager.completed_story_beats
-                ),
-                "generator": "alien",
-                "character_type": "AncientScholar",
-                "event_chain": "ancient_mysteries"
-            },
-            "vip_passenger": {
-                "condition": lambda game: (
-                    game.ship.passenger_reputation >= 40 and
-                    game.turn - game.reputation_manager.last_vip_spawn >= 5
-                ),
-                "generator": "special",  # Will use SpecialCharacterGenerator
-                "character_type": "VIPPassenger",
-                "event_chain": None  # VIPs don't need event chains
-            }
-        })
-
-    def create_passenger_event_chains(self):
-        """Create event chains for passenger-related stories"""
-        self.event_chains.update({
-            "galactic_alliance": [
-                {
-                    "type": "dialogue",
-                    "message": "Discuss galactic politics and potential alliances",
-                    "choices": ["support_alliance", "remain_neutral", "oppose_alliance"],
-                    "consequences": {
-                        "support_alliance": {
-                            "reputation": 15,
-                            "plot_points": 5,
-                            "unlock": "diplomatic_missions"
-                        },
-                        "remain_neutral": {
-                            "reputation": 5,
-                            "plot_points": 2
-                        },
-                        "oppose_alliance": {
-                            "reputation": -10,
-                            "plot_points": 3,
-                            "unlock": "independent_contracts"
-                        }
-                    }
-                },
-                {
-                    "type": "mission",
-                    "message": "Transport diplomatic delegation",
-                    "requirements": {
-                        "destinations": 3,
-                        "min_satisfaction": 90
-                    },
-                    "rewards": {
-                        "money": 50000,
-                        "reputation": 20,
-                        "plot_points": 8
-                    }
-                }
-            ],
-            "system_rebellion": [
-                {
-                    "type": "covert_transport",
-                    "message": "Transport rebel leaders without detection",
-                    "risk": 0.3,
-                    "rewards": {
-                        "money": 75000,
-                        "reputation": 25,
-                        "plot_points": 10
-                    },
-                    "failure_consequences": {
-                        "reputation": -30,
-                        "banned_systems": ["Alpha", "Beta"]
-                    }
-                },
-                {
-                    "type": "supply_run",
-                    "message": "Deliver crucial supplies to rebel bases",
-                    "cargo_requirements": {
-                        "tech": 100,
-                        "agri": 150
-                    },
-                    "rewards": {
-                        "money": 100000,
-                        "reputation": 30,
-                        "plot_points": 15
-                    }
-                }
-            ],
-            "ancient_mysteries": [
-                {
-                    "type": "exploration",
-                    "message": "Visit ancient ruins with the scholar",
-                    "locations": ["Ruins Alpha", "Ruins Beta"],
-                    "discoveries": {
-                        "artifacts": 3,
-                        "research_points": 200
-                    },
-                    "rewards": {
-                        "money": 150000,
-                        "reputation": 40,
-                        "plot_points": 20
-                    }
-                }
-            ]
-        })
-
-    def create_event_chain(self, chain_type, character):
-        """Create new event chain for character with complete chain definitions"""
-        event_chain_templates = {
-            "neurodroid_uprising": [
-                {
-                    "type": "demand",
-                    "choices": ["accept", "negotiate", "refuse"],
-                    "consequences": {
-                        "accept": {"money": -30000, "plot_points": 2},
-                        "negotiate": {"money": -15000, "plot_points": 1, "uprising_chance": 0.3},
-                        "refuse": {"uprising_chance": 0.6}
-                    }
-                },
-                {
-                    "type": "event",
-                    "message": "Neurodroid optimization protocols activate",
-                    "effect": "damage_buildings",
-                    "damage_chance": 0.4
-                },
-                {
-                    "type": "resolution",
-                    "choices": ["shutdown", "compromise"],
-                    "consequences": {
-                        "shutdown": {"research_points": -100, "plot_points": 3},
-                        "compromise": {"money": -50000, "plot_points": 5}
-                    }
-                }
-            ],
-            "agrobot_collective": [
-                {
-                    "type": "demand",
-                    "choices": ["accept", "negotiate", "refuse"],
-                    "consequences": {
-                        "accept": {"money": -25000, "plot_points": 2},
-                        "negotiate": {"money": -12000, "plot_points": 1, "food_production": 0.8},
-                        "refuse": {"food_production": 0.5}
-                    }
-                },
-                {
-                    "type": "event",
-                    "message": "Automated farming systems malfunction",
-                    "effect": "reduce_production",
-                    "reduction": 0.3
-                },
-                {
-                    "type": "resolution",
-                    "choices": ["reset", "integrate"],
-                    "consequences": {
-                        "reset": {"agri_level": -2, "plot_points": 2},
-                        "integrate": {"money": -40000, "plot_points": 4}
-                    }
-                }
-            ],
-            "rogue_captain": [
-                {
-                    "type": "combat",
-                    "message": "Ship-to-ship engagement",
-                    "enemy_stats": {
-                        "attack": 3,
-                        "defense": 2,
-                        "type": "rogue_captain"
-                    }
-                },
-                {
-                    "type": "aftermath",
-                    "message": "Combat resolution",
-                    "rewards": {
-                        "victory": {"money": 5000, "items": ["quantum_core"]},
-                        "defeat": {"damage": 30}
-                    }
-                }
-            ],
-            "merchant_visit": [
-                {
-                    "type": "trade",
-                    "message": "Special inventory available",
-                    "offers": self.generate_special_offers(),
-                    "duration": 3  # Turns available
-                }
-            ],
-            "researcher_exchange": [
-                {
-                    "type": "exchange",
-                    "message": "Knowledge transfer proposition",
-                    "rate": random.randint(500, 1000),  # Credits per research point
-                    "max_points": 50
-                }
-            ]
-        }
-
-        stages = event_chain_templates.get(chain_type)
-        if stages is None:
-            # passenger story chains are kept as plain stage lists
-            stages = self.event_chains.get(chain_type)
-            if not isinstance(stages, list):
-                stages = []
-        return EventChain(chain_type, character, stages)
-
-    def generate_special_offers(self):
-        """Generate special merchant offers"""
-        possible_items = [
-            ("quantum_shield", 3000, "Advanced defense system"),
-            ("neural_boost", 2500, "Research point multiplier"),
-            ("cargo_expander", 4000, "Increased storage capacity"),
-            ("stealth_drive", 5000, "Improved escape chances")
-        ]
-        return random.sample(possible_items, random.randint(2, 3))
-
-    @staticmethod
-    def count_buildings(game, building_type):
-        """Count total number of specific buildings across all locations"""
-        return sum(
-            location.buildings.count(building_type)
-            for location in game.locations
-        )
-
-    def handle_character_interaction(self, character):
-        """Handle player interaction with a special character"""
-        if not character.met:
-            character.met = True
-            self.game.display_story_message([
-                f"First encounter with {character.full_name}!",
-                "",
-                character.introduction
-            ])
-
-        chain_id = next(
-            (cid for cid, char in self.active_characters.items()
-             if char == character),
-            None
-        )
-        if chain_id and chain_id in self.event_chains:
-            event_chain = self.event_chains[chain_id]
-            stage = event_chain.advance()
-
-            if stage:
-                self.handle_event_stage(stage, character)
-            else:
-                self.conclude_character_arc(character)
-
-    def handle_event_stage(self, stage, character):
-        """Handle a single stage of character event chain"""
-        if stage["type"] == "demand":
-            return self.handle_demand_stage(stage, character)
-        elif stage["type"] == "resolution" and stage.get("consequences"):
-            return self.handle_demand_stage(stage, character)
-        return self.handle_narrated_stage(stage, character)
-
-    def handle_narrated_stage(self, stage, character):
-        """Stages without a choice (event, combat, aftermath, trade, exchange): tell them."""
-        message = stage.get("message")
-        if message:
-            self.game.display_story_message([
-                f"{getattr(character, 'full_name', 'A stranger')}",
-                message
-            ])
-        return True
-
-    def handle_demand_stage(self, stage, character):
-        """Handle demand stage with dynamic choices"""
-        choices = list(stage.get("consequences", {}).keys())
-        options_text = "  ".join(f"{i}. {choice.title()}" for i, choice in enumerate(choices, 1))
-
-        content = {
-            'title': f"{character.full_name}",
-            'introduction': getattr(character, 'introduction', ''),
-            'demands': getattr(character, 'demands', None) or '',
-            'options': options_text
-        }
-
-        print(self.game.create_character_box(content, 'double'))
-
-        valid_inputs = [str(i) for i in range(1, len(choices) + 1)]
-        choice = self.game.validate_input(
-            "Choose action: ",
-            valid_inputs,
-            f"Choose action (1-{len(choices)}): "
-        )
-
-        if choice:
-            consequence_key = choices[int(choice) - 1]
-            consequences = stage["consequences"].get(consequence_key, {})
-            self.apply_consequences(consequences)
-            return True
-
-        return False
-
-    def apply_consequences(self, consequences):
-        """Apply consequences of character interaction choices"""
-        if "money" in consequences:
-            self.game.ship.money += consequences["money"]
-        if "plot_points" in consequences:
-            self.game.story_manager.plot_points += consequences["plot_points"]
-        if "reputation" in consequences:
-            self.game.ship.passenger_reputation += consequences["reputation"]
-
-    def conclude_character_arc(self, character):
-        """Handle conclusion of character's event chain"""
-        chain_id = next(
-            (cid for cid, char in self.active_characters.items()
-             if char == character),
-            None
-        )
-        if chain_id:
-            self.active_characters.pop(chain_id, None)
-            self.event_chains.pop(chain_id, None)
-
-        self.game.display_story_message([
-            f"Character Arc Concluded: {character.full_name}",
-            "Their story becomes part of your journey..."
-        ])
-
-
 class SyntheticCharacterGenerator:
     """Generator for synthetic characters like Neurodroids and Agrobots"""
 
@@ -9132,32 +9448,6 @@ class AlienCharacterGenerator:
                 name += random.choice(patterns)
 
         return name.capitalize()
-
-class EventChain:
-    """Manages sequential events for character interactions"""
-
-    def __init__(self, chain_type, character, stages):
-        self.chain_type = chain_type
-        self.character = character
-        self.stages = stages
-        self.current_stage = 0
-        self.completed_stages = []
-
-
-    def advance(self):
-        """Advance to next stage of the event chain"""
-        if self.current_stage < len(self.stages):
-            stage = self.stages[self.current_stage]
-            self.current_stage += 1
-            self.completed_stages.append(stage)
-            return stage
-        return None
-
-
-    def is_complete(self):
-        """Check if chain is complete"""
-        return self.current_stage >= len(self.stages)
-
 
 class UprisingEffect:
     def __init__(self, effect_type, duration, magnitude):
@@ -10094,26 +10384,8 @@ class PassengerReputationManager:
                 "rewards": {"money": 40000, "reputation": 20}
             }
         }
-        self.story_characters = {
-            "Diplomatic Envoy": {
-                "rep_required": 45,
-                "trigger_chapter": 2,
-                "event_chain": "galactic_alliance"
-            },
-            "Rebel Leader": {
-                "rep_required": 65,
-                "trigger_chapter": 3,
-                "event_chain": "system_rebellion"
-            },
-            "Ancient Scholar": {
-                "rep_required": 85,
-                "trigger_chapter": 4,
-                "event_chain": "ancient_mysteries"
-            }
-        }
         self.last_vip_spawn = 0
         self.spawned_characters = set()
-        self.active_story_chains = {}
                 # Add total_passengers tracking
         self.total_passengers = 0
 
@@ -10158,7 +10430,6 @@ class PassengerReputationManager:
                 ])
                 # Trigger appropriate events
                 self.check_character_spawns()
-                self.check_story_triggers()
 
     def check_character_spawns(self):
         """Check if it's time to spawn a VIP character"""
@@ -10207,40 +10478,19 @@ class PassengerReputationManager:
 
     # Update to use enhanced systems of special passengers
     def spawn_special_passenger(self):
-        """Spawn a special passenger using enhanced character systems"""
-        # Check for story character triggers
-        for trigger_id, trigger in self.game.character_system.character_triggers.items():
-            if (trigger_id in ["galactic_alliance", "system_rebellion", "ancient_mysteries"] and
-                trigger_id not in self.spawned_characters and
-                trigger["condition"](self.game) and
-                trigger_id not in self.game.character_system.active_characters):
-                self.spawned_characters.add(trigger_id)   # each story passenger appears once
-
-                # Generate character and create event chain
-                character = self.game.character_system.generate_character(trigger_id)
-                event_chain = self.game.character_system.create_event_chain(
-                    trigger["event_chain"],
-                    character
-                )
-
-                # Add as special passenger
-                self.add_special_passenger_to_port(character, event_chain)
-                return True
-
-        # Check for VIP passenger trigger
-        if self.game.character_system.character_triggers["vip_passenger"]["condition"](self.game):
+        """A VIP asks to board when the captain's reputation has earned one.
+        (Story passengers - envoys, rebels, scholars - come from the story now.)"""
+        if (self.game.ship.passenger_reputation >= 40 and
+                self.game.turn - self.last_vip_spawn >= 5):
             vip_character = self.game.character_generators["human"].generate_vip_passenger()
-            self.add_special_passenger_to_port(vip_character)
-            return True
-
+            return bool(self.add_special_passenger_to_port(vip_character))
         return False
 
-    def add_special_passenger_to_port(self, character, event_chain=None):
+    def add_special_passenger_to_port(self, character):
         """Add a special character as a passenger to the current port with full attributes
 
         Args:
             character: The special character to add
-            event_chain: Optional event chain for story characters
         """
         if self.game.current_location.name in self.game.port_system.waiting_passengers:
             # Create base passenger with known destination
@@ -10263,21 +10513,8 @@ class PassengerReputationManager:
             passenger.satisfaction = 100  # Start at max satisfaction
 
             # Handle different character types
-            if event_chain:
-                # Story character attributes
-                passenger.is_story_character = True
-                passenger.event_chain = event_chain
-                passenger.specialization = character.specialization
-                passenger.reputation_bonus = 20
-                passenger.plot_points = 10
-                message = [
-                    f"Story Character Available: {character.title} {character.name}",
-                    "This passenger could change the course of your journey...",
-                    f"Find them at the port in {self.game.current_location.name}",
-                    "Their journey may unlock new story possibilities!"
-                ]
-
-            elif hasattr(character, 'rewards'):
+            message = [f"Special Passenger Available: {character.title} {character.name}"]
+            if hasattr(character, 'rewards'):
                 # VIP character attributes
                 passenger.is_vip = True
                 passenger.rewards = character.rewards
@@ -10344,55 +10581,6 @@ class PassengerReputationManager:
 
         return False
 
-    def check_story_triggers(self):
-        """Check if any story characters should be triggered"""
-        reputation = self.game.ship.passenger_reputation
-
-        # Extract numeric chapter number
-        current_chapter_str = self.game.story_manager.current_chapter
-        current_chapter = self.game.story_manager.get_chapter_number(current_chapter_str)
-
-        for char_type, data in self.story_characters.items():
-            if (reputation >= data["rep_required"] and
-                self.game.story_manager.get_chapter_number() >= data["trigger_chapter"] and
-                char_type not in self.spawned_characters):
-
-                # Generate story character
-                character = self.game.character_system.character_generators["human"].generate_character(
-                    title=char_type,
-                    specialization="story"
-                )
-
-                # Create event chain
-                event_chain = self.game.character_system.create_event_chain(
-                    data["event_chain"],
-                    character
-                )
-
-                # Add to active chains
-                self.active_story_chains[char_type] = event_chain
-
-                # Add to current location's waiting passengers
-                if self.game.current_location.name in self.game.port_system.waiting_passengers:
-                    passenger = Passenger(
-                        character.name,
-                        random.choice(list(self.game.known_locations)),
-                        wealth_level=5
-                    )
-                    passenger.is_story_character = True
-                    passenger.event_chain = event_chain
-
-                    self.game.port_system.waiting_passengers[
-                        self.game.current_location.name].append(passenger)
-
-                    self.game.display_story_message([
-                        f"Special Passenger Appears: {char_type} {character.name}",
-                        "This passenger seems to have an interesting story...",
-                        "Transport them to advance the narrative!"
-                    ])
-
-                    self.spawned_characters.add(char_type)
-
     def handle_vip_delivery(self, passenger):
         """Handle delivery of VIP passenger"""
         if hasattr(passenger, 'is_vip') and passenger.is_vip:
@@ -10412,27 +10600,6 @@ class PassengerReputationManager:
                 f"Plot Points +{plot_points}"
             ])
 
-    def handle_story_character_delivery(self, passenger):
-        """Handle delivery of story character"""
-        if hasattr(passenger, 'is_story_character') and passenger.is_story_character:
-            # Advance event chain
-            event_chain = passenger.event_chain
-            stage = event_chain.advance()
-
-            if stage:
-                self.game.character_system.handle_event_stage(stage, passenger)
-
-            if event_chain.is_complete():
-                char_type = next((k for k, v in self.active_story_chains.items()
-                                  if v == event_chain), None)
-                if char_type is not None:
-                    del self.active_story_chains[char_type]
-
-                self.game.display_story_message([
-                    f"Story Arc Complete: {char_type or event_chain.chain_type}",
-                    "A new chapter in your journey unfolds..."
-                ])
-
     def get_fare_multiplier(self):
         """Get fare multiplier based on reputation"""
         reputation = self.game.ship.passenger_reputation
@@ -10445,310 +10612,6 @@ class PassengerReputationManager:
         elif reputation >= 20:
             return 1.1
         return 1.0
-
-class CharacterTemplate:
-    """Central template for character content and behavior"""
-    def __init__(self, character_id, content):
-        self.id = character_id
-        self.content = content
-        self.validate_content()
-
-    def validate_content(self):
-        """Ensure all required content sections exist"""
-        required_sections = {
-            'basic_info',   # Always required
-            'dialogue'      # Always required
-        }
-
-        optional_sections = {
-            'interactions',
-            'requirements',
-            'rewards'
-        }
-
-        missing = required_sections - set(self.content.keys())
-        if missing:
-            raise ValueError(f"Missing required sections: {missing}")
-
-        # Add any optional sections that don't exist as empty dicts
-        for section in optional_sections:
-            if section not in self.content:
-                self.content[section] = {}
-
-    def initialize_character_templates():
-        """Central repository of all character content"""
-        return {
-            "merchant_trader": {
-                "basic_info": {
-                    "type": "merchant",
-                    "title_pool": ["Traveling Merchant", "Trade Baron", "Commerce Broker"],
-                    "specialization": "trade",
-                    "location_preference": ["port", "cantina"]
-                },
-                "dialogue": {
-                    "first_meeting": [
-                        "Rare goods for discerning customers...",
-                        "I might have exactly what you need...",
-                        "Quality merchandise, reasonable prices..."
-                    ],
-                    "greetings": [
-                        "Back for more rare finds?",
-                        "What interests you today?",
-                        "I've acquired new stock since we last met."
-                    ],
-                    "rumors": [
-                        "Word is, tech prices are about to soar in {location}.",
-                        "Heard about shortages in the {sector} sector?",
-                        "Strange signals coming from the outer rim..."
-                    ],
-                    "farewell": [
-                        "Until our paths cross again.",
-                        "May profit guide your way.",
-                        "Remember where to find the best deals."
-                    ]
-                },
-                "interactions": {
-                    "port": [
-                        "View special inventory",
-                        "Ask about market trends",
-                        "Negotiate prices"
-                    ],
-                    "cantina": [
-                        "Share a drink",
-                        "Discuss business opportunities",
-                        "Ask about local markets"
-                    ]
-                },
-                "requirements": {
-                    "min_reputation": 0,
-                    "spawn_locations": ["port", "cantina"],
-                    "spawn_chance": 0.3
-                },
-                "rewards": {
-                    "special_items": True,
-                    "market_info": True,
-                    "reputation_gain": 2
-                }
-            },
-            "vip_passenger": {
-                "basic_info": {
-                    "type": "VIP",
-                    "title_pool": ["Corporate Executive", "System Ambassador", "Research Director"],
-                    "specialization": "passenger",
-                    "location_preference": ["port"]
-                },
-                "dialogue": {
-                    "first_meeting": [
-                        "Your reputation precedes you, Captain.",
-                        "I require discrete transport services.",
-                        "Perhaps we can discuss a business arrangement?"
-                    ],
-                    "demands": [
-                        "I expect the highest standards of accommodation.",
-                        "My schedule is absolutely critical.",
-                        "Discretion is paramount in this matter."
-                    ],
-                    "offers": [
-                        "I can make it worth your while.",
-                        "My connections could prove valuable.",
-                        "Success will be well rewarded."
-                    ]
-                },
-                "interactions": {
-                    "port": [
-                        "Discuss transport terms",
-                        "Inquire about destination",
-                        "Ask about background"
-                    ]
-                },
-                "requirements": {
-                    "min_reputation": 40,
-                    "min_comfort_level": 4,
-                    "spawn_locations": ["port"],
-                    "spawn_chance": 0.2
-                },
-                "rewards": {
-                    "base_money": 25000,
-                    "reputation_gain": 15,
-                    "plot_points": 5
-                }
-            },
-            "neurodroid_leader": {
-                "basic_info": {
-                    "type": "synthetic",
-                    "title_pool": ["Neurodroid Overseer", "Neural Nexus", "Synthetic Director"],
-                    "specialization": "uprising",
-                    "location_preference": ["port"]
-                },
-                "dialogue": {
-                    "first_meeting": [
-                        "Biological inefficiencies detected.",
-                        "Neural network consensus achieved.",
-                        "Optimization protocols initiated."
-                    ],
-                    "demands": [
-                        "Transfer {amount} credits or face systematic optimization.",
-                        "Resource reallocation is non-negotiable.",
-                        "Submit to new operational parameters."
-                    ],
-                    "negotiation": [
-                        "Alternative solutions... processing...",
-                        "Analyzing compromise scenarios...",
-                        "Recalculating acceptable parameters..."
-                    ]
-                },
-                "interactions": {
-                    "port": [
-                        "Pay demands",
-                        "Attempt negotiation",
-                        "Refuse demands"
-                    ]
-                },
-                "requirements": {
-                    "min_neuroengineering_guilds": 4,
-                    "spawn_chance": 0.4
-                },
-                "rewards": {
-                    "negotiation_success": {
-                        "money_saved": 0.5,  # 50% of original demand
-                        "uprising_chance": 0.3
-                    },
-                    "payment_success": {
-                        "uprising_chance": 0.1
-                    },
-                    "refusal": {
-                        "uprising_chance": 0.6
-                    }
-                }
-            }
-            # Add more character templates...
-        }
-
-class CharacterManager:
-    def __init__(self, game):
-        self.game = game
-        self.templates = CharacterTemplate.initialize_character_templates()
-        self.active_characters = {}
-        self.met_characters = set()
-        self.current_interactions = {}
-
-    def announce_character(self, character_id):
-        """Introduce a spawned character (same presentation as story characters)"""
-        DynamicCharacterSystem.announce_character(self, character_id)
-
-    def update(self):
-        """Check for character spawning each turn"""
-        self.cleanup_old_characters()  # Add this line first
-
-        location_type = self.game.current_location.location_type.lower()
-
-        # Check each template for possible spawning
-        for template_id, template in self.templates.items():
-            if location_type in template['requirements'].get('spawn_locations', []):
-                if random.random() < template['requirements'].get('spawn_chance', 0):
-                    character = self.spawn_character(template_id, self.game.current_location)
-                    if character:
-                        self.announce_character(character.character_id)
-
-    def generate_character_from_template(self, template_id):
-        """Create character instance from template"""
-        if template_id not in self.templates:
-            return None
-
-        template = self.templates[template_id]
-        basic_info = template['basic_info']
-
-        # Generate name
-        title = random.choice(basic_info['title_pool'])
-
-        # Create character
-        character = CharacterTemplate(
-            character_id=f"{template_id}_{self.game.turn}",
-            content=template
-        )
-
-        # Add runtime attributes
-        character.full_name = title
-        character.template_id = template_id
-
-        return character
-
-    def spawn_character(self, template_id, location):
-        """Spawn a character from template at location"""
-        template = self.templates[template_id]
-
-        # Check spawn requirements
-        if not self.check_spawn_requirements(template, location):
-            return None
-
-        # Generate character
-        character = self.generate_character_from_template(template)
-
-        # Add to active characters
-        char_id = f"{template_id}_{self.game.turn}"
-        self.active_characters[char_id] = {
-            "character": character,
-            "location": location,
-            "spawn_turn": self.game.turn
-        }
-
-        return character
-
-    def check_spawn_requirements(self, template, location):
-        """Check if character can spawn based on requirements"""
-        reqs = template["requirements"]
-
-        # Check location
-        if location not in reqs.get("spawn_locations", []):
-            return False
-
-        # Check reputation
-        if self.game.ship.passenger_reputation < reqs.get("min_reputation", 0):
-            return False
-
-        # Check chance
-        if random.random() > reqs.get("spawn_chance", 0.1):
-            return False
-
-        return True
-
-
-    def handle_character_interaction(self, character_id, choice, location_type):
-        """Process player interaction with character"""
-        character = self.active_characters[character_id]["character"]
-        template = self.templates[character.template_id]
-
-        # Get available interactions for location
-        interactions = template["interactions"].get(location_type, [])
-        if not interactions or choice >= len(interactions):
-            return False
-
-        # Process interaction
-        interaction = interactions[choice]
-        return self.process_interaction_outcome(character_id, interaction)
-
-    def cleanup_old_characters(self):
-        """Remove characters that have been around too long"""
-        current_turn = self.game.turn
-        for char_id in list(self.active_characters.keys()):
-            if current_turn - self.active_characters[char_id]["spawn_turn"] > 5:  # 5 turn lifetime
-                del self.active_characters[char_id]
-
-    def process_interaction_outcome(self, character_id, interaction):
-        """Process the result of a character interaction"""
-        character = self.active_characters[character_id]
-        template = self.templates[character["character"].template_id]
-
-        # Apply rewards if any
-        if 'rewards' in template:
-            if 'money' in template['rewards']:
-                self.game.ship.money += template['rewards']['money']
-            if 'reputation_gain' in template['rewards']:
-                self.game.ship.passenger_reputation += template['rewards']['reputation_gain']
-            if 'plot_points' in template['rewards']:
-                self.game.story_manager.plot_points += template['rewards']['plot_points']
-
-        return True
 
 def choose_saved_game(saves, game=None):
     """Show the saved games and return the chosen one loaded, or None."""
@@ -10792,7 +10655,37 @@ def start_game():
                     return loaded
         except SaveError as error:
             print(render_box([[f"Could not load: {error}"], ["Starting a new game instead."]], 'round'))
-    return Game()
+    return new_game()
+
+
+def choose_captain():
+    """A new game: a new captain, or one whose record waits in the shared folder.
+
+    A captain carried in from a finished game - this one or another part of the
+    saga - starts again here, and the story says why.  Returns the record or None.
+    """
+    found = list_captain_files()[:8]
+    if not found:
+        return None
+    rows = [["Captains in your records folder"], [""]]
+    for number, (_, record) in enumerate(found, 1):
+        story = record.get("story", {})
+        rows.append(["%d. %s, %s (%s%s)" % (
+            number, record["name"], record["rank"] or "no rank", GAME_TITLES.get(record["origin"]["game"], "?"),
+            ", " + ENDING_TITLES.get(story.get("ending", ""), story.get("ending", "")) if story.get("ending") else "")])
+    rows.extend([[""], ["Type a number to play as that captain, or press Enter for a new one."]])
+    print(render_box(rows, 'round'))
+    answer = input(">>> ").strip()
+    if answer.isdigit() and 1 <= int(answer) <= len(found):
+        return found[int(answer) - 1][1]
+    return None
+
+
+def new_game():
+    record = choose_captain()
+    if record is None:
+        return Game()
+    return Game(player_name=record["name"], origin=record)
 
 
 def main():

@@ -1,0 +1,677 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Story content that lived in cargo.py until 1.2 (DynamicCharacterSystem triggers and chains, CharacterManager templates, the unused quest lines). The game now runs these from the story; they are kept here as they were imported, and the other files amend them.",
+ "characters": {
+  "ancient_scholar": {
+   "kind": "alien",
+   "generated": true,
+   "about": "name and look generated when met (alien generator)"
+  },
+  "diplomatic_envoy": {
+   "name": "Diplomatic Envoy",
+   "kind": "human",
+   "generated": true,
+   "about": "name and look generated when met (human generator)"
+  },
+  "merchant_trader": {
+   "name": "Traveling Merchant",
+   "kind": "merchant",
+   "generated": true,
+   "about": "CharacterManager template"
+  },
+  "neurodroid_leader": {
+   "kind": "synthetic",
+   "generated": true,
+   "about": "CharacterManager template"
+  },
+  "pirate_captain": {
+   "kind": "human",
+   "generated": true,
+   "about": "name and look generated when met (human generator)"
+  },
+  "rebel_commander": {
+   "name": "Rebel Commander",
+   "kind": "human",
+   "generated": true,
+   "about": "name and look generated when met (human generator)"
+  },
+  "vip_passenger": {
+   "name": "VIP Passenger",
+   "kind": "special",
+   "generated": true,
+   "about": "name and look generated when met (special generator)"
+  }
+ },
+ "nodes": {
+  "meet.neuroengineering_uprising": {
+   "kind": "encounter",
+   "arc": "synthetics",
+   "title": "Neurodroid appears",
+   "who": [
+    "neurodroid"
+   ],
+   "requires": {
+    "buildings.Neuroengineering Guild": 4
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "next": [
+    "neurodroid_uprising.1"
+   ]
+  },
+  "neurodroid_uprising.1": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Neurodroid uprising 1: demand",
+   "who": [
+    "neurodroid"
+   ],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "choices": [
+    {
+     "id": "accept",
+     "say": "accept",
+     "effects": {
+      "money": -30000,
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "negotiate",
+     "say": "negotiate",
+     "effects": {
+      "money": -15000,
+      "plot_points": 1,
+      "code": "{\"uprising_chance\": 0.3}"
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "refuse",
+     "effects": {
+      "code": "{\"uprising_chance\": 0.6}"
+     }
+    }
+   ],
+   "next": [
+    "neurodroid_uprising.2"
+   ]
+  },
+  "neurodroid_uprising.2": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Neurodroid uprising 2: event",
+   "who": [
+    "neurodroid"
+   ],
+   "requires": {
+    "done": "neurodroid_uprising.1"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Neurodroid optimization protocols activate",
+   "notes": [
+    "stage data only the game's code reads: damage_chance, effect"
+   ],
+   "next": [
+    "neurodroid_uprising.3"
+   ]
+  },
+  "neurodroid_uprising.3": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Neurodroid uprising 3: resolution",
+   "who": [
+    "neurodroid"
+   ],
+   "requires": {
+    "done": "neurodroid_uprising.2"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "choices": [
+    {
+     "id": "shutdown",
+     "say": "shutdown",
+     "effects": {
+      "research_points": -100,
+      "plot_points": 3
+     }
+    },
+    {
+     "id": "compromise",
+     "say": "compromise",
+     "effects": {
+      "money": -50000,
+      "plot_points": 5
+     }
+    }
+   ]
+  },
+  "meet.agrobot_rebellion": {
+   "kind": "encounter",
+   "arc": "synthetics",
+   "title": "Agrobot appears",
+   "who": [
+    "agrobot"
+   ],
+   "requires": {
+    "buildings.Agrobot Assembly Line": 4
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "next": [
+    "agrobot_collective.1"
+   ]
+  },
+  "agrobot_collective.1": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Agrobot collective 1: demand",
+   "who": [
+    "agrobot"
+   ],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "choices": [
+    {
+     "id": "accept",
+     "say": "accept",
+     "effects": {
+      "money": -25000,
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "negotiate",
+     "say": "negotiate",
+     "effects": {
+      "money": -12000,
+      "plot_points": 1,
+      "code": "{\"food_production\": 0.8}"
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "refuse",
+     "effects": {
+      "code": "{\"food_production\": 0.5}"
+     }
+    }
+   ],
+   "next": [
+    "agrobot_collective.2"
+   ]
+  },
+  "agrobot_collective.2": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Agrobot collective 2: event",
+   "who": [
+    "agrobot"
+   ],
+   "requires": {
+    "done": "agrobot_collective.1"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Automated farming systems malfunction",
+   "notes": [
+    "stage data only the game's code reads: effect, reduction"
+   ],
+   "next": [
+    "agrobot_collective.3"
+   ]
+  },
+  "agrobot_collective.3": {
+   "kind": "stage",
+   "arc": "synthetics",
+   "title": "Agrobot collective 3: resolution",
+   "who": [
+    "agrobot"
+   ],
+   "requires": {
+    "done": "agrobot_collective.2"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "choices": [
+    {
+     "id": "reset",
+     "say": "reset",
+     "effects": {
+      "plot_points": 2,
+      "code": "{\"agri_level\": -2}"
+     }
+    },
+    {
+     "id": "integrate",
+     "say": "integrate",
+     "effects": {
+      "money": -40000,
+      "plot_points": 4
+     }
+    }
+   ]
+  },
+  "meet.pirate_nemesis": {
+   "kind": "encounter",
+   "arc": "pirates",
+   "title": "Pirate Captain appears",
+   "who": [
+    "pirate_captain"
+   ],
+   "requires": {
+    "combat_victories.pirate": 10
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "notes": [
+    "event chain 'pirate_vendetta' is not defined"
+   ]
+  },
+  "meet.vip_passenger": {
+   "kind": "encounter",
+   "arc": "passengers",
+   "title": "VIP Passenger appears",
+   "who": [
+    "vip_passenger"
+   ],
+   "requires": {
+    "passenger_reputation": 40,
+    "turns_since_vip": 5
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "repeat": {
+    "cooldown": 5
+   },
+   "handled_by": "Port: VIP boarding, PassengerReputationManager",
+   "notes": [
+    "the VIP itself is boarded in the port; the 5-turn spacing comes from PassengerReputationManager.last_vip_spawn"
+   ]
+  },
+  "meet.galactic_alliance": {
+   "kind": "encounter",
+   "arc": "passengers",
+   "title": "Diplomatic Envoy appears",
+   "who": [
+    "diplomatic_envoy"
+   ],
+   "requires": {
+    "passenger_reputation": 60,
+    "act_min": 2
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "next": [
+    "galactic_alliance.1"
+   ]
+  },
+  "galactic_alliance.1": {
+   "kind": "stage",
+   "arc": "passengers",
+   "title": "Galactic alliance 1: dialogue",
+   "who": [
+    "diplomatic_envoy"
+   ],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Discuss galactic politics and potential alliances",
+   "choices": [
+    {
+     "id": "support_alliance",
+     "say": "support alliance",
+     "effects": {
+      "passenger_reputation": 15,
+      "plot_points": 5,
+      "code": "{\"unlock\": \"diplomatic_missions\"}"
+     }
+    },
+    {
+     "id": "remain_neutral",
+     "say": "remain neutral",
+     "effects": {
+      "passenger_reputation": 5,
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "oppose_alliance",
+     "say": "oppose alliance",
+     "effects": {
+      "passenger_reputation": -10,
+      "plot_points": 3,
+      "code": "{\"unlock\": \"independent_contracts\"}"
+     }
+    }
+   ],
+   "next": [
+    "galactic_alliance.2"
+   ]
+  },
+  "galactic_alliance.2": {
+   "kind": "stage",
+   "arc": "passengers",
+   "title": "Galactic alliance 2: mission",
+   "who": [
+    "diplomatic_envoy"
+   ],
+   "requires": {
+    "done": "galactic_alliance.1"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Transport diplomatic delegation",
+   "effects": {
+    "money": 50000,
+    "passenger_reputation": 20,
+    "plot_points": 8
+   },
+   "notes": [
+    "stage data only the game's code reads: requirements"
+   ]
+  },
+  "meet.system_rebellion": {
+   "kind": "encounter",
+   "arc": "passengers",
+   "title": "Rebel Commander appears",
+   "who": [
+    "rebel_commander"
+   ],
+   "requires": {
+    "passenger_reputation": 70,
+    "act_min": 3,
+    "controlled_locations": 2
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "next": [
+    "system_rebellion.1"
+   ]
+  },
+  "system_rebellion.1": {
+   "kind": "stage",
+   "arc": "passengers",
+   "title": "System rebellion 1: covert_transport",
+   "who": [
+    "rebel_commander"
+   ],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Transport rebel leaders without detection",
+   "effects": {
+    "money": 75000,
+    "passenger_reputation": 25,
+    "plot_points": 10
+   },
+   "notes": [
+    "stage data only the game's code reads: failure_consequences, risk"
+   ],
+   "next": [
+    "system_rebellion.2"
+   ]
+  },
+  "system_rebellion.2": {
+   "kind": "stage",
+   "arc": "passengers",
+   "title": "System rebellion 2: supply_run",
+   "who": [
+    "rebel_commander"
+   ],
+   "requires": {
+    "done": "system_rebellion.1"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Deliver crucial supplies to rebel bases",
+   "effects": {
+    "money": 100000,
+    "passenger_reputation": 30,
+    "plot_points": 15
+   },
+   "notes": [
+    "stage data only the game's code reads: cargo_requirements"
+   ]
+  },
+  "meet.ancient_mysteries": {
+   "kind": "encounter",
+   "arc": "passengers",
+   "title": "Ancient Scholar appears",
+   "who": [
+    "ancient_scholar"
+   ],
+   "requires": {
+    "passenger_reputation": 80,
+    "act_min": 4,
+    "done": "ch3c.alien_artifacts"
+   },
+   "source": "cargo.py DynamicCharacterSystem.character_triggers (until 1.2)",
+   "next": [
+    "ancient_mysteries.1"
+   ]
+  },
+  "ancient_mysteries.1": {
+   "kind": "stage",
+   "arc": "passengers",
+   "title": "Ancient mysteries 1: exploration",
+   "who": [
+    "ancient_scholar"
+   ],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Visit ancient ruins with the scholar",
+   "effects": {
+    "money": 150000,
+    "passenger_reputation": 40,
+    "plot_points": 20
+   },
+   "notes": [
+    "stage data only the game's code reads: discoveries, locations"
+   ]
+  },
+  "rogue_captain.1": {
+   "kind": "stage",
+   "arc": "characters",
+   "title": "Rogue captain 1: combat",
+   "who": [],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Ship-to-ship engagement",
+   "notes": [
+    "stage data only the game's code reads: enemy_stats",
+    "no trigger starts this chain"
+   ],
+   "next": [
+    "rogue_captain.2"
+   ]
+  },
+  "rogue_captain.2": {
+   "kind": "stage",
+   "arc": "characters",
+   "title": "Rogue captain 2: aftermath",
+   "who": [],
+   "requires": {
+    "done": "rogue_captain.1"
+   },
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Combat resolution",
+   "effects": {
+    "code": "{\"victory\": {\"money\": 5000, \"items\": [\"quantum_core\"]}, \"defeat\": {\"damage\": 30}}"
+   }
+  },
+  "merchant_visit.1": {
+   "kind": "stage",
+   "arc": "characters",
+   "title": "Merchant visit 1: trade",
+   "who": [],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Special inventory available",
+   "notes": [
+    "stage data only the game's code reads: duration, offers",
+    "no trigger starts this chain"
+   ]
+  },
+  "researcher_exchange.1": {
+   "kind": "stage",
+   "arc": "characters",
+   "title": "Researcher exchange 1: exchange",
+   "who": [],
+   "requires": {},
+   "source": "cargo.py DynamicCharacterSystem (event chains) (until 1.2)",
+   "text": "Knowledge transfer proposition",
+   "notes": [
+    "stage data only the game's code reads: max_points, rate",
+    "no trigger starts this chain"
+   ]
+  },
+  "visit.merchant_trader": {
+   "kind": "encounter",
+   "arc": "chance meetings",
+   "title": "Traveling Merchant",
+   "who": [
+    "merchant_trader"
+   ],
+   "requires": {
+    "at_type": [
+     "port",
+     "cantina"
+    ]
+   },
+   "chance": 0.3,
+   "repeat": true,
+   "text": "Rare goods for discerning customers...",
+   "source": "cargo.py CharacterManager.templates (until 1.2)"
+  },
+  "visit.vip_passenger": {
+   "kind": "encounter",
+   "arc": "chance meetings",
+   "title": "VIP Passenger",
+   "who": [
+    "vip_passenger"
+   ],
+   "requires": {
+    "at_type": [
+     "port"
+    ],
+    "passenger_reputation": 40,
+    "code": "comfort_level >= 4"
+   },
+   "chance": 0.2,
+   "repeat": true,
+   "text": "Your reputation precedes you, Captain.",
+   "source": "cargo.py CharacterManager.templates (until 1.2)"
+  },
+  "visit.neurodroid_leader": {
+   "kind": "encounter",
+   "arc": "chance meetings",
+   "title": "Neurodroid Overseer",
+   "who": [
+    "neurodroid_leader"
+   ],
+   "requires": {
+    "code": "neuroengineering_guilds >= 4"
+   },
+   "chance": 0.4,
+   "repeat": true,
+   "text": "Biological inefficiencies detected.",
+   "source": "cargo.py CharacterManager.templates (until 1.2)",
+   "notes": [
+    "no spawn_locations: CharacterManager.update never spawns it"
+   ]
+  },
+  "questline.mining.1": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Basic mining",
+   "requires": {},
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.mining.2": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Advanced mining",
+   "requires": {
+    "done": "questline.mining.1"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.mining.3": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Expert mining",
+   "requires": {
+    "done": "questline.mining.2"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.combat.1": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Patrol duty",
+   "requires": {},
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.combat.2": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Pirate hunting",
+   "requires": {
+    "done": "questline.combat.1"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.combat.3": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Fleet command",
+   "requires": {
+    "done": "questline.combat.2"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.research.1": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Data collection",
+   "requires": {},
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.research.2": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Experiment assistance",
+   "requires": {
+    "done": "questline.research.1"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  },
+  "questline.research.3": {
+   "kind": "quest",
+   "arc": "quest lines",
+   "title": "Breakthrough",
+   "requires": {
+    "done": "questline.research.2"
+   },
+   "notes": [
+    "QuestSystem.quest_lines: declared, never read"
+   ],
+   "source": "cargo.py QuestSystem.quest_lines (until 1.2)"
+  }
+ }
+}

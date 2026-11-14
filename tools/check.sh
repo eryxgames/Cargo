@@ -11,7 +11,8 @@ echo "== wrong-object references"
 $PY $T/attrlint.py cargo.py | tail -1
 
 echo "== story machinery (stats forced, real chapter code)"
-$PY $T/story_probe.py cargo.py | grep -E "REACHED|BLOCKED|!" || fail=1
+$PY $T/story_probe.py cargo.py > /tmp/cargo-probe.txt; grep -E "REACHED|BLOCKED|!" /tmp/cargo-probe.txt
+grep -q "BLOCKED" /tmp/cargo-probe.txt && fail=1
 
 echo "== damaged and hostile save / captain files"
 $PY $T/test_files.py cargo.py | tail -1 || fail=1
@@ -42,14 +43,17 @@ sys.exit(1 if crash else 0)" || fail=1; done; done
 
 echo "== story file matches the code, and has no new findings"
 $PY tools/cargo_story.py check || fail=1
-$PY storykit/validate.py story/saga.json --baseline story/findings-baseline.json | tail -3 || fail=1
+$PY tools/build_story.py --check || fail=1
+$PY storykit/validate.py story/saga.json --baseline story/findings-baseline.json > /tmp/cargo-validate.txt; tail -3 /tmp/cargo-validate.txt
+grep -q "baseline: 0 new" /tmp/cargo-validate.txt || fail=1
 
 echo "== story file agrees with the game during play (recorded traces)"
 mkdir -p story/traces
 for goal in trade combat discovery discovery2; do for s in $SEEDS; do
   $PY tools/bot.py cargo.py $goal $s 1500 --trace=story/traces/$goal-$s.jsonl > /dev/null || fail=1
 done; done
-$PY storykit/replay.py story/cargo1.story.json story/traces/*.jsonl --json story/cargo1.replay.json | tail -1 || fail=1
+$PY storykit/replay.py story/cargo1.story.json story/traces/*.jsonl --json story/cargo1.replay.json > /tmp/cargo-replay.txt; tail -1 /tmp/cargo-replay.txt
+grep -q "agree on every recorded verdict" /tmp/cargo-replay.txt || fail=1
 
 [ $fail = 0 ] && echo "ALL CHECKS PASSED" || echo "SOME CHECKS FAILED"
 exit $fail

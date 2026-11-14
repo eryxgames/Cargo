@@ -1,0 +1,220 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Neonobility. Neons are the old money of the expansion: they sleep through decades in hibernation sarcophagi and arbitrage time itself, guided by heritarchists who read family lines half as data, half as horoscope. Virtuals are young Neons who gave up on biology for synthetic or holographic bodies. Fluencers are Neon offspring, or people who say they are, who stream everything.",
+ "arcs": {
+  "neons": {
+   "title": "Neonobility",
+   "order": 2.7
+  }
+ },
+ "characters": {
+  "neon_sleeper": {
+   "kind": "neon",
+   "about": "sleeps through decades in a sarcophagus and buys land before it is worth anything"
+  },
+  "heritarchist": {
+   "name": "Magister Sethric Aelwynn-Halen",
+   "short": "the Magister",
+   "kind": "human",
+   "about": "heritarchist to the Kessary-Vel family: reads family lines across hibernation cycles; bills for it"
+  },
+  "virtual_heir": {
+   "name": "Ren Asquine-Vel",
+   "short": "Ren",
+   "kind": "virtual",
+   "about": "young Neon who gave up biology: a holographic body, a 300-kilo projector, opinions about freight rates"
+  },
+  "fluencer": {
+   "name": "Brisa Vell",
+   "short": "Brisa",
+   "kind": "fluencer",
+   "about": "streams everything; claims a Neon family that may not claim her"
+  }
+ },
+ "flags": {
+  "neon_sleeper_carried": {
+   "about": "the captain carried {neon_sleeper} asleep to Delta",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "neon_land": {
+   "about": "{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "virtual_friend": {
+   "about": "the captain charged {virtual_heir} for the passenger, not the projector",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "fluencer_streamed": {
+   "about": "{fluencer} streamed the captain's ship to nine million followers",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "fluencer_exposed": {
+   "about": "the captain told {fluencer} that the Kessary-Vel family has never heard of her",
+   "carries_to": [
+    "cargo2"
+   ]
+  }
+ },
+ "nodes": {
+  "neon.sarcophagus": {
+   "kind": "quest",
+   "arc": "neons",
+   "act": 2,
+   "title": "Sleeping cargo",
+   "who": [
+    "neon_sleeper",
+    "heritarchist"
+   ],
+   "where": "Alpha",
+   "requires": {
+    "at": "Alpha",
+    "act_min": 2,
+    "passenger_reputation": 20
+   },
+   "chance": 0.3,
+   "text": [
+    "{neon_sleeper} wants passage to Delta, asleep. She travels in a hibernation sarcophagus, as cargo, and pays as first class.",
+    "Her heritarchist, {heritarchist}, rides along awake. Over dinner he reads your family line and announces that it is distinctly haulerish, therefore expect haulerish outcomes. He bills her for the reading."
+   ],
+   "choices": [
+    {
+     "id": "load",
+     "say": "Load the sarcophagus",
+     "effects": {
+      "money": 6000,
+      "set": [
+       "neon_sleeper_carried"
+      ]
+     }
+    },
+    {
+     "id": "decline",
+     "say": "Decline: sleeping cargo makes the crew nervous"
+    }
+   ],
+   "promises": [
+    "the_sleeper"
+   ]
+  },
+  "neon.sarcophagus.wake": {
+   "kind": "event",
+   "arc": "neons",
+   "act": 2,
+   "title": "Eleven minutes awake",
+   "who": [
+    "neon_sleeper",
+    "heritarchist"
+   ],
+   "where": "Delta",
+   "requires": {
+    "flag": "neon_sleeper_carried",
+    "at": "Delta"
+   },
+   "text": "At Delta the sarcophagus opens for eleven minutes. {neon_sleeper.short} buys every field next to {geod}'s Row, signs, tips you in a currency that has not existed for a century, and goes back to sleep. Her instructions to {heritarchist.short}: wake her in thirty years, when the land is worth something.",
+   "effects": {
+    "plot_points": 3,
+    "set": [
+     "neon_land"
+    ]
+   }
+  },
+  "neon.virtual": {
+   "kind": "encounter",
+   "arc": "neons",
+   "act": 2,
+   "title": "Weightless",
+   "who": [
+    "virtual_heir"
+   ],
+   "requires": {
+    "venue": "port",
+    "passenger_reputation": 30
+   },
+   "chance": 0.25,
+   "text": "{virtual_heir}, a young Neon who gave up on biology, books passage as a holographic body and a projector. The body weighs nothing. The projector weighs three hundred kilos and wants a power line of its own. {virtual_heir.short} would like to discuss the freight rate for something that weighs nothing.",
+   "choices": [
+    {
+     "id": "projector",
+     "say": "Charge for the projector",
+     "effects": {
+      "money": 4000
+     }
+    },
+    {
+     "id": "passenger",
+     "say": "Charge for the passenger, let the projector ride free",
+     "effects": {
+      "money": 1500,
+      "passenger_reputation": 5,
+      "set": [
+       "virtual_friend"
+      ]
+     }
+    }
+   ]
+  },
+  "neon.fluencer": {
+   "kind": "encounter",
+   "arc": "neons",
+   "act": 2,
+   "title": "Live from your hold",
+   "who": [
+    "fluencer"
+   ],
+   "requires": {
+    "at_type": "Planet",
+    "act_min": 2
+   },
+   "chance": 0.06,
+   "text": "{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir and that your ship is giving authentic hauler. Her feed has nine million followers. Your coffee machine has never been filmed before and is not handling it well.",
+   "variants": [
+    {
+     "requires": {
+      "flag": "neon_sleeper_carried"
+     },
+     "text": "{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir. You have carried the Kessary-Vel family, asleep, and {heritarchist.short} read you every name on the family line over dinner, twice. Hers was not one of them."
+    }
+   ],
+   "choices": [
+    {
+     "id": "stream",
+     "say": "Let her stream",
+     "effects": {
+      "passenger_reputation": 5,
+      "set": [
+       "fluencer_streamed"
+      ]
+     }
+    },
+    {
+     "id": "expose",
+     "say": "Tell her you have met the family",
+     "requires": {
+      "flag": "neon_sleeper_carried"
+     },
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "fluencer_exposed"
+      ]
+     }
+    },
+    {
+     "id": "off",
+     "say": "Put her off at the next dock"
+    }
+   ]
+  }
+ }
+}

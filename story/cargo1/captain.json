@@ -1,7 +1,7 @@
 {
  "format": "storykit",
  "version": 1,
- "about": "The captain across the saga: two meetings with an older captain (from Cargo 2 at an outpost, from Cargo 3 at the portal) and the clone. Without an imported record the older captain is never named. With one, the scene uses the record's name: the captain's own name means the same person grown old; another name is the captain the player went on to play in that part, who knew this one.",
+ "about": "The captain across the saga: two meetings with an older captain (from Cargo 2 at an outpost, from Cargo 3 at the portal) and the clone. Without an imported record the older captain is never named. With one, the scene uses the record's name: the captain's own name means the same person grown old; another name is the captain the player went on to play in that part, who knew this one. Intros: a fresh captain starts with a loan and a docking slot; a captain carried in from another playthrough or a later part arrives with a short account of who they were and why they start again.",
  "arcs": {
   "saga": {
    "title": "Saga: the long haul",
@@ -10,12 +10,10 @@
  },
  "characters": {
   "captain": {
-   "name": "The captain",
    "saga": true,
    "about": "the player; see saga.json"
   },
   "clone": {
-   "name": "The other captain",
    "saga": true,
    "about": "grown by a research colony's insurer from the captain's customs scan; same face, same licence, same debts"
   }
@@ -72,10 +70,139 @@
   }
  },
  "nodes": {
+  "intro.fresh": {
+   "kind": "intro",
+   "arc": "saga",
+   "act": 1,
+   "title": "Docking slot 14",
+   "requires": {
+    "not": {
+     "player_origin": {}
+    }
+   },
+   "text": [
+    "Every hauler starts the same way: a loan, a ship older than the loan officer, and a docking slot at {place} paid up until Friday.",
+    "The dock master spells your name wrong on the slot. It will be a few years before anyone corrects it."
+   ],
+   "sound": "intro"
+  },
+  "intro.again": {
+   "kind": "intro",
+   "arc": "saga",
+   "act": 1,
+   "title": "Again",
+   "requires": {
+    "player_origin": {
+     "game": "cargo1"
+    }
+   },
+   "text": [
+    "{origin.name} walked away from a career as {origin.rank} before it was finished, and found that walking away is not a trade.",
+    "The bank, which remembers everybody, lends you one ship and a loan with your old account number on it."
+   ],
+   "variants": [
+    {
+     "requires": {
+      "player_origin": {
+       "game": "cargo1",
+       "ending": "trade"
+      }
+     },
+     "text": [
+      "After the founding of the Hansa, {origin.name} retired to a farm drum at Barnard's Star and lasted eleven months.",
+      "You sell the drum, buy one tired hauler and sign the same loan papers as the first time, out of superstition."
+     ]
+    },
+    {
+     "requires": {
+      "player_origin": {
+       "game": "cargo1",
+       "ending": "combat"
+      }
+     },
+     "text": [
+      "The First Legion gave {origin.name} a pension, a medal and a desk. The desk did not survive.",
+      "You resign your commission on a Tuesday and buy a hauler on the Wednesday. It has no guns. That is the point."
+     ]
+    },
+    {
+     "requires": {
+      "player_origin": {
+       "game": "cargo1",
+       "ending": "discovery"
+      }
+     },
+     "text": [
+      "{origin.name} filed the course home and waited for someone to read it. Nobody did.",
+      "If the scholars will not fly it, a hauler might. Haulers need routes, money and a ship. You start with the ship."
+     ]
+    },
+    {
+     "requires": {
+      "player_origin": {
+       "game": "cargo1",
+       "ending": "tycoon"
+      }
+     },
+     "text": [
+      "Retirement on the most expensive drum at Barnard's Star turned out to be one long complaint about prices.",
+      "{origin.name} sells everything and starts again with one ship, to find out whether it was luck."
+     ]
+    }
+   ],
+   "sound": "intro"
+  },
+  "intro.from_cargo2": {
+   "kind": "intro",
+   "arc": "saga",
+   "act": 1,
+   "title": "Forty years early",
+   "requires": {
+    "player_origin": {
+     "game": "cargo2"
+    }
+   },
+   "text": [
+    "The last thing {origin.name}, {origin.rank}, remembers is a ring segment turning the wrong way. The first thing is this dock, forty years before your own career began.",
+    "You have a ship nobody else wanted, a rank on a card no clerk here can read, and {origin.turns} turns of experience that have not happened yet.",
+    "You kept one thing from your own time: the navigation computer, pulled from your old ship before you sold it."
+   ],
+   "effects": {
+    "give": {
+     "items": [
+      "old_navcomp"
+     ]
+    }
+   },
+   "sound": "displaced"
+  },
+  "intro.from_cargo3": {
+   "kind": "intro",
+   "arc": "saga",
+   "act": 1,
+   "title": "Further back than anyone",
+   "requires": {
+    "player_origin": {
+     "game": "cargo3"
+    }
+   },
+   "text": [
+    "{origin.name}, {origin.rank}, was standing at the restart of the Gyrotron, more than a century from now, when it turned once in the wrong direction.",
+    "Here the Hansa does not exist, the Mandate is three security firms, and your rank has not been invented. Your hands still know how to fly. That will have to do.",
+    "In your pocket: a shard of grey alloy, still warm."
+   ],
+   "effects": {
+    "give": {
+     "items": [
+      "ring_shard"
+     ]
+    }
+   },
+   "sound": "displaced"
+  },
   "self.outpost": {
    "kind": "encounter",
    "arc": "saga",
-   "status": "draft",
    "act": 2,
    "title": "The old hauler",
    "who": [
@@ -130,12 +257,12 @@
    ],
    "notes": [
     "outposts and research colonies: explorers rarely stop at outposts"
-   ]
+   ],
+   "sound": "stranger"
   },
   "self.outpost.advice": {
    "kind": "event",
    "arc": "saga",
-   "status": "draft",
    "act": 2,
    "title": "Paid in advance",
    "who": [
@@ -180,7 +307,6 @@
   "self.portal": {
    "kind": "encounter",
    "arc": "saga",
-   "status": "draft",
    "act": 4,
    "title": "The ship on the far side",
    "who": [
@@ -234,12 +360,12 @@
    ],
    "promises": [
     "the_warning"
-   ]
+   ],
+   "sound": "portal-voice"
   },
   "clone.scan": {
    "kind": "beat",
    "arc": "saga",
-   "status": "draft",
    "act": 2,
    "title": "Customs scan",
    "where": "ResearchColony",
@@ -259,7 +385,6 @@
   "clone.bill": {
    "kind": "event",
    "arc": "saga",
-   "status": "draft",
    "act": 3,
    "title": "A bill from Gamma",
    "requires": {
@@ -272,9 +397,8 @@
   "clone.meet": {
    "kind": "encounter",
    "arc": "saga",
-   "status": "draft",
    "act": 3,
-   "title": "The other captain",
+   "title": "{clone}",
    "who": [
     "clone"
    ],
@@ -330,11 +454,10 @@
   "nodes": {
    "rogue_captain.1": {
     "arc": "saga",
-    "status": "draft",
     "who": [
      "clone"
     ],
-    "title": "The other captain: the fight",
+    "title": "{clone}: the fight",
     "requires": {
      "flag": "clone_fight"
     },
@@ -345,11 +468,10 @@
    },
    "rogue_captain.2": {
     "arc": "saga",
-    "status": "draft",
     "who": [
      "clone"
     ],
-    "title": "The other captain: after",
+    "title": "{clone}: after",
     "text": "The other ship breaks off and runs. You know the course it will take, because it is the course you would take. You let it go.",
     "effects": {
      "set": [

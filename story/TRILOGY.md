@@ -1,10 +1,9 @@
 # The Cargo trilogy: outline
 
-Working document, 2026-11-14. Proposals to accept, change or throw out.
-Machine-readable parts (characters, promises, timelines) live in `saga.json`.
-Cargo 1's new and rewritten scenes live in `cargo1/*.json` and show on the story
-map (`map.html`), with the old text kept for comparison. They are drafts until
-the game reads its story from the file.
+Working document, 2026-11-14. Machine-readable parts (characters who span the
+saga, promises, timelines) live in `saga.json`. Cargo 1's scenes live in
+`cargo1/*.json`, show on the story map (`map.html`) with the old text kept for
+comparison, and are built into `cargo.py`, which plays them (1.2).
 
 ## Where and when
 
@@ -78,6 +77,27 @@ pointing at an empty patch of sky. Eryxians and Gordians do not appear.
   fight it (the game's unused rogue-captain chain becomes that fight). It turns
   up in Cargo 2 as the other hauler with your name.
 
+## Crossings: starting a part with a captain from another
+
+A new game offers every captain record in the shared folder. Playing as one, the
+first scene says who this captain was and why they start again with one ship; a
+fresh captain gets a different first scene. Ranks, endings and turns come from the
+record ({origin.name}, {origin.rank}, {origin.ending}, {origin.turns}).
+
+| Into | From | Why they start again |
+| --- | --- | --- |
+| Cargo 1 | nobody (fresh) | a loan, an old ship, a docking slot paid up until Friday |
+| Cargo 1 | Cargo 1 (finished) | retirement did not take: after the Hansa a farm drum, after the legion a desk, after the heading nobody read the file, after the tycoon ending a long complaint about prices |
+| Cargo 1 | Cargo 2 | a ring segment turned the wrong way: forty years too early, with a rank nobody can read and the navigation computer pulled before the old ship was sold |
+| Cargo 1 | Cargo 3 | thrown back from the restart, a century and more: no Hansa yet, the Mandate is three security firms, a shard of the ring still warm in a pocket |
+| Cargo 2 (planned) | Cargo 1 | the same captain, forty years on (fewer with dilation): the intro remembers the Hansa charter, the legion, the heading or the tycoon years |
+| Cargo 2 (planned) | Cargo 3 | thrown back seventy years by the restart; knows how the Mandate ends and cannot say so |
+| Cargo 3 (planned) | Cargo 1 | a century later: slept through it in a Neon's spare sarcophagus, or flew it in relativistic legs |
+| Cargo 3 (planned) | Cargo 2 | the old captain from the bar in Cargo 1, finally arriving at their own story |
+
+A record can also come in as a visitor (`captain` command): then it is the older
+stranger at the station bar or past the portal, named only if the record is there.
+
 ## Factions as they are in Cargo 1
 
 | Later power | In Cargo 1 | Seen as |
@@ -90,6 +110,7 @@ pointing at an empty patch of sky. Eryxians and Gordians do not appear.
 | Solarians | a reading-house at Barnard's Star that logs sunspots | Deacon Amaro, who reads trade routes in them |
 | Cargo cults | the Cult of the Broken Machine (worships a broken-down hauler at an outpost), the Order of the Tarnished Gear (collects broken technology), the Star-Shaped Scar Tribe (Zeta Reticuli) | first contact, pilgrims, the holy manifest, the unholy shelf, the brass band |
 | Hatters | the Grey Hats, an outpost crew | record cleaning, for a fee |
+| Neonobility | Neons who sleep through decades and buy land before it is worth anything (Lady Ottavine and her heritarchist); Virtuals, young Neons in holographic bodies (Ren Asquine-Vel); fluencers, real or fake heirs who stream everything (Brisa Vell) | sleeping cargo, freight rates for the weightless, a stream from your hold |
 | Technoshamans | the farm drums | blessings with firmware patches, on subscription |
 
 ## Characters who outlive their game
@@ -105,6 +126,7 @@ pointing at an empty patch of sky. Eryxians and Gordians do not appear.
 | Ysolde van Rostrom | junior researcher, then founder of House Rostrom | head of the house | |
 | Dharr Santor | flies the fourth drive test, gone eleven minutes, back with three weeks of beard | the drive carries his name | |
 | Matylda Korinek | archaeophysicist; the samples and the segment | old, still right | her notes, or her upload |
+| Lady Ottavine Kessary-Vel | sleeping cargo to Delta; buys land next to Geod's Row | wakes thirty years on, asks for you | awake for the restart, barely older |
 
 ## Promises
 
@@ -122,6 +144,7 @@ Tracked in `saga.json`; the validator lists any a written part fails to pay.
 | the_stonewright | Anselm's long run | Cargo 3 |
 | the_hollow_rock | the nanobot colony's galleries | Cargo 2 |
 | the_lyra_rumour | the Maud Kettle's story and the chirps from Lyra | Cargo 2 |
+| the_sleeper | Lady Ottavine goes back to sleep at Delta | Cargo 2 |
 
 ## Cargo 1: what changed
 
@@ -143,6 +166,16 @@ no content):
 - **Nine location beats** with a name only: now written. Three of them said
   "alien"; they are now the builders' metal and a cargo cult.
 - **The tycoon ending**: ended the game without exporting a captain record.
+
+The game plays all of it since 1.2: the scenes are built into `cargo.py` from
+these files, together with a small runtime (conditions, choices, effects, names).
+Character names are written once (saga characters in `saga.json`, the rest in
+their story file); texts say `{pirate_captain}` or `{pirate_captain.short}`.
+
+Balance: chapter thresholds now mean something (30 plot points for chapter 2,
+90 for chapter 3, 250 for an ending), and each ending needs its turning point
+(the charter, the commission, the samples). Story chains now pay, so their
+rewards were scaled down.
 
 Rewritten: every chapter and ending text, the passenger and synthetics chains,
 and the ancient scholar (now human). New: the Hansa charter, the samples, the
@@ -213,5 +246,6 @@ expedition past HD 178911 to chase it.
 
 ## Open questions
 
-1. Should the game show the real system next to the code (for example
-   "Gamma (Ross 154)") in the location info?
+1. The real systems are shown in the captain's journal (`journal`). Should they
+   also appear next to the code elsewhere, for example "Gamma (Ross 154)" in the
+   location info?

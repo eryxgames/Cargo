@@ -6,7 +6,8 @@
   "deacon": {
    "name": "Deacon Amaro",
    "kind": "human",
-   "about": "Solarian reading-house at Barnard's Star; reads sunspots, and trade routes in them"
+   "about": "Solarian reading-house at Barnard's Star; reads sunspots, and trade routes in them",
+   "short": "the deacon"
   },
   "pilgrims": {
    "name": "Pilgrims of the Broken Machine",
@@ -33,7 +34,6 @@
   "pass.deacon": {
    "kind": "encounter",
    "arc": "passengers",
-   "status": "draft",
    "act": 2,
    "title": "The deacon's reading",
    "who": [
@@ -46,7 +46,7 @@
    },
    "chance": 0.2,
    "text": [
-    "Deacon Amaro of the Solarian reading-house at Barnard's Star needs passage to Alpha. The reading-house has logged the star's spots for forty years, and the deacon reads trade routes in them, for a donation.",
+    "{deacon} of the Solarian reading-house at Barnard's Star needs passage to Alpha. The reading-house has logged the star's spots for forty years, and the deacon reads trade routes in them, for a donation.",
     "'Avoid Gamma on even cycles,' the deacon says. Over the next year this is right more often than your broker."
    ],
    "choices": [
@@ -77,7 +77,6 @@
   "pass.pilgrims": {
    "kind": "encounter",
    "arc": "passengers",
-   "status": "draft",
    "act": 2,
    "title": "Pilgrims",
    "who": [
@@ -107,15 +106,16 @@
    "diplomatic_envoy": {
     "name": "Envoy Ines Halloran",
     "generated": false,
-    "about": "Alpha's colonial council; wants one customs code for five systems"
+    "about": "Alpha's colonial council; wants one customs code for five systems",
+    "short": "Halloran"
    },
    "rebel_commander": {
     "name": "Teodor Brann",
     "generated": false,
-    "about": "spokesman of the Gamma free miners"
+    "about": "spokesman of the Gamma free miners",
+    "short": "Brann"
    },
    "ancient_scholar": {
-    "name": "Matylda Korinek",
     "kind": "human",
     "generated": false,
     "saga": true,
@@ -125,15 +125,23 @@
   "nodes": {
    "meet.galactic_alliance": {
     "title": "The envoy",
-    "text": "Envoy Ines Halloran of Alpha's colonial council books your best cabin and asks whether you have a better one."
+    "text": "{diplomatic_envoy} of Alpha's colonial council books your best cabin and asks whether you have a better one."
    },
    "galactic_alliance.1": {
     "title": "One customs code",
-    "text": "The five colonies are drafting a common customs code. Haulers would pay one fee instead of five. Nobody has asked the haulers. Halloran is asking you, on the record."
+    "text": "The five colonies are drafting a common customs code. Haulers would pay one fee instead of five. Nobody has asked the haulers. {diplomatic_envoy.short} is asking you, on the record."
    },
    "galactic_alliance.2": {
     "title": "The delegation",
-    "text": "Forty delegates, eleven languages and one argument about seating. The delegation booked your ship because you are the only captain none of them has sued."
+    "text": "Forty delegates, eleven languages and one argument about seating. The delegation booked your ship because you are the only captain none of them has sued.",
+    "effects": {
+     "money": 12000,
+     "passenger_reputation": 20,
+     "plot_points": 8
+    },
+    "notes": [
+     "balance: the game never paid these chain rewards (the chains did not advance); paid now, so scaled down"
+    ]
    },
    "meet.system_rebellion": {
     "title": "The Gamma miners",
@@ -149,43 +157,68 @@
    },
    "system_rebellion.1": {
     "title": "A passenger in the coolant tank",
-    "text": "Teodor Brann, the miners' spokesman, needs to reach the customs talks without the legions noticing. He fits in a coolant tank if he breathes shallowly and stops talking. One of these is harder for him."
+    "text": "{rebel_commander}, the miners' spokesman, needs to reach the customs talks without the legions noticing. He fits in a coolant tank if he breathes shallowly and stops talking. One of these is harder for him.",
+    "effects": {
+     "money": 15000,
+     "passenger_reputation": 25,
+     "plot_points": 10
+    },
+    "notes": [
+     "balance: the game never paid these chain rewards (the chains did not advance); paid now, so scaled down"
+    ]
    },
    "system_rebellion.2": {
     "title": "Sheet music",
-    "text": "The miners need air scrubbers, medical stock and, according to the manifest, nine crates of sheet music. Do not open the sheet music."
+    "text": "The miners need air scrubbers, medical stock and, according to the manifest, nine crates of sheet music. Do not open the sheet music.",
+    "effects": {
+     "money": 20000,
+     "passenger_reputation": 30,
+     "plot_points": 15
+    },
+    "notes": [
+     "balance: the game never paid these chain rewards (the chains did not advance); paid now, so scaled down"
+    ]
    },
    "meet.ancient_mysteries": {
-    "title": "Korinek",
-    "text": "Matylda Korinek buys passage with research credits and a promise. She has traced the builders' metal to a segment turning on its own in the wake of Scholz's Star, the Builder Site, and wants to stand on it herself."
+    "title": "{ancient_scholar.short}",
+    "text": "{ancient_scholar} buys passage with research credits and a promise. She has traced the builders' metal to a segment turning on its own in the wake of Scholz's Star, the Builder Site, and wants to stand on it herself."
    },
    "ancient_mysteries.1": {
     "title": "What it took",
-    "text": "She brings a spectrometer, a folding chair and a bottle she says is for afterwards. 'Seventy thousand years ago this star passed close enough to our Sun to steal from it,' she says. 'I want to see what it took.'"
+    "text": "She brings a spectrometer, a folding chair and a bottle she says is for afterwards. 'Seventy thousand years ago this star passed close enough to our Sun to steal from it,' she says. 'I want to see what it took.'",
+    "effects": {
+     "money": 30000,
+     "passenger_reputation": 40,
+     "plot_points": 20,
+     "reveal": [
+      "Builder Site"
+     ]
+    },
+    "notes": [
+     "balance: the game never paid these chain rewards (the chains did not advance); paid now, so scaled down"
+    ]
    },
    "visit.vip_passenger": {
     "requires": {
-     "at_type": [
-      "Planet"
-     ],
+     "venue": "port",
      "passenger_reputation": 40,
-     "code": "comfort_level >= 4"
+     "best_cabin": 4
     },
-    "text": "Your reputation precedes you, Captain. So does your cabin rating.",
+    "text": "Your reputation precedes you, Captain. So does your cabin rating. A Neon steward inspects the cabin, sniffs, and books it anyway.",
     "notes": [
-     "repair: the game compared the location type (planet, outpost...) with 'port', which never matches; this should spawn on a port visit"
+     "repair: compared the location type with 'port'; now met on port visits"
     ]
    },
    "visit.merchant_trader": {
     "requires": {
-     "at_type": [
-      "Planet",
-      "DeepSpaceOutpost"
+     "venue": [
+      "port",
+      "cantina"
      ]
     },
     "text": "Rare goods for discerning customers. Some for undiscerning ones too; those are cheaper.",
     "notes": [
-     "repair: compared the location type with 'port' or 'cantina'; this should spawn on a port or cantina visit"
+     "repair: compared the location type with 'port' or 'cantina'; now met on those visits"
     ]
    }
   }

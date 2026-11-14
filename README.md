@@ -9,7 +9,7 @@ A text-based space trading and exploration game where you navigate between plane
         ╔════════ C Δ R G Ω ════════╗
         ║     Space Trading Saga    ║
         ╚═══════════════════════════╝
-                Version 1.1.0
+                Version 1.2.0
 
 ```
 ## Development Notes
@@ -22,9 +22,13 @@ CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
 - [x] Captain's record (carry a captain between the parts of the Cargo trilogy)
 - [x] Layout that fits narrow phone screens (Termux), from 36 columns up
 - [x] All three endings verified reachable (see `tools/`)
+- [x] Core storyline and characters: the story is written as data in `story/`
+      (storykit format, with a validator and a story map) and built into `cargo.py`
+- [x] Captains from other parts of the saga: start a new game as a recorded captain,
+      or meet one as an older stranger (`tools/make_captain.py` makes test records)
+- [x] Captain's journal (`journal`/`j`), cantina rumours, an epilogue after every ending
 - [ ] New quest system 
 - [ ] New local/global events
-- [ ] Core storyline/characters
 - [ ] New items
 - [ ] New enemies
 ## Features
@@ -127,8 +131,23 @@ Simple text commands to navigate gameplay:
 - `action` - Special actions
 - `log` - Story progress: open milestones and what opens the way to the next chapter
 - `save` / `load` - Save the game under a name, or load a saved game
+- `journal` - The captain's journal: people met, choices the future will remember, places and the real stars they stand for
 - `captain` - The captain's record: export it, or take in a captain from another game
 - And more...
+
+A new game offers to start as any captain whose record is in `~/.cargo/captains/`:
+one who finished this game, or one carried back from a later part of the saga.
+
+## The story
+The scenes, characters and places are written in `story/` (see `story/TRILOGY.md` for
+the outline and `storykit/` for the format) and built into `cargo.py` by
+`python tools/build_story.py`, so the game stays one file. Writers can play a story
+file directly: `python tools/build_story.py --out my.json` then `CARGO_STORY=my.json python cargo.py`.
+
+## Sound (optional)
+A folder `cargo-kit/` next to `cargo.py` with a `sound.py` that has `play(name)` gives
+the story its sound cues (intro, portal, ending...). Without it the game is silent.
+`CARGO_SOUND=0` turns sound off.
 
 ## Saving
 The game saves itself after every turn (slot `autosave`) and asks whether to continue

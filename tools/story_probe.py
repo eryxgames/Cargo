@@ -82,6 +82,29 @@ def satisfy(game, reqs, log):
             log.append("  ! probe does not know how to satisfy %r" % k)
 
 
+STORY_KEYS = {"plot_points": "plot_points", "trades_completed": "trades_completed", "trade_profit": "trade_profit",
+              "research_points": "research_points", "combat_victories": "combat_victories",
+              "passenger_reputation": "passenger_reputation", "combat_rating": "combat_rating"}
+
+
+def satisfy_story(game, cid, log):
+    """A chapter whose requirements the story file repairs: satisfy those instead."""
+    cond = game.story.condition_for(cid)
+    if cond is None:
+        return
+    reqs = {}
+    for k, v in cond.items():
+        if k in STORY_KEYS:
+            reqs[STORY_KEYS[k]] = v
+        elif k in ("done", "done_any"):
+            for n in ([v] if isinstance(v, str) else v)[:1 if k == "done_any" else None]:
+                if n not in game.story_manager.chapters:     # a story scene: count it as played
+                    game.story.done.setdefault(n, game.turn)
+        elif k not in ("act_min", "act_max"):
+            log.append("  ! probe does not know how to satisfy story condition %r" % k)
+    satisfy(game, reqs, log)
+
+
 def tick(game):
     game.story_manager.check_milestone_progress()
     game.story_manager.check_chapter_progress()
@@ -111,9 +134,11 @@ for name, route in PATHS.items():
             for m in chapter.milestones.values():
                 satisfy(game, m.requirements, log)
             satisfy(game, chapter.requirements, log)
+            satisfy_story(game, ch, log)
             nxt = route[i + 1] if i + 1 < len(route) else None
             if nxt:
                 satisfy(game, sm.chapters[nxt].requirements, log)
+                satisfy_story(game, nxt, log)
                 # answer the path choice: position of nxt among the chapter's options
                 opts = chapter.next_chapters
                 io.default = "1"   # only the wanted follow-up is open in this probe

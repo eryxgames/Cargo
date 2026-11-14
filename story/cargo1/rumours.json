@@ -1,0 +1,143 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "What people say in cantinas: one line per visit, the ones about the captain's own doings first.",
+ "arcs": {
+  "rumours": {
+   "title": "Cantina rumours",
+   "order": 8
+  }
+ },
+ "nodes": {
+  "rumour.neon_coffee": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "A Neon woke up after thirty years asleep, asked for coffee at the old price and got it. Nobody wanted to be the one to explain.",
+   "title": "Rumour: neon coffee"
+  },
+  "rumour.drums_at_night": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "The farm drums at Barnard's Star are harvesting at night again. The Sowers say the crop prefers it.",
+   "title": "Rumour: drums at night"
+  },
+  "rumour.grey_hat_fines": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "A Grey Hat at the bar offers to delete your parking fines. You do not have parking fines. He offers to add some.",
+   "title": "Rumour: grey hat fines"
+  },
+  "rumour.legion_merger": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "Three corporate legions, one pilot shortage. Everyone at the bar has an opinion about which logo will survive the merger.",
+   "title": "Rumour: legion merger"
+  },
+  "rumour.your_registry": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "Someone swears a hauler docked at Gamma with your registry, one digit off. Probably nothing.",
+   "requires": {
+    "flag": "scanned_at_customs",
+    "not_done": "clone.meet"
+   },
+   "title": "Rumour: your registry"
+  },
+  "rumour.miners_out": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "The Gamma miners are still out. Someone keeps shipping them sheet music.",
+   "requires": {
+    "done": "meet.system_rebellion",
+    "not_done": "system_rebellion.2"
+   },
+   "title": "Rumour: miners out"
+  },
+  "rumour.first_mark": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "At the next table a man bites a Mark to check it. It has your registry on it. He looks at you and puts it away.",
+   "requires": {
+    "flag": "hansa_founder"
+   },
+   "title": "Rumour: first mark"
+  },
+  "rumour.mraz_free": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "People say {pirate_captain.short} has a new ship and an old grudge. Not against you, oddly.",
+   "requires": {
+    "flag": "mraz_spared"
+   },
+   "title": "Rumour: mraz free"
+  },
+  "rumour.towers_hum": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "The relay towers at Barnard's Star hum at night. The farmers say the harvesters hum back.",
+   "requires": {
+    "flag": "first_node"
+   },
+   "title": "Rumour: towers hum"
+  },
+  "rumour.sterilisation": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "A legion cruiser left for Sigma VII with sterilisation gear. Nobody at the bar will drink to it.",
+   "requires": {
+    "flag": "nano_sold_out"
+   },
+   "title": "Rumour: sterilisation"
+  },
+  "rumour.lyra_again": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "Someone else heard the chirps from Lyra. Someone always does.",
+   "requires": {
+    "flag": "heard_the_lyra_story"
+   },
+   "title": "Rumour: lyra again"
+  },
+  "rumour.pellet_collector": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "The bartender asks whether you still have that heavy pellet. A collector was asking. From where, he did not say.",
+   "requires": {
+    "flag": "kept_the_pellet"
+   },
+   "title": "Rumour: pellet collector"
+  },
+  "rumour.yesterday": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "The bartender serves you the drink you ordered yesterday. You were not here yesterday.",
+   "requires": {
+    "flag": "clone_partner"
+   },
+   "title": "Rumour: yesterday"
+  },
+  "rumour.famous_coffee": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "text": "Your ship was famous for four days on the fluencer feeds, mostly for the coffee machine.",
+   "requires": {
+    "flag": "fluencer_streamed"
+   },
+   "title": "Rumour: famous coffee"
+  }
+ }
+}

@@ -16,7 +16,8 @@
   "kettle_survivor": {
    "name": "Ottilie Brandt",
    "kind": "human",
-   "about": "survivor of the hauler Maud Kettle, lost in Lyra; tells the story for drinks"
+   "about": "survivor of the hauler Maud Kettle, lost in Lyra; tells the story for drinks",
+   "short": "Brandt"
   },
   "tarnished_gear": {
    "name": "Order of the Tarnished Gear",
@@ -54,7 +55,6 @@
   "hatters.grey": {
    "kind": "event",
    "arc": "frontier",
-   "status": "draft",
    "act": 2,
    "title": "The Grey Hats",
    "who": [
@@ -91,7 +91,6 @@
   "zeta.cult": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 4,
    "title": "The waiting city",
    "where": "Zeta",
@@ -110,7 +109,6 @@
   "megastructure.stator": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 3,
    "title": "The Stator Field",
    "where": "Stator Field Megastructure",
@@ -125,14 +123,13 @@
   "builder.beacon": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 4,
    "title": "The beacon",
    "where": "Builder Site",
    "requires": {
     "at": "Builder Site"
    },
-   "text": "The segment Scholz's Star pulled away still turns, alone, and on its rim the builders left a beacon. It points away from every human route, at a patch of sky with nothing in it. Korinek, when you tell her, corrects you: nothing yet.",
+   "text": "The segment Scholz's Star pulled away still turns, alone, and on its rim the builders left a beacon. It points away from every human route, at a patch of sky with nothing in it. {ancient_scholar.short}, when you tell her, corrects you: nothing yet.",
    "effects": {
     "research_points": 80,
     "plot_points": 5
@@ -141,7 +138,6 @@
   "ruins.alpha": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 3,
    "title": "Foundations in the ice",
    "where": "Ancient Ruins Alpha",
@@ -156,14 +152,13 @@
   "ruins.beta": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 3,
    "title": "The anchor",
    "where": "Ancient Ruins Beta",
    "requires": {
     "at": "Ancient Ruins Beta"
    },
-   "text": "On a moon of Epsilon Indi's cold giant, a ring of pylons sunk into the bedrock, all leaning the same way. Korinek's notes call it an anchor. Her notes do not say what it anchored.",
+   "text": "On a moon of Epsilon Indi's cold giant, a ring of pylons sunk into the bedrock, all leaning the same way. {ancient_scholar.short}'s notes call it an anchor. Her notes do not say what it anchored.",
    "effects": {
     "research_points": 40
    }
@@ -171,7 +166,6 @@
   "signal.lyra": {
    "kind": "beat",
    "arc": "frontier",
-   "status": "draft",
    "act": 4,
    "title": "Not proven",
    "where": "Alien Signal Research Outpost Y",
@@ -205,7 +199,6 @@
   "rumour.lyra": {
    "kind": "encounter",
    "arc": "frontier",
-   "status": "draft",
    "act": 2,
    "title": "How the Maud Kettle went down",
    "who": [
@@ -221,7 +214,7 @@
    },
    "chance": 0.08,
    "text": [
-    "Ottilie Brandt tells the bar how the Maud Kettle went down in Lyra, out past HD 178911. Near one moon of a big gas giant the electronics went soft: screens melted into noise, the navigation computer counted backwards, the coffee machine prayed.",
+    "{kettle_survivor} tells the bar how the Maud Kettle went down in Lyra, out past HD 178911. Near one moon of a big gas giant the electronics went soft: screens melted into noise, the navigation computer counted backwards, the coffee machine prayed.",
     "They flew home on a sextant and a wind-up watch. 'Something on that moon answered our radio,' she says. 'In magnetic pulses.' Nobody buys the next round, so she buys it herself."
    ],
    "effects": {
@@ -232,6 +225,41 @@
    "promises": [
     "the_lyra_rumour"
    ]
+  },
+  "builder.crossing": {
+   "kind": "event",
+   "arc": "frontier",
+   "act": 4,
+   "title": "The segment turns",
+   "who": [
+    "ancient_scholar"
+   ],
+   "where": "Builder Site",
+   "requires": {
+    "at": "Builder Site",
+    "not_flag": "stellar_portal"
+   },
+   "repeat": {
+    "cooldown": 3
+   },
+   "text": [
+    "Close up, the segment the star stole turns faster than anything that old should. {ancient_scholar.short} watches the readings and says nothing for a long time.",
+    "Then: 'It is a door. It does not care which way we go through.'"
+   ],
+   "choices": [
+    {
+     "id": "through",
+     "say": "Fly through",
+     "effects": {
+      "code": "portal"
+     }
+    },
+    {
+     "id": "later",
+     "say": "Not today"
+    }
+   ],
+   "sound": "portal"
   }
  },
  "amend": {
@@ -304,7 +332,6 @@
     "text": "The colony keeps its sample of the alloy in a glass case with a handwritten card: NOT ALIEN. PROBABLY. The second word was added later, in different ink."
    },
    "merchant_visit.1": {
-    "status": "draft",
     "arc": "frontier",
     "who": [
      "tarnished_gear"

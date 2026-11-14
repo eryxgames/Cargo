@@ -8,7 +8,7 @@
    "game": "cargo1",
    "title": "CARGO: Space Trading Saga",
    "file": "cargo1.story.json",
-   "status": "released (1.1.0); new arcs drafted in cargo1/",
+   "status": "1.2: plays its story from story/ (built into cargo.py)",
    "era": "about 2420: the Hansa, the first legion, the first node"
   },
   {
@@ -48,6 +48,7 @@
   },
   "clone": {
    "name": "The other captain",
+   "short": "the other captain",
    "about": "Grown from the captain's customs scan by a research colony's insurer.",
    "timeline": [
     {
@@ -62,6 +63,7 @@
   },
   "pirate_captain": {
    "name": "Hedda Mraz",
+   "short": "Mraz",
    "about": "Pirate with a count of grudges.",
    "timeline": [
     {
@@ -76,6 +78,7 @@
   },
   "anselm": {
    "name": "Anselm Rockwarden",
+   "short": "Anselm",
    "about": "Founder of the Rockwarden cooperative; grandfather of Maret Rockwarden (wiki canon).",
    "timeline": [
     {
@@ -90,6 +93,7 @@
   },
   "ysolde": {
    "name": "Ysolde van Rostrom",
+   "short": "Ysolde",
    "about": "Founder of House Rostrom (wiki: CONZE Ysolde van Rostrom, Year of Foundation).",
    "timeline": [
     {
@@ -104,6 +108,7 @@
   },
   "santor": {
    "name": "Dharr Santor",
+   "short": "Santor",
    "about": "Flew the fourth Bekkenheim test and came back eleven minutes later with three weeks of beard.",
    "timeline": [
     {
@@ -118,6 +123,7 @@
   },
   "ancient_scholar": {
    "name": "Matylda Korinek",
+   "short": "Korinek",
    "about": "Archaeophysicist; first to say the builders' metal was a ring around our own Sun.",
    "timeline": [
     {
@@ -135,7 +141,10 @@
    ]
   },
   "neurodroid_leader": {
-   "name": "CU-113, Neurodroid Overseer",
+   "name": "CU-113",
+   "short": "CU-113",
+   "full": "Curator Unit 113",
+   "title": "Neurodroid Overseer",
    "about": "Curator Unit 113, the first neurodroid to refuse an order; the game's Neurodroid Overseer. Machines do not age; they fork.",
    "timeline": [
     {
@@ -154,6 +163,7 @@
   },
   "aela": {
    "name": "Aela",
+   "short": "Aela",
    "about": "AEL-series boring agrobot; perhaps the first machine shareholder in the Hansa.",
    "timeline": [
     {
@@ -163,6 +173,25 @@
     {
      "game": "cargo3",
      "as": "still digging for Stonewright, if it was given a share"
+    }
+   ]
+  },
+  "neon_sleeper": {
+   "name": "Lady Ottavine Kessary-Vel",
+   "short": "Lady Ottavine",
+   "about": "A Neon who sleeps through decades and buys land before it is worth anything. Hibernation carries her across the saga.",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "sleeping cargo to Delta"
+    },
+    {
+     "game": "cargo2",
+     "as": "awake again, thirty years on, asking for you"
+    },
+    {
+     "game": "cargo3",
+     "as": "awake for the restart, barely older"
     }
    ]
   }
@@ -206,6 +235,10 @@
   },
   "the_lyra_rumour": {
    "about": "The Maud Kettle's story and the magnetic chirps from Lyra: the first rumour of the Gordian moon, where ordinary electronics fail.",
+   "pay_by": "cargo2"
+  },
+  "the_sleeper": {
+   "about": "Lady Ottavine wakes thirty years later and asks for the captain who carried her.",
    "pay_by": "cargo2"
   }
  }

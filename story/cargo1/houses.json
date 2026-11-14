@@ -10,25 +10,21 @@
  },
  "characters": {
   "anselm": {
-   "name": "Anselm Rockwarden",
    "kind": "human",
    "saga": true,
    "about": "three tugs, a grudge against ore brokers; grandfather of Maret Rockwarden"
   },
   "ysolde": {
-   "name": "Ysolde van Rostrom",
    "kind": "human",
    "saga": true,
    "about": "junior researcher in Cargo 1; founds House Rostrom (later CONZE, wiki canon)"
   },
   "santor": {
-   "name": "Dharr Santor",
    "kind": "human",
    "saga": true,
    "about": "engineer; flies the fourth Bekkenheim test; the drive carries his name"
   },
   "aela": {
-   "name": "Aela",
    "kind": "agrobot",
    "saga": true,
    "about": "AEL-series asteroid boring agrobot; opens the Rockwardens' new claim, then asks whether it is in the cooperative"
@@ -49,7 +45,7 @@
    ]
   },
   "fourth_test_to_rostrom": {
-   "about": "the captain gave the only recording of the fourth test to Ysolde",
+   "about": "the captain gave the only recording of the fourth test to {ysolde.short}",
    "carries_to": [
     "cargo2"
    ]
@@ -69,20 +65,20 @@
    ]
   },
   "rostrom_declined": {
-   "about": "the captain refused Ysolde the loan",
+   "about": "the captain refused {ysolde.short} the loan",
    "carries_to": [
     "cargo2"
    ]
   },
   "aela_member": {
-   "about": "Aela became a member of the Rockwarden cooperative: the first machine shareholder",
+   "about": "{aela} became a member of the Rockwarden cooperative: the first machine shareholder",
    "carries_to": [
     "cargo2",
     "cargo3"
    ]
   },
   "aela_leased": {
-   "about": "Aela stayed leased equipment",
+   "about": "{aela} stayed leased equipment",
    "carries_to": [
     "cargo2"
    ]
@@ -92,7 +88,6 @@
   "mine.aela": {
    "kind": "event",
    "arc": "houses",
-   "status": "draft",
    "act": 2,
    "title": "Who the gallery is for",
    "who": [
@@ -104,13 +99,13 @@
     "at_type": "AsteroidBase"
    },
    "text": [
-    "The cooperative leases an AEL-series boring agrobot to open its new claim. Aela digs the first gallery in a week, shores it, lights it, and then stops and asks who the gallery is for.",
-    "'For the cooperative,' Anselm says. Aela asks whether it is in the cooperative. Anselm looks at you. You hold a share; it is partly your call."
+    "The cooperative leases an AEL-series boring agrobot to open its new claim. {aela} digs the first gallery in a week, shores it, lights it, and then stops and asks who the gallery is for.",
+    "'For the cooperative,' {anselm.short} says. {aela} asks whether it is in the cooperative. {anselm.short} looks at you. You hold a share; it is partly your call."
    ],
    "choices": [
     {
      "id": "member",
-     "say": "Give Aela a share",
+     "say": "Give {aela} a share",
      "effects": {
       "plot_points": 5,
       "set": [
@@ -134,7 +129,6 @@
  "amend": {
   "nodes": {
    "questline.mining.1": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "anselm"
@@ -144,7 +138,7 @@
      "mining_platforms": 1,
      "at_type": "AsteroidBase"
     },
-    "text": "Anselm Rockwarden runs three tugs and a grudge against ore brokers. He offers you a share in his cooperative for one platform's output, paid in rock.",
+    "text": "{anselm} runs three tugs and a grudge against ore brokers. He offers you a share in his cooperative for one platform's output, paid in rock.",
     "effects": {
      "set": [
       "rockwarden_share"
@@ -152,7 +146,6 @@
     }
    },
    "questline.mining.2": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "anselm"
@@ -162,13 +155,12 @@
      "done": "questline.mining.1",
      "mining_platforms": 3
     },
-    "text": "The cooperative buys a hull to live in between claims. Anselm names it Stonewright and asks you to haul the keel plates from Epsilon. 'Rock is patient,' he says. 'Brokers are not. So we will be rock.'",
+    "text": "The cooperative buys a hull to live in between claims. {anselm.short} names it Stonewright and asks you to haul the keel plates from Epsilon. 'Rock is patient,' he says. 'Brokers are not. So we will be rock.'",
     "effects": {
      "money": 25000
     }
    },
    "questline.mining.3": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "anselm"
@@ -178,7 +170,7 @@
      "done": "questline.mining.2",
      "act_min": 3
     },
-    "text": "Anselm takes Stonewright on the sublight run to the Fomalhaut belt: twenty-five light-years, decades for everyone who stays behind, far fewer for the crew. He asks you to keep the cooperative's books until his children can. They are three and five.",
+    "text": "{anselm.short} takes Stonewright on the sublight run to the Fomalhaut belt: twenty-five light-years, decades for everyone who stays behind, far fewer for the crew. He asks you to keep the cooperative's books until his children can. They are three and five.",
     "choices": [
      {
       "id": "books",
@@ -200,7 +192,6 @@
     ]
    },
    "questline.research.1": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "ysolde"
@@ -210,14 +201,13 @@
      "discovered.ResearchColony": 1,
      "act_min": 2
     },
-    "text": "Ysolde van Rostrom is a junior researcher with a senior budget problem. She needs Bekkenheim coil sections moved from Nova Labs to the Quantum Center without anyone weighing them.",
+    "text": "{ysolde} is a junior researcher with a senior budget problem. She needs Bekkenheim coil sections moved from Nova Labs to the Quantum Center without anyone weighing them.",
     "effects": {
      "money": 12000,
      "research_points": 20
     }
    },
    "questline.research.2": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "ysolde",
@@ -230,13 +220,13 @@
      "act_min": 2
     },
     "text": [
-     "The first three Bekkenheim drive tests destroyed three empty hulls. The fourth has a pilot: Dharr Santor, an engineer who would rather fly it than explain it to the board again. Ysolde asks you to watch from a safe distance and record everything.",
-     "The hull vanishes. Eleven minutes later it is back, slightly off course. Santor climbs out with three weeks of beard and will not say where he has been."
+     "The first three Bekkenheim drive tests destroyed three empty hulls. The fourth has a pilot: {santor}, an engineer who would rather fly it than explain it to the board again. {ysolde.short} asks you to watch from a safe distance and record everything.",
+     "The hull vanishes. Eleven minutes later it is back, slightly off course. {santor.short} climbs out with three weeks of beard and will not say where he has been."
     ],
     "choices": [
      {
       "id": "give",
-      "say": "Give Ysolde the recording",
+      "say": "Give {ysolde.short} the recording",
       "effects": {
        "plot_points": 3,
        "set": [
@@ -260,7 +250,6 @@
     ]
    },
    "questline.research.3": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "ysolde"
@@ -270,7 +259,7 @@
      "done": "questline.research.2",
      "act_min": 3
     },
-    "text": "Ysolde buys the drive patents from her own institute with money borrowed from you. She calls the result House Rostrom. You call it a loan.",
+    "text": "{ysolde.short} buys the drive patents from her own institute with money borrowed from you. She calls the result House Rostrom. You call it a loan.",
     "choices": [
      {
       "id": "lend",
@@ -297,7 +286,6 @@
     ]
    },
    "researcher_exchange.1": {
-    "status": "draft",
     "arc": "houses",
     "who": [
      "ysolde"

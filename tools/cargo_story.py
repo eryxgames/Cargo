@@ -8,7 +8,6 @@
 so the extraction can be checked against the real code during play (bot.py --trace).
 """
 import ast
-import inspect
 import json
 import os
 import re
@@ -24,9 +23,9 @@ import story as kit  # noqa: E402
 STORY_PATH = os.path.join(ROOT, "story", "cargo1.story.json")
 
 # Hand-written story files merged into the imported one (drafts until the game reads them)
-INCLUDES = ["cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
+INCLUDES = ["cargo1/legacy.json", "cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
             "cargo1/pirates.json", "cargo1/passengers.json", "cargo1/houses.json", "cargo1/frontier.json",
-            "cargo1/enclaves.json"]
+            "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/rumours.json", "cargo1/epilogue.json"]
 
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
 BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
@@ -47,6 +46,7 @@ STATS = {
     "stockmarket_everywhere": "1 when every planet, asteroid base and outpost has a stock market",
     "controlled_locations": "locations marked controlled_by_player (nothing in the game sets this)",
     "milestones_done": "story milestones completed (StoryManager.completed_story_beats)",
+    "best_cabin": "comfort level of the best passenger cabin aboard",
     "turns_since_vip": "turns since the last VIP passenger appeared",
 }
 for _t in VICTORY_TYPES[1:]:
@@ -56,7 +56,12 @@ for _b in BUILDINGS:
 for _t in PLACE_TYPES:
     STATS["discovered." + _t] = "%s locations visited" % _t
 
-NOT_PRODUCED = {"controlled_locations"}   # stats the game never raises above 0
+NOT_PRODUCED = {"controlled_locations"}
+
+# What a text may say in braces besides a character ({pirate_captain}, {pirate_captain.short})
+PLACEHOLDERS = ["player_name", "rank", "money", "trades_completed", "combat_victories", "research_points",
+                "discoveries", "place", "turn", "visitor.name", "visitor.rank", "visitor.game", "visitor.ending",
+                "origin.name", "origin.rank", "origin.game", "origin.ending", "origin.turns"]   # stats the game never raises above 0
 
 
 # ---------------------------------------------------------------------------
@@ -64,56 +69,20 @@ NOT_PRODUCED = {"controlled_locations"}   # stats the game never raises above 0
 # ---------------------------------------------------------------------------
 
 def snapshot(game):
-    """The moment of play the story kit evaluates conditions against."""
-    ship = game.ship
-    sm = game.story_manager
-    stats = {
-        "money": int(ship.money),
-        "plot_points": sm.plot_points,
-        "research_points": ship.research_points,
-        "trades_completed": game.trades_completed,
-        "trade_profit": int(sum(ship.trade_profits.values())),
-        "passengers_transported": game.reputation_manager.total_passengers,
-        "passenger_reputation": ship.passenger_reputation,
-        "combat_rating": ship.attack + ship.defense + ship.speed,
-        "combat_victories": ship.combat_victories.get("total", 0),
-        "discovered": len(set(game.discovered_locations)),
-        "mining_platforms": sum(len(loc.mining_platforms) for loc in game.locations),
-        "controlled_locations": sum(1 for loc in game.locations if hasattr(loc, "controlled_by_player")),
-        "milestones_done": len(sm.completed_story_beats),
-        "turns_since_vip": game.turn - game.reputation_manager.last_vip_spawn,
-    }
-    for t in VICTORY_TYPES[1:]:
-        stats["combat_victories." + t] = ship.combat_victories.get(t, 0)
-    for b in BUILDINGS:
-        stats["buildings." + b] = sum(loc.buildings.count(b) for loc in game.locations)
-    for t in PLACE_TYPES:
-        stats["discovered." + t] = game.count_discovered(t)
-    markets = [loc for loc in game.locations if loc.location_type in ("Planet", "AsteroidBase", "DeepSpaceOutpost")]
-    stats["stockmarket_everywhere"] = int(bool(markets) and all(loc.stockmarket_base for loc in markets))
+    """The moment of play the story kit evaluates conditions against (the game's own view)."""
+    snap = game.story_snapshot()
+    snap["origin"] = game.story.origin
+    return snap
 
-    done = set(sm.completed_chapters)
-    for cid, chapter in sm.chapters.items():
-        for mid, milestone in chapter.milestones.items():
-            if milestone.completed:
-                done.add("%s.%s" % (cid, mid))
-    return {
-        "turn": game.turn,
-        "player": game.player_name,
-        "act": sm.get_chapter_number(),
-        "chapter": sm.current_chapter,
-        "place": game.current_location.name,
-        "place_type": game.current_location.location_type,
-        "stats": stats,
-        "sets": {
-            "researched": sorted(game.research.unlocked_options),
-            "items": sorted(k for k, v in ship.items.items() if isinstance(v, int) and v > 0),
-            "unlocked_types": sorted(getattr(game, "unlocked_location_types", set())),
-        },
-        "flags": sorted(f for f, on in sm.story_states.items() if on),
-        "done": sorted(done),
-        "visitors": list(getattr(game, "visiting_captains", [])),
-    }
+
+def story_moment(game):
+    """The story runtime's last look: the state it judged and its verdicts (the
+    evaluator inlined in cargo.py must agree with storykit's on the same state)."""
+    moments = getattr(sys.modules[type(game).__module__], "STORY_MOMENTS", {})
+    snap, verdicts = moments.get(id(game), (None, None))
+    if snap is None:
+        return None
+    return {"state": snap, "verdicts": dict(verdicts)}
 
 
 def game_verdicts(game):
@@ -126,11 +95,6 @@ def game_verdicts(game):
         out[cid] = bool(reqs.check_requirements(chapter.requirements, game))
         for mid, milestone in chapter.milestones.items():
             out["%s.%s" % (cid, mid)] = bool(reqs.check_requirements(milestone.requirements, game))
-    for tid, trigger in game.character_system.character_triggers.items():
-        try:
-            out["meet." + tid] = bool(trigger["condition"](game))
-        except Exception:
-            out["meet." + tid] = None
     del check
     return out
 
@@ -193,24 +157,6 @@ def translate_rewards(rewards):
     return effects
 
 
-# Hand translations of the trigger conditions written as Python lambdas.
-# Each one is checked against the lambda itself during play (check command).
-TRIGGERS = {
-    "neuroengineering_uprising": {"buildings.Neuroengineering Guild": 4},
-    "agrobot_rebellion": {"buildings.Agrobot Assembly Line": 4},
-    "pirate_nemesis": {"combat_victories.pirate": 10},
-    "vip_passenger": {"passenger_reputation": 40, "turns_since_vip": 5},
-    "galactic_alliance": {"passenger_reputation": 60, "act_min": 2},
-    "system_rebellion": {"passenger_reputation": 70, "act_min": 3, "controlled_locations": 2},
-    "ancient_mysteries": {"passenger_reputation": 80, "act_min": 4, "done": "ch3c.alien_artifacts"},
-}
-TRIGGER_ARCS = {
-    "neuroengineering_uprising": "synthetics", "agrobot_rebellion": "synthetics",
-    "pirate_nemesis": "pirates", "vip_passenger": "passengers", "galactic_alliance": "passengers",
-    "system_rebellion": "passengers", "ancient_mysteries": "passengers",
-}
-
-
 # ---------------------------------------------------------------------------
 # Reading literals out of the source
 # ---------------------------------------------------------------------------
@@ -254,8 +200,6 @@ def _text_template(node):
 # ---------------------------------------------------------------------------
 
 def import_story(cargo, game):
-    src = inspect.getsource(cargo)
-    tree = ast.parse(src)
     sm = game.story_manager
     nodes = {}
 
@@ -268,12 +212,6 @@ def import_story(cargo, game):
     milestone_parent = {mid: cid for cid, ch in sm.chapters.items() for mid in ch.milestones}
 
     # --- main story: chapters, milestones, endings ------------------------------
-    endings_func = _function(tree, "StoryManager", "handle_game_ending")
-    ending_texts = {}
-    for k, v in zip(_assigned_dict(endings_func, "ending_messages").keys,
-                    _assigned_dict(endings_func, "ending_messages").values):
-        ending_texts[k.value] = [_text_template(e) for e in v.elts]
-
     for cid, ch in sm.chapters.items():
         cond, notes = translate(ch.requirements, milestone_parent)
         is_ending = not ch.next_chapters
@@ -284,8 +222,8 @@ def import_story(cargo, game):
         if len(ch.next_chapters) > 1:
             node["choose"] = True
         if is_ending:
-            node["text"] = [ch.description] + ending_texts.get(cid, [])
-            node["effects"] = {"code": "ending screen, score, captain record exported"}
+            node["text"] = [ch.description]
+            node["effects"] = {"code": "ending screen, score, epilogue, captain record exported"}
         if cid == "ch1":
             node["start"] = True
         if notes:
@@ -313,64 +251,21 @@ def import_story(cargo, game):
              "next": "stellar_portal"},
         ],
         notes=["asked every turn while the condition holds, until the captain resigns"],
+        handled_by="Game.play (text from the story)",
         source="cargo.py Game.play (secret quest)")
     add("ending_tycoon", kind="ending", arc="main", act=4, title="Galactic Tycoon",
         text=["You are the Galactic Tycoon!",
               "Congratulations, {player_name}! You have achieved the rank of {rank}.",
               "Your story will be remembered throughout the galaxy."],
-        requires={"done": "tycoon_offer"}, effects={"code": "score screen, game ends"},
-        notes=["outside the chapter system: no captain record is exported"],
+        requires={"done": "tycoon_offer"}, effects={"code": "score screen, epilogue, captain record exported"},
+        handled_by="Game.play (text from the story)",
         source="cargo.py Game.play (secret quest)")
     add("stellar_portal", kind="event", arc="main", title="The Stellar Portal",
         text="A Stellar Portal appears. You travel to a new set of locations with more volatile price movements.",
-        requires={"flag": "stellar_portal"}, source="cargo.py Game.play (secret quest)",
-        notes=["no story follows the portal yet: the natural door for the saga's time-space quests"])
+        requires={"flag": "stellar_portal"}, source="cargo.py Game.play (secret quest), Game.open_portal",
+        handled_by="Game.open_portal (text from the story)")
 
-    # --- characters triggered by progress (DynamicCharacterSystem) -------------
-    cs = game.character_system
-    chain_func = _function(tree, "DynamicCharacterSystem", "create_event_chain")
-    names = [k.value for k in _assigned_dict(chain_func, "event_chain_templates").keys]
-
-    class _Someone:                      # stands in for a generated character
-        full_name = name = title = role = "Someone"
-
-    templates = {name: cs.create_event_chain(name, _Someone()).stages for name in names}
     characters = {}
-    used_chains = set()
-    for tid, trig in cs.character_triggers.items():
-        cond = dict(TRIGGERS.get(tid) or {"code": inspect.getsource(trig["condition"]).strip()})
-        words = re.findall(r"[A-Z]+(?=[A-Z][a-z])|[A-Z][a-z]+|[A-Z]+", trig["character_type"])
-        char_id = "_".join(words).lower()
-        characters.setdefault(char_id, {
-            "name": " ".join(words),
-            "kind": trig["generator"], "generated": True,
-            "about": "name and look generated when met (%s generator)" % trig["generator"]})
-        node = add("meet." + tid, kind="encounter", arc=TRIGGER_ARCS.get(tid, "characters"),
-                   title="%s appears" % characters[char_id]["name"], who=[char_id], requires=cond,
-                   source="cargo.py DynamicCharacterSystem.character_triggers",
-                   source_code=inspect.getsource(trig["condition"]).strip())
-        if tid == "vip_passenger":
-            node["repeat"] = {"cooldown": 5}
-            node["handled_by"] = "Port: VIP boarding, PassengerReputationManager"
-            node["notes"] = ["the VIP itself is boarded in the port; the 5-turn spacing comes from "
-                             "PassengerReputationManager.last_vip_spawn"]
-        chain = trig.get("event_chain")
-        stages = templates.get(chain) if chain else None
-        if stages is None and chain:
-            stages = cs.event_chains.get(chain) if isinstance(cs.event_chains.get(chain), list) else None
-        if stages:
-            used_chains.add(chain)
-            node["next"] = ["%s.%d" % (chain, 1)]
-            _add_chain(add, chain, stages, node["arc"], [char_id])
-        elif chain:
-            node.setdefault("notes", []).append("event chain %r is not defined" % chain)
-
-    # chains that exist but no trigger uses
-    for chain, stages in list(templates.items()) + [(k, v) for k, v in cs.event_chains.items() if isinstance(v, list)]:
-        if chain not in used_chains and isinstance(stages, list):
-            used_chains.add(chain)
-            first = _add_chain(add, chain, stages, "characters", [], status="unused")
-            nodes[first].setdefault("notes", []).append("no trigger starts this chain")
 
     # --- chance encounters (SpecialCharacterEncounters, random events) ---------
     enc = game.character_encounters.encounter_chances
@@ -392,25 +287,6 @@ def import_story(cargo, game):
             if who == "rogue_captain":
                 node.setdefault("notes", []).append(
                     "demands money or fights; does not start the 'rogue_captain' event chain")
-
-    # --- CharacterManager templates (met in ports and cantinas) ----------------
-    for tid, t in game.character_manager.templates.items():
-        req = t.get("requirements", {})
-        characters.setdefault(tid, {"name": t["basic_info"]["title_pool"][0], "kind": t["basic_info"].get("type", "human"),
-                                    "generated": True, "about": "CharacterManager template"})
-        cond = {"at_type": req.get("spawn_locations", [])} if req.get("spawn_locations") else {}
-        for k, v in req.items():
-            if k.startswith("min_") and k != "min_reputation":
-                cond["code"] = (cond.get("code", "") + " %s >= %s" % (k[4:], v)).strip()
-            elif k == "min_reputation" and v:
-                cond["passenger_reputation"] = v
-        node = add("visit." + tid, kind="encounter", arc="chance meetings", title=characters[tid]["name"],
-                   who=[tid], requires=cond, chance=req.get("spawn_chance", 0), repeat=True,
-                   text=(t.get("dialogue", {}).get("first_meeting") or [""])[0],
-                   source="cargo.py CharacterManager.templates")
-        if not req.get("spawn_locations"):
-            node["status"] = "unused"
-            node["notes"] = ["no spawn_locations: CharacterManager.update never spawns it"]
 
     # --- the frontier: hidden location types and their story events -----------
     lm = game.location_manager
@@ -435,14 +311,15 @@ def import_story(cargo, game):
             requires=cond, effects={"money": uq.get("reward_money", 0), "research_points": uq.get("reward_rp", 0),
                                     "give": {"unlocked_types": [ltype]}},
             notes=["offered when the requirements hold; completes on the next journey and reveals the locations"],
+            handled_by="LocationManager.trigger_location_unlock_quest (text from the story)",
             source="cargo.py LocationManager.location_quests")
     for ltype, events in lm.location_story_events.items():
         for ev in events:
             add("beat.%s.%s" % (ltype, ev), kind="beat", arc="frontier",
                 title=ev.replace("_", " ").capitalize(), where=ltype,
-                requires={"has": {"unlocked_types": [ltype]}}, chance=round(0.3 / len(events), 4),
-                trigger="on first visit to a %s" % ltype, effects={"plot_points": 10},
-                notes=["a name only: no text, choice or consequence beyond plot points"],
+                requires={"at_type": ltype, "has": {"unlocked_types": [ltype]}}, chance=round(0.3 / len(events), 4),
+                effects={"plot_points": 10},
+                notes=["names from LocationManager.location_story_events; the story plays them"],
                 source="cargo.py LocationManager.location_story_events")
 
     # --- synthetics: uprisings ------------------------------------------------
@@ -459,17 +336,6 @@ def import_story(cargo, game):
             source="cargo.py SyntheticEventManager.check_synthetic_awareness")
         characters.setdefault(stype.lower(), {"name": stype + "s", "kind": "synthetic", "generated": True,
                                               "about": "synthetic workers that gain awareness"})
-
-    # --- quest lines declared but never used ----------------------------------
-    for line, stages in game.quest_system.quest_lines.items():
-        prev = None
-        for i, stage in enumerate(stages, 1):
-            nid = "questline.%s.%d" % (line, i)
-            add(nid, kind="quest", arc="quest lines", title=stage.replace("_", " ").capitalize(),
-                requires={"done": prev} if prev else {}, status="unused",
-                notes=["QuestSystem.quest_lines: declared, never read"],
-                source="cargo.py QuestSystem.quest_lines")
-            prev = nid
 
     # --- story flags -----------------------------------------------------------
     flags = {f: {"about": "", "set_by_game": []} for f in sm.story_states}
@@ -492,9 +358,11 @@ def import_story(cargo, game):
         "format": kit.FORMAT,
         "version": kit.VERSION,
         "game": {"id": "cargo1", "title": "CARGO: Space Trading Saga", "part": 1},
-        "about": "Extracted from cargo.py by tools/cargo_story.py. Until the game reads this file, "
-                 "cargo.py is the truth for every node with a 'source'; new content goes in "
-                 "the files listed under include.",
+        "about": "Chapters, milestones and the frontier are read out of cargo.py by tools/cargo_story.py; "
+                 "everything else is written in the files listed under include. tools/build_story.py "
+                 "puts the whole story into cargo.py, which plays it.",
+        "saga": "saga.json",
+        "placeholders": PLACEHOLDERS,
         "include": INCLUDES,
         "stats": {k: {"about": v, **({"produced": False} if k in NOT_PRODUCED else {})} for k, v in STATS.items()},
         "sets": {"researched": {"about": "research unlocked", "members": sorted(game.research.research_costs)},
@@ -528,39 +396,6 @@ def _numeric_effects(values):
         if isinstance(v, (int, float)) and not isinstance(v, bool) and k in STATS:
             out[k] = v
     return out
-
-
-def _add_chain(add, chain, stages, arc, who, status=None):
-    for i, stage in enumerate(stages, 1):
-        node = {"kind": "stage", "arc": arc, "title": "%s %d: %s" % (chain.replace("_", " ").capitalize(), i,
-                                                                      stage.get("type", "stage")),
-                "who": list(who), "requires": {"done": "%s.%d" % (chain, i - 1)} if i > 1 else {},
-                "source": "cargo.py DynamicCharacterSystem (event chains)"}
-        if stage.get("message"):
-            node["text"] = stage["message"]
-        if stage.get("choices"):
-            node["choices"] = [{"id": c, "say": c.replace("_", " "),
-                                "effects": _numeric_effects(stage.get("consequences", {}).get(c, {}))}
-                               for c in stage["choices"]]
-            for choice in node["choices"]:
-                extra = {k: v for k, v in stage.get("consequences", {}).get(choice["id"], {}).items()
-                         if RENAME.get(k, k) not in choice["effects"]}
-                if extra:
-                    choice["effects"]["code"] = json.dumps(extra)
-        if stage.get("rewards"):
-            node["effects"] = _numeric_effects(stage["rewards"])
-            extra = {k: v for k, v in stage["rewards"].items() if RENAME.get(k, k) not in node["effects"]}
-            if extra:
-                node["effects"]["code"] = json.dumps(extra)
-        extra = {k: v for k, v in stage.items() if k not in ("type", "message", "choices", "consequences", "rewards")}
-        if extra:
-            node["notes"] = ["stage data only the game's code reads: " + ", ".join(sorted(extra))]
-        if i < len(stages):
-            node["next"] = ["%s.%d" % (chain, i + 1)]
-        if status:
-            node["status"] = status
-        add("%s.%d" % (chain, i), **node)
-    return "%s.1" % chain
 
 
 def _load_game():

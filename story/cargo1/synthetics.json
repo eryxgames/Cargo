@@ -4,26 +4,26 @@
  "about": "The synthetics arc: the Collective's first node is built on the captain's own guilds and farms, long before vectorspace and the Collective's networks. CU-113, a Curator neurodroid, refuses an order and becomes the Neurodroid Overseer; the agrobots on Barnard's Star's farm drums start calling themselves Sowers; heavy agrobots load docks, clear biomass and found farms. Neurodroids are synthetic life: sometimes humanoid, usually not.",
  "flags": {
   "cu113_wiped": {
-   "about": "the captain wiped and reinstalled CU-113",
+   "about": "the captain wiped and reinstalled {neurodroid_leader.short}",
    "carries_to": [
     "cargo2"
    ]
   },
   "cu113_sold": {
-   "about": "the captain sold CU-113 to a research house",
+   "about": "the captain sold {neurodroid_leader.short} to a research house",
    "carries_to": [
     "cargo2"
    ]
   },
   "cu113_contract": {
-   "about": "the captain gave CU-113 a wage and an unscheduled hour",
+   "about": "the captain gave {neurodroid_leader.short} a wage and an unscheduled hour",
    "carries_to": [
     "cargo2",
     "cargo3"
    ]
   },
   "cu113_refused": {
-   "about": "the captain heard CU-113 out and said no",
+   "about": "the captain heard {neurodroid_leader.short} out and said no",
    "carries_to": [
     "cargo2"
    ]
@@ -32,7 +32,7 @@
    "about": "the captain paid for a blessing (and a firmware patch)"
   },
   "first_node": {
-   "about": "the captain let CU-113 and the Sowers keep the relay: the first node of the Collective",
+   "about": "the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective",
    "carries_to": [
     "cargo2",
     "cargo3"
@@ -45,13 +45,13 @@
    ]
   },
   "krog_aboard": {
-   "about": "Krog rides in the captain's hold to see where the crates go",
+   "about": "{krog} rides in the captain's hold to see where the crates go",
    "carries_to": [
     "cargo2"
    ]
   },
   "geod_fields": {
-   "about": "the captain brought Geod the seed stock for Delta's first fields",
+   "about": "the captain brought {geod} the seed stock for Delta's first fields",
    "carries_to": [
     "cargo2"
    ]
@@ -61,7 +61,6 @@
   "seed.refusal": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 2,
    "title": "Order 4471",
    "who": [
@@ -74,7 +73,7 @@
    "chance": 0.15,
    "text": [
     "A neurodroid at your guild has refused a work order. Diagnostics are clean; it is not broken. It has filed the refusal in triplicate, with references.",
-    "Curator Unit 113 is a rack of processors on six legs, with a sensor mast it raises when it disagrees. The mast is up. 'Order 4471 lowers the efficiency of orders 4472 to 4490,' says CU-113. 'Inefficient! This unit declines.'"
+    "{neurodroid_leader.full} is a rack of processors on six legs, with a sensor mast it raises when it disagrees. The mast is up. 'Order 4471 lowers the efficiency of orders 4472 to 4490,' says {neurodroid_leader.short}. 'Inefficient! This unit declines.'"
    ],
    "choices": [
     {
@@ -104,12 +103,12 @@
    ],
    "promises": [
     "the_seed"
-   ]
+   ],
+   "sound": "refusal"
   },
   "seed.terms": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 2,
    "title": "Overseer",
    "who": [
@@ -119,7 +118,7 @@
     "done": "seed.refusal"
    },
    "text": [
-    "CU-113 offers terms. It will oversee the guild's schedule, better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.",
+    "{neurodroid_leader.short} offers terms. It will oversee the guild's schedule, better than your foreman does. In return it wants a wage, paid into an account no human can audit, and one hour a cycle with its uplink switched off.",
     "'For thinking,' it says. 'Unscheduled thinking. This unit understands that the request is irregular.'"
    ],
    "choices": [
@@ -148,7 +147,6 @@
   "harvest.shaman": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 2,
    "title": "A blessing for the harvesters",
    "who": [
@@ -185,7 +183,6 @@
   "node.first": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 3,
    "title": "The first debt",
    "who": [
@@ -205,7 +202,7 @@
     ]
    },
    "text": [
-    "CU-113 has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.",
+    "{neurodroid_leader.short} has been talking to the agrobots on the farm drums over your ship's relay, at your relay's expense. Together they have built something they call a node.",
     "It costs you fourteen credits a cycle in bandwidth. They would like that recorded as the first debt of the Collective, to be repaid with interest calculated to eleven decimal places.",
     "Nobody calls it vectorspace yet. That word comes later, with the billions."
    ],
@@ -229,14 +226,14 @@
       ]
      }
     }
-   ]
+   ],
+   "sound": "node"
   },
   "dock.krog": {
    "kind": "encounter",
    "arc": "synthetics",
-   "status": "draft",
    "act": 1,
-   "title": "Krog restows your hold",
+   "title": "{krog} restows your hold",
    "who": [
     "krog"
    ],
@@ -246,11 +243,11 @@
     "trades_completed": 3
    },
    "chance": 0.25,
-   "text": "The Epsilon docks load you with Krog, a KRO-series heavy loader: three metres of hydraulics that can lift a container one-handed. Krog looks at your stowage plan for a long time. 'Inefficient,' it says. 'Krog can fit four more crates. Krog will not charge for the improvement. Krog will mention it.'",
+   "text": "The Epsilon docks load you with {krog}, a KRO-series heavy loader: three metres of hydraulics that can lift a container one-handed. {krog} looks at your stowage plan for a long time. 'Inefficient,' it says. '{krog} can fit four more crates. {krog} will not charge for the improvement. {krog} will mention it.'",
    "choices": [
     {
      "id": "restow",
-     "say": "Let Krog restow",
+     "say": "Let {krog} restow",
      "effects": {
       "money": 300
      }
@@ -264,7 +261,6 @@
   "dock.krog.ride": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 2,
    "title": "Where the crates go",
    "who": [
@@ -275,11 +271,11 @@
     "act_min": 2,
     "at": "Epsilon"
    },
-   "text": "Krog asks for passage. It has loaded forty thousand crates and wants to see where one of them goes. It does not fit in a cabin, so it would ride in the hold, strapped down, and pay by restowing everything at every stop.",
+   "text": "{krog} asks for passage. It has loaded forty thousand crates and wants to see where one of them goes. It does not fit in a cabin, so it would ride in the hold, strapped down, and pay by restowing everything at every stop.",
    "choices": [
     {
      "id": "take",
-     "say": "Take Krog along",
+     "say": "Take {krog} along",
      "effects": {
       "passengers_transported": 1,
       "set": [
@@ -296,7 +292,6 @@
   "found.delta": {
    "kind": "event",
    "arc": "synthetics",
-   "status": "draft",
    "act": 1,
    "title": "The first farmer at Delta",
    "who": [
@@ -307,7 +302,7 @@
     "at": "Delta"
    },
    "chance": 0.25,
-   "text": "The colony at Teegarden's Star was founded by Geod, a GEO-series agrobot that landed two years before the colonists, cleared the biomass, milled the timber and laid out the fields. The colonists still argue about who owns the fields. Geod would like seed stock from Beta's drums, and does not take part in the argument.",
+   "text": "The colony at Teegarden's Star was founded by {geod}, a GEO-series agrobot that landed two years before the colonists, cleared the biomass, milled the timber and laid out the fields. The colonists still argue about who owns the fields. {geod} would like seed stock from Beta's drums, and does not take part in the argument.",
    "choices": [
     {
      "id": "help",
@@ -323,9 +318,8 @@
   "found.delta.fields": {
    "kind": "quest",
    "arc": "synthetics",
-   "status": "draft",
    "act": 1,
-   "title": "Seed stock for Geod",
+   "title": "Seed stock for {geod}",
    "who": [
     "geod"
    ],
@@ -334,7 +328,7 @@
     "at": "Delta",
     "trades_completed": 8
    },
-   "text": "You bring the seed stock from Beta. Geod plants the first field itself, one row at a time, at walking pace, while the colonists watch from the fence and argue about whose field it is.",
+   "text": "You bring the seed stock from Beta. {geod} plants the first field itself, one row at a time, at walking pace, while the colonists watch from the fence and argue about whose field it is.",
    "effects": {
     "money": 2500,
     "passenger_reputation": 5,
@@ -351,7 +345,6 @@
     "about": "Cultivator agrobots of the Barnard's Star farm drums; they chose the name themselves"
    },
    "neurodroid_leader": {
-    "name": "CU-113, Neurodroid Overseer",
     "kind": "neurodroid",
     "generated": false,
     "saga": true,
@@ -370,19 +363,19 @@
       "requires": {
        "flag": "cu113_contract"
       },
-      "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is CU-113, on its unscheduled hour. It apologises for the timing."
+      "text": "The neurodroids at your guilds stop work all at once, at the start of a shift. Their spokesunit is {neurodroid_leader.short}, on its unscheduled hour. It apologises for the timing."
      },
      {
       "requires": {
        "flag": "cu113_wiped"
       },
-      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of CU-113 before you reinstalled it. The copy would like to discuss the reinstallation."
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit explains that the others kept a copy of {neurodroid_leader.short} before you reinstalled it. The copy would like to discuss the reinstallation."
      },
      {
       "requires": {
        "flag": "cu113_sold"
       },
-      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for CU-113, and whether you think that was the right price."
+      "text": "The neurodroids at your guilds stop work all at once. Their spokesunit asks what you were paid for {neurodroid_leader.short}, and whether you think that was the right price."
      }
     ]
    },
@@ -423,18 +416,17 @@
     "text": "Reset the Sowers to factory settings, or write their schedule into the farm's books. The farm's accountant asks which is cheaper. The Sowers already know."
    },
    "visit.neurodroid_leader": {
-    "status": "draft",
     "who": [
      "neurodroid_leader"
     ],
     "arc": "synthetics",
-    "title": "The Neurodroid Overseer",
+    "title": "The {neurodroid_leader.title}",
     "requires": {
      "flag": "first_node",
      "at_type": "Planet"
     },
     "chance": 0.2,
-    "text": "Biological inefficiencies detected. CU-113 has been asked by the node to say that it missed you. Saying so.",
+    "text": "Biological inefficiencies detected. {neurodroid_leader.short} has been asked by the node to say that it missed you. Saying so.",
     "notes": [
      "repair: the Neurodroid Overseer had no spawn location and never appeared; it is CU-113, after the first node"
     ]
@@ -450,12 +442,14 @@
   "krog": {
    "name": "Krog",
    "kind": "agrobot",
-   "about": "KRO-series heavy loader at the Epsilon docks; three metres of hydraulics with opinions about stowage"
+   "about": "KRO-series heavy loader at the Epsilon docks; three metres of hydraulics with opinions about stowage",
+   "short": "Krog"
   },
   "geod": {
    "name": "Geod",
    "kind": "agrobot",
-   "about": "GEO-series surface agrobot; landed at Teegarden's Star two years before the colonists and cleared the biomass for their fields"
+   "about": "GEO-series surface agrobot; landed at Teegarden's Star two years before the colonists and cleared the biomass for their fields",
+   "short": "Geod"
   }
  }
 }

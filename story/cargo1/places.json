@@ -113,7 +113,7 @@
    "system": "TRAPPIST-1",
    "ly": 40,
    "facts": "Seven rocky planets, several in the habitable zone.",
-   "colony": "The far research station. Formative. Matylda Korinek works here."
+   "colony": "The far research station. Formative. Korinek works here."
   },
   "Ancient Ruins Alpha": {
    "kind": "location",
@@ -193,19 +193,37 @@
   "Stator Field Megastructure": {
    "kind": "location",
    "type": "Megastructure",
-   "status": "proposed",
    "system": "Sol, near Sedna's orbit",
    "facts": "The clustered orbits of the most distant known Kuiper belt objects (the wiki's Solar System Hypothesis).",
    "colony": "Segments of the ring, each the size of a hauler, turning together every eleven hours.",
-   "unlock": "the discovery ending's heading, or chapter 4 on the discovery path"
+   "unlock": "revealed by the course home (trail.home), act 4 of the discovery path",
+   "made": {
+    "tech": 15,
+    "agri": 1,
+    "research": 80,
+    "economy": "Mysterious"
+   }
   },
   "Builder Site": {
    "kind": "location",
    "type": "Builder Site",
-   "status": "proposed",
    "system": "Scholz's Star's wake",
    "colony": "The segment the star pulled away 70,000 years ago, still turning; the beacon on its rim.",
-   "unlock": "Korinek's expedition (the ancient mysteries chain)"
+   "unlock": "revealed when the captain takes Korinek to the segment (ancient_mysteries.1)",
+   "made": {
+    "tech": 18,
+    "agri": 1,
+    "research": 90,
+    "economy": "Mysterious"
+   }
+  },
+  "port": {
+   "kind": "venue",
+   "about": "the port: passengers and cabins"
+  },
+  "cantina": {
+   "kind": "venue",
+   "about": "the cantina: gossip, jobs, rumours"
   }
  }
 }

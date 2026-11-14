@@ -10,23 +10,23 @@
  },
  "flags": {
   "bounty_war": {
-   "about": "the captain answered Mraz's bounty with a bigger one"
+   "about": "the captain answered {pirate_captain.short}'s bounty with a bigger one"
   },
   "mraz_handed": {
-   "about": "the captain handed Hedda Mraz to a legion",
+   "about": "the captain handed {pirate_captain} to a legion",
    "carries_to": [
     "cargo2"
    ]
   },
   "mraz_spared": {
-   "about": "the captain let Hedda Mraz go",
+   "about": "the captain let {pirate_captain} go",
    "carries_to": [
     "cargo2",
     "cargo3"
    ]
   },
   "mraz_hired": {
-   "about": "the captain hired Hedda Mraz as an escort",
+   "about": "the captain hired {pirate_captain} as an escort",
    "carries_to": [
     "cargo2"
    ]
@@ -60,7 +60,6 @@
   "vendetta.bounty": {
    "kind": "event",
    "arc": "pirates",
-   "status": "draft",
    "act": 2,
    "title": "The bounty",
    "who": [
@@ -69,7 +68,7 @@
    "requires": {
     "done": "meet.pirate_nemesis"
    },
-   "text": "Mraz posts a bounty on your ship in every outpost bar between Alpha and Luhman 16. The amount is insulting. You count the zeros twice. Still insulting.",
+   "text": "{pirate_captain.short} posts a bounty on your ship in every outpost bar between Alpha and Luhman 16. The amount is insulting. You count the zeros twice. Still insulting.",
    "choices": [
     {
      "id": "raise",
@@ -93,7 +92,6 @@
   "vendetta.convoys": {
    "kind": "event",
    "arc": "pirates",
-   "status": "draft",
    "act": 2,
    "title": "Everyone's cargo but yours",
    "who": [
@@ -103,7 +101,7 @@
     "done": "vendetta.bounty",
     "combat_victories.pirate": 15
    },
-   "text": "Mraz starts raiding the ore convoys out of Gamma. She leaves your cargo alone and takes everyone else's. The miners have noticed. So have the legions.",
+   "text": "{pirate_captain.short} starts raiding the ore convoys out of Gamma. She leaves your cargo alone and takes everyone else's. The miners have noticed. So have the legions.",
    "effects": {
     "passenger_reputation": -5
    }
@@ -111,7 +109,6 @@
   "vendetta.terms": {
    "kind": "encounter",
    "arc": "pirates",
-   "status": "draft",
    "act": 3,
    "title": "Hiding in the weather",
    "who": [
@@ -123,7 +120,7 @@
     "at_type": "DeepSpaceOutpost"
    },
    "text": [
-    "You find Mraz skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
+    "You find {pirate_captain.short} skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
     "Her ship is out of fuel and she is out of patience. 'Go on, then,' she says."
    ],
    "choices": [
@@ -167,7 +164,7 @@
       "flag": "bounty_war"
      },
      "text": [
-      "You find Mraz skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
+      "You find {pirate_captain.short} skimming the cloud tops of the brown dwarf below the outpost, hiding in its weather. It is a good hiding place until the fuel runs out.",
       "Her ship is out of fuel and she is out of patience. 'Go on, then,' she says. 'Collect your own bounty. I hear it is a big one.'"
      ]
     }
@@ -176,7 +173,6 @@
   "legion.offer": {
    "kind": "event",
    "arc": "legions",
-   "status": "draft",
    "act": 3,
    "title": "Commission",
    "requires": {
@@ -230,7 +226,6 @@
  "amend": {
   "characters": {
    "pirate_captain": {
-    "name": "Hedda Mraz",
     "generated": false,
     "about": "pirate; holds grudges, keeps count; spared, she founds the Void Angels free company in Cargo 2"
    }
@@ -238,7 +233,7 @@
   "nodes": {
    "meet.pirate_nemesis": {
     "title": "Ten ships",
-    "text": "A message arrives on the frequency only your crew uses. 'Ten of my ships,' it says. 'I counted.' It is signed Hedda Mraz.",
+    "text": "A message arrives on the frequency only your crew uses. 'Ten of my ships,' it says. 'I counted.' It is signed {pirate_captain}.",
     "next": [
      "vendetta.bounty"
     ],
@@ -247,7 +242,6 @@
     ]
    },
    "questline.combat.1": {
-    "status": "draft",
     "arc": "legions",
     "title": "OmniCorp: escort duty",
     "requires": {
@@ -260,7 +254,6 @@
     }
    },
    "questline.combat.2": {
-    "status": "draft",
     "arc": "legions",
     "title": "Stellar Dynamics: a head for the board",
     "requires": {
@@ -273,7 +266,6 @@
     }
    },
    "questline.combat.3": {
-    "status": "draft",
     "arc": "legions",
     "title": "Xylo Consortium: war games",
     "requires": {

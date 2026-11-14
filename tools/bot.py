@@ -32,6 +32,9 @@ def write_trace(g, final=False):
     traced_turn[0] = g.turn
     snap = cargo_story.snapshot(g)
     snap["verdicts"] = cargo_story.game_verdicts(g)
+    moment = cargo_story.story_moment(g)
+    if moment:
+        snap["moment"] = moment
     snap["style"] = goal
     snap["seed"] = seed
     if final:
@@ -64,6 +67,7 @@ class Bot:
     def __init__(self):
         self.game = None
         self.ctx = None            # (prompt, options) while validate_input is asking
+        self.story_choices = 0     # choices made in story scenes
         self.qty = False
         self.turn_seen = -1
         self.flags = set()
@@ -344,6 +348,9 @@ class Bot:
                     if afford:
                         return min(afford, key=lambda i: mods[i]["cost"])
                 return "back"
+            if p.startswith("your choice"):           # a story scene's choice
+                self.story_choices += 1
+                return random.choice(options) if options else ""
             if "choose action (1/2/3)" in p or "choose action" in p or "your response" in p:
                 self.unknown[("choice", tuple(options)[:6])] += 1
                 return options[0] if options else ""

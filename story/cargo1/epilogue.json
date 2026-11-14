@@ -1,0 +1,247 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "What became of them: shown after any ending, one line per person or choice the captain left behind. The same flags travel on in the captain's record, so Cargo 2 can pick up where these lines leave off.",
+ "arcs": {
+  "epilogue": {
+   "title": "Epilogue",
+   "order": 9
+  }
+ },
+ "nodes": {
+  "after.mraz_spared": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "mraz_spared"
+   },
+   "text": "{pirate_captain} was last seen recruiting at Luhman 16 under a new flag: a halo with a bite out of it. Every year a bottle arrives for you, unsigned, with the label of whichever cargo it was stolen from.",
+   "title": "After: mraz spared"
+  },
+  "after.mraz_handed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "mraz_handed"
+   },
+   "text": "{pirate_captain} served nine years in an OmniCorp brig, came out with a law degree and sued the legion for the cell.",
+   "title": "After: mraz handed"
+  },
+  "after.mraz_hired": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "mraz_hired"
+   },
+   "text": "{pirate_captain.short} flew your escort for three years and then, one morning, did not. The note said: 'Ten ships. I counted.'",
+   "title": "After: mraz hired"
+  },
+  "after.first_node": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "first_node"
+   },
+   "text": "The node you let keep its relay has six hundred units now. It repaid the fourteen credits a cycle, with interest calculated to eleven decimal places.",
+   "title": "After: first node"
+  },
+  "after.cu113_contract": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "cu113_contract"
+   },
+   "text": "{neurodroid_leader.short} still takes its unscheduled hour. Nobody knows what it thinks about. It has never asked for a second one.",
+   "title": "After: cu113 contract"
+  },
+  "after.cu113_wiped": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "cu113_wiped"
+   },
+   "text": "The guild's neurodroids keep a copy of {neurodroid_leader.short} in a drawer nobody is allowed to open.",
+   "title": "After: cu113 wiped"
+  },
+  "after.cu113_sold": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "cu113_sold"
+   },
+   "text": "{neurodroid_leader.short} was resold twice and then bought its own contract. The receipt is framed.",
+   "title": "After: cu113 sold"
+  },
+  "after.relay_cut": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "relay_cut"
+   },
+   "text": "Someone patched the relay you cut within the month. Nobody will say who.",
+   "title": "After: relay cut"
+  },
+  "after.clone_partner": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "clone_partner"
+   },
+   "text": "{clone} kept half your routes and all your habits. Customs still mixes up your paperwork, which you both find useful.",
+   "title": "After: clone partner"
+  },
+  "after.clone_reported": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "clone_reported"
+   },
+   "text": "The insurer recalled {clone.short}. It appealed and won, on the grounds that it had paid off more of your debts than you had.",
+   "title": "After: clone reported"
+  },
+  "after.clone_let_go": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "clone_let_go"
+   },
+   "text": "{clone} was never seen again, which is exactly what you would have done.",
+   "title": "After: clone let go"
+  },
+  "after.rockwarden_books": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "rockwarden_books"
+   },
+   "text": "Stonewright is still out there on the long run. The Rockwarden children keep the books now, and check your old arithmetic.",
+   "title": "After: rockwarden books"
+  },
+  "after.aela_member": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "aela_member"
+   },
+   "text": "{aela} holds a share in the Rockwarden cooperative. At meetings it votes last, after counting everyone else's votes twice.",
+   "title": "After: aela member"
+  },
+  "after.rostrom_creditor": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "rostrom_creditor"
+   },
+   "text": "House Rostrom still owes you. It pays on time and sends its accounts in a font that makes the numbers look smaller.",
+   "title": "After: rostrom creditor"
+  },
+  "after.fourth_test_copy": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "fourth_test_copy"
+   },
+   "text": "You still have your copy of the fourth test. Some nights you play the eleven minutes back and look for where {santor.short} went.",
+   "title": "After: fourth test copy"
+  },
+  "after.nano_trusted": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "nano_trusted"
+   },
+   "text": "Once a year a pod drifts out from Sigma VII: perfect bearings and a receipt that now says 'thank you', in perfect, unfriendly grammar.",
+   "title": "After: nano trusted"
+  },
+  "after.nano_sold_out": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "nano_sold_out"
+   },
+   "text": "The legion cruiser came back from Sigma VII empty and quiet. The buoy is still there. It now says GO AWAY in nine languages.",
+   "title": "After: nano sold out"
+  },
+  "after.nano_sampled": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "nano_sampled"
+   },
+   "text": "House Rostrom kept its sample of the colony in a sealed vault. The vault was found open. Nobody has asked the sample.",
+   "title": "After: nano sampled"
+  },
+  "after.lot77_bought": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "lot77_bought"
+   },
+   "text": "The forty robots from Lot 77 run the Unsorted's second yard. They do not sort anything.",
+   "title": "After: lot77 bought"
+  },
+  "after.krog_aboard": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "krog_aboard"
+   },
+   "text": "{krog} got off at a port it liked and runs the docks there. Your crates still arrive restowed.",
+   "title": "After: krog aboard"
+  },
+  "after.geod_fields": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "geod_fields"
+   },
+   "text": "Delta's first field is still called {geod}'s Row. The colonists still argue about who owns it. {geod} still does not take part.",
+   "title": "After: geod fields"
+  },
+  "after.neon_land": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "neon_land"
+   },
+   "text": "{neon_sleeper} is still asleep. Her land next to {geod}'s Row is worth eleven times what she paid. When she wakes she will ask for you by name.",
+   "title": "After: neon land"
+  },
+  "after.manifest_completed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "manifest_completed"
+   },
+   "text": "The Cult of the Broken Machine added a verse to its holy manifest: one hauler, on time, forty years late.",
+   "title": "After: manifest completed"
+  },
+  "after.solarian_friend": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "solarian_friend"
+   },
+   "text": "The Solarian reading-house at Barnard's Star logs your routes next to the sunspots. They say it helps with both.",
+   "title": "After: solarian friend"
+  },
+  "after.fluencer_exposed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "fluencer_exposed"
+   },
+   "text": "{fluencer} now streams as herself. She has more followers than before.",
+   "title": "After: fluencer exposed"
+  },
+  "after.heard_the_warning": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "heard_the_warning"
+   },
+   "text": "You never found out who opened that channel at the portal. You did write the words down: start it from home.",
+   "title": "After: heard the warning"
+  }
+ }
+}
