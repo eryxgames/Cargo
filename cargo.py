@@ -8547,17 +8547,28 @@ class DynamicCharacterSystem:
             }
         }
         self.event_chains = {}
+        self.trigger_last_spawn = {}   # trigger id -> turn its character last appeared
         self.add_passenger_triggers()
         self.create_passenger_event_chains()
 
     def create_character_box(self, character_content, style='round'):
         return self.game.create_character_box(character_content, style)
 
+    # Characters who may come back, and how many turns apart; everyone else appears once
+    REPEATING_TRIGGERS = {"vip_passenger": 5}
+
     def check_character_triggers(self):
         """Check for new character appearances based on game state"""
+        if not hasattr(self, 'trigger_last_spawn'):
+            self.trigger_last_spawn = {}
         for trigger_id, trigger in self.character_triggers.items():
-            if (trigger_id not in self.active_characters and
-                trigger['condition'](self.game)):
+            last = self.trigger_last_spawn.get(trigger_id)
+            if last is not None:
+                cooldown = self.REPEATING_TRIGGERS.get(trigger_id)
+                if cooldown is None or self.game.turn - last < cooldown:
+                    continue
+            if trigger['condition'](self.game):
+                self.trigger_last_spawn[trigger_id] = self.game.turn
                 self.spawn_character(trigger_id)
 
 
