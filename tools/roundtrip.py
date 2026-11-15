@@ -31,8 +31,10 @@ def fake_input(prompt=""):
     if fed[0] > budget[0]:
         raise Stop()
     if fed[0] == 1:
-        return "1"
+        return "1"              # difficulty
     if fed[0] == 2:
+        return "2"              # voyage
+    if fed[0] == 3:
         return "Tester %d" % seed
     v = rng.choice(POOL)
     return v
@@ -60,7 +62,7 @@ real = sys.stdout
 sys.stdout = out
 result = {"seed": seed}
 try:
-    budget[0] = 2
+    budget[0] = 3
     game = cargo.Game()
     game, how = run(game, n1)
     result["phase1"] = how

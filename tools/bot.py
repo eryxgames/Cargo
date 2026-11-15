@@ -11,6 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import headless
 
 path, goal, seed = sys.argv[1], sys.argv[2], int(sys.argv[3])
+# --voyage=short|standard|long (default standard)
+VOYAGE = {"short": "1", "standard": "2", "long": "3"}.get(
+    next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--voyage=")), "standard"), "2")
 max_turns = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4].isdigit() else 3000
 verbose = "--verbose" in sys.argv
 save_every = 0
@@ -276,6 +279,15 @@ class Bot:
                 self.research = todo[0]
                 return "a"
 
+        # a heavier hull at a planet shipyard, once the money is there (fighters and explorers first)
+        if "upgrade" in options and "upgrade" not in self.flags and isinstance(here, cargo.Planet) \
+                and ship.hull + 1 < len(ship.HULLS):
+            price = ship.HULLS[ship.hull + 1]["price"]
+            if ship.money > price * (2 if goal in ("combat", "discovery", "discovery2") else 4):
+                self.flags.add("upgrade")
+                self.upgrade = "hull"
+                return "u"
+
         # ship upgrades: attack decides every fight (attack must exceed the enemy's defence,
         # which goes up to 6), defence only reduces damage
         if "upgrade" in options and "upgrade" not in self.flags:
@@ -385,6 +397,8 @@ class Bot:
                 return self.item
             if "property to upgrade" in p:
                 return self.upgrade
+            if "overhaul the hull" in p:
+                return "yes"
             if "building type" in p:
                 return self.building
             if "choose your path" in p:
@@ -516,6 +530,13 @@ class Bot:
                     chance = g.fight_chance(power, cargo.FIGHT_TRICKS[key[6:]][1]["edge"])
                     if chance > best_chance:
                         best_key, best_chance = key, chance
+                if key.startswith("ally:"):
+                    chance = g.fight_chance(power, g.ALLIES[key[5:]][2])
+                    if chance > best_chance:
+                        best_key, best_chance = key, chance
+            for key in ("mraz", "pilgrims", "lauritz"):          # an old favour ends it peacefully
+                if key in keys and not fighter:
+                    return str(keys.index(key) + 1)
             if best_chance >= (0.4 if fighter else 0.6):
                 return str(keys.index(best_key) + 1)
             for key in ("slip", "warp", "scan", "holy", "feed", "talk", "pay", "run"):
@@ -614,7 +635,7 @@ result = {"goal": goal, "seed": seed}
 history = []
 try:
     bot.ctx = None
-    answers = iter(["2", "Bot %s %d" % (goal, seed)])
+    answers = iter(["2", VOYAGE, "Bot %s %d" % (goal, seed)])
     builtins.input = lambda prompt="": next(answers)
     game = cargo.Game()
     builtins.input = fake_input

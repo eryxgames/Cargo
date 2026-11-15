@@ -74,6 +74,63 @@
   "paid_in_full": {
    "about": "the captain paid the margin call in full"
   },
+  "varga_paid": {
+   "about": "{convoy_captain} called in her favours to cover the margin call"
+  },
+  "neon_bought_debt": {
+   "about": "the Kessary-Vel family bought the captain's debt"
+  },
+  "collector_forged": {
+   "about": "{inspector} proved the collector's papers forged"
+  },
+  "named_the_quartermaster": {
+   "about": "the captain named the quartermaster who sold the convoy"
+  },
+  "cleared_by_lauritz": {
+   "about": "{inspector} testified for the captain at the inquiry"
+  },
+  "varga_testified": {
+   "about": "{convoy_captain}'s convoy logged the recall order"
+  },
+  "node_testified": {
+   "about": "{neurodroid_leader} gave the inquiry its copy of the logs"
+  },
+  "salt_barge_copy": {
+   "about": "{convoy_captain} carried the logs out in a salt barge"
+  },
+  "salon_broadcast": {
+   "about": "{virtual_heir} played the findings in every Neon salon"
+  },
+  "logs_released": {
+   "about": "{inspector} released the captain's logs"
+  },
+  "copy_in_rock": {
+   "about": "the nanobot colony kept a copy of the logs"
+  },
+  "varga_votes": {
+   "about": "{convoy_captain}'s captains carried the vote"
+  },
+  "young_haulers_vote": {
+   "about": "{young_hauler} brought the young haulers to the vote"
+  },
+  "the_forty_came": {
+   "about": "the forty haulers from the jump point came to Alpha"
+  },
+  "varga_at_alpha": {
+   "about": "{convoy_captain}'s convoy fought at Alpha"
+  },
+  "mraz_at_alpha": {
+   "about": "{pirate_captain} fought for Alpha under her own flag"
+  },
+  "tadeo_came_back": {
+   "about": "{gunner} came back from the brig for the battle at Alpha"
+  },
+  "varga_towed": {
+   "about": "{convoy_captain}'s tug towed the captain out of the plane"
+  },
+  "pell_tanker": {
+   "about": "{young_hauler} refuelled the captain halfway to the ring"
+  },
   "honest_mark": {
    "about": "the first Marks were struck at full weight"
   },
@@ -307,6 +364,48 @@
       "passenger_reputation": 5,
       "set": [
        "captains_paid"
+      ]
+     }
+    },
+    {
+     "id": "varga",
+     "say": "Ask {convoy_captain.short} to call in her favours",
+     "requires": {
+      "flag": "varga_friend"
+     },
+     "effects": {
+      "code": "lose money 0.1 min 5000",
+      "plot_points": 8,
+      "set": [
+       "varga_paid"
+      ]
+     }
+    },
+    {
+     "id": "neons",
+     "say": "Let {heritarchist.short} buy the debt for the family",
+     "requires": {
+      "flag": "neon_sleeper_carried"
+     },
+     "effects": {
+      "code": "lose money 0.05 min 2000",
+      "plot_points": 5,
+      "set": [
+       "neon_bought_debt"
+      ]
+     }
+    },
+    {
+     "id": "forged",
+     "say": "Ask {inspector.short} to look at the collector's papers",
+     "requires": {
+      "flag": "lauritz_courier"
+     },
+     "effects": {
+      "code": "lose money 0.03 min 1000",
+      "plot_points": 8,
+      "set": [
+       "collector_forged"
       ]
      }
     },
@@ -564,6 +663,34 @@
      }
     },
     {
+     "id": "varga",
+     "say": "{convoy_captain.short} brings her forty captains to the hold",
+     "requires": {
+      "flag": "varga_friend"
+     },
+     "effects": {
+      "plot_points": 15,
+      "set": [
+       "won_the_vote",
+       "varga_votes"
+      ]
+     }
+    },
+    {
+     "id": "pell",
+     "say": "{young_hauler.short} brings the young haulers, who were never asked",
+     "requires": {
+      "flag": "pell_friend"
+     },
+     "effects": {
+      "plot_points": 15,
+      "set": [
+       "won_the_vote",
+       "young_haulers_vote"
+      ]
+     }
+    },
+    {
      "id": "buy",
      "say": "Buy the last vote (40,000 credits)",
      "requires": {
@@ -712,6 +839,69 @@
      }
     },
     {
+     "id": "name",
+     "say": "Name the quartermaster whose books you saw",
+     "requires": {
+      "flag": "knows_the_quartermaster"
+     },
+     "effects": {
+      "combat_rating": 2,
+      "plot_points": 10,
+      "set": [
+       "named_the_quartermaster"
+      ]
+     }
+    },
+    {
+     "id": "lauritz",
+     "say": "Call {inspector.short} as a witness",
+     "requires": {
+      "any": [
+       {
+        "flag": "lauritz_trust"
+       },
+       {
+        "flag": "lauritz_courier"
+       }
+      ]
+     },
+     "effects": {
+      "combat_rating": 2,
+      "plot_points": 8,
+      "set": [
+       "cleared_by_lauritz"
+      ]
+     }
+    },
+    {
+     "id": "varga",
+     "say": "{convoy_captain.short}'s convoy logged the recall order",
+     "requires": {
+      "flag": "varga_friend"
+     },
+     "effects": {
+      "combat_rating": 2,
+      "plot_points": 8,
+      "set": [
+       "varga_testified"
+      ]
+     }
+    },
+    {
+     "id": "node",
+     "say": "Ask {neurodroid_leader} for the copy it kept",
+     "requires": {
+      "flag": "cu113_contract"
+     },
+     "effects": {
+      "combat_rating": 2,
+      "plot_points": 6,
+      "set": [
+       "node_testified"
+      ]
+     }
+    },
+    {
      "id": "tadeo",
      "say": "Let {gunner.short} take the blame he offers to take",
      "requires": {
@@ -775,6 +965,86 @@
       "plot_points": 15,
       "set": [
        "led_the_defence"
+      ]
+     }
+    },
+    {
+     "id": "haulers",
+     "say": "Call the forty haulers from the jump point",
+     "requires": {
+      "any": [
+       {
+        "flag": "held_the_line"
+       },
+       {
+        "flag": "led_them_out"
+       }
+      ]
+     },
+     "effects": {
+      "code": "fight dreadnought edge 3",
+      "plot_points": 15,
+      "set": [
+       "led_the_defence",
+       "the_forty_came"
+      ]
+     }
+    },
+    {
+     "id": "varga",
+     "say": "{convoy_captain.short}'s convoy arms up and comes in",
+     "requires": {
+      "flag": "varga_friend"
+     },
+     "effects": {
+      "code": "fight dreadnought edge 3",
+      "plot_points": 15,
+      "set": [
+       "led_the_defence",
+       "varga_at_alpha"
+      ]
+     }
+    },
+    {
+     "id": "mraz",
+     "say": "{pirate_captain.short} brings her ships, under her own flag",
+     "requires": {
+      "any": [
+       {
+        "flag": "mraz_spared"
+       },
+       {
+        "flag": "mraz_hired"
+       },
+       {
+        "flag": "mraz_protection"
+       }
+      ]
+     },
+     "effects": {
+      "code": "fight dreadnought edge 4",
+      "plot_points": 15,
+      "set": [
+       "led_the_defence",
+       "mraz_at_alpha"
+      ]
+     }
+    },
+    {
+     "id": "tadeo",
+     "say": "{gunner.short} walks out of the brig and into your gun seat",
+     "requires": {
+      "flag": "tadeo_took_blame"
+     },
+     "effects": {
+      "code": [
+       "crew joins gunner",
+       "fight dreadnought edge 2"
+      ],
+      "plot_points": 15,
+      "set": [
+       "led_the_defence",
+       "tadeo_came_back"
       ]
      }
     },
@@ -921,6 +1191,63 @@
      }
     },
     {
+     "id": "varga",
+     "say": "{convoy_captain.short} carries a copy out in a barge of salt",
+     "requires": {
+      "flag": "varga_friend"
+     },
+     "effects": {
+      "code": "lose research 0.1",
+      "plot_points": 8,
+      "set": [
+       "salt_barge_copy"
+      ]
+     }
+    },
+    {
+     "id": "ren",
+     "say": "Let {virtual_heir.short} play it in every Neon salon",
+     "requires": {
+      "flag": "virtual_friend"
+     },
+     "effects": {
+      "code": "lose research 0.2",
+      "plot_points": 8,
+      "passenger_reputation": 10,
+      "set": [
+       "salon_broadcast"
+      ]
+     }
+    },
+    {
+     "id": "lauritz",
+     "say": "Ask {inspector.short} to release the logs",
+     "requires": {
+      "flag": "lauritz_trust"
+     },
+     "effects": {
+      "code": "lose research 0.05",
+      "plot_points": 6,
+      "set": [
+       "logs_released"
+      ]
+     }
+    },
+    {
+     "id": "rock",
+     "say": "The colony at Sigma VII kept a copy, in rock",
+     "requires": {
+      "flag": "nano_trusted"
+     },
+     "effects": {
+      "code": "lose research 0.05",
+      "plot_points": 6,
+      "set": [
+       "copy_in_rock"
+      ]
+     }
+    },
+    {
      "id": "publish",
      "say": "Publish everything, free, today",
      "effects": {
@@ -989,6 +1316,49 @@
       "plot_points": 15,
       "set": [
        "sisters_road"
+      ]
+     }
+    },
+    {
+     "id": "farstrider",
+     "say": "The Farstrider makes it on half the fuel (30 fuel)",
+     "requires": {
+      "hull_class": 2,
+      "cargo.fuel": 30
+     },
+     "effects": {
+      "cargo.fuel": -30,
+      "plot_points": 15,
+      "set": [
+       "flew_it_ourselves"
+      ]
+     }
+    },
+    {
+     "id": "varga",
+     "say": "{convoy_captain.short}'s tug tows you out of the plane (20 fuel)",
+     "requires": {
+      "flag": "varga_friend",
+      "cargo.fuel": 20
+     },
+     "effects": {
+      "cargo.fuel": -20,
+      "plot_points": 15,
+      "set": [
+       "varga_towed"
+      ]
+     }
+    },
+    {
+     "id": "pell",
+     "say": "{young_hauler.short} flies a tanker out to meet you halfway",
+     "requires": {
+      "flag": "pell_friend"
+     },
+     "effects": {
+      "plot_points": 15,
+      "set": [
+       "pell_tanker"
       ]
      }
     },
@@ -1151,6 +1521,150 @@
    },
    "text": "The trading houses never forgave the vote at Epsilon. They named a ledger column after you: 'losses, unforeseeable'.",
    "title": "After: turned on the houses"
+  },
+  "after.neon_bought_debt": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "neon_bought_debt"
+   },
+   "text": "The Kessary-Vel family owns your old loan now. They have never called it in, and {heritarchist.short} sends a statement every year to say so.",
+   "title": "After: neon bought debt"
+  },
+  "after.collector_forged": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "collector_forged"
+   },
+   "text": "The collector's papers were forged, as {inspector.short} said. He went to prison; the trading houses said they had never heard of him.",
+   "title": "After: collector forged"
+  },
+  "after.cleared_by_lauritz": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "cleared_by_lauritz"
+   },
+   "text": "{inspector.short}'s testimony took four minutes and cleared you completely. She billed the legion for the four minutes.",
+   "title": "After: cleared by lauritz"
+  },
+  "after.varga_testified": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_testified"
+   },
+   "text": "{convoy_captain.short}'s convoy log is in the inquiry record, with the recall order timed to the second and a note in the margin: 'told you so'.",
+   "title": "After: varga testified"
+  },
+  "after.node_testified": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "node_testified"
+   },
+   "text": "The copy {neurodroid_leader} kept is the only complete record of the convoy at the jump point. It has been subpoenaed nine times since and has never once complained.",
+   "title": "After: node testified"
+  },
+  "after.salt_barge_copy": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "salt_barge_copy"
+   },
+   "text": "Your logs crossed three customs lines inside a barge of salt. Every survey since quotes them, slightly salty.",
+   "title": "After: salt barge copy"
+  },
+  "after.salon_broadcast": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "salon_broadcast"
+   },
+   "text": "The grey alloy became the fashion of one Neon season: earrings, toasts, a ballet. The review board could not survive a ballet.",
+   "title": "After: salon broadcast"
+  },
+  "after.logs_released": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "logs_released"
+   },
+   "text": "{inspector.short} released your logs with a stamp that said 'of no customs interest'. It is the most useful stamp you ever got.",
+   "title": "After: logs released"
+  },
+  "after.copy_in_rock": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "copy_in_rock"
+   },
+   "text": "The colony at Sigma VII keeps your logs in a gallery wall, written in rock. Visitors are allowed to read them if they knock first.",
+   "title": "After: copy in rock"
+  },
+  "after.varga_votes": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_votes"
+   },
+   "text": "{convoy_captain.short}'s forty captains carried the vote at Epsilon, and she chewed liquorice root through every speech.",
+   "title": "After: varga votes"
+  },
+  "after.young_haulers_vote": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "young_haulers_vote"
+   },
+   "text": "The young haulers {young_hauler.short} brought to Epsilon had never been allowed to vote on anything. The Hansa gave them a seat on its council, which they still have.",
+   "title": "After: young haulers vote"
+  },
+  "after.the_forty_came": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "the_forty_came"
+   },
+   "text": "The forty haulers from the jump point came to Alpha with every gun they owned. Half the guns were older than their captains. It was enough.",
+   "title": "After: the forty came"
+  },
+  "after.varga_at_alpha": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_at_alpha"
+   },
+   "text": "{convoy_captain.short}'s convoy fought at Alpha in close order, the way it flies. The legion asked her to teach it. She charged.",
+   "title": "After: varga at alpha"
+  },
+  "after.tadeo_came_back": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "tadeo_came_back"
+   },
+   "text": "{gunner.short} walked out of a legion brig into your gun seat in the middle of a battle. He has never explained how. The brig has never asked.",
+   "title": "After: tadeo came back"
+  },
+  "after.varga_towed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_towed"
+   },
+   "text": "{convoy_captain.short}'s tug towed you out of the plane of the planets and turned back at the last depot. She kept the tow line as a souvenir.",
+   "title": "After: varga towed"
+  },
+  "after.pell_tanker": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "pell_tanker"
+   },
+   "text": "{young_hauler.short} flew a tanker halfway to the edge of the system to refuel you. He still says it was the easy part.",
+   "title": "After: pell tanker"
   },
   "after.held_the_line": {
    "kind": "epilogue",

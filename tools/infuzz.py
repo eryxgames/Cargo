@@ -36,8 +36,10 @@ def fake_input(prompt=""):
     if count[0] > n_inputs:
         raise Stop()
     if count[0] == 1:
-        v = "1"
+        v = "1"             # difficulty
     elif count[0] == 2:
+        v = "2"             # voyage
+    elif count[0] == 3:
         v = "Tester"
     else:
         v = rng.choice(POOL)

@@ -206,6 +206,21 @@ at Epsilon Eridani, an interstellar comet, and a microlensing parallax
 (`cargo1/science.json`). The people who want them flown keep them from getting too
 solemn.
 
+People who come back (`cargo1/recurring.json`): Ilse Varga, captain of the
+Gamma-Alpha convoy, who keeps score of favours; Pell Okafor, nineteen and without a
+ship, who becomes a friend, a debtor or a raider; and Hanne Lauritz, the customs inspector
+who writes everything down, bribes included. Each meets the captain early and again in
+the middle, can be called into fights, and turns up at the low point and the climax
+depending on how they were treated. Old debts come due on their own: the harvest at
+Geod's Row, the Kessary-Vel dividend, the clone's half of the profits, Mraz's old crew,
+the neurodroid that was sold. The low points and climaxes offer paybacks for many earlier
+choices: the forty haulers from the jump point at Alpha, Mraz under her own flag, Tadeo
+out of the brig, the colony at Sigma VII keeping a copy of the logs in rock.
+
+Hulls: Ironback and Farstrider overhauls; outposts, ruins and listening posts are rough
+lanes, the far edge of the system and the systems past the portal deep ones. Voyage
+length (short, standard, long) scales what the main story asks for.
+
 Between docks: twelve kinds of enemy (scrap skiffs to a pirate dreadnought, feral
 mining drones, a runaway harvester, customs, cultists, legion deserters) and twelve
 situations, each with choices that the right gear or crew improves. Crew for hire

@@ -43,6 +43,7 @@
   "cargo1/crew.json",
   "cargo1/hansa.json",
   "cargo1/science.json",
+  "cargo1/recurring.json",
   "cargo1/drama.json",
   "cargo1/rumours.json",
   "cargo1/gossip.json",
@@ -106,6 +107,9 @@
   },
   "dues_arrears": {
    "about": "convoy dues owed and not yet paid"
+  },
+  "hull_class": {
+   "about": "the ship's hull: 0 the old hauler, 1 Ironback, 2 Farstrider"
   },
   "cargo.tech": {
    "about": "tech in the hold (an effect adds or takes it)"

@@ -12,7 +12,7 @@ os.environ["CARGO_HOME"] = home
 cargo = headless.load(sys.argv[1])
 io = headless.IO()
 headless.patch(cargo, io)
-io.feed(["1", "Filer"])
+io.feed(["1", "2", "Filer"])
 with headless.quiet():
     game = cargo.Game()
     good_path = game.save_game("good")

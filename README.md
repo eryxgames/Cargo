@@ -176,6 +176,17 @@ A few rules worth knowing:
   Alpha Centauri, an interstellar comet...) burn fuel, or you buy the burn from the depot.
 - Each road through the story has a crisis in chapter three, a low point before the finale
   and a climax that opens the ending. They cost real money, bonds, research or crew.
+- A new game asks for a difficulty and a voyage length. Easy has calmer lanes (fewer
+  interruptions) and gentler fights, Expert busier lanes and harder ones. A short voyage's
+  chapters ask for 40% less, a long one's for half as much again.
+- Rich captains draw bigger pirates, and pirates take a bigger share from them.
+- Hulls: the old hauler you start with, then an Ironback (60,000) and a Farstrider (220,000)
+  from a planet's shipyard (`upgrade`, then `hull`). Each fights and carries better and costs far
+  more to repair. Outposts, ruins and listening posts are rough going for the old hull; the far
+  edge of the system and the systems past the portal need a Farstrider.
+- People come back: a convoy captain, a young hauler and a customs inspector meet you early,
+  again later, and turn up at the crisis or the climax depending on how you treated them.
+  Old choices come due too, for better or worse, and friends can be called into a fight.
 - Passenger reputation runs from 0 to 100.
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 

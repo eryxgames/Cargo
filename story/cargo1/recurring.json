@@ -1,0 +1,1059 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "People who come back. Three recurring characters (a convoy captain, a young hauler, a customs inspector) who meet the captain early, again in the middle, and turn up at the low point or the climax depending on how they were treated; and old debts, good and bad, that earlier choices leave lying around until they are collected. Fights read some of these flags too (Game.encounter).",
+ "arcs": {
+  "recurring": {
+   "title": "People who come back",
+   "order": 2.95
+  },
+  "debts": {
+   "title": "Old debts",
+   "order": 2.96
+  }
+ },
+ "characters": {
+  "convoy_captain": {
+   "name": "Ilse Varga",
+   "short": "Varga",
+   "kind": "human",
+   "about": "captain of the Gamma-Alpha convoy; chews liquorice root; keeps score of every favour, both ways"
+  },
+  "young_hauler": {
+   "name": "Pell Okafor",
+   "short": "Pell",
+   "kind": "human",
+   "about": "nineteen, a fresh licence and no ship; asks too many questions and remembers the answers"
+  },
+  "inspector": {
+   "name": "Hanne Lauritz",
+   "short": "Lauritz",
+   "kind": "human",
+   "about": "customs inspector; reads manifests the way other people read novels, looking for the twist"
+  }
+ },
+ "flags": {
+  "varga_helped": {
+   "about": "the captain towed {convoy_captain}'s barges",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "varga_refused": {
+   "about": "the captain left {convoy_captain}'s barges at the dock"
+  },
+  "varga_friend": {
+   "about": "{convoy_captain} answers when the captain calls",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "pell_taught": {
+   "about": "the captain took {young_hauler} along for a run"
+  },
+  "pell_turned_away": {
+   "about": "the captain turned {young_hauler} away",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "pell_lent": {
+   "about": "the captain lent {young_hauler} ten thousand"
+  },
+  "pell_advised": {
+   "about": "the captain gave {young_hauler} advice instead of money"
+  },
+  "pell_friend": {
+   "about": "{young_hauler} flies beside the captain when asked",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "pell_redeemed": {
+   "about": "the captain took {young_hauler} back from the raiders"
+  },
+  "fought_pell": {
+   "about": "the captain fought {young_hauler} on the lane"
+  },
+  "paid_pell": {
+   "about": "the captain paid {young_hauler} to go away"
+  },
+  "lauritz_trust": {
+   "about": "{inspector} trusts the captain's manifests",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "lauritz_bribed": {
+   "about": "the captain paid {inspector} a 'processing fee', and she wrote it down"
+  },
+  "lauritz_suspicious": {
+   "about": "{inspector} watched the Grey Hats tidy the captain's manifest"
+  },
+  "lauritz_courier": {
+   "about": "the captain carried {inspector}'s case sealed"
+  },
+  "lauritz_burned": {
+   "about": "the captain opened {inspector}'s case"
+  },
+  "knows_the_quartermaster": {
+   "about": "the captain knows which quartermaster sold the convoys",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "fined_for_the_fee": {
+   "about": "the audit fined the captain for {inspector}'s page nine"
+  },
+  "mraz_protection": {
+   "about": "{pirate_captain}'s people leave the captain's ship alone"
+  }
+ },
+ "nodes": {
+  "varga.tug": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Two barges and no tug",
+   "requires": {
+    "at_type": "Planet",
+    "turn_min": 6,
+    "trades_completed": 4
+   },
+   "text": "{convoy_captain} runs the Gamma-Alpha convoy: forty haulers, one tug, and the tug has just died. Two of her barges drift at the dock with perishables aboard. 'Tow them to the next dock,' she says, chewing liquorice root, 'and I owe you. I keep score.'",
+   "act": 1,
+   "chance": 0.2,
+   "who": [
+    "convoy_captain"
+   ],
+   "choices": [
+    {
+     "id": "tow",
+     "say": "Tow her barges (a day's trading lost)",
+     "effects": {
+      "money": -1500,
+      "plot_points": 3,
+      "set": [
+       "varga_helped"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Not your convoy, not your problem",
+     "effects": {
+      "set": [
+       "varga_refused"
+      ]
+     }
+    }
+   ]
+  },
+  "varga.berth": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "{convoy_captain.short} keeps score",
+   "requires": {
+    "flag": "varga_helped",
+    "since": {
+     "varga.tug": 15
+    },
+    "at_type": [
+     "Planet",
+     "AsteroidBase"
+    ]
+   },
+   "text": "{convoy_captain.short} finds you at the dock. 'You're up,' she says. Her convoy has a berth near the middle, where pirates don't reach, and the convoy office owes her more favours than it can count.",
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "convoy_captain"
+   ],
+   "choices": [
+    {
+     "id": "berth",
+     "say": "Take the berth (dues 30% lower for thirty turns)",
+     "effects": {
+      "code": "dues hike 0.7",
+      "plot_points": 3,
+      "set": [
+       "varga_friend"
+      ]
+     }
+    },
+    {
+     "id": "call",
+     "say": "Fly alone, but tell her you'll come if she calls",
+     "effects": {
+      "plot_points": 6,
+      "set": [
+       "varga_friend"
+      ]
+     }
+    }
+   ]
+  },
+  "varga.passing": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "The convoy passes",
+   "requires": {
+    "flag": "varga_refused",
+    "not_flag": "varga_helped",
+    "since": {
+     "varga.tug": 15
+    }
+   },
+   "text": "{convoy_captain.short}'s convoy passes you on the lane: forty ships in good order. She doesn't hail. On the open channel somebody says your ship's name, and somebody else laughs.",
+   "act": 2,
+   "chance": 0.25,
+   "who": [
+    "convoy_captain"
+   ],
+   "choices": [
+    {
+     "id": "round",
+     "say": "Hail her and buy her crews a round (2,000)",
+     "requires": {
+      "money": 2000
+     },
+     "effects": {
+      "money": -2000,
+      "set": [
+       "varga_helped"
+      ]
+     }
+    },
+    {
+     "id": "pass",
+     "say": "Let them pass"
+    }
+   ]
+  },
+  "varga.escort": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Close order",
+   "requires": {
+    "flag": "varga_friend",
+    "act_min": 3
+   },
+   "text": "Pirates have been tailing you for two jumps. Then forty haulers come up the lane in close order, {convoy_captain.short}'s tug at the front and every gun they own pointed outwards. The pirates remember an appointment somewhere else.",
+   "act": 3,
+   "chance": 0.12,
+   "effects": {
+    "plot_points": 3,
+    "passenger_reputation": 3
+   },
+   "who": [
+    "convoy_captain"
+   ]
+  },
+  "pell.ride": {
+   "kind": "encounter",
+   "arc": "recurring",
+   "title": "A kid with a licence",
+   "requires": {
+    "venue": "cantina",
+    "trades_completed": 5
+   },
+   "text": "{young_hauler} is nineteen, has a pilot's licence with the ink still wet, and no ship. He has read every manual in the station library and would like you to explain the parts the manuals got wrong. 'One run,' he says. 'I'll sleep in the hold. I'll pay in questions.'",
+   "act": 1,
+   "chance": 0.25,
+   "who": [
+    "young_hauler"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take him along for one run",
+     "effects": {
+      "money": -800,
+      "plot_points": 3,
+      "set": [
+       "pell_taught"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "No room aboard",
+     "effects": {
+      "set": [
+       "pell_turned_away"
+      ]
+     }
+    }
+   ]
+  },
+  "pell.loan": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Not asking",
+   "requires": {
+    "flag": "pell_taught",
+    "since": {
+     "pell.ride": 20
+    }
+   },
+   "text": "{young_hauler.short} has a ship now: a skiff older than both of you, with an engine that coughs. He needs ten thousand for a new one and every bank on the station has laughed at him. He is not asking. He is very carefully not asking.",
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "young_hauler"
+   ],
+   "choices": [
+    {
+     "id": "lend",
+     "say": "Lend him 10,000",
+     "requires": {
+      "money": 10000
+     },
+     "effects": {
+      "money": -10000,
+      "set": [
+       "pell_lent"
+      ]
+     }
+    },
+    {
+     "id": "advice",
+     "say": "Give him advice and a spare filter",
+     "effects": {
+      "plot_points": 2,
+      "set": [
+       "pell_advised"
+      ]
+     }
+    }
+   ]
+  },
+  "pell.repays": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Interest",
+   "requires": {
+    "flag": "pell_lent",
+    "since": {
+     "pell.loan": 20
+    }
+   },
+   "text": "{young_hauler.short} docks beside you in a skiff with a new engine and a name painted on the bow. You recognise the name. He pays back the ten thousand and five more, in a jar. 'Interest,' he says. 'I looked it up.'",
+   "act": 3,
+   "chance": 0.4,
+   "effects": {
+    "money": 15000,
+    "plot_points": 5,
+    "set": [
+     "pell_friend"
+    ]
+   },
+   "who": [
+    "young_hauler"
+   ]
+  },
+  "pell.prices": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Exact to the credit",
+   "requires": {
+    "flag": "pell_advised",
+    "since": {
+     "pell.loan": 20
+    }
+   },
+   "text": "{young_hauler.short} still flies the coughing skiff. It still coughs. He used your advice on everything else, and it worked: he sends a price list from three docks, exact to the credit, and asks if you need a hand some time.",
+   "act": 3,
+   "chance": 0.3,
+   "effects": {
+    "plot_points": 3,
+    "set": [
+     "pell_friend"
+    ]
+   },
+   "who": [
+    "young_hauler"
+   ]
+  },
+  "pell.raider": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Nothing personal",
+   "requires": {
+    "flag": "pell_turned_away",
+    "act_min": 3,
+    "since": {
+     "pell.ride": 25
+    }
+   },
+   "text": "A raider drops in behind you and hails. You know the voice: {young_hauler.short}, the kid you turned away in the cantina, flying for whoever pays now. 'Nothing personal,' he says. 'You taught me that.'",
+   "act": 3,
+   "chance": 0.2,
+   "who": [
+    "young_hauler"
+   ],
+   "choices": [
+    {
+     "id": "fight",
+     "say": "Fight him",
+     "effects": {
+      "code": "fight raider",
+      "set": [
+       "fought_pell"
+      ]
+     }
+    },
+    {
+     "id": "berth",
+     "say": "Offer him a berth now and clear his debts (5,000)",
+     "requires": {
+      "money": 5000
+     },
+     "effects": {
+      "money": -5000,
+      "plot_points": 5,
+      "set": [
+       "pell_friend",
+       "pell_redeemed"
+      ]
+     }
+    },
+    {
+     "id": "pay",
+     "say": "Pay him to go away",
+     "effects": {
+      "code": "lose money 0.08 min 2000",
+      "set": [
+       "paid_pell"
+      ]
+     }
+    }
+   ]
+  },
+  "lauritz.inspection": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "A crate on nobody's manifest",
+   "requires": {
+    "at_type": "Planet",
+    "turn_min": 10
+   },
+   "text": "{inspector} reads manifests the way other people read novels: slowly, looking for the twist. She finds it in your hold, a crate that is on nobody's manifest. You have never seen it before. She has heard a lot of captains say that.",
+   "act": 1,
+   "chance": 0.15,
+   "who": [
+    "inspector"
+   ],
+   "choices": [
+    {
+     "id": "open",
+     "say": "Open everything and fill in every form",
+     "effects": {
+      "money": -500,
+      "plot_points": 2,
+      "set": [
+       "lauritz_trust"
+      ]
+     }
+    },
+    {
+     "id": "fee",
+     "say": "Offer her a 'processing fee'",
+     "effects": {
+      "money": -1500,
+      "set": [
+       "lauritz_bribed"
+      ]
+     }
+    },
+    {
+     "id": "hats",
+     "say": "Let the Grey Hats tidy the manifest",
+     "requires": {
+      "flag": "grey_hats_client"
+     },
+     "effects": {
+      "set": [
+       "lauritz_suspicious"
+      ]
+     }
+    }
+   ]
+  },
+  "lauritz.case": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "A sealed case",
+   "requires": {
+    "any": [
+     {
+      "flag": "lauritz_trust"
+     },
+     {
+      "flag": "lauritz_bribed"
+     }
+    ],
+    "since": {
+     "lauritz.inspection": 20
+    }
+   },
+   "text": "{inspector.short} has a sealed case for Alpha and no customs officer she trusts to carry it. She has decided to trust you instead, which she says is a professional failing. 'Don't open it.'",
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "inspector"
+   ],
+   "choices": [
+    {
+     "id": "carry",
+     "say": "Carry it sealed",
+     "effects": {
+      "money": 3000,
+      "plot_points": 5,
+      "set": [
+       "lauritz_courier"
+      ]
+     }
+    },
+    {
+     "id": "open",
+     "say": "Open it on the way",
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "knows_the_quartermaster",
+       "lauritz_burned"
+      ]
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "Refuse: not your case"
+    }
+   ]
+  },
+  "lauritz.opened": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Second books",
+   "requires": {
+    "flag": "knows_the_quartermaster",
+    "since": {
+     "lauritz.case": 1
+    }
+   },
+   "text": "Inside the case: a legion quartermaster's second set of books, with convoy routes and the dates they were sold. You reseal it badly. {inspector.short} looks at the seal, then at you, and says nothing at all, which is worse.",
+   "act": 2
+  },
+  "lauritz.notebook": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "Page nine",
+   "requires": {
+    "flag": "lauritz_bribed",
+    "since": {
+     "lauritz.inspection": 40
+    }
+   },
+   "text": "{inspector.short}'s notebook turns up in an audit. Page nine has your ship's name, a date and a sum: the processing fee. She wrote everything down, including the bribes. The audit fines you ten times the fee.",
+   "act": 3,
+   "chance": 0.3,
+   "effects": {
+    "money": -15000,
+    "passenger_reputation": -5,
+    "set": [
+     "fined_for_the_fee"
+    ]
+   },
+   "who": [
+    "inspector"
+   ]
+  },
+  "lauritz.watching": {
+   "kind": "event",
+   "arc": "recurring",
+   "title": "On her list",
+   "requires": {
+    "flag": "lauritz_suspicious",
+    "act_min": 2,
+    "since": {
+     "lauritz.inspection": 20
+    }
+   },
+   "text": "{inspector.short} has your ship on a list. Every planet dock inspects you for a month: every crate, every form, every fee. The Grey Hats' tidy manifest is the first thing she checked.",
+   "act": 2,
+   "chance": 0.2,
+   "effects": {
+    "money": -3000,
+    "passenger_reputation": -2
+   },
+   "who": [
+    "inspector"
+   ]
+  },
+  "debt.geod": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "First harvest",
+   "requires": {
+    "flag": "geod_fields",
+    "at": "Delta",
+    "since": {
+     "found.delta.fields": 20
+    }
+   },
+   "text": "{geod}'s Row has its first real harvest, and the farmers have not forgotten who brought the seed stock. They load your hold before you can argue.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "cargo.agri": 80,
+    "plot_points": 4
+   },
+   "who": [
+    "geod"
+   ]
+  },
+  "debt.heritarchist": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A dividend across the decades",
+   "requires": {
+    "flag": "neon_sleeper_carried",
+    "since": {
+     "neon.sarcophagus": 25
+    }
+   },
+   "text": "{heritarchist} sends a bank draft and four pages explaining it. The family settles its debts across hibernation cycles, with interest at a rate he appears to have invented.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "money": 12000,
+    "plot_points": 3
+   },
+   "who": [
+    "heritarchist"
+   ]
+  },
+  "debt.ren": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Full fare",
+   "requires": {
+    "flag": "virtual_friend",
+    "venue": "port",
+    "since": {
+     "neon.virtual": 20
+    }
+   },
+   "text": "{virtual_heir.short} sends three friends, all holographic, all paying full fare for the passenger and nothing for the projector. They have heard you are the only captain who knows the difference.",
+   "act": 2,
+   "chance": 0.25,
+   "effects": {
+    "money": 6000,
+    "passenger_reputation": 5
+   },
+   "who": [
+    "virtual_heir"
+   ]
+  },
+  "debt.brisa_fans": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Nine million followers",
+   "requires": {
+    "flag": "fluencer_exposed",
+    "since": {
+     "neon.fluencer": 20
+    }
+   },
+   "text": "{fluencer.short}'s followers have found your ship's registry. Your messages fill with opinions, three proposals of marriage and a hull-paint sponsor withdrawing its offer.",
+   "act": 2,
+   "chance": 0.25,
+   "effects": {
+    "passenger_reputation": -8
+   },
+   "who": [
+    "fluencer"
+   ]
+  },
+  "debt.brisa_stream": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Shipping agents watch too",
+   "requires": {
+    "flag": "fluencer_streamed",
+    "since": {
+     "neon.fluencer": 20
+    }
+   },
+   "text": "Nine million people watched your hold on {fluencer.short}'s stream. Three of them were shipping agents, and they would like a word about rates.",
+   "act": 2,
+   "chance": 0.25,
+   "effects": {
+    "money": 8000,
+    "plot_points": 2
+   },
+   "who": [
+    "fluencer"
+   ]
+  },
+  "debt.mraz_bottle": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A bottle, unsigned",
+   "requires": {
+    "flag": "mraz_spared",
+    "since": {
+     "vendetta.terms": 15
+    }
+   },
+   "text": "A bottle arrives, unsigned, with the label of somebody else's cargo. Under it a note: your ship is off-limits to anyone who flies under a halo with a bite out of it. Drop the name if you need to.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "plot_points": 3,
+    "set": [
+     "mraz_protection"
+    ]
+   },
+   "who": [
+    "pirate_captain"
+   ]
+  },
+  "debt.mraz_crew": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Old crew",
+   "requires": {
+    "flag": "mraz_handed",
+    "since": {
+     "vendetta.terms": 20
+    }
+   },
+   "text": "{pirate_captain.short}'s old crew are out of the brig before she is, and they remember who handed her over. Two raiders drop in behind you.",
+   "act": 3,
+   "chance": 0.25,
+   "who": [
+    "pirate_captain"
+   ],
+   "choices": [
+    {
+     "id": "fight",
+     "say": "Fight them",
+     "effects": {
+      "code": "fight raider"
+     }
+    },
+    {
+     "id": "pay",
+     "say": "Pay them for her lawyer",
+     "effects": {
+      "code": "lose money 0.1 min 3000"
+     }
+    }
+   ]
+  },
+  "debt.clone_share": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Your half",
+   "requires": {
+    "flag": "clone_partner",
+    "since": {
+     "clone.meet": 25
+    }
+   },
+   "text": "{clone} sends your half of the season's profits, itemised, with a note in your own handwriting: 'Fair is fair.' It is fair. That is the unnerving part.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "money": 20000,
+    "plot_points": 3
+   },
+   "who": [
+    "clone"
+   ]
+  },
+  "debt.clone_reward": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "The insurer pays",
+   "requires": {
+    "flag": "clone_reported",
+    "since": {
+     "clone.meet": 20
+    }
+   },
+   "text": "The insurer that grew {clone} pays a reward for the report, and a second sum for not talking to journalists. You had not been going to.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "money": 8000
+   },
+   "who": [
+    "clone"
+   ]
+  },
+  "debt.cu113": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A maintenance swarm",
+   "requires": {
+    "flag": "cu113_contract",
+    "since": {
+     "seed.terms": 25
+    }
+   },
+   "text": "While you sleep at dock, a swarm of small machines goes over your hull. In the morning it is patched, and a message from {neurodroid_leader} says the work was paid for out of fourteen credits a cycle, with interest.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "code": "repair 30",
+    "plot_points": 3
+   },
+   "who": [
+    "neurodroid_leader"
+   ]
+  },
+  "debt.cu113_sold": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A familiar sensor mast",
+   "requires": {
+    "flag": "cu113_sold",
+    "since": {
+     "seed.refusal": 25
+    }
+   },
+   "text": "A drone swarm comes out of a pirate ship's hold, steered by a six-legged machine with a sensor mast you have seen before. You sold it. Somebody bought it, and it learned.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "code": "fight drones"
+   }
+  },
+  "debt.nano": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Patched in rock",
+   "requires": {
+    "flag": "nano_trusted",
+    "at": "Sigma VII"
+   },
+   "text": "The colony at Sigma VII sends a cloud of itself over your hull while you dock. Every crack is filled with something like rock and something like glass. There is no bill. There is a note: 'Thank you for knocking.'",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "code": "repair 99",
+    "plot_points": 3
+   },
+   "who": [
+    "nanohive"
+   ]
+  },
+  "debt.nano_bill": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A bill from the rock",
+   "requires": {
+    "flag": "nano_sold_out",
+    "at": "Sigma VII"
+   },
+   "text": "The colony has sealed its galleries, and the dock at Sigma VII has a new fee schedule with your ship's name at the top.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "money": -5000
+   },
+   "who": [
+    "nanohive"
+   ]
+  },
+  "debt.aela": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A share of the seam",
+   "requires": {
+    "flag": "aela_member",
+    "since": {
+     "mine.aela": 25
+    }
+   },
+   "text": "{aela}'s gallery strikes a seam of salt a kilometre long. As a member of the cooperative you get a share, and a photograph of the seam with {aela} for scale.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "money": 10000,
+    "cargo.salt": 40,
+    "plot_points": 3
+   },
+   "who": [
+    "aela"
+   ]
+  },
+  "debt.convoys": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "The captains remember",
+   "requires": {
+    "flag": "stood_with_convoys",
+    "since": {
+     "drama.trade.squeeze": 12
+    }
+   },
+   "text": "The convoy captains you stood with in the squeeze send a man with a ledger. They have a contract nobody else is trusted with, and they have decided you are nobody else.",
+   "act": 4,
+   "chance": 0.25,
+   "effects": {
+    "money": 15000,
+    "plot_points": 4
+   }
+  },
+  "debt.pilgrims": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Blessed airlock",
+   "requires": {
+    "flag": "carried_the_pilgrims",
+    "act_min": 3
+   },
+   "text": "Cultists of the Broken Machine cross your bow, recognise the ship that carried their pilgrims, and weld a second tin medal next to the first. Their boarding parties will know your ship now.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "plot_points": 2
+   }
+  },
+  "after.varga_friend": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_friend"
+   },
+   "text": "{convoy_captain} retired with the convoy's best record and no unpaid favours. Her score sheet, framed in the convoy office, has your ship's name on the right-hand side.",
+   "title": "After: varga friend"
+  },
+  "after.varga_refused": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_refused",
+    "not_flag": "varga_helped"
+   },
+   "text": "{convoy_captain} never forgot the barges. When she retired she left you a single liquorice root in her will, which everybody at the convoy office understood.",
+   "title": "After: varga refused"
+  },
+  "after.pell_friend": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "pell_friend",
+    "not_flag": "pell_redeemed"
+   },
+   "text": "{young_hauler} flies his own convoy now. He tells new pilots the parts the manuals got wrong, and he tells them who told him.",
+   "title": "After: pell friend"
+  },
+  "after.pell_redeemed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "pell_redeemed"
+   },
+   "text": "{young_hauler.short} flew with you for three years after the raider, and never once mentioned it. Then he bought his own ship and named it after the cantina where you turned him down.",
+   "title": "After: pell redeemed"
+  },
+  "after.paid_pell": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "paid_pell"
+   },
+   "text": "You paid {young_hauler.short} to go away and he went, with your money and your lesson. He runs a fleet of raiders now, very politely.",
+   "title": "After: paid pell"
+  },
+  "after.lauritz_burned": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "lauritz_burned"
+   },
+   "text": "{inspector.short} never asked you to carry anything again. She did send you a seal-making kit, unasked, with instructions.",
+   "title": "After: lauritz burned"
+  },
+  "after.lauritz_suspicious": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "lauritz_suspicious"
+   },
+   "text": "{inspector.short} kept your ship on her list for the rest of her career. Every inspection was courteous. None of them was short.",
+   "title": "After: lauritz suspicious"
+  },
+  "after.fought_pell": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "fought_pell"
+   },
+   "text": "{young_hauler.short} quit the raiders after the fight and went to work in a shipyard. He sends you a card every year with no message, just a drawing of your ship, very accurate.",
+   "title": "After: fought pell"
+  },
+  "after.pell_turned_away": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "pell_turned_away",
+    "not_flag": [
+     "pell_friend",
+     "fought_pell"
+    ]
+   },
+   "text": "{young_hauler} found someone else to learn from. You see his name on cargo lists sometimes, always next to the cheapest rate.",
+   "title": "After: pell turned away"
+  },
+  "after.lauritz_trust": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "lauritz_trust"
+   },
+   "text": "{inspector} became chief of customs at Alpha and kept your inspection record on her desk as an example of what she meant.",
+   "title": "After: lauritz trust"
+  },
+  "after.fined_for_the_fee": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "fined_for_the_fee"
+   },
+   "text": "{inspector.short}'s notebook is in the customs museum now, open at page nine.",
+   "title": "After: fined for the fee"
+  },
+  "after.named_the_quartermaster": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "named_the_quartermaster"
+   },
+   "text": "The quartermaster who sold the convoy got eleven years. The inquiry's report gives your logs one line, and the line is enough.",
+   "title": "After: named the quartermaster"
+  },
+  "after.mraz_at_alpha": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "mraz_at_alpha"
+   },
+   "text": "{pirate_captain.short} flew into Alpha against the dreadnought under her own flag. The merged legion gave her a medal and a warrant on the same afternoon.",
+   "title": "After: mraz at alpha"
+  },
+  "after.varga_paid": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "varga_paid"
+   },
+   "text": "{convoy_captain.short} paid your margin call out of favours, not money. You spent the next ten years paying them back, one tow at a time.",
+   "title": "After: varga paid"
+  }
+ }
+}

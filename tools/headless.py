@@ -53,10 +53,10 @@ def quiet():
         sys.stdout = old
 
 
-def new_game(cargo, difficulty="1", name="Tester", silent=True):
+def new_game(cargo, difficulty="1", name="Tester", silent=True, voyage="2"):
     io = IO()
     patch(cargo, io)
-    io.feed([difficulty, name])
+    io.feed([difficulty, voyage, name])
     if silent:
         with quiet():
             game = cargo.Game()
