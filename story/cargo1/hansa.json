@@ -1,0 +1,73 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The Hansa as it is in Cargo 1: the convoy office that carries ships between the stars, charges dues every ten turns and sells bonds that lower them (cargo.py: Game.collect_dues, handle_hansa); the ports' broker robot; what people say about both. The charter (main.json) is the convoy office becoming a league with its own money.",
+ "characters": {
+  "port_broker": {
+   "name": "TALLY-4",
+   "short": "Tally",
+   "kind": "robot",
+   "about": "the ports' broker robot: quotes prices at other docks with more confidence than it has earned"
+  }
+ },
+ "nodes": {
+  "rumour.dues_board": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "title": "Rumour: dues board",
+   "requires": {
+    "dues_arrears": 1
+   },
+   "text": "They say your name is up on the convoy office board. Not the good board."
+  },
+  "rumour.bondholder": {
+   "kind": "rumour",
+   "arc": "rumours",
+   "repeat": true,
+   "title": "Rumour: bondholder",
+   "requires": {
+    "hansa_bonds": 5
+   },
+   "text": "A young hauler asks you, quite seriously, whether it is true you own a piece of the convoys. You do, technically. About the size of a door."
+  },
+  "gossip.dues": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: dues",
+   "text": "The convoy dues went up again. The convoy master says it is the price of safety. The haulers say it is the price of the convoy master's new hat."
+  },
+  "gossip.convoy": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: convoy",
+   "text": "Forty ships in the Gamma convoy this week and one tug at the back that keeps falling asleep. The convoy master says it is a scheduling feature."
+  },
+  "gossip.bonds": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: bonds",
+   "text": "An old captain says Hansa bonds are the only thing that ever went up on this station apart from the rent."
+  },
+  "gossip.price_bot": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: price bot",
+   "who": [
+    "port_broker"
+   ],
+   "text": "{port_broker} got the agri price at Delta right to the credit last week. It has mentioned this to everyone since, twice."
+  },
+  "gossip.dumping": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: dumping",
+   "text": "Somebody sold six hundred tons of tech at Gamma in one go and the price fell through the floor. The dock is still sweeping it up."
+  }
+ }
+}

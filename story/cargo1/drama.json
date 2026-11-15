@@ -1,0 +1,1366 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The shape of each road: a crisis at the start of chapter three, a low point before the finale, and a climax that opens the ending. Each one costs the captain something real (money, bonds, research, crew, guns) and leaves a flag the epilogue and Cargo 2 remember.",
+ "arcs": {
+  "drama": {
+   "title": "Crisis, low point, climax",
+   "order": 0.5
+  }
+ },
+ "flags": {
+  "won_the_vote": {
+   "about": "the captain spoke the Mark into law at Epsilon",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "bought_the_vote": {
+   "about": "the captain bought the vote that made the Mark law",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "held_the_line": {
+   "about": "the captain stayed with forty haulers when the legion recalled their escort",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "found_the_chair": {
+   "about": "the captain knows whose security firm set the Institute fire",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "rostrom_paper": {
+   "about": "House Rostrom put its name on the first paper about the ring",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "tadeo_took_blame": {
+   "about": "{gunner} took the blame for the sold convoy",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "fight_won_mothership": {
+   "about": "the captain won the story's fight against the mothership",
+   "set_by_game": "story_hook 'fight mothership' (cargo.py), after the fight"
+  },
+  "fight_lost_mothership": {
+   "about": "the captain lost the story's fight against the mothership",
+   "set_by_game": "story_hook 'fight mothership' (cargo.py), after the fight"
+  },
+  "fight_won_dreadnought": {
+   "about": "the captain won the story's fight against the dreadnought",
+   "set_by_game": "story_hook 'fight dreadnought' (cargo.py), after the fight"
+  },
+  "fight_lost_dreadnought": {
+   "about": "the captain lost the story's fight against the dreadnought",
+   "set_by_game": "story_hook 'fight dreadnought' (cargo.py), after the fight"
+  },
+  "held_the_lanes": {
+   "about": "the captain held their lanes through the squeeze and ate the losses"
+  },
+  "stood_with_convoys": {
+   "about": "the captain bought Hansa bonds to stand with the convoy captains in the squeeze"
+  },
+  "cartel_hauler": {
+   "about": "the captain hauled for the trading houses during the squeeze"
+  },
+  "paid_in_full": {
+   "about": "the captain paid the margin call in full"
+  },
+  "honest_mark": {
+   "about": "the first Marks were struck at full weight"
+  },
+  "short_mark": {
+   "about": "the first Marks were struck a hair light"
+  },
+  "public_weighing": {
+   "about": "every Mark was weighed in public during the run"
+  },
+  "stood_behind_the_mark": {
+   "about": "the captain bought Marks back during the run"
+  },
+  "fenn_talked": {
+   "about": "{broker} talked the run on the Mark down"
+  },
+  "let_it_run": {
+   "about": "the captain let the run on the Mark run its course"
+  },
+  "refused_the_seat": {
+   "about": "the captain refused a seat on the trading houses' board"
+  },
+  "took_the_seat": {
+   "about": "the captain took a seat on the trading houses' board"
+  },
+  "turned_on_the_houses": {
+   "about": "the captain spoke for the Mark from the trading houses' seat"
+  },
+  "sold_bonds": {
+   "about": "the captain cashed in Hansa bonds to meet the margin call"
+  },
+  "captains_paid": {
+   "about": "the convoy captains covered the captain's margin call"
+  },
+  "paperwork_lost": {
+   "about": "the Grey Hats lost the captain's loan papers"
+  },
+  "walked_out": {
+   "about": "the captain walked out of the vote at Epsilon"
+  },
+  "led_them_out": {
+   "about": "the captain led forty haulers out through the debris"
+  },
+  "followed_the_recall": {
+   "about": "the captain followed the recall and left the convoy"
+  },
+  "told_the_truth": {
+   "about": "the captain gave the inquiry their logs and told it straight"
+  },
+  "went_dark": {
+   "about": "the captain took the ship and went dark during the inquiry"
+  },
+  "led_the_defence": {
+   "about": "the captain led the defence of Alpha against the dreadnought"
+  },
+  "saved_the_civilians": {
+   "about": "the captain got the civilian ships out of Alpha first"
+  },
+  "funded_the_search": {
+   "about": "the captain paid for a new survey after the Institute fire"
+  },
+  "rostrom_backed": {
+   "about": "House Rostrom backed the survey after the fire, with a clause"
+  },
+  "logs_seized": {
+   "about": "customs took the captain's research logs"
+  },
+  "kept_a_copy": {
+   "about": "the captain smuggled a copy of the logs past customs"
+  },
+  "published_everything": {
+   "about": "the captain published the logs free"
+  },
+  "flew_it_ourselves": {
+   "about": "the captain flew the long burn to the ring on their own fuel"
+  },
+  "sisters_road": {
+   "about": "{navigator} found the road to the ring"
+  },
+  "bought_the_burn": {
+   "about": "the captain bought the fuel for the long burn at any price"
+  }
+ },
+ "nodes": {
+  "drama.trade.squeeze": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 3,
+   "title": "The squeeze",
+   "requires": {
+    "chapter": "ch3a"
+   },
+   "text": [
+    "The three corporations' trading houses have decided the independent haulers are a rounding error. This month they correct it: tech dumped below cost at every dock you use, until the small haulers sell their routes or their ships.",
+    "The Hansa convoy office panics and raises its dues by half, 'until the market settles'. Your loan officer calls to ask how you are. He has never asked before."
+   ],
+   "chance": 0.25,
+   "effects": {
+    "code": "squeeze tech 0.55"
+   },
+   "choices": [
+    {
+     "id": "hold",
+     "say": "Hold your lanes and eat the losses",
+     "effects": {
+      "code": [
+       "lose money 0.12 min 3000",
+       "dues hike 1.5"
+      ],
+      "plot_points": 6,
+      "passenger_reputation": 5,
+      "set": [
+       "held_the_lanes"
+      ]
+     }
+    },
+    {
+     "id": "bonds",
+     "say": "Buy two Hansa bonds and stand with the convoy captains",
+     "requires": {
+      "money": 12000
+     },
+     "effects": {
+      "code": "buy bonds 2",
+      "plot_points": 8,
+      "set": [
+       "stood_with_convoys"
+      ]
+     }
+    },
+    {
+     "id": "cartel",
+     "say": "Haul for the trading houses until it blows over",
+     "effects": {
+      "money": 15000,
+      "code": "dues hike 1.5",
+      "passenger_reputation": -5,
+      "set": [
+       "cartel_hauler"
+      ]
+     }
+    }
+   ],
+   "sound": "refusal"
+  },
+  "drama.trade.margin_call": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "Margin call",
+   "requires": {
+    "chapter": "ch3a",
+    "done": [
+     "ch3a",
+     "hansa.charter"
+    ],
+    "since": {
+     "drama.trade.squeeze": 10
+    },
+    "plot_points": 230
+   },
+   "text": [
+    "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.",
+    "You are a week away from being a captain without a ship, and everybody at the bar knows it. The barman gives you the good glass. That is how you know it is bad."
+   ],
+   "chance": 0.3,
+   "variants": [
+    {
+     "requires": {
+      "flag": "cartel_hauler"
+     },
+     "text": [
+      "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. You know him: you hauled for him during the squeeze. He is very polite. He remembers your rates. He calls the loan in, all of it, by the end of the week.",
+      "Until it is settled the convoy office will not give you a berth. The barman gives you the good glass. That is how you know it is bad."
+     ]
+    },
+    {
+     "requires": {
+      "flag": "stood_with_convoys"
+     },
+     "text": [
+      "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.",
+      "The convoy captains you stood with in the squeeze have heard. Nobody says anything yet. The barman gives you the good glass."
+     ]
+    }
+   ],
+   "choices": [
+    {
+     "id": "pay",
+     "say": "Pay it all, today",
+     "effects": {
+      "code": "lose money 0.3 min 15000",
+      "plot_points": 5,
+      "set": [
+       "paid_in_full"
+      ]
+     }
+    },
+    {
+     "id": "bonds",
+     "say": "Cash in your Hansa bonds",
+     "requires": {
+      "hansa_bonds": 2
+     },
+     "effects": {
+      "code": [
+       "sell bonds",
+       "lose money 0.1 min 5000"
+      ],
+      "plot_points": 5,
+      "set": [
+       "sold_bonds"
+      ]
+     }
+    },
+    {
+     "id": "captains",
+     "say": "Ask the convoy captains to stand with you",
+     "requires": {
+      "any": [
+       {
+        "flag": "stood_with_convoys"
+       },
+       {
+        "flag": "hansa_founder"
+       }
+      ]
+     },
+     "effects": {
+      "code": "lose money 0.12 min 5000",
+      "plot_points": 10,
+      "passenger_reputation": 5,
+      "set": [
+       "captains_paid"
+      ]
+     }
+    },
+    {
+     "id": "hats",
+     "say": "Let the Grey Hats lose the paperwork",
+     "requires": {
+      "done": "hatters.grey"
+     },
+     "effects": {
+      "code": "lose money 0.08 min 4000",
+      "passenger_reputation": -10,
+      "set": [
+       "paperwork_lost"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.trade.mint": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "The first Mark",
+   "requires": {
+    "chapter": "ch3a",
+    "since": {
+     "drama.trade.margin_call": 4
+    },
+    "trade_profit": 220000
+   },
+   "text": [
+    "The Hansa strikes its first Marks in a borrowed foundry at Gamma: pellets of iridium and osmium, each stamped with the weight of cargo it stands for.",
+    "The foundry foreman takes you aside. He can short every pellet by a hair. Nobody with ordinary scales would notice for ten years, and the Hansa needs the margin. He says this the way other people talk about the weather."
+   ],
+   "chance": 0.4,
+   "choices": [
+    {
+     "id": "full",
+     "say": "Full weight, every pellet",
+     "effects": {
+      "plot_points": 6,
+      "passenger_reputation": 5,
+      "set": [
+       "honest_mark"
+      ]
+     }
+    },
+    {
+     "id": "short",
+     "say": "Short them a hair; the Hansa needs it",
+     "effects": {
+      "money": 30000,
+      "set": [
+       "short_mark"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.trade.run": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "A run on the Mark",
+   "requires": {
+    "chapter": "ch3a",
+    "since": {
+     "drama.trade.mint": 6
+    },
+    "trade_profit": 290000
+   },
+   "text": [
+    "Somebody has weighed a Mark and found it light. Or says so. By morning every convoy captain wants credits for their Marks, and the convoy office has credits for about a third of them.",
+    "A queue goes twice round the dock. Somebody has started selling soup to it."
+   ],
+   "chance": 0.4,
+   "variants": [
+    {
+     "requires": {
+      "flag": "short_mark"
+     },
+     "text": [
+      "Somebody has weighed a Mark and found it light. They are right, and you know exactly how light. By morning every convoy captain wants credits for their Marks, and the convoy office has credits for about a third of them.",
+      "A queue goes twice round the dock. The foundry foreman has taken a holiday."
+     ]
+    }
+   ],
+   "choices": [
+    {
+     "id": "weigh",
+     "say": "Weigh every Mark in public, on the dock",
+     "requires": {
+      "flag": "honest_mark"
+     },
+     "effects": {
+      "plot_points": 10,
+      "passenger_reputation": 10,
+      "set": [
+       "public_weighing"
+      ]
+     }
+    },
+    {
+     "id": "buy",
+     "say": "Buy Marks back with your own money",
+     "effects": {
+      "code": "lose money 0.15 min 10000",
+      "plot_points": 8,
+      "passenger_reputation": 8,
+      "set": [
+       "stood_behind_the_mark"
+      ]
+     }
+    },
+    {
+     "id": "fenn",
+     "say": "Let {broker.short} talk the queue down",
+     "requires": {
+      "has": {
+       "crew": [
+        "broker"
+       ]
+      }
+     },
+     "effects": {
+      "plot_points": 6,
+      "set": [
+       "fenn_talked"
+      ]
+     }
+    },
+    {
+     "id": "run",
+     "say": "Let it run its course",
+     "effects": {
+      "passenger_reputation": -10,
+      "set": [
+       "let_it_run"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.trade.offer": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "A seat at the table",
+   "requires": {
+    "chapter": "ch3a",
+    "since": {
+     "drama.trade.run": 5
+    },
+    "trade_profit": 340000
+   },
+   "text": [
+    "The trading houses ask you to dinner at Alpha: real tablecloth, real wine, and a contract. A seat on their board, and a share of every convoy, if the vote at Epsilon fails by one.",
+    "The wine is very good. That is the point of it."
+   ],
+   "chance": 0.4,
+   "choices": [
+    {
+     "id": "refuse",
+     "say": "Refuse, and finish the wine",
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "refused_the_seat"
+      ]
+     }
+    },
+    {
+     "id": "seat",
+     "say": "Take the seat (100,000 credits now)",
+     "effects": {
+      "money": 100000,
+      "set": [
+       "took_the_seat"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.trade.vote": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "The vote",
+   "requires": {
+    "chapter": "ch3a",
+    "done": [
+     "ch3a",
+     "hansa.charter",
+     "drama.trade.offer"
+    ],
+    "since": {
+     "drama.trade.margin_call": 8
+    },
+    "plot_points": 350,
+    "trade_profit": 400000
+   },
+   "text": [
+    "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
+    "The count comes out one vote short, either way. Everybody looks at the captain with the most routes. Again."
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "took_the_seat"
+     },
+     "text": [
+      "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
+      "You have a seat at the trading houses' table now, and everybody in the hold knows it. The count comes out one vote short. The missing vote is yours."
+     ]
+    },
+    {
+     "requires": {
+      "flag": "hansa_outside"
+     },
+     "text": [
+      "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
+      "You never signed the charter. The count comes out one vote short, either way, and it turns out that makes you the only captain both sides will listen to."
+     ]
+    }
+   ],
+   "choices": [
+    {
+     "id": "speak",
+     "say": "Speak for the Mark",
+     "requires": {
+      "passenger_reputation": 50,
+      "not_flag": "took_the_seat"
+     },
+     "effects": {
+      "plot_points": 15,
+      "set": [
+       "won_the_vote"
+      ]
+     }
+    },
+    {
+     "id": "turn",
+     "say": "Speak for the Mark anyway, and lose the seat",
+     "requires": {
+      "flag": "took_the_seat"
+     },
+     "effects": {
+      "code": "lose money 0.2 min 20000",
+      "plot_points": 15,
+      "set": [
+       "won_the_vote",
+       "turned_on_the_houses"
+      ]
+     }
+    },
+    {
+     "id": "buy",
+     "say": "Buy the last vote (40,000 credits)",
+     "requires": {
+      "money": 40000
+     },
+     "effects": {
+      "money": -40000,
+      "plot_points": 5,
+      "set": [
+       "bought_the_vote"
+      ]
+     }
+    },
+    {
+     "id": "walk",
+     "say": "Walk out and let them count without you",
+     "effects": {
+      "set": [
+       "walked_out"
+      ]
+     }
+    }
+   ],
+   "sound": "charter"
+  },
+  "drama.combat.left_behind": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 3,
+   "title": "Left behind",
+   "requires": {
+    "chapter": "ch3b"
+   },
+   "text": [
+    "Escort job: forty civilian haulers from Gamma to Alpha under a legion flag. At the jump point your two wingmen get a recall order, turn round and leave. Ten minutes later a pirate mothership comes out of the dark, exactly where the recall order said nobody would be.",
+    "Somebody sold this convoy. The haulers are calling you by name on an open channel. Most of them do not know your name; they are reading it off your hull."
+   ],
+   "chance": 0.25,
+   "choices": [
+    {
+     "id": "hold",
+     "say": "Hold the line",
+     "effects": {
+      "code": "fight mothership",
+      "plot_points": 6,
+      "set": [
+       "held_the_line"
+      ]
+     }
+    },
+    {
+     "id": "lead",
+     "say": "Lead them out through the debris",
+     "requires": {
+      "any": [
+       {
+        "has": {
+         "crew": [
+          "navigator"
+         ]
+        }
+       },
+       {
+        "has": {
+         "items": [
+          "probe"
+         ]
+        }
+       }
+      ]
+     },
+     "effects": {
+      "plot_points": 8,
+      "passenger_reputation": 10,
+      "set": [
+       "led_them_out"
+      ]
+     }
+    },
+    {
+     "id": "recall",
+     "say": "Follow the recall order",
+     "effects": {
+      "money": 6000,
+      "passenger_reputation": -10,
+      "set": [
+       "followed_the_recall"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.combat.tribunal": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "The inquiry",
+   "requires": {
+    "chapter": "ch3b",
+    "done": [
+     "ch3b",
+     "legion.offer"
+    ],
+    "since": {
+     "drama.combat.left_behind": 10
+    },
+    "plot_points": 230
+   },
+   "text": [
+    "The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.",
+    "The inquiry has already decided who sold the convoy. It has decided it was you."
+   ],
+   "chance": 0.3,
+   "effects": {
+    "combat_rating": -2
+   },
+   "variants": [
+    {
+     "requires": {
+      "flag": "held_the_line"
+     },
+     "text": [
+      "The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.",
+      "The inquiry has already decided who sold the convoy: you. A strange thing to decide about the only ship that stayed."
+     ]
+    },
+    {
+     "requires": {
+      "flag": "followed_the_recall"
+     },
+     "text": [
+      "The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.",
+      "You did follow the recall. That is the trouble: so did whoever wrote it, and somebody has to have sold the convoy."
+     ]
+    }
+   ],
+   "choices": [
+    {
+     "id": "truth",
+     "say": "Hand over your logs and tell it straight",
+     "effects": {
+      "plot_points": 8,
+      "set": [
+       "told_the_truth"
+      ]
+     }
+    },
+    {
+     "id": "tadeo",
+     "say": "Let {gunner.short} take the blame he offers to take",
+     "requires": {
+      "has": {
+       "crew": [
+        "gunner"
+       ]
+      }
+     },
+     "effects": {
+      "code": "crew leaves gunner",
+      "combat_rating": 2,
+      "set": [
+       "tadeo_took_blame"
+      ]
+     }
+    },
+    {
+     "id": "dark",
+     "say": "Take the ship and go dark",
+     "effects": {
+      "code": "lose money 0.15 min 5000",
+      "passenger_reputation": -10,
+      "set": [
+       "went_dark"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.combat.roll_call": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "Roll call",
+   "requires": {
+    "chapter": "ch3b",
+    "done": [
+     "ch3b",
+     "legion.offer"
+    ],
+    "since": {
+     "drama.combat.tribunal": 8
+    },
+    "plot_points": 350,
+    "combat_victories": 50
+   },
+   "text": [
+    "The merger ceremony is at Alpha: three logos, one new flag, every commander in dress uniform and every warship in parade order with its guns cold. That is when the pirate dreadnought arrives.",
+    "Your ammunition came back this morning; the inquiry lost your paperwork in your favour. Somebody on the open channel asks who is in charge. Nobody answers. Then everybody looks at your hull."
+   ],
+   "effects": {
+    "combat_rating": 2
+   },
+   "choices": [
+    {
+     "id": "fight",
+     "say": "Take the fight to them",
+     "effects": {
+      "code": "fight dreadnought",
+      "plot_points": 15,
+      "set": [
+       "led_the_defence"
+      ]
+     }
+    },
+    {
+     "id": "civilians",
+     "say": "Get the civilian ships out first",
+     "effects": {
+      "plot_points": 10,
+      "passenger_reputation": 15,
+      "set": [
+       "saved_the_civilians"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.discovery.fire": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 3,
+   "title": "The fire",
+   "requires": {
+    "chapter": "ch3c"
+   },
+   "text": [
+    "A fire in the sample store of the Stellar Institute at TRAPPIST-1. Nobody hurt. Every sample of the grey alloy is gone, with the notes, and the fire door was propped open with a chair from somebody else's lab.",
+    "{ancient_scholar.short} sits on the steps with a smoke-black notebook. 'Somebody does not want this to be true,' she says. 'Or wants it to be true only for them.'"
+   ],
+   "chance": 0.25,
+   "who": [
+    "ancient_scholar"
+   ],
+   "choices": [
+    {
+     "id": "fund",
+     "say": "Pay for a new survey yourself",
+     "effects": {
+      "code": "lose money 0.15 min 8000",
+      "plot_points": 8,
+      "set": [
+       "funded_the_search"
+      ]
+     }
+    },
+    {
+     "id": "rostrom",
+     "say": "Take House Rostrom's offer of help",
+     "effects": {
+      "money": 10000,
+      "set": [
+       "rostrom_backed"
+      ]
+     }
+    },
+    {
+     "id": "chair",
+     "say": "Find out whose chair it was (200 research points)",
+     "requires": {
+      "research_points": 200
+     },
+     "effects": {
+      "research_points": -200,
+      "plot_points": 10,
+      "set": [
+       "found_the_chair"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.discovery.not_proven": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "Not proven",
+   "requires": {
+    "chapter": "ch3c",
+    "done": [
+     "ch3c",
+     "trail.samples"
+    ],
+    "since": {
+     "drama.discovery.fire": 10
+    },
+    "plot_points": 230
+   },
+   "text": [
+    "The Academy's review board rules on the grey alloy: a natural formation, not shown to be made, further survey 'not a priority'. {ancient_scholar.short}'s grant is cancelled the same afternoon.",
+    "At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."
+   ],
+   "chance": 0.3,
+   "who": [
+    "ancient_scholar"
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "rostrom_backed"
+     },
+     "text": [
+      "The Academy's review board rules on the grey alloy: a natural formation, not shown to be made. {ancient_scholar.short}'s grant is cancelled the same afternoon, and House Rostrom's lawyers file your findings under the House's name. They send flowers.",
+      "At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."
+     ]
+    }
+   ],
+   "choices": [
+    {
+     "id": "hand",
+     "say": "Hand over the logs",
+     "effects": {
+      "code": "lose research 0.5",
+      "set": [
+       "logs_seized"
+      ]
+     }
+    },
+    {
+     "id": "copy",
+     "say": "Smuggle a copy out first",
+     "requires": {
+      "any": [
+       {
+        "has": {
+         "items": [
+          "data_analyzer"
+         ]
+        }
+       },
+       {
+        "has": {
+         "items": [
+          "quantum_scanner"
+         ]
+        }
+       }
+      ]
+     },
+     "effects": {
+      "code": "lose research 0.15",
+      "plot_points": 6,
+      "set": [
+       "kept_a_copy"
+      ]
+     }
+    },
+    {
+     "id": "publish",
+     "say": "Publish everything, free, today",
+     "effects": {
+      "code": "lose research 0.3",
+      "plot_points": 8,
+      "passenger_reputation": 10,
+      "set": [
+       "published_everything"
+      ]
+     }
+    }
+   ]
+  },
+  "drama.discovery.burn": {
+   "kind": "event",
+   "arc": "drama",
+   "act": 4,
+   "title": "The long burn",
+   "requires": {
+    "chapter": "ch3c",
+    "done": [
+     "ch3c",
+     "trail.samples"
+    ],
+    "since": {
+     "drama.discovery.not_proven": 8
+    },
+    "plot_points": 350,
+    "research_points": 1500
+   },
+   "text": [
+    "{ancient_scholar.short} has the course: back along Scholz's Star's track to the edge of our own system, where the ring should be. Nobody will fund the flight, so nobody will be on it but you.",
+    "It is the longest burn your ship will ever make: out of the plane of the planets, no convoy, no depot. If the numbers are wrong you will find out a long way from anyone who could tow you."
+   ],
+   "who": [
+    "ancient_scholar"
+   ],
+   "choices": [
+    {
+     "id": "fuel",
+     "say": "Burn on your own fuel (60 fuel)",
+     "requires": {
+      "cargo.fuel": 60
+     },
+     "effects": {
+      "cargo.fuel": -60,
+      "plot_points": 15,
+      "set": [
+       "flew_it_ourselves"
+      ]
+     }
+    },
+    {
+     "id": "road",
+     "say": "Let {navigator.short} find a cheaper road (35 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "navigator"
+       ]
+      },
+      "cargo.fuel": 35
+     },
+     "effects": {
+      "cargo.fuel": -35,
+      "plot_points": 15,
+      "set": [
+       "sisters_road"
+      ]
+     }
+    },
+    {
+     "id": "buy",
+     "say": "Buy the fuel at any price (40,000 credits)",
+     "requires": {
+      "money": 40000
+     },
+     "effects": {
+      "money": -40000,
+      "plot_points": 10,
+      "set": [
+       "bought_the_burn"
+      ]
+     }
+    },
+    {
+     "id": "rostrom",
+     "say": "Fly it on House Rostrom's ship, under their name",
+     "effects": {
+      "set": [
+       "rostrom_paper"
+      ]
+     }
+    }
+   ]
+  },
+  "after.held_the_lanes": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "held_the_lanes"
+   },
+   "text": "The haulers who held their lanes through the squeeze still drink at a table nobody else uses. One of the chairs has your name on it. Somebody carved it.",
+   "title": "After: held the lanes"
+  },
+  "after.cartel_hauler": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "cartel_hauler"
+   },
+   "text": "The trading houses kept your rate card on file for forty years, as an example of a reasonable captain.",
+   "title": "After: cartel hauler"
+  },
+  "after.captains_paid": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "captains_paid"
+   },
+   "text": "The convoy captains who paid your margin call never asked for it back. Every year one of them sends a bill for a single credit, framed.",
+   "title": "After: captains paid"
+  },
+  "after.won_the_vote": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "won_the_vote"
+   },
+   "text": "The record of the vote at Epsilon has forty names and one speech. Schoolchildren learn its first line. Nobody agrees on the second.",
+   "title": "After: won the vote"
+  },
+  "after.bought_the_vote": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "bought_the_vote"
+   },
+   "text": "The captain whose vote you bought became the Hansa's first treasurer. He always said he had been cheap at the price.",
+   "title": "After: bought the vote"
+  },
+  "after.walked_out": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "walked_out"
+   },
+   "text": "They counted without you and the Mark passed by one vote. Nobody ever learned which way you would have voted, which suited everybody.",
+   "title": "After: walked out"
+  },
+  "after.honest_mark": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "honest_mark"
+   },
+   "text": "Every Mark from the first strike still weighs what it says. Collectors pay double for them, and weigh them first anyway.",
+   "title": "After: honest mark"
+  },
+  "after.short_mark": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "short_mark"
+   },
+   "text": "The first Marks were a hair light. A Collective auditor found out ninety years later, wrote a polite report, and charged the Hansa for the scales.",
+   "title": "After: short mark"
+  },
+  "after.public_weighing": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "public_weighing"
+   },
+   "text": "They weighed four thousand Marks on the dock at Epsilon, one by one, with a crowd counting along. It is a festival now. The soup is still sold.",
+   "title": "After: public weighing"
+  },
+  "after.stood_behind_the_mark": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "stood_behind_the_mark"
+   },
+   "text": "You bought back Marks at face value until the queue ran out. The ones you kept are in a drawer on your ship. You never spent them.",
+   "title": "After: stood behind the mark"
+  },
+  "after.let_it_run": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "let_it_run"
+   },
+   "text": "The run on the Mark lasted nine days and ruined two captains. The Mark survived it. People said that about the Mark, not about the captains.",
+   "title": "After: let it run"
+  },
+  "after.fenn_talked": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "fenn_talked"
+   },
+   "text": "{broker.short} talked the queue down in one afternoon, mostly by telling it about his feet. Brokers still study the speech. Nobody has managed the feet.",
+   "title": "After: fenn talked"
+  },
+  "after.refused_the_seat": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "refused_the_seat"
+   },
+   "text": "You refused the trading houses' seat and finished their wine. The bottle is on your shelf, empty, with the dinner date written on the label.",
+   "title": "After: refused the seat"
+  },
+  "after.took_the_seat": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "took_the_seat"
+   },
+   "text": "You sat on the trading houses' board for eleven years and voted against them every time. They kept the seat warm for your successor, who did not.",
+   "title": "After: took the seat"
+  },
+  "after.turned_on_the_houses": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "turned_on_the_houses"
+   },
+   "text": "The trading houses never forgave the vote at Epsilon. They named a ledger column after you: 'losses, unforeseeable'.",
+   "title": "After: turned on the houses"
+  },
+  "after.held_the_line": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": [
+     "held_the_line",
+     "fight_won_mothership"
+    ]
+   },
+   "text": "The forty haulers from the jump point still send a crate every year, addressed only to your ship.",
+   "title": "After: held the line"
+  },
+  "after.led_them_out": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "led_them_out"
+   },
+   "text": "The lane you led forty haulers through is on the charts now, marked 'shortcut, not recommended'.",
+   "title": "After: led them out"
+  },
+  "after.followed_the_recall": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "followed_the_recall"
+   },
+   "text": "Whoever wrote the recall order rose high in the merged legion. Nobody asked you to testify, and you did not offer.",
+   "title": "After: followed the recall"
+  },
+  "after.tadeo_took_blame": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "tadeo_took_blame"
+   },
+   "text": "{gunner.short} served eight months in a legion brig for an order he never saw. He came out, found your ship, and asked whether the gunner's seat was still warm. It was.",
+   "title": "After: tadeo took blame"
+  },
+  "after.led_the_defence": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": [
+     "led_the_defence",
+     "fight_won_dreadnought"
+    ]
+   },
+   "text": "The dreadnought's bell hangs in the merged legion's mess. New pilots touch it for luck before their first patrol.",
+   "title": "After: led the defence"
+  },
+  "after.saved_the_civilians": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "saved_the_civilians"
+   },
+   "text": "Not one civilian ship was lost at Alpha. The legion's history gives the battle a chapter and the civilians a footnote; the civilians remember it the other way round.",
+   "title": "After: saved the civilians"
+  },
+  "after.found_the_chair": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "found_the_chair"
+   },
+   "text": "The chair that propped the fire door belonged to a security liaison from a firm that later became part of the Mandate. Nobody was charged. The chair sits in a cupboard you have the key to.",
+   "title": "After: found the chair"
+  },
+  "after.published_everything": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "published_everything"
+   },
+   "text": "Your logs, published free, were in every colony library within a year. The review board's ruling is in there too, as a footnote.",
+   "title": "After: published everything"
+  },
+  "after.rostrom_paper": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "rostrom_paper"
+   },
+   "text": "The first paper on the ring carries House Rostrom's name in large letters and yours in the acknowledgements, between the caterer and the fuel supplier.",
+   "title": "After: rostrom paper"
+  },
+  "after.paid_in_full": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "paid_in_full"
+   },
+   "text": "You paid the margin call in full and never borrowed again. The bank at Alpha still sends you a calendar every year, out of respect or fear.",
+   "title": "After: paid in full"
+  },
+  "after.sold_bonds": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "sold_bonds"
+   },
+   "text": "You sold your Hansa bonds to keep your ship. The captain who bought them sold them back to the Hansa ten years later for a farm.",
+   "title": "After: sold bonds"
+  },
+  "after.paperwork_lost": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "paperwork_lost"
+   },
+   "text": "Your loan papers were never found. The Grey Hats sent an invoice for not finding them, which was also never found.",
+   "title": "After: paperwork lost"
+  },
+  "after.told_the_truth": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "told_the_truth"
+   },
+   "text": "Your logs from the jump point are in the legion archive, unredacted. Nobody reads them; everybody knows they are there.",
+   "title": "After: told the truth"
+  },
+  "after.went_dark": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "went_dark"
+   },
+   "text": "For years the legion's wanted list carried your ship under a name that was nearly right. Nobody ever corrected it.",
+   "title": "After: went dark"
+  },
+  "after.funded_the_search": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "funded_the_search"
+   },
+   "text": "The survey you paid for after the fire found more alloy than the one that burned. The receipt is framed in the Institute's new store, next to the fire door, which closes now.",
+   "title": "After: funded the search"
+  },
+  "after.logs_seized": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "logs_seized"
+   },
+   "text": "Your seized logs turned up forty years later in a customs auction, sold as 'ship's diary, dull'.",
+   "title": "After: logs seized"
+  },
+  "after.kept_a_copy": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "kept_a_copy"
+   },
+   "text": "The copy you smuggled past customs is the one every later survey quotes. The original is still in a customs vault, with a form attached.",
+   "title": "After: kept a copy"
+  },
+  "after.flew_it_ourselves": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "flew_it_ourselves"
+   },
+   "text": "You flew the long burn on your own fuel. The ship never quite lost the frost on its forward plates, and you never had it cleaned.",
+   "title": "After: flew it ourselves"
+  },
+  "after.bought_the_burn": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "bought_the_burn"
+   },
+   "text": "The fuel for the long burn cost more than the ship. The depot named a tank after you, as a joke at first.",
+   "title": "After: bought the burn"
+  },
+  "after.sisters_road": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "requires": {
+    "flag": "sisters_road"
+   },
+   "text": "{navigator.short}'s road to the edge of the system is still flown. Everybody calls it the Sister's Road except the Solarians, who call it obvious.",
+   "title": "After: sisters road"
+  },
+  "after.held_the_line_lost": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: held the line, lost",
+   "requires": {
+    "flag": [
+     "held_the_line",
+     "fight_lost_mothership"
+    ]
+   },
+   "text": "You lost the fight at the jump point and the mothership took a third of the convoy. The other two thirds got home because you were in its way. Their captains still argue about whether that counts. They buy you drinks while they argue."
+  },
+  "after.led_the_defence_lost": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: led the defence, lost",
+   "requires": {
+    "flag": [
+     "led_the_defence",
+     "fight_lost_dreadnought"
+    ]
+   },
+   "text": "The dreadnought beat you at Alpha and left with its holds full, but it left. The new legion flew its first flag full of the holes it made that day, and never replaced it."
+  }
+ }
+}

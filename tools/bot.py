@@ -144,7 +144,7 @@ class Bot:
     def prices(self, loc, item):
         if not loc.can_trade(item):
             return None
-        if item in ("salt", "fuel") and not any(p["type"] == item for p in loc.mining_platforms):
+        if item in ("salt", "fuel") and not loc.trades_bulk(item):
             return None
         p = loc.market.get(item, 0)
         return p if p and p > 0 else None
@@ -165,7 +165,8 @@ class Bot:
                 sell = self.prices(loc, item)
                 if not sell:
                     continue
-                margin = sell * 0.9 - buy * 1.1
+                load = min(g.ship.hold_room(item), 400)       # a full load moves both prices
+                margin = loc.trade_price(item, load, True) * 0.92 - here.trade_price(item, load, False) * 1.08
                 if margin > 0 and (best is None or margin / buy > best[0]):
                     best = (margin / buy, item, loc.name)
         return best
@@ -213,9 +214,17 @@ class Bot:
                     continue
                 planned = self.sell_at.get(item) == here.name
                 better = self.best_sale_elsewhere(item)
-                cost = self.cost[item] or 0
+                # what the goods really cost (load size and tax included), and what selling them
+                # all here would really bring, since a big load moves the price
+                held = ship.cargo[item]
+                cost = ship.__dict__.get("cost_basis", {}).get(item, 0) / held if held else 0
+                tax = ship.trade_tax(here.calculate_tax_rate(g.rank, price))
+                price = here.trade_price(item, held, selling=True) * (1 - tax)
+                bought_here = self.__dict__.setdefault("bought_at", {}).get(item) == here.name
                 stale = better is None or g.turn - self.__dict__.setdefault("bought_turn", {}).get(item, g.turn) > 12
-                if price >= cost * 1.08 or (planned and price >= cost) or (stale and price >= cost * 0.8):
+                held_for = g.turn - self.__dict__.setdefault("bought_turn", {}).get(item, g.turn)
+                if (price >= cost * 1.05 and not bought_here) or (planned and price >= cost) \
+                        or (stale and price >= cost * 0.8) or held_for > 25:      # cut the loss
                     self.flags.add(("sell", item))
                     self.item = item
                     return "s"
@@ -293,6 +302,17 @@ class Bot:
             self.flags.add("hunt")
             return "hu"
 
+        # every fifth turn a look in the shop for gear that suits the captain's road
+        if "shop" in options and "shop" not in self.flags and g.turn % 5 == 0 and ship.money > 20000:
+            self.flags.add("shop")
+            return "sh"
+
+        # idle money buys Hansa bonds, which lower the convoy dues
+        if "hansa" in options and "hansa" not in self.flags and ship.money > 15 * g.bond_price() \
+                and getattr(g, "hansa_bonds", 0) < 8:
+            self.flags.add("hansa")
+            return "ha"
+
         # now and then a drink in the cantina: people, rumours, crew for hire
         if "cantina" in options and "cantina" not in self.flags and g.turn % 4 == 0:
             self.flags.add("cantina")
@@ -310,6 +330,7 @@ class Bot:
                 self.buy_price = self.prices(here, item)
                 held = ship.cargo[item]
                 self.__dict__.setdefault("bought_turn", {})[item] = g.turn
+                self.__dict__.setdefault("bought_at", {})[item] = here.name
                 self.cost[item] = self.buy_price if not held else (self.cost[item] or self.buy_price)
                 return "b"
 
@@ -401,6 +422,10 @@ class Bot:
                     if afford:
                         return min(afford, key=lambda i: mods[i]["cost"])
                 return "back"
+            if p.startswith("hansa - choose"):        # the Hansa terminal: a bond when money is idle
+                if g.ship.money > 15 * g.bond_price() and getattr(g, "hansa_bonds", 0) < 8:
+                    return "b"
+                return ""
             if p.startswith("your move"):             # a fight, a situation or the bounty board
                 return self.move(options)
             if p.startswith("your choice"):           # a story scene's choice
@@ -411,6 +436,18 @@ class Bot:
                 return options[0] if options else ""
             if "0 to leave" in p:
                 return "0"
+            if "choose item to buy" in p:
+                wanted = {"trade": ["quantum_compressor", "cargo_extender", "containment_field", "stasis_vault",
+                                    "auto_loader", "cargo_scanner", "shield", "patcher"],
+                          "combat": ["combat_drone", "turrets", "shield", "shield_booster", "mining_laser",
+                                     "advanced_radar", "patcher", "neutron_shield", "warp_core", "emergency_warp"]}.get(
+                    goal, ["research_module", "data_analyzer", "quantum_scanner", "probe", "scanner", "shield",
+                           "cargo_extender", "patcher"])
+                prices = dict((name, data["price"]) for name, data in g.shop.current_turn_items)
+                for name in wanted:
+                    if name in options and not g.ship.items.get(name) and prices.get(name, 10 ** 9) * 4 < g.ship.money:
+                        return name
+                return "none"
             if "none" in options:
                 return "none"
             if "back" in options:
@@ -418,7 +455,11 @@ class Bot:
             self.unknown[("prompt", prompt[:50])] += 1
             return ""
         if self.qty:
-            self.qty = False
+            asked, self.qty = str(self.qty).lower(), False
+            if "research points to buy" in asked:      # a researcher selling research for credits
+                if goal.startswith("discovery") and g.ship.money > 50000 and "research_points" in self.need():
+                    return "half"
+                return ""
             return "max"
         t = tail.lower()
         if "save as" in t:
@@ -562,7 +603,7 @@ def vi(self, default_prompt, valid_options, prompt=None):
 
 
 def vq(self, prompt):
-    bot.qty = True
+    bot.qty = prompt or True
     return orig_vq(self, prompt)
 
 

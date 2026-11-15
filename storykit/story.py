@@ -19,6 +19,7 @@ CORE_CONDITIONS = {
     "all", "any", "not",            # combinators
     "flag", "not_flag",             # story flags
     "done", "done_any", "not_done", # nodes completed
+    "since",                        # {node: turns}: that node happened at least so many turns ago
     "act_min", "act_max",           # act (chapter number) of the main story
     "turn_min", "turn_max",
     "at", "at_type",                # where the player is
@@ -26,6 +27,7 @@ CORE_CONDITIONS = {
     "visiting_captain",             # a captain record from another part of the saga
     "player_origin",                # the record of the captain the player is playing as
     "venue",                        # a place inside a location the player is visiting (port, cantina)
+    "chapter",                      # the chapter the player is in now (its id, or a list of ids)
     "code",                         # opaque: game code the tools cannot read
 }
 
@@ -138,7 +140,8 @@ class State:
     """
 
     def __init__(self, stats=None, sets=None, flags=None, done=None, act=1, turn=0,
-                 place=None, place_type=None, visitors=None, player=None, venue=None, origin=None):
+                 place=None, place_type=None, visitors=None, player=None, venue=None, origin=None,
+                 chapter=None, done_at=None):
         self.stats = dict(stats or {})
         self.sets = {k: set(v) for k, v in (sets or {}).items()}
         self.flags = set(flags or ())
@@ -151,12 +154,15 @@ class State:
         self.player = player
         self.venue = venue
         self.origin = origin
+        self.chapter = chapter
+        self.done_at = dict(done_at or {})
 
     @classmethod
     def from_snapshot(cls, snap):
         return cls(snap.get("stats"), snap.get("sets"), snap.get("flags"), snap.get("done"),
                    snap.get("act", 1), snap.get("turn", 0), snap.get("place"), snap.get("place_type"),
-                   snap.get("visitors"), snap.get("player"), snap.get("venue"), snap.get("origin"))
+                   snap.get("visitors"), snap.get("player"), snap.get("venue"), snap.get("origin"),
+                   snap.get("chapter"), snap.get("done_at"))
 
 
 def _threshold(value, wanted):
@@ -197,6 +203,9 @@ def check(cond, state, unknown="fail"):
             ok = any(n in state.done for n in as_list(want))
         elif key == "not_done":
             ok = not any(n in state.done for n in as_list(want))
+        elif key == "since":
+            ok = all(n in state.done and state.turn - state.done_at.get(n, -10 ** 9) >= turns
+                     for n, turns in want.items())
         elif key == "act_min":
             ok = state.act >= want
         elif key == "act_max":
@@ -217,6 +226,8 @@ def check(cond, state, unknown="fail"):
             ok = state.origin is not None and visitor_matches(state.origin, want)
         elif key == "venue":
             ok = state.venue in as_list(want)
+        elif key == "chapter":
+            ok = state.chapter in as_list(want)
         elif key == "code":
             if unknown == "raise":
                 raise StoryError("opaque condition: %s" % want)
@@ -331,6 +342,9 @@ def references(node):
             if key in ("done", "done_any", "not_done"):
                 for nid in as_list(want):
                     out.append((key, nid))
+            elif key == "since":
+                for nid in want:
+                    out.append(("done", nid))
         walk_condition(cond, visit)
     for effects in node_effects(node):
         for nid in as_list((effects or {}).get("start")):

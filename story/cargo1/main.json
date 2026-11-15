@@ -41,8 +41,8 @@
     "trades_completed": 40
    },
    "text": [
-    "Eleven captains meet in a cargo hold at Epsilon because it is the only room nobody charges for.",
-    "The proposal fits on one sheet: the haulers pool their cargo, set their own rates, and settle in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.",
+    "For thirty years the Hansa has been a convoy office: a timetable, a dues collector and nothing else. Eleven captains meet in a cargo hold at Epsilon, the only room nobody charges for, to make it more.",
+    "The proposal fits on one sheet: the Hansa pools its members' cargo, sets its own rates, and settles in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.",
     "Someone has to put up the first metal and sign first. Everyone looks at the captain with the most routes."
    ],
    "choices": [
@@ -54,6 +54,19 @@
      },
      "effects": {
       "money": -20000,
+      "plot_points": 10,
+      "set": [
+       "hansa_founder"
+      ]
+     }
+    },
+    {
+     "id": "bonds",
+     "say": "Sign first: your Hansa bonds are your metal",
+     "requires": {
+      "hansa_bonds": 3
+     },
+     "effects": {
       "plot_points": 10,
       "set": [
        "hansa_founder"
@@ -274,13 +287,15 @@
     "requires": {
      "done": [
       "ch3a",
-      "hansa.charter"
+      "hansa.charter",
+      "drama.trade.vote"
      ],
      "plot_points": 350,
-     "trade_profit": 500000
+     "trade_profit": 400000
     },
     "notes": [
-     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales; the trade ending asks 500 000 profit (at 600 000 bot traders kept grinding for 100 turns after the last chapter)"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales; the trade ending asks 400 000 profit (at 600 000 bot traders kept grinding for 100 turns after the last chapter; markets that feel every load slowed them again)",
+     "dramaturgy (1.2): the ending opens after its climax (drama.trade.vote), which follows the crisis and the low point in drama.json"
     ]
    },
    "ending_combat": {
@@ -295,13 +310,15 @@
     "requires": {
      "done": [
       "ch3b",
-      "legion.offer"
+      "legion.offer",
+      "drama.combat.roll_call"
      ],
      "plot_points": 350,
      "combat_victories": 50
     },
     "notes": [
-     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales",
+     "dramaturgy (1.2): the ending opens after its climax (drama.combat.roll_call), which follows the crisis and the low point in drama.json"
     ]
    },
    "ending_discovery": {
@@ -320,13 +337,15 @@
     "requires": {
      "done": [
       "ch3c",
-      "trail.samples"
+      "trail.samples",
+      "drama.discovery.burn"
      ],
      "plot_points": 350,
      "research_points": 1500
     },
     "notes": [
-     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales"
+     "balance (1.2): plot points ran far above every threshold; now 50 for chapter 2, 150 for chapter 3, 350 for an ending, and each ending needs its arc's turning point; trade profit is now real profit, not sales",
+     "dramaturgy (1.2): the ending opens after its climax (drama.discovery.burn), which follows the crisis and the low point in drama.json"
     ]
    },
    "ending_discovery.discovery_ending": {

@@ -132,6 +132,7 @@ and how the game works; each location also lists its own commands under the stat
 | `travel` | `t` | Move to another location |
 | `port` | `p` | Passengers, VIPs and contracts |
 | `hunt` | `hu` | The bounty board: pick a wanted ship and go after it (uses the turn) |
+| `hansa` | `ha` | Hansa terminal: convoy dues, bonds that lower them, the price board |
 | `cantina` | `c` | Rumours, people and quests |
 | `shop` | `sh` | Equipment for the ship |
 | `build` | `bl` | Construct buildings |
@@ -163,6 +164,18 @@ A few rules worth knowing:
 - Plot points move the story. They come from doing things: scenes, quests, passengers, good deals,
   research, first visits, fights won. The status line shows how many the next chapter needs, and
   `log` shows the rest. Stuck for a while? Have a drink in the cantina.
+- The Hansa's convoys carry ships between the stars. Every 10 turns they charge convoy dues,
+  a little more each time; Hansa bonds lower them. Unpaid dues gather a surcharge, and the
+  convoy master takes cargo for them.
+- Big loads move prices: a full hold sold at once drops a planet's price by about 8%, more at
+  small outposts, less where there is a stock market. Prices drift back over a few turns.
+  The Hansa price board and the port's broker robot guess prices elsewhere: close for docks
+  you saw lately, loose for old news, a rough guess for places you never visited.
+- Fuel is cargo. Between stars the convoy carries you; inside a star system you fly yourself,
+  and the science missions (radio bursts at YZ Ceti, weather on Luhman 16, a starshade at
+  Alpha Centauri, an interstellar comet...) burn fuel, or you buy the burn from the depot.
+- Each road through the story has a crisis in chapter three, a low point before the finale
+  and a climax that opens the ending. They cost real money, bonds, research or crew.
 - Passenger reputation runs from 0 to 100.
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 

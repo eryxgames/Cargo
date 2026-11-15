@@ -290,6 +290,8 @@ def reachable(story):
             in_any = "any" in path
             if negated or in_any:
                 return                      # judged loosely: never blocks structurally
+            if key == "since":              # structurally the same as having happened
+                key, want = "done", list(want)
             if key == "code":
                 worse("opaque", str(want)[:80])
             elif key in ("done", "done_any"):
@@ -323,6 +325,9 @@ def reachable(story):
                         lv = [level.get(g, "no") for g in gifts.get((name, item), [])]
                         if "yes" not in lv:
                             worse("opaque" if "opaque" in lv else "no", "%s %r can never be had" % (name, item))
+            elif key == "chapter":
+                if not any(c in nodes for c in kit.as_list(want)):
+                    worse("no", "chapter %s does not exist" % ", ".join(kit.as_list(want)))
             elif key in ("turn_min", "turn_max", "act_max", "not_flag", "not_done", "visiting_captain",
                          "player_origin", "venue"):
                 return

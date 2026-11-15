@@ -75,6 +75,9 @@ def try_command(cargo, kind, command, then=()):
 
 
 def place(game, kind):
+    # the story's scenes (a science mission at an outpost, say) would answer the command
+    # before the turn prompt does; this audit is about commands, so they stay quiet
+    game.story.tick = lambda: None
     for group in getattr(game, "hidden_locations", {}).values():
         for loc in group:
             if loc not in game.locations:

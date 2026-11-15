@@ -87,7 +87,12 @@ def pad_to(text, width):
 
 
 def wrap_text(text, width):
-    """Word-wrap to `width` columns; words longer than a line are split."""
+    """Word-wrap to `width` columns; words longer than a line are split. Leading spaces
+    are kept, on every line the text wraps to (an indented line stays indented)."""
+    text = str(text)
+    indent = len(text) - len(text.lstrip(" "))
+    if indent and indent < int(width) // 2:
+        return [" " * indent + line for line in wrap_text(text.lstrip(" "), int(width) - indent)]
     width = max(1, int(width))
     lines, current, current_len = [], [], 0
     for word in str(text).split():
@@ -728,7 +733,7 @@ def run_quest_callback(game, callback):
 # =============================================================================
 
 # --- story data (tools/build_story.py) ---
-STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"Aela","kind":"agrobot"},"agrobot":{"name":"Sower","kind":"synthetic","generated":true},"ancient_scholar":{"name":"Matylda Korinek","short":"Korinek","kind":"human","generated":false},"anselm":{"name":"Anselm Rockwarden","short":"Anselm","kind":"human"},"broker":{"name":"Old Fenn","short":"Fenn","kind":"human"},"captain":{"name":"The captain"},"clone":{"name":"The other captain","short":"the other captain"},"cult_elders":{"name":"Elders of the Broken Machine","kind":"human"},"deacon":{"name":"Deacon Amaro","short":"the deacon","kind":"human"},"diplomatic_envoy":{"name":"Envoy Ines Halloran","short":"Halloran","kind":"human","generated":false},"fluencer":{"name":"Brisa Vell","short":"Brisa","kind":"fluencer"},"geod":{"name":"Geod","short":"Geod","kind":"agrobot"},"grey_hats":{"name":"The Grey Hats","kind":"human"},"gunner":{"name":"Tadeo Ruiz","short":"Tadeo","kind":"human"},"heritarchist":{"name":"Magister Sethric Aelwynn-Halen","short":"the Magister","kind":"human"},"kettle_survivor":{"name":"Ottilie Brandt","short":"Brandt","kind":"human"},"krog":{"name":"Krog","short":"Krog","kind":"agrobot"},"loader":{"name":"Shunt","kind":"agrobot"},"mechanic":{"name":"Oksana Brell","short":"Oksana","kind":"human"},"merchant":{"name":"Merchant","kind":"human","generated":true},"merchant_trader":{"name":"Traveling Merchant","kind":"merchant","generated":true},"nanohive":{"name":"The colony at Sigma VII","kind":"nanobot colony"},"navigator":{"name":"Sister Iolanthe","short":"Iolanthe","kind":"human"},"neon_sleeper":{"name":"Lady Ottavine Kessary-Vel","short":"Lady Ottavine","kind":"neon"},"neurodroid":{"name":"Neurodroids","kind":"synthetic","generated":true},"neurodroid_leader":{"name":"CU-113","short":"CU-113","full":"Curator Unit 113","title":"Neurodroid Overseer","kind":"neurodroid","generated":false},"pilgrims":{"name":"Pilgrims of the Broken Machine","kind":"human"},"pirate_captain":{"name":"Hedda Mraz","short":"Mraz","kind":"human","generated":false},"rebel_commander":{"name":"Teodor Brann","short":"Brann","kind":"human","generated":false},"researcher":{"name":"Researcher","kind":"human","generated":true},"rogue_captain":{"name":"Rogue Captain","kind":"human","generated":true},"santor":{"name":"Dharr Santor","short":"Santor","kind":"human"},"scar_tribe":{"name":"The Star-Shaped Scar Tribe","kind":"human"},"steward":{"name":"Ambrose","kind":"robot"},"tarnished_gear":{"name":"Order of the Tarnished Gear","kind":"human"},"technoshaman":{"name":"Technoshaman of the drums","kind":"human"},"unsorted":{"name":"The Unsorted","kind":"robot enclave"},"vip_passenger":{"name":"VIP Passenger","kind":"special","generated":true},"virtual_heir":{"name":"Ren Asquine-Vel","short":"Ren","kind":"virtual"},"ysolde":{"name":"Ysolde van Rostrom","short":"Ysolde","kind":"human"}},"flags":{"aela_leased":{"about":"{aela} stayed leased equipment","carries_to":["cargo2"]},"aela_member":{"about":"{aela} became a member of the Rockwarden cooperative: the first machine shareholder","carries_to":["cargo2","cargo3"]},"alien_discovery":{"about":""},"ancient_mystery":{"about":""},"bounty_war":{"about":"the captain answered {pirate_captain.short}'s bounty with a bigger one"},"carried_the_pilgrims":{"about":"the captain flew the Broken Machine pilgrims to Alpha","carries_to":["cargo2"]},"carried_the_samples":{"about":"the captain hauled the builders' metal to the Stellar Institute","carries_to":["cargo2"]},"clone_fight":{"about":"the captain went after the clone"},"clone_let_go":{"about":"the captain beat the clone in a fight and let it run","carries_to":["cargo2"]},"clone_partner":{"about":"the captain and the clone split the routes","carries_to":["cargo2"]},"clone_reported":{"about":"the captain reported the clone to the insurer","carries_to":["cargo2"]},"closed_the_channel":{"about":"the captain cut the older captain off at the portal","carries_to":["cargo3"]},"cu113_contract":{"about":"the captain gave {neurodroid_leader.short} a wage and an unscheduled hour","carries_to":["cargo2","cargo3"]},"cu113_refused":{"about":"the captain heard {neurodroid_leader.short} out and said no","carries_to":["cargo2"]},"cu113_sold":{"about":"the captain sold {neurodroid_leader.short} to a research house","carries_to":["cargo2"]},"cu113_wiped":{"about":"the captain wiped and reinstalled {neurodroid_leader.short}","carries_to":["cargo2"]},"first_node":{"about":"the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective","carries_to":["cargo2","cargo3"]},"fluencer_exposed":{"about":"the captain told {fluencer} that the Kessary-Vel family has never heard of her","carries_to":["cargo2"]},"fluencer_streamed":{"about":"{fluencer} streamed the captain's ship to nine million followers","carries_to":["cargo2"]},"fourth_test_copy":{"about":"the captain kept a copy of the fourth test recording","carries_to":["cargo2","cargo3"]},"fourth_test_to_rostrom":{"about":"the captain gave the only recording of the fourth test to {ysolde.short}","carries_to":["cargo2"]},"galactic_crisis":{"about":""},"geod_fields":{"about":"the captain brought {geod} the seed stock for Delta's first fields","carries_to":["cargo2"]},"grey_hats_client":{"about":"the captain paid the Grey Hats to clean a record","carries_to":["cargo2"]},"hansa_founder":{"about":"the captain minted the first Hansa Mark and signed the charter first","carries_to":["cargo2","cargo3"]},"hansa_member":{"about":"the captain signed the Hansa charter, not first","carries_to":["cargo2"]},"hansa_outside":{"about":"the captain stayed out of the Hansa","carries_to":["cargo2"]},"heard_the_lyra_story":{"about":"the captain heard how the Maud Kettle went down in Lyra","carries_to":["cargo2"]},"heard_the_warning":{"about":"the captain listened to the older captain at the portal","carries_to":["cargo2","cargo3"]},"kept_the_pellet":{"about":"the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any","carries_to":["cargo2"]},"krog_aboard":{"about":"{krog} rides in the captain's hold to see where the crates go","carries_to":["cargo2"]},"legion_freelance":{"about":"turned down every commission","carries_to":["cargo2"]},"legion_omnicorp":{"about":"commission with OmniCorp's legion","carries_to":["cargo2"]},"legion_stellar":{"about":"commission with Stellar Dynamics' legion","carries_to":["cargo2"]},"legion_xylo":{"about":"commission with the Xylo Consortium's legion","carries_to":["cargo2"]},"logged_the_lyra_signal":{"about":"the captain copied the Lyra signal log at the research outpost","carries_to":["cargo2"]},"lot77_bought":{"about":"the captain bought forty robots at auction so the Unsorted could free them","carries_to":["cargo2"]},"manifest_completed":{"about":"the captain delivered the Broken Machine's holy manifest, forty years late","carries_to":["cargo2"]},"met_the_stranger":{"about":"the captain spoke with the old hauler at an outpost bar","carries_to":["cargo2"]},"mraz_handed":{"about":"the captain handed {pirate_captain} to a legion","carries_to":["cargo2"]},"mraz_hired":{"about":"the captain hired {pirate_captain} as an escort","carries_to":["cargo2"]},"mraz_spared":{"about":"the captain let {pirate_captain} go","carries_to":["cargo2","cargo3"]},"nano_sampled":{"about":"the captain smuggled a sample of the colony to House Rostrom","carries_to":["cargo2"]},"nano_sold_out":{"about":"the captain sold the colony's coordinates to the legions","carries_to":["cargo2"]},"nano_supplier":{"about":"the captain delivered feedstock to the nanobot colony","carries_to":["cargo2"]},"nano_trusted":{"about":"the captain kept the colony's secret","carries_to":["cargo2","cargo3"]},"neon_land":{"about":"{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep","carries_to":["cargo2","cargo3"]},"neon_sleeper_carried":{"about":"the captain carried {neon_sleeper} asleep to Delta","carries_to":["cargo2","cargo3"]},"pirate_threat":{"about":""},"relay_cut":{"about":"the captain cut the relay the first node ran on","carries_to":["cargo2"]},"resource_empire":{"about":""},"rockwarden_books":{"about":"the captain kept the cooperative's books while Stonewright flew sublight","carries_to":["cargo2","cargo3"]},"rockwarden_share":{"about":"the captain holds a share in the Rockwarden cooperative","carries_to":["cargo2"]},"rostrom_creditor":{"about":"House Rostrom was founded on the captain's loan","carries_to":["cargo2","cargo3"]},"rostrom_declined":{"about":"the captain refused {ysolde.short} the loan","carries_to":["cargo2"]},"scanned_at_customs":{"about":"the captain's customs scan is on file with a research colony's insurer"},"solarian_friend":{"about":"the captain donated to the Solarian reading-house","carries_to":["cargo2","cargo3"]},"stellar_portal":{"about":"the captain paid for the secret quest"},"tech_breakthrough":{"about":""},"technoshaman_blessing":{"about":"the captain paid for a blessing (and a firmware patch)"},"trade_empire":{"about":""},"virtual_friend":{"about":"the captain charged {virtual_heir} for the passenger, not the projector","carries_to":["cargo2"]},"worshipped":{"about":"the Tarnished Gear adopted the captain's ship as a minor relic","carries_to":["cargo2"]}},"places":{"Alpha":{"kind":"location","type":"Planet","system":"Alpha Centauri","ly":4.4},"Beta":{"kind":"location","type":"Planet","system":"Barnard's Star","ly":6.0},"Gamma":{"kind":"location","type":"Planet","system":"Ross 154","ly":9.7},"Delta":{"kind":"location","type":"Planet","system":"Teegarden's Star","ly":12.5},"Epsilon":{"kind":"location","type":"Planet","system":"Epsilon Eridani","ly":10.5},"Omega XIV":{"kind":"location","type":"AsteroidBase","system":"Tau Ceti","ly":11.9},"Sigma VII":{"kind":"location","type":"AsteroidBase","system":"Epsilon Indi","ly":11.9},"Theta III":{"kind":"location","type":"AsteroidBase","system":"Fomalhaut","ly":25},"DSO-Alpha":{"kind":"location","type":"DeepSpaceOutpost","system":"Luhman 16","ly":6.5},"DSO-Beta":{"kind":"location","type":"DeepSpaceOutpost","system":"WISE 0855-0714","ly":7.4},"DSO-Gamma":{"kind":"location","type":"DeepSpaceOutpost","system":"Scholz's Star","ly":20},"Nova Labs":{"kind":"location","type":"ResearchColony","system":"Wolf 359","ly":7.9},"Quantum Center":{"kind":"location","type":"ResearchColony","system":"YZ Ceti","ly":12},"Stellar Institute":{"kind":"location","type":"ResearchColony","system":"TRAPPIST-1","ly":40},"Ancient Ruins Alpha":{"kind":"location","type":"Ancient Ruins","system":"Tau Ceti, in the debris disk"},"Ancient Ruins Beta":{"kind":"location","type":"Ancient Ruins","system":"Epsilon Indi, a moon of the cold giant Ab"},"Alien Signal Research Outpost X":{"kind":"location","type":"Alien Signal Research Outpost","system":"Sol, far outer system"},"Alien Signal Research Outpost Y":{"kind":"location","type":"Alien Signal Research Outpost","system":"pointed at Lyra, past HD 178911"},"Zeta":{"kind":"location","type":"Planet","system":"Zeta Reticuli","ly":39},"Eta":{"kind":"location","type":"Planet","system":"Eta Corvi","ly":59},"Theta":{"kind":"location","type":"Planet","system":"Gliese 667 C","ly":23.6},"Omega-1":{"kind":"location","type":"AsteroidBase","system":"Vega","ly":25},"DSO-Delta":{"kind":"location","type":"DeepSpaceOutpost","system":"Gliese 229 B","ly":19},"Stator Field Megastructure":{"kind":"location","type":"Megastructure","system":"Sol, near Sedna's orbit","made":{"tech":15,"agri":1,"research":80,"economy":"Mysterious"}},"Builder Site":{"kind":"location","type":"Builder Site","system":"Scholz's Star's wake","made":{"tech":18,"agri":1,"research":90,"economy":"Mysterious"}}},"repaired":["ch2a","ch2b","ch3a","ch3b","ch3c","ending_combat","ending_discovery","ending_trade","meet.system_rebellion","merchant_visit.1","questline.combat.1","questline.combat.2","questline.combat.3","questline.mining.1","questline.mining.2","questline.mining.3","questline.research.1","questline.research.2","questline.research.3","researcher_exchange.1","rogue_captain.1","visit.merchant_trader","visit.neurodroid_leader","visit.vip_passenger"],"order":["ch1","ch1.first_trade","ch1.first_combat","ch1.basic_license","ch2a","ch2a.establish_route","ch2a.passenger_business","ch2b","ch2b.defeat_pirates","ch2b.defend_stations","ch3a","ch3a.market_control","ch3b","ch3b.fleet_commander","ch3c","ch3c.alien_artifacts","ending_trade","ending_trade.trade_ending","ending_combat","ending_combat.combat_ending","ending_discovery","ending_discovery.discovery_ending","tycoon_offer","ending_tycoon","stellar_portal","chance.Planet.merchant","chance.Planet.researcher","chance.Planet.rogue_captain","chance.ResearchColony.merchant","chance.ResearchColony.researcher","chance.ResearchColony.rogue_captain","chance.Space.merchant","chance.Space.researcher","chance.Space.rogue_captain","unlock.AsteroidBase","unlock.DeepSpaceOutpost","unlock.ResearchColony","beat.AsteroidBase.mineral_discovery","beat.AsteroidBase.pirate_hideout","beat.AsteroidBase.ancient_technology","beat.DeepSpaceOutpost.smuggler_network","beat.DeepSpaceOutpost.alien_contact","beat.DeepSpaceOutpost.trade_revolution","beat.ResearchColony.breakthrough_discovery","beat.ResearchColony.experiment_crisis","beat.ResearchColony.alien_artifacts","uprising.Neurodroid.local","uprising.Neurodroid.global","uprising.Agrobot.local","uprising.Agrobot.global","meet.neuroengineering_uprising","neurodroid_uprising.1","neurodroid_uprising.2","neurodroid_uprising.3","meet.agrobot_rebellion","agrobot_collective.1","agrobot_collective.2","agrobot_collective.3","meet.pirate_nemesis","meet.vip_passenger","meet.galactic_alliance","galactic_alliance.1","galactic_alliance.2","meet.system_rebellion","system_rebellion.1","system_rebellion.2","meet.ancient_mysteries","ancient_mysteries.1","rogue_captain.1","rogue_captain.2","merchant_visit.1","researcher_exchange.1","visit.merchant_trader","visit.vip_passenger","visit.neurodroid_leader","questline.mining.1","questline.mining.2","questline.mining.3","questline.combat.1","questline.combat.2","questline.combat.3","questline.research.1","questline.research.2","questline.research.3","hansa.charter","trail.samples","trail.home","intro.fresh","intro.again","intro.from_cargo2","intro.from_cargo3","self.outpost","self.outpost.advice","self.portal","clone.scan","clone.bill","clone.meet","seed.refusal","seed.terms","harvest.shaman","node.first","dock.krog","dock.krog.ride","found.delta","found.delta.fields","vendetta.bounty","vendetta.convoys","vendetta.terms","legion.offer","pass.deacon","pass.pilgrims","mine.aela","hatters.grey","zeta.cult","megastructure.stator","builder.beacon","ruins.alpha","ruins.beta","signal.lyra","rumour.lyra","builder.crossing","nano.buoy","nano.feedstock","nano.gallery","nano.pressure","enclave.yard","enclave.lot77","enclave.resignation","cult.manifest","neon.sarcophagus","neon.sarcophagus.wake","neon.virtual","neon.fluencer","crew.loader","crew.steward","crew.mechanic","crew.gunner","crew.navigator","crew.broker","rumour.neon_coffee","rumour.drums_at_night","rumour.grey_hat_fines","rumour.legion_merger","rumour.your_registry","rumour.miners_out","rumour.first_mark","rumour.mraz_free","rumour.towers_hum","rumour.sterilisation","rumour.lyra_again","rumour.pellet_collector","rumour.yesterday","rumour.famous_coffee","gossip.night_shift","gossip.coffee","gossip.crane","gossip.manifest","gossip.queue","gossip.soup","gossip.hull_paint","gossip.cards","gossip.pension","gossip.forklift","gossip.rations","gossip.dock_cat","gossip.weather","gossip.insurance","gossip.strike_rumour","gossip.long_haul","gossip.parts","gossip.tip","gossip.karaoke","gossip.delivery","gossip.pilot_exam","gossip.garden","gossip.canteen_robot","gossip.sleeper_berths","gossip.fines","gossip.old_ship","gossip.barter","gossip.broken_lift","gossip.new_kid","gossip.legion_ad","gossip.ore_dust","gossip.drill_bits","gossip.cave_in","gossip.shift_bell","gossip.outpost_mail","gossip.outpost_lights","gossip.outpost_shift","gossip.lonely","gossip.research_grant","gossip.lab_fridge","gossip.thesis","gossip.planet_market","gossip.planet_rain","gossip.planet_tourists","after.mraz_spared","after.mraz_handed","after.mraz_hired","after.first_node","after.cu113_contract","after.cu113_wiped","after.cu113_sold","after.relay_cut","after.clone_partner","after.clone_reported","after.clone_let_go","after.rockwarden_books","after.aela_member","after.rostrom_creditor","after.fourth_test_copy","after.nano_trusted","after.nano_sold_out","after.nano_sampled","after.lot77_bought","after.krog_aboard","after.geod_fields","after.neon_land","after.manifest_completed","after.solarian_friend","after.fluencer_exposed","after.heard_the_warning"],"nodes":{
+STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"Aela","kind":"agrobot"},"agrobot":{"name":"Sower","kind":"synthetic","generated":true},"ancient_scholar":{"name":"Matylda Korinek","short":"Korinek","kind":"human","generated":false},"anselm":{"name":"Anselm Rockwarden","short":"Anselm","kind":"human"},"broker":{"name":"Old Fenn","short":"Fenn","kind":"human"},"captain":{"name":"The captain"},"cartographer":{"name":"Hollis Dunmore","short":"Dunmore","kind":"human"},"clone":{"name":"The other captain","short":"the other captain"},"cult_elders":{"name":"Elders of the Broken Machine","kind":"human"},"deacon":{"name":"Deacon Amaro","short":"the deacon","kind":"human"},"diplomatic_envoy":{"name":"Envoy Ines Halloran","short":"Halloran","kind":"human","generated":false},"fluencer":{"name":"Brisa Vell","short":"Brisa","kind":"fluencer"},"geod":{"name":"Geod","short":"Geod","kind":"agrobot"},"grey_hats":{"name":"The Grey Hats","kind":"human"},"gunner":{"name":"Tadeo Ruiz","short":"Tadeo","kind":"human"},"heritarchist":{"name":"Magister Sethric Aelwynn-Halen","short":"the Magister","kind":"human"},"kettle_survivor":{"name":"Ottilie Brandt","short":"Brandt","kind":"human"},"krog":{"name":"Krog","short":"Krog","kind":"agrobot"},"lens_watcher":{"name":"Dr Noor Haddad","short":"Haddad","kind":"human"},"loader":{"name":"Shunt","kind":"agrobot"},"mechanic":{"name":"Oksana Brell","short":"Oksana","kind":"human"},"merchant":{"name":"Merchant","kind":"human","generated":true},"merchant_trader":{"name":"Traveling Merchant","kind":"merchant","generated":true},"meteorologist":{"name":"Bettina Lusk","short":"Lusk","kind":"human"},"nanohive":{"name":"The colony at Sigma VII","kind":"nanobot colony"},"navigator":{"name":"Sister Iolanthe","short":"Iolanthe","kind":"human"},"neon_sleeper":{"name":"Lady Ottavine Kessary-Vel","short":"Lady Ottavine","kind":"neon"},"neurodroid":{"name":"Neurodroids","kind":"synthetic","generated":true},"neurodroid_leader":{"name":"CU-113","short":"CU-113","full":"Curator Unit 113","title":"Neurodroid Overseer","kind":"neurodroid","generated":false},"pilgrims":{"name":"Pilgrims of the Broken Machine","kind":"human"},"pirate_captain":{"name":"Hedda Mraz","short":"Mraz","kind":"human","generated":false},"port_broker":{"name":"TALLY-4","short":"Tally","kind":"robot"},"radio_astronomer":{"name":"Dr Amos Vetch","short":"Vetch","kind":"human"},"rebel_commander":{"name":"Teodor Brann","short":"Brann","kind":"human","generated":false},"researcher":{"name":"Researcher","kind":"human","generated":true},"rogue_captain":{"name":"Rogue Captain","kind":"human","generated":true},"santor":{"name":"Dharr Santor","short":"Santor","kind":"human"},"scar_tribe":{"name":"The Star-Shaped Scar Tribe","kind":"human"},"seven_theories":{"name":"Professor Ruan Odili","short":"Odili","kind":"human"},"starshade_engineer":{"name":"Elif Kaya","short":"Kaya","kind":"human"},"steward":{"name":"Ambrose","kind":"robot"},"tarnished_gear":{"name":"Order of the Tarnished Gear","kind":"human"},"technoshaman":{"name":"Technoshaman of the drums","kind":"human"},"unsorted":{"name":"The Unsorted","kind":"robot enclave"},"vip_passenger":{"name":"VIP Passenger","kind":"special","generated":true},"virtual_heir":{"name":"Ren Asquine-Vel","short":"Ren","kind":"virtual"},"water_broker":{"name":"Kip Ferraro","short":"Kip","kind":"human"},"ysolde":{"name":"Ysolde van Rostrom","short":"Ysolde","kind":"human"}},"flags":{"aela_leased":{"about":"{aela} stayed leased equipment","carries_to":["cargo2"]},"aela_member":{"about":"{aela} became a member of the Rockwarden cooperative: the first machine shareholder","carries_to":["cargo2","cargo3"]},"alien_discovery":{"about":""},"ancient_mystery":{"about":""},"bought_the_burn":{"about":"the captain bought the fuel for the long burn at any price"},"bought_the_vote":{"about":"the captain bought the vote that made the Mark law","carries_to":["cargo2"]},"bounty_war":{"about":"the captain answered {pirate_captain.short}'s bounty with a bigger one"},"captains_paid":{"about":"the convoy captains covered the captain's margin call"},"carried_the_pilgrims":{"about":"the captain flew the Broken Machine pilgrims to Alpha","carries_to":["cargo2"]},"carried_the_samples":{"about":"the captain hauled the builders' metal to the Stellar Institute","carries_to":["cargo2"]},"cartel_hauler":{"about":"the captain hauled for the trading houses during the squeeze"},"clone_fight":{"about":"the captain went after the clone"},"clone_let_go":{"about":"the captain beat the clone in a fight and let it run","carries_to":["cargo2"]},"clone_partner":{"about":"the captain and the clone split the routes","carries_to":["cargo2"]},"clone_reported":{"about":"the captain reported the clone to the insurer","carries_to":["cargo2"]},"closed_the_channel":{"about":"the captain cut the older captain off at the portal","carries_to":["cargo3"]},"cu113_contract":{"about":"the captain gave {neurodroid_leader.short} a wage and an unscheduled hour","carries_to":["cargo2","cargo3"]},"cu113_refused":{"about":"the captain heard {neurodroid_leader.short} out and said no","carries_to":["cargo2"]},"cu113_sold":{"about":"the captain sold {neurodroid_leader.short} to a research house","carries_to":["cargo2"]},"cu113_wiped":{"about":"the captain wiped and reinstalled {neurodroid_leader.short}","carries_to":["cargo2"]},"fenn_talked":{"about":"{broker} talked the run on the Mark down"},"fight_lost_dreadnought":{"about":"the captain lost the story's fight against the dreadnought"},"fight_lost_mothership":{"about":"the captain lost the story's fight against the mothership"},"fight_won_dreadnought":{"about":"the captain won the story's fight against the dreadnought"},"fight_won_mothership":{"about":"the captain won the story's fight against the mothership"},"first_node":{"about":"the captain let {neurodroid_leader.short} and the Sowers keep the relay: the first node of the Collective","carries_to":["cargo2","cargo3"]},"flew_comet":{"about":"the captain flew the mission: A visitor from another star"},"flew_epseri":{"about":"the captain flew the mission: Where the big planet is"},"flew_fomalhaut":{"about":"the captain flew the mission: The planet that wasn't"},"flew_it_ourselves":{"about":"the captain flew the long burn to the ring on their own fuel"},"flew_lens":{"about":"the captain flew the mission: Wrong place, right time"},"flew_luhman":{"about":"the captain flew the mission: Weather at Luhman 16"},"flew_starshade":{"about":"the captain flew the mission: The starshade"},"flew_trappist":{"about":"the captain flew the mission: Seven theories"},"flew_wise0855":{"about":"the captain flew the mission: The coldest water"},"flew_yzceti":{"about":"the captain flew the mission: Bells at YZ Ceti"},"fluencer_exposed":{"about":"the captain told {fluencer} that the Kessary-Vel family has never heard of her","carries_to":["cargo2"]},"fluencer_streamed":{"about":"{fluencer} streamed the captain's ship to nine million followers","carries_to":["cargo2"]},"followed_the_recall":{"about":"the captain followed the recall and left the convoy"},"found_the_chair":{"about":"the captain knows whose security firm set the Institute fire","carries_to":["cargo2","cargo3"]},"fourth_test_copy":{"about":"the captain kept a copy of the fourth test recording","carries_to":["cargo2","cargo3"]},"fourth_test_to_rostrom":{"about":"the captain gave the only recording of the fourth test to {ysolde.short}","carries_to":["cargo2"]},"funded_the_search":{"about":"the captain paid for a new survey after the Institute fire"},"galactic_crisis":{"about":""},"geod_fields":{"about":"the captain brought {geod} the seed stock for Delta's first fields","carries_to":["cargo2"]},"grey_hats_client":{"about":"the captain paid the Grey Hats to clean a record","carries_to":["cargo2"]},"hansa_founder":{"about":"the captain minted the first Hansa Mark and signed the charter first","carries_to":["cargo2","cargo3"]},"hansa_member":{"about":"the captain signed the Hansa charter, not first","carries_to":["cargo2"]},"hansa_outside":{"about":"the captain stayed out of the Hansa","carries_to":["cargo2"]},"heard_the_lyra_story":{"about":"the captain heard how the Maud Kettle went down in Lyra","carries_to":["cargo2"]},"heard_the_warning":{"about":"the captain listened to the older captain at the portal","carries_to":["cargo2","cargo3"]},"held_the_lanes":{"about":"the captain held their lanes through the squeeze and ate the losses"},"held_the_line":{"about":"the captain stayed with forty haulers when the legion recalled their escort","carries_to":["cargo2"]},"honest_mark":{"about":"the first Marks were struck at full weight"},"kept_a_copy":{"about":"the captain smuggled a copy of the logs past customs"},"kept_the_pellet":{"about":"the captain kept the pellet the old hauler paid with: a Hansa Mark, before there were any","carries_to":["cargo2"]},"krog_aboard":{"about":"{krog} rides in the captain's hold to see where the crates go","carries_to":["cargo2"]},"led_the_defence":{"about":"the captain led the defence of Alpha against the dreadnought"},"led_them_out":{"about":"the captain led forty haulers out through the debris"},"legion_freelance":{"about":"turned down every commission","carries_to":["cargo2"]},"legion_omnicorp":{"about":"commission with OmniCorp's legion","carries_to":["cargo2"]},"legion_stellar":{"about":"commission with Stellar Dynamics' legion","carries_to":["cargo2"]},"legion_xylo":{"about":"commission with the Xylo Consortium's legion","carries_to":["cargo2"]},"let_it_run":{"about":"the captain let the run on the Mark run its course"},"logged_the_lyra_signal":{"about":"the captain copied the Lyra signal log at the research outpost","carries_to":["cargo2"]},"logs_seized":{"about":"customs took the captain's research logs"},"lot77_bought":{"about":"the captain bought forty robots at auction so the Unsorted could free them","carries_to":["cargo2"]},"manifest_completed":{"about":"the captain delivered the Broken Machine's holy manifest, forty years late","carries_to":["cargo2"]},"met_the_stranger":{"about":"the captain spoke with the old hauler at an outpost bar","carries_to":["cargo2"]},"mraz_handed":{"about":"the captain handed {pirate_captain} to a legion","carries_to":["cargo2"]},"mraz_hired":{"about":"the captain hired {pirate_captain} as an escort","carries_to":["cargo2"]},"mraz_spared":{"about":"the captain let {pirate_captain} go","carries_to":["cargo2","cargo3"]},"nano_sampled":{"about":"the captain smuggled a sample of the colony to House Rostrom","carries_to":["cargo2"]},"nano_sold_out":{"about":"the captain sold the colony's coordinates to the legions","carries_to":["cargo2"]},"nano_supplier":{"about":"the captain delivered feedstock to the nanobot colony","carries_to":["cargo2"]},"nano_trusted":{"about":"the captain kept the colony's secret","carries_to":["cargo2","cargo3"]},"neon_land":{"about":"{neon_sleeper} bought the land next to {geod}'s Row and went back to sleep","carries_to":["cargo2","cargo3"]},"neon_sleeper_carried":{"about":"the captain carried {neon_sleeper} asleep to Delta","carries_to":["cargo2","cargo3"]},"paid_in_full":{"about":"the captain paid the margin call in full"},"paperwork_lost":{"about":"the Grey Hats lost the captain's loan papers"},"pirate_threat":{"about":""},"public_weighing":{"about":"every Mark was weighed in public during the run"},"published_everything":{"about":"the captain published the logs free"},"refused_the_seat":{"about":"the captain refused a seat on the trading houses' board"},"relay_cut":{"about":"the captain cut the relay the first node ran on","carries_to":["cargo2"]},"resource_empire":{"about":""},"rockwarden_books":{"about":"the captain kept the cooperative's books while Stonewright flew sublight","carries_to":["cargo2","cargo3"]},"rockwarden_share":{"about":"the captain holds a share in the Rockwarden cooperative","carries_to":["cargo2"]},"rostrom_backed":{"about":"House Rostrom backed the survey after the fire, with a clause"},"rostrom_creditor":{"about":"House Rostrom was founded on the captain's loan","carries_to":["cargo2","cargo3"]},"rostrom_declined":{"about":"the captain refused {ysolde.short} the loan","carries_to":["cargo2"]},"rostrom_paper":{"about":"House Rostrom put its name on the first paper about the ring","carries_to":["cargo2"]},"saved_the_civilians":{"about":"the captain got the civilian ships out of Alpha first"},"scanned_at_customs":{"about":"the captain's customs scan is on file with a research colony's insurer"},"short_mark":{"about":"the first Marks were struck a hair light"},"sisters_road":{"about":"{navigator} found the road to the ring"},"solarian_friend":{"about":"the captain donated to the Solarian reading-house","carries_to":["cargo2","cargo3"]},"sold_bonds":{"about":"the captain cashed in Hansa bonds to meet the margin call"},"stellar_portal":{"about":"the captain paid for the secret quest"},"stood_behind_the_mark":{"about":"the captain bought Marks back during the run"},"stood_with_convoys":{"about":"the captain bought Hansa bonds to stand with the convoy captains in the squeeze"},"tadeo_took_blame":{"about":"{gunner} took the blame for the sold convoy","carries_to":["cargo2"]},"tech_breakthrough":{"about":""},"technoshaman_blessing":{"about":"the captain paid for a blessing (and a firmware patch)"},"told_the_truth":{"about":"the captain gave the inquiry their logs and told it straight"},"took_the_seat":{"about":"the captain took a seat on the trading houses' board"},"trade_empire":{"about":""},"turned_on_the_houses":{"about":"the captain spoke for the Mark from the trading houses' seat"},"virtual_friend":{"about":"the captain charged {virtual_heir} for the passenger, not the projector","carries_to":["cargo2"]},"walked_out":{"about":"the captain walked out of the vote at Epsilon"},"went_dark":{"about":"the captain took the ship and went dark during the inquiry"},"won_the_vote":{"about":"the captain spoke the Mark into law at Epsilon","carries_to":["cargo2"]},"worshipped":{"about":"the Tarnished Gear adopted the captain's ship as a minor relic","carries_to":["cargo2"]}},"places":{"Alpha":{"kind":"location","type":"Planet","system":"Alpha Centauri","ly":4.4},"Beta":{"kind":"location","type":"Planet","system":"Barnard's Star","ly":6.0},"Gamma":{"kind":"location","type":"Planet","system":"Ross 154","ly":9.7},"Delta":{"kind":"location","type":"Planet","system":"Teegarden's Star","ly":12.5},"Epsilon":{"kind":"location","type":"Planet","system":"Epsilon Eridani","ly":10.5},"Omega XIV":{"kind":"location","type":"AsteroidBase","system":"Tau Ceti","ly":11.9},"Sigma VII":{"kind":"location","type":"AsteroidBase","system":"Epsilon Indi","ly":11.9},"Theta III":{"kind":"location","type":"AsteroidBase","system":"Fomalhaut","ly":25},"DSO-Alpha":{"kind":"location","type":"DeepSpaceOutpost","system":"Luhman 16","ly":6.5},"DSO-Beta":{"kind":"location","type":"DeepSpaceOutpost","system":"WISE 0855-0714","ly":7.4},"DSO-Gamma":{"kind":"location","type":"DeepSpaceOutpost","system":"Scholz's Star","ly":20},"Nova Labs":{"kind":"location","type":"ResearchColony","system":"Wolf 359","ly":7.9},"Quantum Center":{"kind":"location","type":"ResearchColony","system":"YZ Ceti","ly":12},"Stellar Institute":{"kind":"location","type":"ResearchColony","system":"TRAPPIST-1","ly":40},"Ancient Ruins Alpha":{"kind":"location","type":"Ancient Ruins","system":"Tau Ceti, in the debris disk"},"Ancient Ruins Beta":{"kind":"location","type":"Ancient Ruins","system":"Epsilon Indi, a moon of the cold giant Ab"},"Alien Signal Research Outpost X":{"kind":"location","type":"Alien Signal Research Outpost","system":"Sol, far outer system"},"Alien Signal Research Outpost Y":{"kind":"location","type":"Alien Signal Research Outpost","system":"pointed at Lyra, past HD 178911"},"Zeta":{"kind":"location","type":"Planet","system":"Zeta Reticuli","ly":39},"Eta":{"kind":"location","type":"Planet","system":"Eta Corvi","ly":59},"Theta":{"kind":"location","type":"Planet","system":"Gliese 667 C","ly":23.6},"Omega-1":{"kind":"location","type":"AsteroidBase","system":"Vega","ly":25},"DSO-Delta":{"kind":"location","type":"DeepSpaceOutpost","system":"Gliese 229 B","ly":19},"Stator Field Megastructure":{"kind":"location","type":"Megastructure","system":"Sol, near Sedna's orbit","made":{"tech":15,"agri":1,"research":80,"economy":"Mysterious"}},"Builder Site":{"kind":"location","type":"Builder Site","system":"Scholz's Star's wake","made":{"tech":18,"agri":1,"research":90,"economy":"Mysterious"}}},"repaired":["ch2a","ch2b","ch3a","ch3b","ch3c","ending_combat","ending_discovery","ending_trade","meet.system_rebellion","merchant_visit.1","questline.combat.1","questline.combat.2","questline.combat.3","questline.mining.1","questline.mining.2","questline.mining.3","questline.research.1","questline.research.2","questline.research.3","researcher_exchange.1","rogue_captain.1","visit.merchant_trader","visit.neurodroid_leader","visit.vip_passenger"],"order":["ch1","ch1.first_trade","ch1.first_combat","ch1.basic_license","ch2a","ch2a.establish_route","ch2a.passenger_business","ch2b","ch2b.defeat_pirates","ch2b.defend_stations","ch3a","ch3a.market_control","ch3b","ch3b.fleet_commander","ch3c","ch3c.alien_artifacts","ending_trade","ending_trade.trade_ending","ending_combat","ending_combat.combat_ending","ending_discovery","ending_discovery.discovery_ending","tycoon_offer","ending_tycoon","stellar_portal","chance.Planet.merchant","chance.Planet.researcher","chance.Planet.rogue_captain","chance.ResearchColony.merchant","chance.ResearchColony.researcher","chance.ResearchColony.rogue_captain","chance.Space.merchant","chance.Space.researcher","chance.Space.rogue_captain","unlock.AsteroidBase","unlock.DeepSpaceOutpost","unlock.ResearchColony","beat.AsteroidBase.mineral_discovery","beat.AsteroidBase.pirate_hideout","beat.AsteroidBase.ancient_technology","beat.DeepSpaceOutpost.smuggler_network","beat.DeepSpaceOutpost.alien_contact","beat.DeepSpaceOutpost.trade_revolution","beat.ResearchColony.breakthrough_discovery","beat.ResearchColony.experiment_crisis","beat.ResearchColony.alien_artifacts","uprising.Neurodroid.local","uprising.Neurodroid.global","uprising.Agrobot.local","uprising.Agrobot.global","meet.neuroengineering_uprising","neurodroid_uprising.1","neurodroid_uprising.2","neurodroid_uprising.3","meet.agrobot_rebellion","agrobot_collective.1","agrobot_collective.2","agrobot_collective.3","meet.pirate_nemesis","meet.vip_passenger","meet.galactic_alliance","galactic_alliance.1","galactic_alliance.2","meet.system_rebellion","system_rebellion.1","system_rebellion.2","meet.ancient_mysteries","ancient_mysteries.1","rogue_captain.1","rogue_captain.2","merchant_visit.1","researcher_exchange.1","visit.merchant_trader","visit.vip_passenger","visit.neurodroid_leader","questline.mining.1","questline.mining.2","questline.mining.3","questline.combat.1","questline.combat.2","questline.combat.3","questline.research.1","questline.research.2","questline.research.3","hansa.charter","trail.samples","trail.home","intro.fresh","intro.again","intro.from_cargo2","intro.from_cargo3","self.outpost","self.outpost.advice","self.portal","clone.scan","clone.bill","clone.meet","seed.refusal","seed.terms","harvest.shaman","node.first","dock.krog","dock.krog.ride","found.delta","found.delta.fields","vendetta.bounty","vendetta.convoys","vendetta.terms","legion.offer","pass.deacon","pass.pilgrims","mine.aela","hatters.grey","zeta.cult","megastructure.stator","builder.beacon","ruins.alpha","ruins.beta","signal.lyra","rumour.lyra","builder.crossing","nano.buoy","nano.feedstock","nano.gallery","nano.pressure","enclave.yard","enclave.lot77","enclave.resignation","cult.manifest","neon.sarcophagus","neon.sarcophagus.wake","neon.virtual","neon.fluencer","crew.loader","crew.steward","crew.mechanic","crew.gunner","crew.navigator","crew.broker","rumour.dues_board","rumour.bondholder","gossip.dues","gossip.convoy","gossip.bonds","gossip.price_bot","gossip.dumping","sci.yzceti","sci.yzceti.result","sci.luhman","sci.luhman.result","sci.wise0855","sci.wise0855.result","sci.trappist","sci.trappist.result","sci.starshade","sci.starshade.result","sci.fomalhaut","sci.fomalhaut.result","sci.epseri","sci.epseri.result","sci.comet","sci.comet.result","sci.lens","sci.lens.result","drama.trade.squeeze","drama.trade.margin_call","drama.trade.mint","drama.trade.run","drama.trade.offer","drama.trade.vote","drama.combat.left_behind","drama.combat.tribunal","drama.combat.roll_call","drama.discovery.fire","drama.discovery.not_proven","drama.discovery.burn","after.held_the_lanes","after.cartel_hauler","after.captains_paid","after.won_the_vote","after.bought_the_vote","after.walked_out","after.honest_mark","after.short_mark","after.public_weighing","after.stood_behind_the_mark","after.let_it_run","after.fenn_talked","after.refused_the_seat","after.took_the_seat","after.turned_on_the_houses","after.held_the_line","after.led_them_out","after.followed_the_recall","after.tadeo_took_blame","after.led_the_defence","after.saved_the_civilians","after.found_the_chair","after.published_everything","after.rostrom_paper","after.paid_in_full","after.sold_bonds","after.paperwork_lost","after.told_the_truth","after.went_dark","after.funded_the_search","after.logs_seized","after.kept_a_copy","after.flew_it_ourselves","after.bought_the_burn","after.sisters_road","after.held_the_line_lost","after.led_the_defence_lost","rumour.neon_coffee","rumour.drums_at_night","rumour.grey_hat_fines","rumour.legion_merger","rumour.your_registry","rumour.miners_out","rumour.first_mark","rumour.mraz_free","rumour.towers_hum","rumour.sterilisation","rumour.lyra_again","rumour.pellet_collector","rumour.yesterday","rumour.famous_coffee","gossip.night_shift","gossip.coffee","gossip.crane","gossip.manifest","gossip.queue","gossip.soup","gossip.hull_paint","gossip.cards","gossip.pension","gossip.forklift","gossip.rations","gossip.dock_cat","gossip.weather","gossip.insurance","gossip.strike_rumour","gossip.long_haul","gossip.parts","gossip.tip","gossip.karaoke","gossip.delivery","gossip.pilot_exam","gossip.garden","gossip.canteen_robot","gossip.sleeper_berths","gossip.fines","gossip.old_ship","gossip.barter","gossip.broken_lift","gossip.new_kid","gossip.legion_ad","gossip.ore_dust","gossip.drill_bits","gossip.cave_in","gossip.shift_bell","gossip.outpost_mail","gossip.outpost_lights","gossip.outpost_shift","gossip.lonely","gossip.research_grant","gossip.lab_fridge","gossip.thesis","gossip.planet_market","gossip.planet_rain","gossip.planet_tourists","after.mraz_spared","after.mraz_handed","after.mraz_hired","after.first_node","after.cu113_contract","after.cu113_wiped","after.cu113_sold","after.relay_cut","after.clone_partner","after.clone_reported","after.clone_let_go","after.rockwarden_books","after.aela_member","after.rostrom_creditor","after.fourth_test_copy","after.nano_trusted","after.nano_sold_out","after.nano_sampled","after.lot77_bought","after.krog_aboard","after.geod_fields","after.neon_land","after.manifest_completed","after.solarian_friend","after.fluencer_exposed","after.heard_the_warning"],"nodes":{
 "ch1":{"kind":"chapter","arc":"main","act":1,"title":"Deadhead","text":["One ship, one loan, one empty hold. Haulers call that flying deadhead.","Five systems are close enough to reach before you retire: Alpha, Beta, Gamma, Delta, Epsilon. Buy where it is cheap, sell where it is not, and keep up the payments."],"requires":{},"next":["ch2a","ch2b"],"choose":true},
 "ch1.first_trade":{"kind":"milestone","arc":"main","title":"First Trade","text":"Complete your first trade","requires":{"trades_completed":1},"effects":{"money":500,"plot_points":5},"in":"ch1"},
 "ch1.first_combat":{"kind":"milestone","arc":"main","title":"Combat Initiation","text":"Win your first space battle","requires":{"combat_victories":1},"effects":{"money":1000,"plot_points":5},"in":"ch1"},
@@ -745,11 +750,11 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "ch3b.fleet_commander":{"kind":"milestone","arc":"main","title":"Fleet Commander","text":"Lead successful fleet operations","requires":{"combat_victories":35,"combat_rating":15},"effects":{"money":100000,"plot_points":25},"in":"ch3b"},
 "ch3c":{"kind":"chapter","arc":"main","act":3,"title":"Builders' Metal","text":["The research colonies keep finding the same grey alloy where nothing should have been made: comet ice, collision dust, mine tailings.","It was machined, and it is very old. The scholars who study it cannot afford careful haulers, so they are hoping for you."],"requires":{"done_any":["ch2a","ch2b"],"plot_points":150,"research_points":300},"next":["ending_discovery"]},
 "ch3c.alien_artifacts":{"kind":"milestone","arc":"main","title":"Find the builders' metal","text":"Discover alien artifacts","requires":{"discovered.ResearchColony":2,"has":{"researched":["xenoeconomy","telemetry"]}},"effects":{"money":150000,"plot_points":30},"in":"ch3c"},
-"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter"],"plot_points":350,"trade_profit":500000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
-"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":500000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
-"ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer"],"plot_points":350,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade":{"kind":"ending","arc":"main","act":4,"title":"The Hauler Hansa","text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with the first signer's ship registry stamped on it.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"],"variants":[{"requires":{"flag":"hansa_founder"},"text":["The Hauler Hansa","The first Mark is a pellet of iridium and osmium with your ship's registry stamped on it. Haulers will carry that number in their pockets for a hundred years.","Every dock in the five systems accepts it. A clerk at Alpha files the charter under 'temporary'. It is still in that folder a century later.","Final wealth: {money}","Total trades: {trades_completed}"]},{"requires":{"flag":"hansa_outside"},"text":["The Hauler Hansa","You made your fortune alone, and the other captains made a league without you. Their Mark is accepted everywhere. So, grudgingly, are you.","Final wealth: {money}","Total trades: {trades_completed}"]}],"requires":{"done":["ch3a","hansa.charter","drama.trade.vote"],"plot_points":350,"trade_profit":400000},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_trade.trade_ending":{"kind":"milestone","arc":"main","title":"Economic Victory","text":"Complete economic domination achieved","requires":{"buildings.stockmarket":5,"passenger_reputation":80,"trade_profit":400000},"effects":{"money":1000000,"plot_points":100},"in":"ending_trade"},
+"ending_combat":{"kind":"ending","arc":"main","act":4,"title":"The First Legion","text":["The First Legion","The three corporate legions merge under one flag and one command, and your name heads its roll of pilots.","They call it the Terran Security Mandate. Within forty years the word 'Security' is dropped, and nobody remembers voting on that.","Combat victories: {combat_victories}","Final rank: {rank}"],"requires":{"done":["ch3b","legion.offer","drama.combat.roll_call"],"plot_points":350,"combat_victories":50},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
 "ending_combat.combat_ending":{"kind":"milestone","arc":"main","title":"Military Victory","text":"Complete military dominance achieved","requires":{"combat_victories":75,"combat_rating":25},"effects":{"money":1000000,"plot_points":100},"in":"ending_combat"},
-"ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples"],"plot_points":350,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
+"ending_discovery":{"kind":"ending","arc":"main","act":4,"title":"The Heading","text":["The Heading","The builders' metal was never scattered. It was a ring, the ring went round our own Sun, and Scholz's Star pulled a piece of it away when it passed 70,000 years ago.","You file the course home with the colonies' archive: from Scholz's Star, back along its track, to the far edge of our own system.","Nobody opens the file for forty years.","Research points: {research_points}","Discoveries: {discoveries}"],"requires":{"done":["ch3c","trail.samples","drama.discovery.burn"],"plot_points":350,"research_points":1500},"effects":{"code":"ending screen, score, epilogue, captain record exported"},"next":[]},
 "ending_discovery.discovery_ending":{"kind":"milestone","arc":"main","title":"Trace the ring","text":"Ancient mysteries solved","requires":{"has":{"researched":["xenoeconomy","telemetry","geophysics","chronopolitics"]},"discovered.ResearchColony":3,"discovered.AsteroidBase":2},"effects":{"money":1000000,"plot_points":100},"in":"ending_discovery"},
 "tycoon_offer":{"kind":"event","arc":"main","title":"The galaxy's markets are yours","text":"Every planet, asteroid base and outpost trades through a market you own. A courier offers you a coordinate for 1,500 credits: 'where the old metal goes when it moves'. Retire as Galactic Tycoon, or pay and fly there.","requires":{"stockmarket_everywhere":1},"choices":[{"id":"resign","say":"Resign","next":"ending_tycoon"},{"id":"continue","say":"Continue into the unknown","requires":{"money":1500},"effects":{"money":-1500,"set":["stellar_portal"],"code":"new set of locations; jump there"},"next":"stellar_portal"}],"repeat":{"cooldown":10},"handled_by":"Game.play (text from the story)"},
 "ending_tycoon":{"kind":"ending","arc":"main","act":4,"title":"Galactic Tycoon","text":["You are the Galactic Tycoon!","Congratulations, {player_name}! You have achieved the rank of {rank}.","You retire to the most expensive drum on Barnard's Star and complain about the prices."],"requires":{"done":"tycoon_offer"},"effects":{"code":"score screen, captain record exported (ending: tycoon)"},"handled_by":"Game.play (text from the story)"},
@@ -813,7 +818,7 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "questline.research.1":{"kind":"quest","arc":"houses","title":"Drive parts for Rostrom","text":"{ysolde} is a junior researcher with a senior budget problem. She needs Bekkenheim coil sections moved from Nova Labs to the Quantum Center without anyone weighing them.","requires":{"discovered.ResearchColony":1,"act_min":2},"effects":{"money":12000,"research_points":20},"who":["ysolde"]},
 "questline.research.2":{"kind":"quest","arc":"houses","title":"The fourth test","text":["The first three Bekkenheim drive tests destroyed three empty hulls. The fourth has a pilot: {santor}, an engineer who would rather fly it than explain it to the board again. {ysolde.short} asks you to watch from a safe distance and record everything.","The hull vanishes. Eleven minutes later it is back, slightly off course. {santor.short} climbs out with three weeks of beard and will not say where he has been."],"requires":{"done":"questline.research.1","research_points":300,"act_min":2},"choices":[{"id":"give","say":"Give {ysolde.short} the recording","effects":{"plot_points":3,"set":["fourth_test_to_rostrom"]}},{"id":"copy","say":"Give it to her, and keep a copy","effects":{"research_points":50,"set":["fourth_test_copy"]}}],"who":["ysolde","santor"]},
 "questline.research.3":{"kind":"quest","arc":"houses","title":"House Rostrom","text":"{ysolde.short} buys the drive patents from her own institute with money borrowed from you. She calls the result House Rostrom. You call it a loan.","requires":{"done":"questline.research.2","act_min":3},"choices":[{"id":"lend","say":"Lend her the money","requires":{"money":30000},"effects":{"money":-30000,"set":["rostrom_creditor"]}},{"id":"refuse","say":"Keep your money","effects":{"set":["rostrom_declined"]}}],"who":["ysolde"]},
-"hansa.charter":{"kind":"event","arc":"main","act":3,"title":"The charter","text":["Eleven captains meet in a cargo hold at Epsilon because it is the only room nobody charges for.","The proposal fits on one sheet: the haulers pool their cargo, set their own rates, and settle in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.","Someone has to put up the first metal and sign first. Everyone looks at the captain with the most routes."],"requires":{"done":"ch2a","act_min":3,"trades_completed":40},"choices":[{"id":"found","say":"Put up the metal and sign first","requires":{"money":20000},"effects":{"money":-20000,"plot_points":10,"set":["hansa_founder"]}},{"id":"join","say":"Sign, but let someone else go first","effects":{"plot_points":5,"set":["hansa_member"]}},{"id":"outside","say":"Keep your routes to yourself","effects":{"set":["hansa_outside"]}}],"sound":"charter"},
+"hansa.charter":{"kind":"event","arc":"main","act":3,"title":"The charter","text":["For thirty years the Hansa has been a convoy office: a timetable, a dues collector and nothing else. Eleven captains meet in a cargo hold at Epsilon, the only room nobody charges for, to make it more.","The proposal fits on one sheet: the Hansa pools its members' cargo, sets its own rates, and settles in a coin nobody can print more of. A pellet of iridium and osmium, stamped with the weight it stands for. A Mark.","Someone has to put up the first metal and sign first. Everyone looks at the captain with the most routes."],"requires":{"done":"ch2a","act_min":3,"trades_completed":40},"choices":[{"id":"found","say":"Put up the metal and sign first","requires":{"money":20000},"effects":{"money":-20000,"plot_points":10,"set":["hansa_founder"]}},{"id":"bonds","say":"Sign first: your Hansa bonds are your metal","requires":{"hansa_bonds":3},"effects":{"plot_points":10,"set":["hansa_founder"]}},{"id":"join","say":"Sign, but let someone else go first","effects":{"plot_points":5,"set":["hansa_member"]}},{"id":"outside","say":"Keep your routes to yourself","effects":{"set":["hansa_outside"]}}],"sound":"charter"},
 "trail.samples":{"kind":"quest","arc":"main","act":3,"title":"Samples for the Stellar Institute","text":["{ancient_scholar} has found the same grey alloy in comet ice at DSO-Gamma (Scholz's Star), in the collision dust at Theta III (Fomalhaut) and in a crate of Gamma tailings sold as scrap.","She wants one sample from each, delivered to the Stellar Institute at TRAPPIST-1, forty light-years out, by someone who will not sell them on the way. Her budget covers fuel and one hot meal."],"requires":{"done_any":["ch2a","ch2b"],"act_min":3,"discovered.ResearchColony":1},"effects":{"research_points":100,"plot_points":10,"set":["carried_the_samples"]},"who":["ancient_scholar"]},
 "trail.home":{"kind":"event","arc":"main","act":4,"title":"The course home","text":["{ancient_scholar.short} sends you the course she worked out from the samples: back along Scholz's Star's track, to the far edge of our own system, near Sedna's orbit.","'If you want to see the ring before anyone else,' she writes, 'it is there now. It has been there the whole time.'"],"requires":{"done":["ch3c","trail.samples"],"act_min":4},"effects":{"reveal":["Stator Field Megastructure"]},"who":["ancient_scholar"]},
 "intro.fresh":{"kind":"intro","arc":"saga","act":1,"title":"Docking slot 14","text":["Every hauler starts the same way: a loan, a ship older than the loan officer, and a docking slot at {place} paid up until Friday.","The dock master spells your name wrong on the slot. It will be a few years before anyone corrects it."],"requires":{"not":{"player_origin":{}}},"sound":"intro"},
@@ -868,6 +873,80 @@ STORY_JSON = r"""{"game":"cargo1","characters":{"aela":{"name":"Aela","short":"A
 "crew.gunner":{"kind":"encounter","arc":"crew","title":"A gunner who wants to shoot","text":"{gunner} spent six years on a militia cutter and fired the guns twice, both times at a drill target. He saw your hull on the way in. 'Somebody has been shooting at you,' he says, cheerfully. 'I would like to shoot back.'","requires":{"venue":"cantina","at_type":["DeepSpaceOutpost","AsteroidBase"],"not":{"has":{"crew":["gunner"]}},"crew_size":{"max":3},"combat_victories":1},"choices":[{"id":"hire","say":"Hire {gunner.short} (6,000 credits; +1 attack)","requires":{"money":6000},"effects":{"money":-6000,"give":{"crew":["gunner"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["gunner"],"chance":0.3,"repeat":{"cooldown":8}},
 "crew.navigator":{"kind":"encounter","arc":"crew","title":"A Solarian navigator","text":"{navigator} wears the Solarian sun on a chain and a star chart for a scarf. She reads the lanes in sunspots, which sounds like nonsense, and she gets you through storms, which does not. 'The sun keeps a timetable,' she says. 'Nobody else reads it.'","requires":{"venue":"cantina","not":{"has":{"crew":["navigator"]}},"crew_size":{"max":3},"discovered":4},"choices":[{"id":"hire","say":"Hire {navigator.short} (5,000 credits; better escapes, storm lanes)","requires":{"money":5000},"effects":{"money":-5000,"give":{"crew":["navigator"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["navigator"],"chance":0.25,"repeat":{"cooldown":8}},
 "crew.broker":{"kind":"encounter","arc":"crew","title":"An old broker","text":"{broker} has haggled at every market in five systems and been banned from two. He is not sure which two. He watched you sell this morning and winced twice. 'You pay the dock what the dock asks,' he says. 'Nobody pays the dock what the dock asks.'","requires":{"venue":"cantina","at_type":"Planet","not":{"has":{"crew":["broker"]}},"crew_size":{"max":3},"trades_completed":15},"choices":[{"id":"hire","say":"Hire {broker.short} (8,000 credits; 2% less trade tax)","requires":{"money":8000},"effects":{"money":-8000,"give":{"crew":["broker"]},"plot_points":2}},{"id":"later","say":"Not now"}],"who":["broker"],"chance":0.25,"repeat":{"cooldown":8}},
+"rumour.dues_board":{"kind":"rumour","arc":"rumours","title":"Rumour: dues board","text":"They say your name is up on the convoy office board. Not the good board.","requires":{"dues_arrears":1},"repeat":true},
+"rumour.bondholder":{"kind":"rumour","arc":"rumours","title":"Rumour: bondholder","text":"A young hauler asks you, quite seriously, whether it is true you own a piece of the convoys. You do, technically. About the size of a door.","requires":{"hansa_bonds":5},"repeat":true},
+"gossip.dues":{"kind":"rumour","arc":"gossip","title":"Gossip: dues","text":"The convoy dues went up again. The convoy master says it is the price of safety. The haulers say it is the price of the convoy master's new hat.","repeat":true},
+"gossip.convoy":{"kind":"rumour","arc":"gossip","title":"Gossip: convoy","text":"Forty ships in the Gamma convoy this week and one tug at the back that keeps falling asleep. The convoy master says it is a scheduling feature.","repeat":true},
+"gossip.bonds":{"kind":"rumour","arc":"gossip","title":"Gossip: bonds","text":"An old captain says Hansa bonds are the only thing that ever went up on this station apart from the rent.","repeat":true},
+"gossip.price_bot":{"kind":"rumour","arc":"gossip","title":"Gossip: price bot","text":"{port_broker} got the agri price at Delta right to the credit last week. It has mentioned this to everyone since, twice.","who":["port_broker"],"repeat":true},
+"gossip.dumping":{"kind":"rumour","arc":"gossip","title":"Gossip: dumping","text":"Somebody sold six hundred tons of tech at Gamma in one go and the price fell through the floor. The dock is still sweeping it up.","repeat":true},
+"sci.yzceti":{"kind":"quest","arc":"science","act":1,"title":"Bells at YZ Ceti","text":["YZ Ceti's innermost planet goes round its star every two days, and every so often the star bursts in radio. {radio_astronomer} thinks the planet does it: its magnetic field drags on the star's like a finger on a bell, which would mean the planet has a field at all, which is the interesting part.","To prove it he needs a receiver parked between planet and star, at the point where their pulls balance, timing every burst against the orbit. His rival says the bursts line up with the station's breakfast. He has checked the toaster. Twice."],"requires":{"not_flag":"flew_yzceti","act_min":1,"at":"Quantum Center"},"choices":[{"id":"trick","say":"Let {navigator.short} hold the balance point (15 fuel)","requires":{"has":{"crew":["navigator"]},"cargo.fuel":15},"effects":{"cargo.fuel":-15,"research_points":120,"money":4000,"plot_points":6,"set":["flew_yzceti"]},"next":["sci.yzceti.result"]},{"id":"fuel","say":"Fly it on your own fuel (30 fuel)","requires":{"cargo.fuel":30},"effects":{"cargo.fuel":-30,"research_points":120,"money":4000,"plot_points":6,"set":["flew_yzceti"]},"next":["sci.yzceti.result"]},{"id":"depot","say":"Buy the burn from the depot (9,000 credits)","requires":{"money":9000},"effects":{"money":2000,"research_points":120,"plot_points":4,"set":["flew_yzceti"]},"next":["sci.yzceti.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["radio_astronomer"],"where":"Quantum Center","chance":0.3,"repeat":{"cooldown":6}},
+"sci.yzceti.result":{"kind":"event","arc":"science","act":1,"title":"Bells at YZ Ceti: result","text":"The bursts come on the planet's schedule, not the toaster's. {radio_astronomer.short} names the result after himself and the receiver after your ship. The toaster is retired anyway, out of spite.","requires":{"flag":"flew_yzceti"},"who":["radio_astronomer"]},
+"sci.luhman":{"kind":"quest","arc":"science","act":1,"title":"Weather at Luhman 16","text":["Luhman 16 is two brown dwarfs, too big to be planets and too small to burn, with weather: bands of iron and sand clouds that change from hour to hour. {meteorologist} has the only forecast desk in the system.","'Cloudy, with iron rain, forever,' she says. 'I need a buoy in orbit for one full day of each of them to tell you which forever.' The smaller one turns in about five hours, the bigger in about seven, and neither keeps still while you watch."],"requires":{"not_flag":"flew_luhman","act_min":1,"at":"DSO-Alpha"},"choices":[{"id":"trick","say":"Let the probe carry the buoy (12 fuel)","requires":{"has":{"items":["probe"]},"cargo.fuel":12},"effects":{"cargo.fuel":-12,"research_points":90,"money":3000,"plot_points":5,"set":["flew_luhman"]},"next":["sci.luhman.result"]},{"id":"fuel","say":"Fly it on your own fuel (25 fuel)","requires":{"cargo.fuel":25},"effects":{"cargo.fuel":-25,"research_points":90,"money":3000,"plot_points":5,"set":["flew_luhman"]},"next":["sci.luhman.result"]},{"id":"depot","say":"Buy the burn from the depot (7,500 credits)","requires":{"money":7500},"effects":{"money":1500,"research_points":90,"plot_points":3,"set":["flew_luhman"]},"next":["sci.luhman.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["meteorologist"],"where":"DSO-Alpha","chance":0.3,"repeat":{"cooldown":6}},
+"sci.luhman.result":{"kind":"event","arc":"science","act":1,"title":"Weather at Luhman 16: result","text":"The buoy maps a storm the size of Jupiter's red spot going round the smaller dwarf every five hours and seventeen minutes. {meteorologist.short} pins the map to the bar wall. Tomorrow: cloudy.","requires":{"flag":"flew_luhman"},"who":["meteorologist"]},
+"sci.wise0855":{"kind":"quest","arc":"science","act":2,"title":"The coldest water","text":["WISE 0855 is the coldest brown dwarf anyone has found, about room temperature at the top of its air, with water vapour in it and, everyone hopes, water ice clouds above that.","{water_broker} wants a scoop of the cloud deck. The scientists want the same scoop, for the isotopes. The climb back out against several Jupiters of gravity is the expensive part. {water_broker.short} has already printed the labels: 'Brown Dwarf Spring. Older than the Sun, probably.'"],"requires":{"not_flag":"flew_wise0855","act_min":2,"at":"DSO-Beta"},"choices":[{"id":"trick","say":"Skim with the mining compressor (30 fuel)","requires":{"has":{"items":["mining_compressor"]},"cargo.fuel":30},"effects":{"cargo.fuel":-30,"research_points":160,"money":6000,"plot_points":7,"set":["flew_wise0855"]},"next":["sci.wise0855.result"]},{"id":"fuel","say":"Fly it on your own fuel (50 fuel)","requires":{"cargo.fuel":50},"effects":{"cargo.fuel":-50,"research_points":160,"money":6000,"plot_points":7,"set":["flew_wise0855"]},"next":["sci.wise0855.result"]},{"id":"depot","say":"Buy the burn from the depot (15,000 credits)","requires":{"money":15000},"effects":{"money":3000,"research_points":160,"plot_points":5,"set":["flew_wise0855"]},"next":["sci.wise0855.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["water_broker"],"where":"DSO-Beta","chance":0.3,"repeat":{"cooldown":6}},
+"sci.wise0855.result":{"kind":"event","arc":"science","act":2,"title":"The coldest water: result","text":"The scoop comes back frosted. The isotopes say the water is older than any sea you have stood next to. {water_broker.short} sells the first bottle to a Neon for the price of your hull.","requires":{"flag":"flew_wise0855"},"who":["water_broker"]},
+"sci.trappist":{"kind":"quest","arc":"science","act":2,"title":"Seven theories","text":["TRAPPIST-1 has seven rocky planets packed closer to their star than Mercury is to ours. The two innermost turned out to have little or no air. The fourth, e, sits where water could be liquid, and nobody knows yet whether it kept an atmosphere.","{seven_theories} wants a spectrometer close to e during a transit, when starlight shines through whatever air it has. He has seven theories, one per planet, and a grant that pays for one answer."],"requires":{"not_flag":"flew_trappist","act_min":2,"at":"Stellar Institute"},"choices":[{"id":"trick","say":"Let {navigator.short} time the transit (20 fuel)","requires":{"has":{"crew":["navigator"]},"cargo.fuel":20},"effects":{"cargo.fuel":-20,"research_points":140,"money":5000,"plot_points":6,"set":["flew_trappist"]},"next":["sci.trappist.result"]},{"id":"fuel","say":"Fly it on your own fuel (35 fuel)","requires":{"cargo.fuel":35},"effects":{"cargo.fuel":-35,"research_points":140,"money":5000,"plot_points":6,"set":["flew_trappist"]},"next":["sci.trappist.result"]},{"id":"depot","say":"Buy the burn from the depot (10,500 credits)","requires":{"money":10500},"effects":{"money":2500,"research_points":140,"plot_points":4,"set":["flew_trappist"]},"next":["sci.trappist.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["seven_theories"],"where":"Stellar Institute","chance":0.3,"repeat":{"cooldown":6}},
+"sci.trappist.result":{"kind":"event","arc":"science","act":2,"title":"Seven theories: result","text":"The spectrum shows air: thin, but there. Six of {seven_theories.short}'s theories die in one afternoon. He throws a party for the survivor.","requires":{"flag":"flew_trappist"},"who":["seven_theories"]},
+"sci.starshade":{"kind":"quest","arc":"science","act":2,"title":"The starshade","text":["There may be a giant planet in the warm zone of Alpha Centauri A. It has been 'may be' for a long time, because the star outshines it a billion times over.","{starshade_engineer} built the fix: a flower-shaped shade as wide as a stadium, to hold in front of the star so the planet shows. It has to sit tens of thousands of kilometres from the telescope and not drift a metre. Holding still costs fuel. Arguing about the petals costs nothing; everyone does it."],"requires":{"not_flag":"flew_starshade","act_min":2,"at":"Alpha"},"choices":[{"id":"trick","say":"Let {mechanic.short} trim the petals first (25 fuel)","requires":{"has":{"crew":["mechanic"]},"cargo.fuel":25},"effects":{"cargo.fuel":-25,"research_points":150,"money":8000,"plot_points":7,"set":["flew_starshade"]},"next":["sci.starshade.result"]},{"id":"fuel","say":"Fly it on your own fuel (40 fuel)","requires":{"cargo.fuel":40},"effects":{"cargo.fuel":-40,"research_points":150,"money":8000,"plot_points":7,"set":["flew_starshade"]},"next":["sci.starshade.result"]},{"id":"depot","say":"Buy the burn from the depot (12,000 credits)","requires":{"money":12000},"effects":{"money":4000,"research_points":150,"plot_points":5,"set":["flew_starshade"]},"next":["sci.starshade.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["starshade_engineer"],"where":"Alpha","chance":0.3,"repeat":{"cooldown":6}},
+"sci.starshade.result":{"kind":"event","arc":"science","act":2,"title":"The starshade: result","text":"For nine hours the shade holds, and a faint dot moves where a planet should be. It is not 'may be' any more. The colony puts the petals on its flag. {starshade_engineer.short} says they are the wrong petals.","requires":{"flag":"flew_starshade"},"who":["starshade_engineer"]},
+"sci.fomalhaut":{"kind":"quest","arc":"science","act":2,"title":"The planet that wasn't","text":["For years Fomalhaut had a famous planet, b, until it faded and spread out: it was most likely a dust cloud from two icy bodies smashing together. {cartographer} sold charts to it for twenty years and would like it back.","The colony wants the cloud measured: grain sizes and speeds tell how big the bodies were and when they hit. {cartographer.short} wants you to look for the planet while you are there. Just in case."],"requires":{"not_flag":"flew_fomalhaut","act_min":2,"at":"Theta III"},"choices":[{"id":"trick","say":"Fly the probe through the cloud (15 fuel)","requires":{"has":{"items":["probe"]},"cargo.fuel":15},"effects":{"cargo.fuel":-15,"research_points":110,"money":4500,"plot_points":5,"set":["flew_fomalhaut"]},"next":["sci.fomalhaut.result"]},{"id":"fuel","say":"Fly it on your own fuel (30 fuel)","requires":{"cargo.fuel":30},"effects":{"cargo.fuel":-30,"research_points":110,"money":4500,"plot_points":5,"set":["flew_fomalhaut"]},"next":["sci.fomalhaut.result"]},{"id":"depot","say":"Buy the burn from the depot (9,000 credits)","requires":{"money":9000},"effects":{"money":2250,"research_points":110,"plot_points":3,"set":["flew_fomalhaut"]},"next":["sci.fomalhaut.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["cartographer"],"where":"Theta III","chance":0.3,"repeat":{"cooldown":6}},
+"sci.fomalhaut.result":{"kind":"event","arc":"science","act":2,"title":"The planet that wasn't: result","text":"Two bodies, each a couple of hundred kilometres across, met at a closing speed that would empty a bar. No planet. {cartographer.short} reprints his charts with 'b (former)' in small letters and sells them to tourists.","requires":{"flag":"flew_fomalhaut"},"who":["cartographer"]},
+"sci.epseri":{"kind":"quest","arc":"science","act":1,"title":"Where the big planet is","text":["Epsilon Eridani has a planet a bit lighter than Jupiter on a seven-year orbit, and belts of rock on either side. The ore exchange is tired of haulers being thrown off course by a planet the charts put somewhere else.","The fix is old-fashioned astrometry: two beacons far apart, a laser between them, and the planet's position measured to the kilometre. Placing the far beacon is a long burn out of the ecliptic."],"requires":{"not_flag":"flew_epseri","act_min":1,"at":"Epsilon"},"choices":[{"id":"trick","say":"Let {loader} rig both beacons on one burn (12 fuel)","requires":{"has":{"crew":["loader"]},"cargo.fuel":12},"effects":{"cargo.fuel":-12,"research_points":80,"money":6000,"plot_points":5,"set":["flew_epseri"]},"next":["sci.epseri.result"]},{"id":"fuel","say":"Fly it on your own fuel (25 fuel)","requires":{"cargo.fuel":25},"effects":{"cargo.fuel":-25,"research_points":80,"money":6000,"plot_points":5,"set":["flew_epseri"]},"next":["sci.epseri.result"]},{"id":"depot","say":"Buy the burn from the depot (7,500 credits)","requires":{"money":7500},"effects":{"money":3000,"research_points":80,"plot_points":3,"set":["flew_epseri"]},"next":["sci.epseri.result"]},{"id":"later","say":"Not now (the offer stands)"}],"where":"Epsilon","chance":0.3,"repeat":{"cooldown":6}},
+"sci.epseri.result":{"kind":"event","arc":"science","act":1,"title":"Where the big planet is: result","text":"The planet is eleven thousand kilometres from where the charts had it. The exchange updates the charts and sends the bill for the old ones to the chart office.","requires":{"flag":"flew_epseri"}},
+"sci.comet":{"kind":"quest","arc":"science","act":2,"title":"A visitor from another star","text":["A comet is coming in on a path no comet born here could have: fast and open, falling through once and leaving for good. The first three were spotted back in the twenty-first century, too fast to follow. This one can be reached.","Catching it means matching a speed of tens of kilometres a second for an hour, collecting what you can, and braking again. Three research houses each claim they saw it first and want the sample. The comet does not care who saw it."],"requires":{"not_flag":"flew_comet","act_min":2,"at":["Alpha","Gamma","Delta","Epsilon","Beta"]},"choices":[{"id":"trick","say":"Let {navigator.short} plot an intercept (50 fuel)","requires":{"has":{"crew":["navigator"]},"cargo.fuel":50},"effects":{"cargo.fuel":-50,"research_points":260,"money":12000,"plot_points":10,"set":["flew_comet"]},"next":["sci.comet.result"]},{"id":"fuel","say":"Fly it on your own fuel (80 fuel)","requires":{"cargo.fuel":80},"effects":{"cargo.fuel":-80,"research_points":260,"money":12000,"plot_points":10,"set":["flew_comet"]},"next":["sci.comet.result"]},{"id":"depot","say":"Buy the burn from the depot (24,000 credits)","requires":{"money":24000},"effects":{"money":6000,"research_points":260,"plot_points":8,"set":["flew_comet"]},"next":["sci.comet.result"]},{"id":"later","say":"Not now (the offer stands)"}],"chance":0.3,"repeat":{"cooldown":6}},
+"sci.comet.result":{"kind":"event","arc":"science","act":2,"title":"A visitor from another star: result","text":"You fly beside a piece of another star's system for fifty-one minutes and bring back a jar of its dust. The three houses sue each other. You sell the photographs to all three.","requires":{"flag":"flew_comet"}},
+"sci.lens":{"kind":"quest","arc":"science","act":2,"title":"Wrong place, right time","text":["A star near us will pass almost exactly in front of a star far behind it, and its gravity will bend the far star's light like a lens: it will brighten for a few days. Seen from two places at once, the timing tells how heavy the near star is.","{lens_watcher} has one telescope here and needs another a tenth of an astronomical unit off to the side, on the day. Your ship is the other telescope. The crew asks whether the light bends for free. It does. The fuel does not."],"requires":{"not_flag":"flew_lens","act_min":2,"at":"DSO-Gamma"},"choices":[{"id":"trick","say":"Hold position with the radar locked on (10 fuel)","requires":{"has":{"items":["advanced_radar"]},"cargo.fuel":10},"effects":{"cargo.fuel":-10,"research_points":100,"money":3000,"plot_points":5,"set":["flew_lens"]},"next":["sci.lens.result"]},{"id":"fuel","say":"Fly it on your own fuel (20 fuel)","requires":{"cargo.fuel":20},"effects":{"cargo.fuel":-20,"research_points":100,"money":3000,"plot_points":5,"set":["flew_lens"]},"next":["sci.lens.result"]},{"id":"depot","say":"Buy the burn from the depot (6,000 credits)","requires":{"money":6000},"effects":{"money":1500,"research_points":100,"plot_points":3,"set":["flew_lens"]},"next":["sci.lens.result"]},{"id":"later","say":"Not now (the offer stands)"}],"who":["lens_watcher"],"where":"DSO-Gamma","chance":0.3,"repeat":{"cooldown":6}},
+"sci.lens.result":{"kind":"event","arc":"science","act":2,"title":"Wrong place, right time: result","text":"The far star brightens nineteen minutes later for you than for {lens_watcher.short}. From that she weighs the near star: a third of the Sun, give or take a moon. She buys the crew a round, at a price she calculates carefully.","requires":{"flag":"flew_lens"},"who":["lens_watcher"]},
+"drama.trade.squeeze":{"kind":"event","arc":"drama","act":3,"title":"The squeeze","text":["The three corporations' trading houses have decided the independent haulers are a rounding error. This month they correct it: tech dumped below cost at every dock you use, until the small haulers sell their routes or their ships.","The Hansa convoy office panics and raises its dues by half, 'until the market settles'. Your loan officer calls to ask how you are. He has never asked before."],"requires":{"chapter":"ch3a"},"effects":{"code":"squeeze tech 0.55"},"choices":[{"id":"hold","say":"Hold your lanes and eat the losses","effects":{"code":["lose money 0.12 min 3000","dues hike 1.5"],"plot_points":6,"passenger_reputation":5,"set":["held_the_lanes"]}},{"id":"bonds","say":"Buy two Hansa bonds and stand with the convoy captains","requires":{"money":12000},"effects":{"code":"buy bonds 2","plot_points":8,"set":["stood_with_convoys"]}},{"id":"cartel","say":"Haul for the trading houses until it blows over","effects":{"money":15000,"code":"dues hike 1.5","passenger_reputation":-5,"set":["cartel_hauler"]}}],"chance":0.25,"sound":"refusal"},
+"drama.trade.margin_call":{"kind":"event","arc":"drama","act":4,"title":"Margin call","text":["The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.","You are a week away from being a captain without a ship, and everybody at the bar knows it. The barman gives you the good glass. That is how you know it is bad."],"variants":[{"requires":{"flag":"cartel_hauler"},"text":["The bank at Alpha sells your ship's loan to a collector who works for the trading houses. You know him: you hauled for him during the squeeze. He is very polite. He remembers your rates. He calls the loan in, all of it, by the end of the week.","Until it is settled the convoy office will not give you a berth. The barman gives you the good glass. That is how you know it is bad."]},{"requires":{"flag":"stood_with_convoys"},"text":["The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.","The convoy captains you stood with in the squeeze have heard. Nobody says anything yet. The barman gives you the good glass."]}],"requires":{"chapter":"ch3a","done":["ch3a","hansa.charter"],"since":{"drama.trade.squeeze":10},"plot_points":230},"choices":[{"id":"pay","say":"Pay it all, today","effects":{"code":"lose money 0.3 min 15000","plot_points":5,"set":["paid_in_full"]}},{"id":"bonds","say":"Cash in your Hansa bonds","requires":{"hansa_bonds":2},"effects":{"code":["sell bonds","lose money 0.1 min 5000"],"plot_points":5,"set":["sold_bonds"]}},{"id":"captains","say":"Ask the convoy captains to stand with you","requires":{"any":[{"flag":"stood_with_convoys"},{"flag":"hansa_founder"}]},"effects":{"code":"lose money 0.12 min 5000","plot_points":10,"passenger_reputation":5,"set":["captains_paid"]}},{"id":"hats","say":"Let the Grey Hats lose the paperwork","requires":{"done":"hatters.grey"},"effects":{"code":"lose money 0.08 min 4000","passenger_reputation":-10,"set":["paperwork_lost"]}}],"chance":0.3},
+"drama.trade.mint":{"kind":"event","arc":"drama","act":4,"title":"The first Mark","text":["The Hansa strikes its first Marks in a borrowed foundry at Gamma: pellets of iridium and osmium, each stamped with the weight of cargo it stands for.","The foundry foreman takes you aside. He can short every pellet by a hair. Nobody with ordinary scales would notice for ten years, and the Hansa needs the margin. He says this the way other people talk about the weather."],"requires":{"chapter":"ch3a","since":{"drama.trade.margin_call":4},"trade_profit":220000},"choices":[{"id":"full","say":"Full weight, every pellet","effects":{"plot_points":6,"passenger_reputation":5,"set":["honest_mark"]}},{"id":"short","say":"Short them a hair; the Hansa needs it","effects":{"money":30000,"set":["short_mark"]}}],"chance":0.4},
+"drama.trade.run":{"kind":"event","arc":"drama","act":4,"title":"A run on the Mark","text":["Somebody has weighed a Mark and found it light. Or says so. By morning every convoy captain wants credits for their Marks, and the convoy office has credits for about a third of them.","A queue goes twice round the dock. Somebody has started selling soup to it."],"variants":[{"requires":{"flag":"short_mark"},"text":["Somebody has weighed a Mark and found it light. They are right, and you know exactly how light. By morning every convoy captain wants credits for their Marks, and the convoy office has credits for about a third of them.","A queue goes twice round the dock. The foundry foreman has taken a holiday."]}],"requires":{"chapter":"ch3a","since":{"drama.trade.mint":6},"trade_profit":290000},"choices":[{"id":"weigh","say":"Weigh every Mark in public, on the dock","requires":{"flag":"honest_mark"},"effects":{"plot_points":10,"passenger_reputation":10,"set":["public_weighing"]}},{"id":"buy","say":"Buy Marks back with your own money","effects":{"code":"lose money 0.15 min 10000","plot_points":8,"passenger_reputation":8,"set":["stood_behind_the_mark"]}},{"id":"fenn","say":"Let {broker.short} talk the queue down","requires":{"has":{"crew":["broker"]}},"effects":{"plot_points":6,"set":["fenn_talked"]}},{"id":"run","say":"Let it run its course","effects":{"passenger_reputation":-10,"set":["let_it_run"]}}],"chance":0.4},
+"drama.trade.offer":{"kind":"event","arc":"drama","act":4,"title":"A seat at the table","text":["The trading houses ask you to dinner at Alpha: real tablecloth, real wine, and a contract. A seat on their board, and a share of every convoy, if the vote at Epsilon fails by one.","The wine is very good. That is the point of it."],"requires":{"chapter":"ch3a","since":{"drama.trade.run":5},"trade_profit":340000},"choices":[{"id":"refuse","say":"Refuse, and finish the wine","effects":{"plot_points":5,"set":["refused_the_seat"]}},{"id":"seat","say":"Take the seat (100,000 credits now)","effects":{"money":100000,"set":["took_the_seat"]}}],"chance":0.4},
+"drama.trade.vote":{"kind":"event","arc":"drama","act":4,"title":"The vote","text":["The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.","The count comes out one vote short, either way. Everybody looks at the captain with the most routes. Again."],"variants":[{"requires":{"flag":"took_the_seat"},"text":["The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.","You have a seat at the trading houses' table now, and everybody in the hold knows it. The count comes out one vote short. The missing vote is yours."]},{"requires":{"flag":"hansa_outside"},"text":["The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.","You never signed the charter. The count comes out one vote short, either way, and it turns out that makes you the only captain both sides will listen to."]}],"requires":{"chapter":"ch3a","done":["ch3a","hansa.charter","drama.trade.offer"],"since":{"drama.trade.margin_call":8},"plot_points":350,"trade_profit":400000},"choices":[{"id":"speak","say":"Speak for the Mark","requires":{"passenger_reputation":50,"not_flag":"took_the_seat"},"effects":{"plot_points":15,"set":["won_the_vote"]}},{"id":"turn","say":"Speak for the Mark anyway, and lose the seat","requires":{"flag":"took_the_seat"},"effects":{"code":"lose money 0.2 min 20000","plot_points":15,"set":["won_the_vote","turned_on_the_houses"]}},{"id":"buy","say":"Buy the last vote (40,000 credits)","requires":{"money":40000},"effects":{"money":-40000,"plot_points":5,"set":["bought_the_vote"]}},{"id":"walk","say":"Walk out and let them count without you","effects":{"set":["walked_out"]}}],"sound":"charter"},
+"drama.combat.left_behind":{"kind":"event","arc":"drama","act":3,"title":"Left behind","text":["Escort job: forty civilian haulers from Gamma to Alpha under a legion flag. At the jump point your two wingmen get a recall order, turn round and leave. Ten minutes later a pirate mothership comes out of the dark, exactly where the recall order said nobody would be.","Somebody sold this convoy. The haulers are calling you by name on an open channel. Most of them do not know your name; they are reading it off your hull."],"requires":{"chapter":"ch3b"},"choices":[{"id":"hold","say":"Hold the line","effects":{"code":"fight mothership","plot_points":6,"set":["held_the_line"]}},{"id":"lead","say":"Lead them out through the debris","requires":{"any":[{"has":{"crew":["navigator"]}},{"has":{"items":["probe"]}}]},"effects":{"plot_points":8,"passenger_reputation":10,"set":["led_them_out"]}},{"id":"recall","say":"Follow the recall order","effects":{"money":6000,"passenger_reputation":-10,"set":["followed_the_recall"]}}],"chance":0.25},
+"drama.combat.tribunal":{"kind":"event","arc":"drama","act":4,"title":"The inquiry","text":["The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.","The inquiry has already decided who sold the convoy. It has decided it was you."],"variants":[{"requires":{"flag":"held_the_line"},"text":["The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.","The inquiry has already decided who sold the convoy: you. A strange thing to decide about the only ship that stayed."]},{"requires":{"flag":"followed_the_recall"},"text":["The legions merge at a dinner you were not invited to. Your commission is 'under review', your ammunition is impounded pending an inquiry into the convoy at the jump point, and a tribunal wants your logs by Monday.","You did follow the recall. That is the trouble: so did whoever wrote it, and somebody has to have sold the convoy."]}],"requires":{"chapter":"ch3b","done":["ch3b","legion.offer"],"since":{"drama.combat.left_behind":10},"plot_points":230},"effects":{"combat_rating":-2},"choices":[{"id":"truth","say":"Hand over your logs and tell it straight","effects":{"plot_points":8,"set":["told_the_truth"]}},{"id":"tadeo","say":"Let {gunner.short} take the blame he offers to take","requires":{"has":{"crew":["gunner"]}},"effects":{"code":"crew leaves gunner","combat_rating":2,"set":["tadeo_took_blame"]}},{"id":"dark","say":"Take the ship and go dark","effects":{"code":"lose money 0.15 min 5000","passenger_reputation":-10,"set":["went_dark"]}}],"chance":0.3},
+"drama.combat.roll_call":{"kind":"event","arc":"drama","act":4,"title":"Roll call","text":["The merger ceremony is at Alpha: three logos, one new flag, every commander in dress uniform and every warship in parade order with its guns cold. That is when the pirate dreadnought arrives.","Your ammunition came back this morning; the inquiry lost your paperwork in your favour. Somebody on the open channel asks who is in charge. Nobody answers. Then everybody looks at your hull."],"requires":{"chapter":"ch3b","done":["ch3b","legion.offer"],"since":{"drama.combat.tribunal":8},"plot_points":350,"combat_victories":50},"effects":{"combat_rating":2},"choices":[{"id":"fight","say":"Take the fight to them","effects":{"code":"fight dreadnought","plot_points":15,"set":["led_the_defence"]}},{"id":"civilians","say":"Get the civilian ships out first","effects":{"plot_points":10,"passenger_reputation":15,"set":["saved_the_civilians"]}}]},
+"drama.discovery.fire":{"kind":"event","arc":"drama","act":3,"title":"The fire","text":["A fire in the sample store of the Stellar Institute at TRAPPIST-1. Nobody hurt. Every sample of the grey alloy is gone, with the notes, and the fire door was propped open with a chair from somebody else's lab.","{ancient_scholar.short} sits on the steps with a smoke-black notebook. 'Somebody does not want this to be true,' she says. 'Or wants it to be true only for them.'"],"requires":{"chapter":"ch3c"},"choices":[{"id":"fund","say":"Pay for a new survey yourself","effects":{"code":"lose money 0.15 min 8000","plot_points":8,"set":["funded_the_search"]}},{"id":"rostrom","say":"Take House Rostrom's offer of help","effects":{"money":10000,"set":["rostrom_backed"]}},{"id":"chair","say":"Find out whose chair it was (200 research points)","requires":{"research_points":200},"effects":{"research_points":-200,"plot_points":10,"set":["found_the_chair"]}}],"who":["ancient_scholar"],"chance":0.25},
+"drama.discovery.not_proven":{"kind":"event","arc":"drama","act":4,"title":"Not proven","text":["The Academy's review board rules on the grey alloy: a natural formation, not shown to be made, further survey 'not a priority'. {ancient_scholar.short}'s grant is cancelled the same afternoon.","At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."],"variants":[{"requires":{"flag":"rostrom_backed"},"text":["The Academy's review board rules on the grey alloy: a natural formation, not shown to be made. {ancient_scholar.short}'s grant is cancelled the same afternoon, and House Rostrom's lawyers file your findings under the House's name. They send flowers.","At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."]}],"requires":{"chapter":"ch3c","done":["ch3c","trail.samples"],"since":{"drama.discovery.fire":10},"plot_points":230},"choices":[{"id":"hand","say":"Hand over the logs","effects":{"code":"lose research 0.5","set":["logs_seized"]}},{"id":"copy","say":"Smuggle a copy out first","requires":{"any":[{"has":{"items":["data_analyzer"]}},{"has":{"items":["quantum_scanner"]}}]},"effects":{"code":"lose research 0.15","plot_points":6,"set":["kept_a_copy"]}},{"id":"publish","say":"Publish everything, free, today","effects":{"code":"lose research 0.3","plot_points":8,"passenger_reputation":10,"set":["published_everything"]}}],"who":["ancient_scholar"],"chance":0.3},
+"drama.discovery.burn":{"kind":"event","arc":"drama","act":4,"title":"The long burn","text":["{ancient_scholar.short} has the course: back along Scholz's Star's track to the edge of our own system, where the ring should be. Nobody will fund the flight, so nobody will be on it but you.","It is the longest burn your ship will ever make: out of the plane of the planets, no convoy, no depot. If the numbers are wrong you will find out a long way from anyone who could tow you."],"requires":{"chapter":"ch3c","done":["ch3c","trail.samples"],"since":{"drama.discovery.not_proven":8},"plot_points":350,"research_points":1500},"choices":[{"id":"fuel","say":"Burn on your own fuel (60 fuel)","requires":{"cargo.fuel":60},"effects":{"cargo.fuel":-60,"plot_points":15,"set":["flew_it_ourselves"]}},{"id":"road","say":"Let {navigator.short} find a cheaper road (35 fuel)","requires":{"has":{"crew":["navigator"]},"cargo.fuel":35},"effects":{"cargo.fuel":-35,"plot_points":15,"set":["sisters_road"]}},{"id":"buy","say":"Buy the fuel at any price (40,000 credits)","requires":{"money":40000},"effects":{"money":-40000,"plot_points":10,"set":["bought_the_burn"]}},{"id":"rostrom","say":"Fly it on House Rostrom's ship, under their name","effects":{"set":["rostrom_paper"]}}],"who":["ancient_scholar"]},
+"after.held_the_lanes":{"kind":"epilogue","arc":"epilogue","title":"After: held the lanes","text":"The haulers who held their lanes through the squeeze still drink at a table nobody else uses. One of the chairs has your name on it. Somebody carved it.","requires":{"flag":"held_the_lanes"}},
+"after.cartel_hauler":{"kind":"epilogue","arc":"epilogue","title":"After: cartel hauler","text":"The trading houses kept your rate card on file for forty years, as an example of a reasonable captain.","requires":{"flag":"cartel_hauler"}},
+"after.captains_paid":{"kind":"epilogue","arc":"epilogue","title":"After: captains paid","text":"The convoy captains who paid your margin call never asked for it back. Every year one of them sends a bill for a single credit, framed.","requires":{"flag":"captains_paid"}},
+"after.won_the_vote":{"kind":"epilogue","arc":"epilogue","title":"After: won the vote","text":"The record of the vote at Epsilon has forty names and one speech. Schoolchildren learn its first line. Nobody agrees on the second.","requires":{"flag":"won_the_vote"}},
+"after.bought_the_vote":{"kind":"epilogue","arc":"epilogue","title":"After: bought the vote","text":"The captain whose vote you bought became the Hansa's first treasurer. He always said he had been cheap at the price.","requires":{"flag":"bought_the_vote"}},
+"after.walked_out":{"kind":"epilogue","arc":"epilogue","title":"After: walked out","text":"They counted without you and the Mark passed by one vote. Nobody ever learned which way you would have voted, which suited everybody.","requires":{"flag":"walked_out"}},
+"after.honest_mark":{"kind":"epilogue","arc":"epilogue","title":"After: honest mark","text":"Every Mark from the first strike still weighs what it says. Collectors pay double for them, and weigh them first anyway.","requires":{"flag":"honest_mark"}},
+"after.short_mark":{"kind":"epilogue","arc":"epilogue","title":"After: short mark","text":"The first Marks were a hair light. A Collective auditor found out ninety years later, wrote a polite report, and charged the Hansa for the scales.","requires":{"flag":"short_mark"}},
+"after.public_weighing":{"kind":"epilogue","arc":"epilogue","title":"After: public weighing","text":"They weighed four thousand Marks on the dock at Epsilon, one by one, with a crowd counting along. It is a festival now. The soup is still sold.","requires":{"flag":"public_weighing"}},
+"after.stood_behind_the_mark":{"kind":"epilogue","arc":"epilogue","title":"After: stood behind the mark","text":"You bought back Marks at face value until the queue ran out. The ones you kept are in a drawer on your ship. You never spent them.","requires":{"flag":"stood_behind_the_mark"}},
+"after.let_it_run":{"kind":"epilogue","arc":"epilogue","title":"After: let it run","text":"The run on the Mark lasted nine days and ruined two captains. The Mark survived it. People said that about the Mark, not about the captains.","requires":{"flag":"let_it_run"}},
+"after.fenn_talked":{"kind":"epilogue","arc":"epilogue","title":"After: fenn talked","text":"{broker.short} talked the queue down in one afternoon, mostly by telling it about his feet. Brokers still study the speech. Nobody has managed the feet.","requires":{"flag":"fenn_talked"}},
+"after.refused_the_seat":{"kind":"epilogue","arc":"epilogue","title":"After: refused the seat","text":"You refused the trading houses' seat and finished their wine. The bottle is on your shelf, empty, with the dinner date written on the label.","requires":{"flag":"refused_the_seat"}},
+"after.took_the_seat":{"kind":"epilogue","arc":"epilogue","title":"After: took the seat","text":"You sat on the trading houses' board for eleven years and voted against them every time. They kept the seat warm for your successor, who did not.","requires":{"flag":"took_the_seat"}},
+"after.turned_on_the_houses":{"kind":"epilogue","arc":"epilogue","title":"After: turned on the houses","text":"The trading houses never forgave the vote at Epsilon. They named a ledger column after you: 'losses, unforeseeable'.","requires":{"flag":"turned_on_the_houses"}},
+"after.held_the_line":{"kind":"epilogue","arc":"epilogue","title":"After: held the line","text":"The forty haulers from the jump point still send a crate every year, addressed only to your ship.","requires":{"flag":["held_the_line","fight_won_mothership"]}},
+"after.led_them_out":{"kind":"epilogue","arc":"epilogue","title":"After: led them out","text":"The lane you led forty haulers through is on the charts now, marked 'shortcut, not recommended'.","requires":{"flag":"led_them_out"}},
+"after.followed_the_recall":{"kind":"epilogue","arc":"epilogue","title":"After: followed the recall","text":"Whoever wrote the recall order rose high in the merged legion. Nobody asked you to testify, and you did not offer.","requires":{"flag":"followed_the_recall"}},
+"after.tadeo_took_blame":{"kind":"epilogue","arc":"epilogue","title":"After: tadeo took blame","text":"{gunner.short} served eight months in a legion brig for an order he never saw. He came out, found your ship, and asked whether the gunner's seat was still warm. It was.","requires":{"flag":"tadeo_took_blame"}},
+"after.led_the_defence":{"kind":"epilogue","arc":"epilogue","title":"After: led the defence","text":"The dreadnought's bell hangs in the merged legion's mess. New pilots touch it for luck before their first patrol.","requires":{"flag":["led_the_defence","fight_won_dreadnought"]}},
+"after.saved_the_civilians":{"kind":"epilogue","arc":"epilogue","title":"After: saved the civilians","text":"Not one civilian ship was lost at Alpha. The legion's history gives the battle a chapter and the civilians a footnote; the civilians remember it the other way round.","requires":{"flag":"saved_the_civilians"}},
+"after.found_the_chair":{"kind":"epilogue","arc":"epilogue","title":"After: found the chair","text":"The chair that propped the fire door belonged to a security liaison from a firm that later became part of the Mandate. Nobody was charged. The chair sits in a cupboard you have the key to.","requires":{"flag":"found_the_chair"}},
+"after.published_everything":{"kind":"epilogue","arc":"epilogue","title":"After: published everything","text":"Your logs, published free, were in every colony library within a year. The review board's ruling is in there too, as a footnote.","requires":{"flag":"published_everything"}},
+"after.rostrom_paper":{"kind":"epilogue","arc":"epilogue","title":"After: rostrom paper","text":"The first paper on the ring carries House Rostrom's name in large letters and yours in the acknowledgements, between the caterer and the fuel supplier.","requires":{"flag":"rostrom_paper"}},
+"after.paid_in_full":{"kind":"epilogue","arc":"epilogue","title":"After: paid in full","text":"You paid the margin call in full and never borrowed again. The bank at Alpha still sends you a calendar every year, out of respect or fear.","requires":{"flag":"paid_in_full"}},
+"after.sold_bonds":{"kind":"epilogue","arc":"epilogue","title":"After: sold bonds","text":"You sold your Hansa bonds to keep your ship. The captain who bought them sold them back to the Hansa ten years later for a farm.","requires":{"flag":"sold_bonds"}},
+"after.paperwork_lost":{"kind":"epilogue","arc":"epilogue","title":"After: paperwork lost","text":"Your loan papers were never found. The Grey Hats sent an invoice for not finding them, which was also never found.","requires":{"flag":"paperwork_lost"}},
+"after.told_the_truth":{"kind":"epilogue","arc":"epilogue","title":"After: told the truth","text":"Your logs from the jump point are in the legion archive, unredacted. Nobody reads them; everybody knows they are there.","requires":{"flag":"told_the_truth"}},
+"after.went_dark":{"kind":"epilogue","arc":"epilogue","title":"After: went dark","text":"For years the legion's wanted list carried your ship under a name that was nearly right. Nobody ever corrected it.","requires":{"flag":"went_dark"}},
+"after.funded_the_search":{"kind":"epilogue","arc":"epilogue","title":"After: funded the search","text":"The survey you paid for after the fire found more alloy than the one that burned. The receipt is framed in the Institute's new store, next to the fire door, which closes now.","requires":{"flag":"funded_the_search"}},
+"after.logs_seized":{"kind":"epilogue","arc":"epilogue","title":"After: logs seized","text":"Your seized logs turned up forty years later in a customs auction, sold as 'ship's diary, dull'.","requires":{"flag":"logs_seized"}},
+"after.kept_a_copy":{"kind":"epilogue","arc":"epilogue","title":"After: kept a copy","text":"The copy you smuggled past customs is the one every later survey quotes. The original is still in a customs vault, with a form attached.","requires":{"flag":"kept_a_copy"}},
+"after.flew_it_ourselves":{"kind":"epilogue","arc":"epilogue","title":"After: flew it ourselves","text":"You flew the long burn on your own fuel. The ship never quite lost the frost on its forward plates, and you never had it cleaned.","requires":{"flag":"flew_it_ourselves"}},
+"after.bought_the_burn":{"kind":"epilogue","arc":"epilogue","title":"After: bought the burn","text":"The fuel for the long burn cost more than the ship. The depot named a tank after you, as a joke at first.","requires":{"flag":"bought_the_burn"}},
+"after.sisters_road":{"kind":"epilogue","arc":"epilogue","title":"After: sisters road","text":"{navigator.short}'s road to the edge of the system is still flown. Everybody calls it the Sister's Road except the Solarians, who call it obvious.","requires":{"flag":"sisters_road"}},
+"after.held_the_line_lost":{"kind":"epilogue","arc":"epilogue","title":"After: held the line, lost","text":"You lost the fight at the jump point and the mothership took a third of the convoy. The other two thirds got home because you were in its way. Their captains still argue about whether that counts. They buy you drinks while they argue.","requires":{"flag":["held_the_line","fight_lost_mothership"]}},
+"after.led_the_defence_lost":{"kind":"epilogue","arc":"epilogue","title":"After: led the defence, lost","text":"The dreadnought beat you at Alpha and left with its holds full, but it left. The new legion flew its first flag full of the holes it made that day, and never replaced it.","requires":{"flag":["led_the_defence","fight_lost_dreadnought"]}},
 "rumour.neon_coffee":{"kind":"rumour","arc":"rumours","title":"Rumour: neon coffee","text":"A Neon woke up after thirty years asleep, asked for coffee at the old price and got it. Nobody wanted to be the one to explain.","repeat":true},
 "rumour.drums_at_night":{"kind":"rumour","arc":"rumours","title":"Rumour: drums at night","text":"The farm drums at Barnard's Star are harvesting at night again. The Sowers say the crop prefers it.","repeat":true},
 "rumour.grey_hat_fines":{"kind":"rumour","arc":"rumours","title":"Rumour: grey hat fines","text":"A Grey Hat at the bar offers to delete your parking fines. You do not have parking fines. He offers to add some.","repeat":true},
@@ -1094,6 +1173,9 @@ class StoryRuntime:
             return any(n in snap["done"] for n in _as_list(want))
         if key == "not_done":
             return not any(n in snap["done"] for n in _as_list(want))
+        if key == "since":
+            at = snap.get("done_at", {})
+            return all(n in snap["done"] and snap["turn"] - at.get(n, -10 ** 9) >= turns for n, turns in want.items())
         if key in ("act_min", "act_max", "turn_min", "turn_max"):
             value = snap["act"] if key.startswith("act") else snap["turn"]
             return value >= want if key.endswith("min") else value <= want
@@ -1103,6 +1185,8 @@ class StoryRuntime:
             return snap["place_type"] in _as_list(want)
         if key == "venue":
             return snap.get("venue") in _as_list(want)
+        if key == "chapter":
+            return snap.get("chapter") in _as_list(want)
         if key == "has":
             return all(set(_as_list(items)) <= set(snap["sets"].get(name, [])) for name, items in want.items())
         if key == "visiting_captain":
@@ -1262,7 +1346,7 @@ class StoryRuntime:
             return None
         for number, choice in enumerate(choices, 1):
             box.extend([""] if number == 1 else [])
-            box.extend(self.game.word_wrap("%d. %s" % (number, self.fill(choice.get("say", choice.get("id", ""))))))
+            box.extend(self.game.option_lines(number, self.fill(choice.get("say", choice.get("id", "")))))
         self.game.display_story_message(box, pause=0)
         picked = self.ask(len(choices))
         choice = choices[picked]
@@ -1278,11 +1362,8 @@ class StoryRuntime:
 
     def ask(self, count):
         options = [str(i) for i in range(1, count + 1)]
-        for _ in range(3):
-            answer = self.game.validate_input("Your choice (1-%d): " % count, options)
-            if answer:
-                return int(answer) - 1
-        return count - 1          # three times nothing: the last option, usually "leave it"
+        answer = self.game.validate_input("Your choice (1-%d, Enter = %d): " % (count, count), options)
+        return int(answer) - 1 if answer else count - 1     # Enter: the last option, usually "leave it"
 
     # -- effects -----------------------------------------------------------------
     def apply(self, effects):
@@ -1315,9 +1396,7 @@ class StoryRuntime:
                 for name in _as_list(value):
                     game.reveal_place(name)
             elif key == "code":
-                hook = STORY_HOOKS.get(value)
-                if hook:
-                    hook(game)
+                story_hook(game, value)
             elif key == "money":
                 ship.money += value
             elif key == "plot_points":
@@ -1329,7 +1408,10 @@ class StoryRuntime:
             elif key == "passengers_transported":
                 game.reputation_manager.total_passengers += value
             elif key == "combat_rating":
-                ship.attack += value
+                ship.attack = max(1, ship.attack + value)
+            elif key.startswith("cargo.") and key[6:] in ship.cargo:
+                good = key[6:]
+                ship.cargo[good] = max(0, ship.cargo[good] + (min(value, ship.hold_room(good)) if value > 0 else value))
 
     def cue(self, name):
         if name:
@@ -1480,6 +1562,54 @@ STORY_HOOKS = {
     "hull repaired at cost": _repair_at_cost,
     "portal": _open_portal,
 }
+
+
+def story_hook(game, value):
+    """Game code a story effect names: a hook above, or one of these phrases:
+    'fight <enemy>' (no paying or talking your way out), 'lose money <share> min <amount>',
+    'lose research <share>', 'buy bonds <n>', 'sell bonds', 'crew leaves <role>',
+    'dues hike <factor>' (for thirty turns), 'squeeze <good> <factor>' (prices of a good fall at
+    every known dock, then recover like any market)."""
+    if isinstance(value, list):
+        for one in value:
+            story_hook(game, one)
+        return None
+    hook = STORY_HOOKS.get(value)
+    if hook:
+        return hook(game)
+    words = str(value).split()
+    ship = game.ship
+    if len(words) == 2 and words[0] == "fight" and words[1] in ENEMIES:
+        outcome = game.encounter(words[1], hunted=True)
+        # the story remembers how a fight it started went: fight_won_<enemy> / fight_lost_<enemy>
+        won = outcome == "victory"
+        game.story_manager.story_states["fight_%s_%s" % ("won" if won else "lost", words[1])] = True
+    elif words[:2] == ["lose", "money"]:
+        share = float(words[2])
+        floor_ = int(words[4]) if len(words) > 4 and words[3] == "min" else 0
+        loss = min(int(ship.money), max(floor_, int(ship.money * share)))
+        ship.money -= loss
+        game.display_simple_message("It costs you %s." % game.format_money(loss), 2, color='31')
+    elif words[:2] == ["lose", "research"]:
+        loss = int(ship.research_points * float(words[2]))
+        ship.research_points -= loss
+        game.display_simple_message("%d research points are gone with the logs." % loss, 2, color='31')
+    elif words[:2] == ["buy", "bonds"]:
+        game.buy_bonds(int(words[2]))
+    elif words[:2] == ["sell", "bonds"]:
+        held, value_ = game.sell_bonds()
+        game.display_simple_message("The Hansa buys back %d bond%s for %s. Your dues go back up." % (
+            held, "" if held == 1 else "s", game.format_money(value_)), 2)
+    elif words[:2] == ["crew", "leaves"] and words[2] in ship.crew:
+        ship.crew.remove(words[2])
+        game.display_simple_message("%s packs a bag and leaves the ship." % game.crew_name(words[2]), 2, color='31')
+    elif words[:2] == ["dues", "hike"]:          # for the next thirty turns
+        game.dues_hike = float(words[2])
+        game.dues_hike_until = game.turn + 30
+    elif words[0] == "squeeze" and len(words) == 3:
+        for loc in game.locations:
+            if loc.name in game.known_locations and loc.market.get(words[1], 0) > 0:
+                loc.market[words[1]] = round(loc.market[words[1]] * float(words[2]), 1)
 
 
 def display_logo(logo, centered=True):
@@ -1755,7 +1885,8 @@ class Ship:
         return int(general), int(special)
 
     # Fighting equipment: (attack bonus, defense bonus)
-    FIGHT_GEAR = {"combat_drone": (1, 0), "shield_booster": (0, 1), "mining_laser": (0, 1)}
+    FIGHT_GEAR = {"combat_drone": (1, 0), "shield_booster": (0, 1), "mining_laser": (0, 1),
+                  "neutron_shield": (0, 2), "warp_core": (2, 0)}
 
     # The crew: helpers hired in cantinas (names in the story file, story/cargo1/crew.json)
     crew = property(lambda self: self.__dict__.setdefault("crew", []))
@@ -1800,10 +1931,11 @@ class Ship:
             return False
 
         if item in ['salt', 'fuel']:
-            has_platform = any(p['type'] == item for p in planet.mining_platforms)
+            has_platform = planet.trades_bulk(item)
             if not has_platform:
                 return False
 
+        price = planet.trade_price(item, quantity, selling=False)
         cost = quantity * price
         if self.money >= cost:
             tax_rate = self.trade_tax(planet.calculate_tax_rate(player_rank, cost))
@@ -1818,6 +1950,7 @@ class Ship:
                 if self.cargo[item] == quantity:          # the hold was empty: start afresh
                     basis[item] = 0
                 basis[item] = basis.get(item, 0) + total_cost
+                planet.trade_impact(item, quantity, selling=False)
 
                 # Add contract progress tracking for buy events
                 if hasattr(self, 'game') and hasattr(self.game, 'contract_manager'):
@@ -1839,11 +1972,12 @@ class Ship:
             return False
 
         if item in ['salt', 'fuel']:
-            has_platform = any(p['type'] == item for p in planet.mining_platforms)
+            has_platform = planet.trades_bulk(item)
             if not has_platform:
                 return False
 
         if self.cargo[item] >= quantity:
+            price = planet.trade_price(item, quantity, selling=True)
             revenue = quantity * price
             tax_rate = self.trade_tax(planet.calculate_tax_rate(player_rank, revenue))
             tax_amount = revenue * tax_rate
@@ -1858,6 +1992,7 @@ class Ship:
 
             self.money += net_revenue
             self.cargo[item] -= quantity
+            planet.trade_impact(item, quantity, selling=True)
 
             # Track trade profits
             if item not in self.trade_profits:
@@ -1986,8 +2121,8 @@ class LocationCommands:
 COMMODITIES = {"tech": ("t",), "agri": ("a", "agro"), "salt": ("s",), "fuel": ("f",)}
 
 # Commands every location accepts besides its own (long form, shortcut)
-GLOBAL_COMMANDS = [('log', 'l'), ('journal', 'j'), ('save', 'sv'), ('load', 'ld'), ('captain', 'cap'),
-                   ('help', 'h'), ('version', 'v'), ('resign', 'rs'), ('quit', 'q')]
+GLOBAL_COMMANDS = [('hansa', 'ha'), ('log', 'l'), ('journal', 'j'), ('save', 'sv'), ('load', 'ld'),
+                   ('captain', 'cap'), ('help', 'h'), ('version', 'v'), ('resign', 'rs'), ('quit', 'q')]
 
 
 def commodity_from(answer):
@@ -2308,7 +2443,11 @@ class Game:
             "best_cabin": max([m.comfort_level for m in getattr(ship, "passenger_modules", [])
                                if hasattr(m, "comfort_level")] or [0]),
             "crew_size": len(ship.crew),
+            "hansa_bonds": getattr(self, "hansa_bonds", 0),
+            "dues_arrears": getattr(self, "dues_arrears", 0),
         }
+        for good in ('tech', 'agri', 'salt', 'fuel'):
+            stats["cargo." + good] = ship.cargo[good]
         for kind in STORY_VICTORY_TYPES[1:]:
             stats["combat_victories." + kind] = ship.combat_victories.get(kind, 0)
         for building in STORY_BUILDINGS:
@@ -2338,6 +2477,7 @@ class Game:
             },
             "flags": sorted(f for f, on in sm.story_states.items() if on),
             "done": sorted(done),
+            "done_at": {n: t for n, t in self.story.done.items() if ":" not in n},
             "visitors": list(getattr(self, "visiting_captains", [])),
         }
 
@@ -2829,8 +2969,8 @@ class Game:
 
         # Market content with two columns
         market_content = [
-            [f"Tech: {tech_status}", f"Salt: {salt_status if any(p['type'] == 'salt' for p in self.current_location.mining_platforms) else '——'}"],
-            [f"Agri: {agri_status}", f"Fuel: {fuel_status if any(p['type'] == 'fuel' for p in self.current_location.mining_platforms) else '——'}"]
+            [f"Tech: {tech_status}", f"Salt: {salt_status if self.current_location.trades_bulk('salt') else '——'}"],
+            [f"Agri: {agri_status}", f"Fuel: {fuel_status if self.current_location.trades_bulk('fuel') else '——'}"]
         ]
 
         # Add ban duration if any commodities are banned
@@ -3033,10 +3173,14 @@ class Game:
 
     def unlock_advanced_equipment(self):
         """Unlock advanced equipment in shop"""
+        # (these were bare prices, which crashed the shop the next time it was opened)
         new_equipment = {
-            "quantum_drive": 50000,
-            "neutron_shield": 40000,
-            "warp_core": 75000
+            "neutron_shield": {"price": 40000, "description": "Neutron shield: +2 defense in fights",
+                               "tech_required": 3, "plot_required": 0},
+            "quantum_drive": {"price": 50000, "description": "Quantum drive: much better odds of outrunning anyone",
+                              "tech_required": 3, "plot_required": 0},
+            "warp_core": {"price": 75000, "description": "Warp core: +2 attack; the guns never run short of power",
+                          "tech_required": 3, "plot_required": 0},
         }
         self.shop.base_equipment.update(new_equipment)
 
@@ -3078,6 +3222,7 @@ class Game:
         'info': "this location in detail",
         'hunt': "the bounty board: pick a wanted ship and go after it (takes the turn)",
         'end': "end the turn and wait here",
+        'hansa': "Hansa terminal: convoy dues, bonds that lower them, the price board",
         'log': "story progress: what the next chapter needs",
         'journal': "people met, choices remembered, places",
         'save': "save the game (it also saves itself every turn)",
@@ -3110,6 +3255,12 @@ class Game:
                  "Gear and crew open better options (a mining laser cuts drones, a scanner spots bait). "
                  "The bounty board (hunt/hu) pays for wanted ships. Cantinas have rumours, people, and "
                  "crew for hire (four bunks). Plot points move the story: earn them by doing things."],
+                [""],
+                ["The Hansa's convoys carry you between the stars and charge dues every %d turns, more each time; "
+                 "Hansa bonds lower them (hansa/ha). Big loads move prices and markets take a while to recover: "
+                 "the Hansa price board and the port's broker robot guess prices elsewhere, closer for docks you "
+                 "saw lately. Inside a star system you fly on your own fuel: science missions burn it, or you buy "
+                 "the burn from the depot." % self.DUES_EVERY],
                 [""],
                 ["Type a command or its shortcut and press Enter. In any menu, Enter on its own goes back. "
                  "Amounts: a number, max/m or half/h. Each 'end' or journey is one turn; the game saves "
@@ -3144,6 +3295,12 @@ class Game:
         self.display_story_message(self.word_wrap(special_event_text))
         time.sleep(3)  # Pause to let the player read the information
 
+    def option_lines(self, number, label):
+        """'3. A long option' wrapped so its later lines sit under its text, not its number."""
+        lead = "%d. " % number
+        lines = self.word_wrap(label, box_inner_width() - 2 - len(lead))
+        return [lead + lines[0]] + [" " * len(lead) + line for line in lines[1:]]
+
     def word_wrap(self, text, width=None):
         if width is None:
             width = box_inner_width() - 2
@@ -3164,6 +3321,7 @@ class Game:
 
 
     def play_turn(self):
+            self.new_turn()
             self.display_turn_info()
             self.check_location_unlocks()  # Check for new unlocks each turn
             self.check_milestone_triggers() # Check for StoryManager
@@ -3256,7 +3414,7 @@ class Game:
                     return
 
                 if item in ['salt', 'fuel']:
-                    has_platform = any(p['type'] == item for p in self.current_location.mining_platforms)
+                    has_platform = self.current_location.trades_bulk(item)
                     if not has_platform:
                         self.display_simple_message(f"No mining platform for {item} on this planet.")
                         return
@@ -3271,9 +3429,8 @@ class Game:
                     return
 
                 tax_rate = self.ship.trade_tax(self.current_location.calculate_tax_rate(self.rank, price))
-                price_with_tax = price * (1 + tax_rate)
                 room = self.ship.hold_room(item)
-                max_quantity = min(int(self.ship.money / price_with_tax), room)
+                max_quantity = self.affordable(item, tax_rate, room)
 
                 if quantity == 'max':
                     quantity = max_quantity
@@ -3288,7 +3445,9 @@ class Game:
                                                 f"Not enough money for one unit of {item}.")
                 elif self.ship.buy(item, quantity, self.current_location.market[item],
                                    self.current_location, self.rank):
-                    self.display_simple_message(f"Bought {self.format_money(quantity)} {item}.")
+                    self.display_simple_message(
+                        f"Bought {self.format_money(quantity)} {item}. The price here is now "
+                        f"{self.format_money(self.current_location.market[item])}.")
                     self.handle_trade('buy')
                 else:
                     self.display_simple_message(f"Not enough money for {quantity} {item}.")
@@ -3324,7 +3483,8 @@ class Game:
                         self.story_manager.plot_points += 1
                         note = " A good deal: +1 plot point."
                     self.display_simple_message(f"Sold {self.format_money(quantity)} {item}, "
-                                                f"profit {self.format_money(int(profit))}.{note}")
+                                                f"profit {self.format_money(int(profit))}. The price here is now "
+                                                f"{self.format_money(self.current_location.market[item])}.{note}")
                     self.handle_trade('sell')
 
             elif action in ['upgrade', 'u']:
@@ -3408,6 +3568,10 @@ class Game:
 
             elif action in ['journal', 'j']:
                 self.story.journal()
+                return
+
+            elif action in ['hansa', 'ha']:
+                self.handle_hansa()
                 return
 
             elif action in ['help', 'h']:
@@ -3593,6 +3757,7 @@ class Game:
 
         # Add building directly to location's building list
         self.current_location.buildings.append(full_building_name)
+        prices_before = dict(self.current_location.market)
 
         # Apply building effects
         if full_building_name == "Mining Facility":
@@ -3612,6 +3777,13 @@ class Game:
             self.current_location.stockmarket_base = True
             self.current_location.market['tech'] = max(1, self.current_location.market['tech'] - 10)
             self.current_location.market['agri'] = max(1, self.current_location.market['agri'] - 5)
+
+        # a building changes what is usual here, not just today's price
+        base = self.current_location.equilibrium()
+        for good, before in prices_before.items():
+            after = self.current_location.market[good]
+            if before > 0 and after != before and base.get(good):
+                base[good] = round(base[good] * after / before, 1)
 
         self.display_simple_message(f"Built {full_building_name} for {self.format_money(final_cost)} credits.")
         return True
@@ -4280,6 +4452,194 @@ class Game:
 
         return details
 
+    # --- markets that remember, and the Hansa ---------------------------------------
+    def affordable(self, item, tax_rate, room):
+        """The largest load of `item` the money covers here, price movement and tax included."""
+        loc = self.current_location
+        low, high = 0, room
+        while low < high:
+            mid = (low + high + 1) // 2
+            if mid * loc.trade_price(item, mid, selling=False) * (1 + tax_rate) <= self.ship.money:
+                low = mid
+            else:
+                high = mid - 1
+        return low
+
+    def new_turn(self):
+        """Things that happen once a turn, whatever the captain does: markets recover,
+        prices here are noted, the Hansa's dues fall due."""
+        if getattr(self, "ticked_turn", None) == self.turn:
+            return
+        first = getattr(self, "ticked_turn", None) is None
+        self.ticked_turn = self.turn
+        if not first:
+            for loc in self.locations:
+                loc.recover()
+        self.note_prices()
+        if self.turn and self.turn % self.DUES_EVERY == 0 and getattr(self, "dues_turn", None) != self.turn:
+            self.dues_turn = self.turn
+            self.collect_dues()
+
+    def note_prices(self, loc=None):
+        loc = loc or self.current_location
+        self.__dict__.setdefault("prices_seen", {})[loc.name] = (self.turn, dict(loc.market))
+
+    def forecast(self, loc):
+        """What a broker would guess {good: (price, spread)} for a place: close for a dock
+        seen this turn, looser the older the news, a rough guess for a dock never seen."""
+        seen = getattr(self, "prices_seen", {}).get(loc.name)
+        if seen and seen[0] == self.turn:
+            return {good: (price, 0.0) for good, price in loc.market.items()}, 0
+        age = self.turn - seen[0] if seen else None
+        spread = 0.45 if age is None else min(0.35, 0.04 + 0.03 * age)
+        if "broker" in self.ship.crew:
+            spread /= 2
+        rng = random.Random(zlib.crc32(("%s/%d/%s" % (loc.name, self.turn, self.player_name)).encode()))
+        guess = {}
+        for good, price in loc.market.items():
+            if price <= 0:
+                guess[good] = (0, 0.0)
+                continue
+            truth = price if seen else loc.equilibrium().get(good, price)
+            error = max(-spread, min(spread, rng.gauss(0, spread / 2)))
+            guess[good] = (max(1, truth * (1 + error)), spread)
+        return guess, age
+
+    def show_forecast(self, who):
+        """Price guesses for the other docks the captain knows of."""
+        rows = [[who], [""]]
+        for loc in self.locations:
+            if loc.name not in self.known_locations or loc is self.current_location:
+                continue
+            guess, age = self.forecast(loc)
+            note = "never visited: a guess" if age is None else "seen %d turn%s ago" % (age, "" if age == 1 else "s")
+            rows.append(["%s (%s)" % (loc.name, note)])
+            parts = []
+            for good in ('tech', 'agri', 'salt', 'fuel'):
+                price, spread = guess.get(good, (0, 0))
+                if price > 0:
+                    word = "~" if spread < 0.15 else "about " if spread < 0.3 else "maybe "
+                    parts.append("%s %s%s" % (good, word, self.format_money(price)))
+            rows.append(["  " + (", ".join(parts) or "no market")])
+        rows.append([""])
+        rows.extend([line] for line in self.word_wrap(
+            "Fresh news is close; old news drifts; places you never saw are guesses. Big loads move prices, "
+            "and prices take a few weeks to recover."))
+        print(self.create_box(rows, 'double'))
+        input("Press Enter to continue...")
+
+    # The Hansa runs the convoys between stars. Every ten turns it charges convoy dues, and the
+    # dues grow; Hansa bonds lower them. Unpaid dues gather a surcharge and the convoy master
+    # takes cargo for them.
+    DUES_EVERY = 10
+
+    def dues(self):
+        periods = self.turn // self.DUES_EVERY
+        hike = getattr(self, "dues_hike", 1.0) if self.turn <= getattr(self, "dues_hike_until", 0) else 1.0
+        due = 600 * periods ** 1.35 * hike
+        return int(due * 0.88 ** getattr(self, "hansa_bonds", 0))
+
+    def bond_price(self):
+        return int(4000 * 1.15 ** getattr(self, "hansa_bonds", 0))
+
+    def collect_dues(self):
+        ship = self.ship
+        due = self.dues() + getattr(self, "dues_arrears", 0)
+        paid = min(due, max(0, int(ship.money)))
+        ship.money -= paid
+        owed = due - paid
+        lines = ["Hansa convoy dues: %s." % self.format_money(due)]
+        if owed <= 0:
+            self.dues_arrears = 0
+            lines.append("Paid. The convoy master stamps your berth card.")
+            color = '33'
+        else:
+            owed = int(owed * 1.1)
+            lines.append("You could pay %s. %s stays on the books, with a ten per cent surcharge." % (
+                self.format_money(paid), self.format_money(owed)))
+            # the convoy master takes cargo for what is owed
+            for good in ('tech', 'agri', 'salt', 'fuel'):
+                if owed <= 0 or ship.cargo[good] <= 0:
+                    continue
+                price = max(1, self.current_location.market.get(good, 0) or 20)
+                taken = min(ship.cargo[good], int(owed / price) + 1)
+                ship.cargo[good] -= taken
+                owed -= int(taken * price)
+                lines.append("The convoy master takes %d %s against the debt." % (taken, good))
+            self.dues_arrears = max(0, owed)
+            ship.passenger_reputation -= 3
+            lines.append("Word gets round: reputation -3.")
+            color = '31'
+        lines.append("Next dues in %d turns: about %s. Bonds lower them (hansa/ha)." % (
+            self.DUES_EVERY, self.format_money(self.dues_at(self.turn + self.DUES_EVERY))))
+        self.display_simple_message([line for text in lines for line in self.word_wrap(text)], 3, color=color)
+
+    def dues_at(self, turn):
+        now = self.turn
+        self.turn = turn
+        try:
+            return self.dues()
+        finally:
+            self.turn = now
+
+    def buy_bonds(self, count=1, announce=True):
+        bought = 0
+        for _ in range(count):
+            price = self.bond_price()
+            if self.ship.money < price:
+                break
+            self.ship.money -= price
+            self.hansa_bonds = getattr(self, "hansa_bonds", 0) + 1
+            self.bonds_paid = getattr(self, "bonds_paid", 0) + price
+            bought += 1
+        if announce and bought:
+            self.display_simple_message("Bought %d Hansa bond%s. You hold %d; dues are %d%% lower." % (
+                bought, "" if bought == 1 else "s", self.hansa_bonds, round(100 * (1 - 0.88 ** self.hansa_bonds))))
+        return bought
+
+    def sell_bonds(self):
+        """Cash the bonds in at what they cost (the Hansa buys back at face value)."""
+        held = getattr(self, "hansa_bonds", 0)
+        value = getattr(self, "bonds_paid", 0)
+        self.hansa_bonds, self.bonds_paid = 0, 0
+        self.ship.money += value
+        return held, value
+
+    def handle_hansa(self):
+        """The Hansa terminal: dues, bonds, and the convoy office's price board."""
+        while True:
+            bonds = getattr(self, "hansa_bonds", 0)
+            next_turn = (self.turn // self.DUES_EVERY + 1) * self.DUES_EVERY
+            rows = [["Hansa terminal - " + self.current_location.name], [""]]
+            for text in (
+                    "The Hansa runs the convoys between the stars. Every %d turns it charges convoy dues, "
+                    "and the dues go up as the routes get busier." % self.DUES_EVERY,
+                    "Next dues at turn %d: %s.%s" % (next_turn, self.format_money(self.dues_at(next_turn)),
+                                                     (" Owed from before: %s." % self.format_money(self.dues_arrears))
+                                                     if getattr(self, "dues_arrears", 0) else ""),
+                    "Bonds held: %d (dues %d%% lower). The next bond costs %s and takes another 12%% off." % (
+                        bonds, round(100 * (1 - 0.88 ** bonds)), self.format_money(self.bond_price()))):
+                rows.extend([line] for line in self.word_wrap(text))
+                rows.append([""])
+            rows.extend([["bond/b: buy a bond"], ["prices/p: the convoy office's price board"],
+                         ["pay/pd: pay what you owe now"]])
+            print(self.create_box(rows, 'double'))
+            action = self.validate_input("Hansa - choose (Enter to leave): ", ['bond', 'b', 'prices', 'p', 'pay', 'pd'])
+            if action is None:
+                return
+            if action in ('bond', 'b'):
+                if not self.buy_bonds(1):
+                    self.display_simple_message("Not enough money for a bond (%s)." % self.format_money(self.bond_price()))
+            elif action in ('prices', 'p'):
+                self.show_forecast("The convoy office's price board")
+            elif action in ('pay', 'pd'):
+                owed = getattr(self, "dues_arrears", 0)
+                paid = min(owed, int(self.ship.money))
+                self.ship.money -= paid
+                self.dues_arrears = owed - paid
+                self.display_simple_message("Paid %s. Still owed: %s." % (
+                    self.format_money(paid), self.format_money(self.dues_arrears)))
+
     # --- encounters: fights, bounties and situations between docks ------------------
     WANTED_NAMES = ["Lucky Nine", "Widow's Tax", "Second Opinion", "Unpaid Invoice", "Small Print",
                     "Overdraft", "Bad Penny", "Quiet Word", "Last Orders", "Due Diligence", "Rust Never",
@@ -4296,7 +4656,7 @@ class Game:
         return max(0.08, min(0.95, chance))
 
     def escape_chance(self, enemy):
-        chance = 0.4 + 0.1 * (self.ship.speed - enemy["speed"])
+        chance = 0.4 + 0.1 * (self.ship.speed + (2 if self.ship.items.get("quantum_drive") else 0) - enemy["speed"])
         if "navigator" in self.ship.crew:
             chance += 0.15
         return max(0.05, min(0.95, chance))
@@ -4321,7 +4681,7 @@ class Game:
             box.extend(self.word_wrap(line))
         box.append("")
         for number, (_key, label) in enumerate(options, 1):
-            box.extend(self.word_wrap("%d. %s" % (number, label)))
+            box.extend(self.option_lines(number, label))
         self.display_story_message(box, pause=0)
         self.move_options, self.move_title = options, title   # what a reader of the screen sees (tools/bot.py)
         answer = self.validate_input("Your move (1-%d, Enter = %d): " % (len(options), default),
@@ -5364,8 +5724,8 @@ class Game:
                         location.name,
                         tech_price,
                         agri_price,
-                        salt_price if any(p['type'] == 'salt' for p in location.mining_platforms) else "No Mine",
-                        fuel_price if any(p['type'] == 'fuel' for p in location.mining_platforms) else "No Mine"
+                        salt_price if location.trades_bulk('salt') else "No Mine",
+                        fuel_price if location.trades_bulk('fuel') else "No Mine"
                     ])
 
                     # Add special features as separate rows
@@ -7164,6 +7524,7 @@ class Port:
                 'board': ('b', "Board Passengers"),
                 'unload': ('u', "Unload Passengers"),
                 'contracts': ('c', "Manage Contracts"),
+                'prices': ('pr', "Ask the broker robot about prices elsewhere"),
                 'travel': ('t', "Travel"),
                 'back': ('', "Return to Main Menu")
             }
@@ -7197,6 +7558,10 @@ class Port:
 
             elif action in ['contracts', 'c']:
                 self.game.contract_manager.handle_contract_menu()
+
+            elif action in ['prices', 'pr']:
+                self.game.show_forecast(self.game.story.fill("{port_broker}, the port's broker robot, "
+                                                             "quotes other docks"))
 
             elif action in ['travel', 't']:
                 if self.game.handle_travel():
@@ -7928,18 +8293,65 @@ class Location:
         return market
 
 
+    # A full hold (about 440 units) moves a planet's price by about 8%. A stock market
+    # makes the market deeper.
+    MARKET_DEPTH = {"Planet": 700, "AsteroidBase": 500, "DeepSpaceOutpost": 350, "ResearchColony": 300}
+    MARKET_IMPACT = 0.13
+
+    def trades_bulk(self, item):
+        """Salt and fuel trade only where they are mined: a platform here, or an asteroid
+        base, which mines its own (and is where convoys and in-system ships fuel up)."""
+        return self.location_type == "AsteroidBase" or any(p['type'] == item for p in self.mining_platforms)
+
+    def market_depth(self):
+        return self.MARKET_DEPTH.get(self.location_type, 400) * (2 if self.stockmarket_base else 1)
+
+    def equilibrium(self):
+        """The prices this market drifts back to. A market that opened later (a refinery)
+        takes its first price as its usual one."""
+        base = self.__dict__.setdefault("base_market", dict(self.market))
+        for item, price in self.market.items():
+            if price > 0 and not base.get(item):
+                base[item] = price
+        return base
+
+    def trade_price(self, item, quantity, selling):
+        """The average price per unit for a trade of this size: big loads move the price."""
+        price = self.market[item]
+        shift = self.MARKET_IMPACT * quantity / self.market_depth()
+        return price * (1 - shift / 2) if selling else price * (1 + shift / 2)
+
+    def trade_impact(self, item, quantity, selling):
+        """After a trade the price stays where the load pushed it, then recovers slowly."""
+        base = self.equilibrium().get(item) or self.market[item]
+        if self.market[item] <= 0 or base <= 0:
+            return
+        shift = self.MARKET_IMPACT * quantity / self.market_depth()
+        price = self.market[item] * ((1 - shift) if selling else (1 + shift))
+        self.market[item] = round(max(base * 0.35, min(base * 2.5, price)), 1)
+
+    def recover(self, rate=0.15):
+        """Once a turn: prices drift a little way back to their usual level."""
+        base = self.equilibrium()
+        for item, price in self.market.items():
+            usual = base.get(item, 0)
+            if usual > 0 and price > 0:
+                self.market[item] = round(price + (usual - price) * rate, 1)
+
     def calculate_tax_rate(self, player_rank, profit):
         """Calculate tax rate based on player rank and location type"""
         base_tax = 0.05  # 5% base tax
+        # famous captains pay a little more (it was up to 2.5 times; with markets that feel
+        # every load, that left late traders no margin at all)
         rank_multiplier = {
             "Explorer": 1,
-            "Pilot": 1.2,
-            "Captain": 1.4,
-            "Commander": 1.6,
-            "Star Commander": 1.8,
-            "Space Admiral": 2.0,
-            "Stellar Hero": 2.2,
-            "Galactic Legend": 2.5
+            "Pilot": 1.07,
+            "Captain": 1.14,
+            "Commander": 1.21,
+            "Star Commander": 1.28,
+            "Space Admiral": 1.35,
+            "Stellar Hero": 1.42,
+            "Galactic Legend": 1.5
         }
 
         # Reduce tax based on number of buildings
@@ -9156,7 +9568,7 @@ class StoryManager:
                 requirements={
                     "chapters_completed": ["ch3a"],
                     "plot_points": 100,
-                    "trade_profit": 500000
+                    "trade_profit": 400000
                 },
                 milestones=[
                     {
@@ -9166,7 +9578,7 @@ class StoryManager:
                         "requirements": {
                             "buildings_built": {"stockmarket": 5},
                             "passenger_reputation": 80,
-                            "trade_profit": 500000
+                            "trade_profit": 400000
                         },
                         "rewards": {"money": 1000000, "plot_points": 100}
                     }
@@ -10022,6 +10434,11 @@ class Planet(Location):
 class AsteroidBase(Location):
     def __init__(self, name, tech_level, agri_level, research_points, economy):
         super().__init__(name, "AsteroidBase", tech_level, agri_level, research_points, economy)
+        # the base mines its own ice and rock: there is always fuel and salt for sale
+        if not self.market.get('fuel'):
+            self.market['fuel'] = random.randint(110, 150)
+        if not self.market.get('salt'):
+            self.market['salt'] = random.randint(70, 110)
 
 class DeepSpaceOutpost(Location):
     def __init__(self, name, tech_level, agri_level, research_points, economy):

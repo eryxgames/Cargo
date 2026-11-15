@@ -41,6 +41,9 @@
   "cargo1/enclaves.json",
   "cargo1/neons.json",
   "cargo1/crew.json",
+  "cargo1/hansa.json",
+  "cargo1/science.json",
+  "cargo1/drama.json",
   "cargo1/rumours.json",
   "cargo1/gossip.json",
   "cargo1/epilogue.json"
@@ -97,6 +100,24 @@
   },
   "crew_size": {
    "about": "helpers hired (the ship has bunks for four)"
+  },
+  "hansa_bonds": {
+   "about": "Hansa bonds held (each lowers the convoy dues)"
+  },
+  "dues_arrears": {
+   "about": "convoy dues owed and not yet paid"
+  },
+  "cargo.tech": {
+   "about": "tech in the hold (an effect adds or takes it)"
+  },
+  "cargo.agri": {
+   "about": "agri in the hold (an effect adds or takes it)"
+  },
+  "cargo.salt": {
+   "about": "salt in the hold (an effect adds or takes it)"
+  },
+  "cargo.fuel": {
+   "about": "fuel in the hold (an effect adds or takes it)"
   },
   "combat_victories.pirate": {
    "about": "battles won against pirate"
@@ -618,7 +639,7 @@
      "ch3a"
     ],
     "plot_points": 100,
-    "trade_profit": 500000
+    "trade_profit": 400000
    },
    "next": [],
    "source": "cargo.py StoryManager.__init__ (chapters)",
@@ -636,7 +657,7 @@
    "requires": {
     "buildings.stockmarket": 5,
     "passenger_reputation": 80,
-    "trade_profit": 500000
+    "trade_profit": 400000
    },
    "effects": {
     "money": 1000000,

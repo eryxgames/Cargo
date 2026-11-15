@@ -75,11 +75,13 @@ An object is "all of these". Keys:
 | any declared stat | the stat is at least the value; `{"min": a, "max": b}` for a range |
 | `flag`, `not_flag` | the flag(s) are on / off |
 | `done`, `done_any`, `not_done` | the node(s) have happened |
+| `since` | `{"node": turns}`: that node happened at least so many turns ago (spaces scenes out) |
 | `act_min`, `act_max`, `turn_min`, `turn_max` | the act or turn is in range |
 | `at`, `at_type` | the player is at this place, or a place of this type |
 | `has` | `{"researched": ["telemetry"]}`: the set holds these members |
 | `player_origin` | `{"game": "cargo2", "ending": "trade"}`: the player is playing as a captain from that record; `{}` any record |
 | `venue` | the player is visiting this place inside a location (`port`, `cantina`), declared as a place of kind `venue` |
+| `chapter` | the player is in this chapter now (its id, or one of a list); a finished chapter still counts until the next one starts |
 | `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x", "same_name": true}`: a captain record from that part has been imported; `same_name` true when it carries the current captain's name, false when another |
 | `all`, `any`, `not` | combine conditions |
 | `code` | opaque game code; the tools report it and cannot judge it |

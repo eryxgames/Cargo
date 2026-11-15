@@ -25,8 +25,9 @@ STORY_PATH = os.path.join(ROOT, "story", "cargo1.story.json")
 # Hand-written story files merged into the imported one (drafts until the game reads them)
 INCLUDES = ["cargo1/legacy.json", "cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
             "cargo1/pirates.json", "cargo1/passengers.json", "cargo1/houses.json", "cargo1/frontier.json",
-            "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/crew.json", "cargo1/rumours.json",
-            "cargo1/gossip.json", "cargo1/epilogue.json"]
+            "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/crew.json", "cargo1/hansa.json",
+            "cargo1/science.json", "cargo1/drama.json", "cargo1/rumours.json", "cargo1/gossip.json",
+            "cargo1/epilogue.json"]
 
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
 BUILDINGS = ["stockmarket", "Neuroengineering Guild", "Agrobot Assembly Line", "mining_platform"]
@@ -50,7 +51,11 @@ STATS = {
     "best_cabin": "comfort level of the best passenger cabin aboard",
     "turns_since_vip": "turns since the last VIP passenger appeared",
     "crew_size": "helpers hired (the ship has bunks for four)",
+    "hansa_bonds": "Hansa bonds held (each lowers the convoy dues)",
+    "dues_arrears": "convoy dues owed and not yet paid",
 }
+for _g in ("tech", "agri", "salt", "fuel"):
+    STATS["cargo." + _g] = "%s in the hold (an effect adds or takes it)" % _g
 for _t in VICTORY_TYPES[1:]:
     STATS["combat_victories." + _t] = "battles won against " + _t
 for _b in BUILDINGS:

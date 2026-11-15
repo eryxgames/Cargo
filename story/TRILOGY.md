@@ -102,7 +102,7 @@ stranger at the station bar or past the portal, named only if the record is ther
 
 | Later power | In Cargo 1 | Seen as |
 | --- | --- | --- |
-| Hauler Hansa | independent haulers, a few cooperatives, no common money | the player's people; the charter and the first Mark |
+| Hauler Hansa | the convoy office: carries ships between the stars, charges dues, sells bonds; no common money yet | the player's people; dues and bonds; the charter and the first Mark |
 | Terran Mandate | security legions of OmniCorp, Stellar Dynamics and the Xylo Consortium | legion contracts, the commission, the merger |
 | Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests | Ysolde van Rostrom, Dharr Santor |
 | Collective | CU-113, a Curator neurodroid at the player's guild (the game's Neurodroid Overseer); the Sowers on the farm drums | the first refusal, the first node, long before vectorspace |
@@ -178,11 +178,33 @@ Balance: chapter thresholds now mean something (50 plot points for chapter 2,
 rewards were scaled down. Since 1.2 trade profit is real (sale price minus what
 the goods cost), the hold has a size, fights take money only when they are lost,
 and passenger reputation stops at 100; the trader's chapter asks 150 000 profit
-and the trade ending 500 000. Plot points come from what the captain does (scenes,
+and the trade ending 400 000. Plot points come from what the captain does (scenes,
 quests, passengers, good deals, research, first visits, fights won, situations
 handled), not from things that merely happen to the ship. Fighters take bounties
 (`hunt`), so the combat road is no longer a wait for pirates. Measured with the bot:
-every route ends in about 85 to 140 turns.
+discovery ends in about 75 to 95 turns, combat in 115 to 135, trade in 120 to 210.
+
+Shape: every road has a crisis at the start of chapter three (the squeeze, left
+behind, the fire), a low point before the finale (margin call, the inquiry, not
+proven) and a climax that opens the ending (the vote, roll call, the long burn).
+Each costs money, bonds, research, guns or a crew member, and leaves a flag the
+epilogue and Cargo 2 read (`cargo1/drama.json`). The trader's finale is the longest,
+so it has three more beats between the low point and the vote: striking the first
+Mark (full weight or a hair light), a run on it, and the trading houses' offer of a
+seat on their board.
+
+Money and the Hansa: between stars the Hansa's convoys carry every ship and charge
+dues every ten turns, a little more each time; Hansa bonds lower them and count at
+the charter. Markets feel big loads and recover over a few turns; the price board
+and the ports' broker robot, TALLY-4, guess prices elsewhere.
+
+Fuel and science: fuel is only burned inside a star system, where a ship flies on
+its own. Nine missions after real astronomy (as published by 2026) burn it:
+radio bursts at YZ Ceti, weather on Luhman 16, water at WISE 0855, an atmosphere at
+TRAPPIST-1e, a starshade at Alpha Centauri, the dust that was Fomalhaut b, astrometry
+at Epsilon Eridani, an interstellar comet, and a microlensing parallax
+(`cargo1/science.json`). The people who want them flown keep them from getting too
+solemn.
 
 Between docks: twelve kinds of enemy (scrap skiffs to a pirate dreadnought, feral
 mining drones, a runaway harvester, customs, cultists, legion deserters) and twelve

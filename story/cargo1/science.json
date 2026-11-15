@@ -1,0 +1,1006 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "flags": {
+  "flew_yzceti": {
+   "about": "the captain flew the mission: Bells at YZ Ceti"
+  },
+  "flew_luhman": {
+   "about": "the captain flew the mission: Weather at Luhman 16"
+  },
+  "flew_wise0855": {
+   "about": "the captain flew the mission: The coldest water"
+  },
+  "flew_trappist": {
+   "about": "the captain flew the mission: Seven theories"
+  },
+  "flew_starshade": {
+   "about": "the captain flew the mission: The starshade"
+  },
+  "flew_fomalhaut": {
+   "about": "the captain flew the mission: The planet that wasn't"
+  },
+  "flew_epseri": {
+   "about": "the captain flew the mission: Where the big planet is"
+  },
+  "flew_comet": {
+   "about": "the captain flew the mission: A visitor from another star"
+  },
+  "flew_lens": {
+   "about": "the captain flew the mission: Wrong place, right time"
+  }
+ },
+ "about": "Missions inside star systems, after real astronomy (as published by November 2026), told by the people who want them flown. Between stars the Hansa's convoys carry you; inside a system you fly on your own fuel, or buy the burn from the local depot.",
+ "arcs": {
+  "science": {
+   "title": "Science missions",
+   "order": 2.9
+  }
+ },
+ "characters": {
+  "radio_astronomer": {
+   "name": "Dr Amos Vetch",
+   "short": "Vetch",
+   "kind": "human",
+   "about": "radio astronomer at YZ Ceti; sure the planet rings the star like a bell; suspects the toaster"
+  },
+  "meteorologist": {
+   "name": "Bettina Lusk",
+   "short": "Lusk",
+   "kind": "human",
+   "about": "the only meteorologist at Luhman 16; forecasts iron rain for a living"
+  },
+  "water_broker": {
+   "name": "Kip Ferraro",
+   "short": "Kip",
+   "kind": "human",
+   "about": "sells bottled water from the coldest brown dwarf anyone knows; has the labels printed already"
+  },
+  "seven_theories": {
+   "name": "Professor Ruan Odili",
+   "short": "Odili",
+   "kind": "human",
+   "about": "TRAPPIST-1 institute; seven planets, seven theories, one grant"
+  },
+  "starshade_engineer": {
+   "name": "Elif Kaya",
+   "short": "Kaya",
+   "kind": "human",
+   "about": "built a starshade the size of a stadium and argues with everyone about the petals"
+  },
+  "cartographer": {
+   "name": "Hollis Dunmore",
+   "short": "Dunmore",
+   "kind": "human",
+   "about": "sold charts to the planet Fomalhaut b for twenty years; the planet was a dust cloud"
+  },
+  "lens_watcher": {
+   "name": "Dr Noor Haddad",
+   "short": "Haddad",
+   "kind": "human",
+   "about": "microlensing observer; needs a ship in exactly the wrong place at exactly the right time"
+  }
+ },
+ "nodes": {
+  "sci.yzceti": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 1,
+   "title": "Bells at YZ Ceti",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_yzceti",
+    "act_min": 1,
+    "at": "Quantum Center"
+   },
+   "text": [
+    "YZ Ceti's innermost planet goes round its star every two days, and every so often the star bursts in radio. {radio_astronomer} thinks the planet does it: its magnetic field drags on the star's like a finger on a bell, which would mean the planet has a field at all, which is the interesting part.",
+    "To prove it he needs a receiver parked between planet and star, at the point where their pulls balance, timing every burst against the orbit. His rival says the bursts line up with the station's breakfast. He has checked the toaster. Twice."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let {navigator.short} hold the balance point (15 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "navigator"
+       ]
+      },
+      "cargo.fuel": 15
+     },
+     "effects": {
+      "cargo.fuel": -15,
+      "research_points": 120,
+      "money": 4000,
+      "plot_points": 6,
+      "set": [
+       "flew_yzceti"
+      ]
+     },
+     "next": [
+      "sci.yzceti.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (30 fuel)",
+     "requires": {
+      "cargo.fuel": 30
+     },
+     "effects": {
+      "cargo.fuel": -30,
+      "research_points": 120,
+      "money": 4000,
+      "plot_points": 6,
+      "set": [
+       "flew_yzceti"
+      ]
+     },
+     "next": [
+      "sci.yzceti.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (9,000 credits)",
+     "requires": {
+      "money": 9000
+     },
+     "effects": {
+      "money": 2000,
+      "research_points": 120,
+      "plot_points": 4,
+      "set": [
+       "flew_yzceti"
+      ]
+     },
+     "next": [
+      "sci.yzceti.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "radio_astronomer"
+   ],
+   "where": "Quantum Center"
+  },
+  "sci.yzceti.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 1,
+   "title": "Bells at YZ Ceti: result",
+   "requires": {
+    "flag": "flew_yzceti"
+   },
+   "text": "The bursts come on the planet's schedule, not the toaster's. {radio_astronomer.short} names the result after himself and the receiver after your ship. The toaster is retired anyway, out of spite.",
+   "who": [
+    "radio_astronomer"
+   ]
+  },
+  "sci.luhman": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 1,
+   "title": "Weather at Luhman 16",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_luhman",
+    "act_min": 1,
+    "at": "DSO-Alpha"
+   },
+   "text": [
+    "Luhman 16 is two brown dwarfs, too big to be planets and too small to burn, with weather: bands of iron and sand clouds that change from hour to hour. {meteorologist} has the only forecast desk in the system.",
+    "'Cloudy, with iron rain, forever,' she says. 'I need a buoy in orbit for one full day of each of them to tell you which forever.' The smaller one turns in about five hours, the bigger in about seven, and neither keeps still while you watch."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let the probe carry the buoy (12 fuel)",
+     "requires": {
+      "has": {
+       "items": [
+        "probe"
+       ]
+      },
+      "cargo.fuel": 12
+     },
+     "effects": {
+      "cargo.fuel": -12,
+      "research_points": 90,
+      "money": 3000,
+      "plot_points": 5,
+      "set": [
+       "flew_luhman"
+      ]
+     },
+     "next": [
+      "sci.luhman.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (25 fuel)",
+     "requires": {
+      "cargo.fuel": 25
+     },
+     "effects": {
+      "cargo.fuel": -25,
+      "research_points": 90,
+      "money": 3000,
+      "plot_points": 5,
+      "set": [
+       "flew_luhman"
+      ]
+     },
+     "next": [
+      "sci.luhman.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (7,500 credits)",
+     "requires": {
+      "money": 7500
+     },
+     "effects": {
+      "money": 1500,
+      "research_points": 90,
+      "plot_points": 3,
+      "set": [
+       "flew_luhman"
+      ]
+     },
+     "next": [
+      "sci.luhman.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "meteorologist"
+   ],
+   "where": "DSO-Alpha"
+  },
+  "sci.luhman.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 1,
+   "title": "Weather at Luhman 16: result",
+   "requires": {
+    "flag": "flew_luhman"
+   },
+   "text": "The buoy maps a storm the size of Jupiter's red spot going round the smaller dwarf every five hours and seventeen minutes. {meteorologist.short} pins the map to the bar wall. Tomorrow: cloudy.",
+   "who": [
+    "meteorologist"
+   ]
+  },
+  "sci.wise0855": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "The coldest water",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_wise0855",
+    "act_min": 2,
+    "at": "DSO-Beta"
+   },
+   "text": [
+    "WISE 0855 is the coldest brown dwarf anyone has found, about room temperature at the top of its air, with water vapour in it and, everyone hopes, water ice clouds above that.",
+    "{water_broker} wants a scoop of the cloud deck. The scientists want the same scoop, for the isotopes. The climb back out against several Jupiters of gravity is the expensive part. {water_broker.short} has already printed the labels: 'Brown Dwarf Spring. Older than the Sun, probably.'"
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Skim with the mining compressor (30 fuel)",
+     "requires": {
+      "has": {
+       "items": [
+        "mining_compressor"
+       ]
+      },
+      "cargo.fuel": 30
+     },
+     "effects": {
+      "cargo.fuel": -30,
+      "research_points": 160,
+      "money": 6000,
+      "plot_points": 7,
+      "set": [
+       "flew_wise0855"
+      ]
+     },
+     "next": [
+      "sci.wise0855.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (50 fuel)",
+     "requires": {
+      "cargo.fuel": 50
+     },
+     "effects": {
+      "cargo.fuel": -50,
+      "research_points": 160,
+      "money": 6000,
+      "plot_points": 7,
+      "set": [
+       "flew_wise0855"
+      ]
+     },
+     "next": [
+      "sci.wise0855.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (15,000 credits)",
+     "requires": {
+      "money": 15000
+     },
+     "effects": {
+      "money": 3000,
+      "research_points": 160,
+      "plot_points": 5,
+      "set": [
+       "flew_wise0855"
+      ]
+     },
+     "next": [
+      "sci.wise0855.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "water_broker"
+   ],
+   "where": "DSO-Beta"
+  },
+  "sci.wise0855.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "The coldest water: result",
+   "requires": {
+    "flag": "flew_wise0855"
+   },
+   "text": "The scoop comes back frosted. The isotopes say the water is older than any sea you have stood next to. {water_broker.short} sells the first bottle to a Neon for the price of your hull.",
+   "who": [
+    "water_broker"
+   ]
+  },
+  "sci.trappist": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "Seven theories",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_trappist",
+    "act_min": 2,
+    "at": "Stellar Institute"
+   },
+   "text": [
+    "TRAPPIST-1 has seven rocky planets packed closer to their star than Mercury is to ours. The two innermost turned out to have little or no air. The fourth, e, sits where water could be liquid, and nobody knows yet whether it kept an atmosphere.",
+    "{seven_theories} wants a spectrometer close to e during a transit, when starlight shines through whatever air it has. He has seven theories, one per planet, and a grant that pays for one answer."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let {navigator.short} time the transit (20 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "navigator"
+       ]
+      },
+      "cargo.fuel": 20
+     },
+     "effects": {
+      "cargo.fuel": -20,
+      "research_points": 140,
+      "money": 5000,
+      "plot_points": 6,
+      "set": [
+       "flew_trappist"
+      ]
+     },
+     "next": [
+      "sci.trappist.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (35 fuel)",
+     "requires": {
+      "cargo.fuel": 35
+     },
+     "effects": {
+      "cargo.fuel": -35,
+      "research_points": 140,
+      "money": 5000,
+      "plot_points": 6,
+      "set": [
+       "flew_trappist"
+      ]
+     },
+     "next": [
+      "sci.trappist.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (10,500 credits)",
+     "requires": {
+      "money": 10500
+     },
+     "effects": {
+      "money": 2500,
+      "research_points": 140,
+      "plot_points": 4,
+      "set": [
+       "flew_trappist"
+      ]
+     },
+     "next": [
+      "sci.trappist.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "seven_theories"
+   ],
+   "where": "Stellar Institute"
+  },
+  "sci.trappist.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "Seven theories: result",
+   "requires": {
+    "flag": "flew_trappist"
+   },
+   "text": "The spectrum shows air: thin, but there. Six of {seven_theories.short}'s theories die in one afternoon. He throws a party for the survivor.",
+   "who": [
+    "seven_theories"
+   ]
+  },
+  "sci.starshade": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "The starshade",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_starshade",
+    "act_min": 2,
+    "at": "Alpha"
+   },
+   "text": [
+    "There may be a giant planet in the warm zone of Alpha Centauri A. It has been 'may be' for a long time, because the star outshines it a billion times over.",
+    "{starshade_engineer} built the fix: a flower-shaped shade as wide as a stadium, to hold in front of the star so the planet shows. It has to sit tens of thousands of kilometres from the telescope and not drift a metre. Holding still costs fuel. Arguing about the petals costs nothing; everyone does it."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let {mechanic.short} trim the petals first (25 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "mechanic"
+       ]
+      },
+      "cargo.fuel": 25
+     },
+     "effects": {
+      "cargo.fuel": -25,
+      "research_points": 150,
+      "money": 8000,
+      "plot_points": 7,
+      "set": [
+       "flew_starshade"
+      ]
+     },
+     "next": [
+      "sci.starshade.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (40 fuel)",
+     "requires": {
+      "cargo.fuel": 40
+     },
+     "effects": {
+      "cargo.fuel": -40,
+      "research_points": 150,
+      "money": 8000,
+      "plot_points": 7,
+      "set": [
+       "flew_starshade"
+      ]
+     },
+     "next": [
+      "sci.starshade.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (12,000 credits)",
+     "requires": {
+      "money": 12000
+     },
+     "effects": {
+      "money": 4000,
+      "research_points": 150,
+      "plot_points": 5,
+      "set": [
+       "flew_starshade"
+      ]
+     },
+     "next": [
+      "sci.starshade.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "starshade_engineer"
+   ],
+   "where": "Alpha"
+  },
+  "sci.starshade.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "The starshade: result",
+   "requires": {
+    "flag": "flew_starshade"
+   },
+   "text": "For nine hours the shade holds, and a faint dot moves where a planet should be. It is not 'may be' any more. The colony puts the petals on its flag. {starshade_engineer.short} says they are the wrong petals.",
+   "who": [
+    "starshade_engineer"
+   ]
+  },
+  "sci.fomalhaut": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "The planet that wasn't",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_fomalhaut",
+    "act_min": 2,
+    "at": "Theta III"
+   },
+   "text": [
+    "For years Fomalhaut had a famous planet, b, until it faded and spread out: it was most likely a dust cloud from two icy bodies smashing together. {cartographer} sold charts to it for twenty years and would like it back.",
+    "The colony wants the cloud measured: grain sizes and speeds tell how big the bodies were and when they hit. {cartographer.short} wants you to look for the planet while you are there. Just in case."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Fly the probe through the cloud (15 fuel)",
+     "requires": {
+      "has": {
+       "items": [
+        "probe"
+       ]
+      },
+      "cargo.fuel": 15
+     },
+     "effects": {
+      "cargo.fuel": -15,
+      "research_points": 110,
+      "money": 4500,
+      "plot_points": 5,
+      "set": [
+       "flew_fomalhaut"
+      ]
+     },
+     "next": [
+      "sci.fomalhaut.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (30 fuel)",
+     "requires": {
+      "cargo.fuel": 30
+     },
+     "effects": {
+      "cargo.fuel": -30,
+      "research_points": 110,
+      "money": 4500,
+      "plot_points": 5,
+      "set": [
+       "flew_fomalhaut"
+      ]
+     },
+     "next": [
+      "sci.fomalhaut.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (9,000 credits)",
+     "requires": {
+      "money": 9000
+     },
+     "effects": {
+      "money": 2250,
+      "research_points": 110,
+      "plot_points": 3,
+      "set": [
+       "flew_fomalhaut"
+      ]
+     },
+     "next": [
+      "sci.fomalhaut.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "cartographer"
+   ],
+   "where": "Theta III"
+  },
+  "sci.fomalhaut.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "The planet that wasn't: result",
+   "requires": {
+    "flag": "flew_fomalhaut"
+   },
+   "text": "Two bodies, each a couple of hundred kilometres across, met at a closing speed that would empty a bar. No planet. {cartographer.short} reprints his charts with 'b (former)' in small letters and sells them to tourists.",
+   "who": [
+    "cartographer"
+   ]
+  },
+  "sci.epseri": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 1,
+   "title": "Where the big planet is",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_epseri",
+    "act_min": 1,
+    "at": "Epsilon"
+   },
+   "text": [
+    "Epsilon Eridani has a planet a bit lighter than Jupiter on a seven-year orbit, and belts of rock on either side. The ore exchange is tired of haulers being thrown off course by a planet the charts put somewhere else.",
+    "The fix is old-fashioned astrometry: two beacons far apart, a laser between them, and the planet's position measured to the kilometre. Placing the far beacon is a long burn out of the ecliptic."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let {loader} rig both beacons on one burn (12 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "loader"
+       ]
+      },
+      "cargo.fuel": 12
+     },
+     "effects": {
+      "cargo.fuel": -12,
+      "research_points": 80,
+      "money": 6000,
+      "plot_points": 5,
+      "set": [
+       "flew_epseri"
+      ]
+     },
+     "next": [
+      "sci.epseri.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (25 fuel)",
+     "requires": {
+      "cargo.fuel": 25
+     },
+     "effects": {
+      "cargo.fuel": -25,
+      "research_points": 80,
+      "money": 6000,
+      "plot_points": 5,
+      "set": [
+       "flew_epseri"
+      ]
+     },
+     "next": [
+      "sci.epseri.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (7,500 credits)",
+     "requires": {
+      "money": 7500
+     },
+     "effects": {
+      "money": 3000,
+      "research_points": 80,
+      "plot_points": 3,
+      "set": [
+       "flew_epseri"
+      ]
+     },
+     "next": [
+      "sci.epseri.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "where": "Epsilon"
+  },
+  "sci.epseri.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 1,
+   "title": "Where the big planet is: result",
+   "requires": {
+    "flag": "flew_epseri"
+   },
+   "text": "The planet is eleven thousand kilometres from where the charts had it. The exchange updates the charts and sends the bill for the old ones to the chart office."
+  },
+  "sci.comet": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "A visitor from another star",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_comet",
+    "act_min": 2,
+    "at": [
+     "Alpha",
+     "Gamma",
+     "Delta",
+     "Epsilon",
+     "Beta"
+    ]
+   },
+   "text": [
+    "A comet is coming in on a path no comet born here could have: fast and open, falling through once and leaving for good. The first three were spotted back in the twenty-first century, too fast to follow. This one can be reached.",
+    "Catching it means matching a speed of tens of kilometres a second for an hour, collecting what you can, and braking again. Three research houses each claim they saw it first and want the sample. The comet does not care who saw it."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Let {navigator.short} plot an intercept (50 fuel)",
+     "requires": {
+      "has": {
+       "crew": [
+        "navigator"
+       ]
+      },
+      "cargo.fuel": 50
+     },
+     "effects": {
+      "cargo.fuel": -50,
+      "research_points": 260,
+      "money": 12000,
+      "plot_points": 10,
+      "set": [
+       "flew_comet"
+      ]
+     },
+     "next": [
+      "sci.comet.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (80 fuel)",
+     "requires": {
+      "cargo.fuel": 80
+     },
+     "effects": {
+      "cargo.fuel": -80,
+      "research_points": 260,
+      "money": 12000,
+      "plot_points": 10,
+      "set": [
+       "flew_comet"
+      ]
+     },
+     "next": [
+      "sci.comet.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (24,000 credits)",
+     "requires": {
+      "money": 24000
+     },
+     "effects": {
+      "money": 6000,
+      "research_points": 260,
+      "plot_points": 8,
+      "set": [
+       "flew_comet"
+      ]
+     },
+     "next": [
+      "sci.comet.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ]
+  },
+  "sci.comet.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "A visitor from another star: result",
+   "requires": {
+    "flag": "flew_comet"
+   },
+   "text": "You fly beside a piece of another star's system for fifty-one minutes and bring back a jar of its dust. The three houses sue each other. You sell the photographs to all three."
+  },
+  "sci.lens": {
+   "kind": "quest",
+   "arc": "science",
+   "act": 2,
+   "title": "Wrong place, right time",
+   "chance": 0.3,
+   "repeat": {
+    "cooldown": 6
+   },
+   "requires": {
+    "not_flag": "flew_lens",
+    "act_min": 2,
+    "at": "DSO-Gamma"
+   },
+   "text": [
+    "A star near us will pass almost exactly in front of a star far behind it, and its gravity will bend the far star's light like a lens: it will brighten for a few days. Seen from two places at once, the timing tells how heavy the near star is.",
+    "{lens_watcher} has one telescope here and needs another a tenth of an astronomical unit off to the side, on the day. Your ship is the other telescope. The crew asks whether the light bends for free. It does. The fuel does not."
+   ],
+   "choices": [
+    {
+     "id": "trick",
+     "say": "Hold position with the radar locked on (10 fuel)",
+     "requires": {
+      "has": {
+       "items": [
+        "advanced_radar"
+       ]
+      },
+      "cargo.fuel": 10
+     },
+     "effects": {
+      "cargo.fuel": -10,
+      "research_points": 100,
+      "money": 3000,
+      "plot_points": 5,
+      "set": [
+       "flew_lens"
+      ]
+     },
+     "next": [
+      "sci.lens.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (20 fuel)",
+     "requires": {
+      "cargo.fuel": 20
+     },
+     "effects": {
+      "cargo.fuel": -20,
+      "research_points": 100,
+      "money": 3000,
+      "plot_points": 5,
+      "set": [
+       "flew_lens"
+      ]
+     },
+     "next": [
+      "sci.lens.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (6,000 credits)",
+     "requires": {
+      "money": 6000
+     },
+     "effects": {
+      "money": 1500,
+      "research_points": 100,
+      "plot_points": 3,
+      "set": [
+       "flew_lens"
+      ]
+     },
+     "next": [
+      "sci.lens.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "who": [
+    "lens_watcher"
+   ],
+   "where": "DSO-Gamma"
+  },
+  "sci.lens.result": {
+   "kind": "event",
+   "arc": "science",
+   "act": 2,
+   "title": "Wrong place, right time: result",
+   "requires": {
+    "flag": "flew_lens"
+   },
+   "text": "The far star brightens nineteen minutes later for you than for {lens_watcher.short}. From that she weighs the near star: a third of the Sun, give or take a moon. She buys the crew a round, at a price she calculates carefully.",
+   "who": [
+    "lens_watcher"
+   ]
+  }
+ }
+}
