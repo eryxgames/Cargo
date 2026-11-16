@@ -15,7 +15,7 @@
    "game": "cargo2",
    "title": "Cargo 2",
    "file": "cargo2.story.json",
-   "status": "in development; story imported from data/*.yml",
+   "status": "2.0.0-dev: rebuilt on Cargo 1.2's core in the Cargo-2 repository, story in its story/cargo2/ (this folder's cargo2.story.json is the 2025 version's story, imported)",
    "open": true,
    "era": "about 40 years later: the Mandate, the Concord's houses and gates, the Binary Dawn"
   },
@@ -245,6 +245,51 @@
     {
      "game": "cargo2",
      "as": "the family has grown; she asks customs officers whether a certain captain is still flying"
+    }
+   ]
+  },
+  "convoy_captain": {
+   "name": "Allsa Targa",
+   "short": "Targa",
+   "about": "captain of a Hansa convoy who keeps score of every favour, both ways",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "captain of the Gamma-Alpha convoy; barges, a berth or a cold shoulder, an escort; comes to Alpha and to the vote"
+    },
+    {
+     "game": "cargo2",
+     "as": "GRAB Targa, master of the Hansa's needle office, old and still counting"
+    }
+   ]
+  },
+  "young_hauler": {
+   "name": "Pell Okafor",
+   "short": "Pell",
+   "about": "a hauler the captain met at nineteen, without a ship",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "nineteen, a fresh licence and no ship: friend, debtor or raider"
+    },
+    {
+     "game": "cargo2",
+     "as": "fifty-nine, a Hansa senior who remembers who lent him a ship, or who turned him away"
+    }
+   ]
+  },
+  "inspector": {
+   "name": "Hanne Lauritz",
+   "short": "Lauritz",
+   "about": "a customs inspector who writes everything down, bribes included",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "customs inspector; inspections, a sealed case, the notebook audit, the sting at Gamma"
+    },
+    {
+     "game": "cargo2",
+     "as": "retired; her notebooks surface, with the captain's bribes in them, or the tea"
     }
    ]
   }

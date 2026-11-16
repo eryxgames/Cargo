@@ -218,3 +218,6 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | Magister Notary Augias Pfennig | cargo2: Astin Pfennig, his son or his clone, guards the waking fortune; cargo3: a Pfennig still at the sarcophagus, by then nobody is sure which |
 | Serac | cargo2: runs the Mandate's (TAM) operations and the Solar Union's inner-systems 'defence' wing; cargo3: unchanged; still asks after the captain |
 | Meza Voce | cargo2: the family has grown; she asks customs officers whether a certain captain is still flying |
+| Allsa Targa | cargo2: GRAB Targa, master of the Hansa's needle office, old and still counting |
+| Pell Okafor | cargo2: fifty-nine, a Hansa senior who remembers who lent him a ship, or who turned him away |
+| Hanne Lauritz | cargo2: retired; her notebooks surface, with the captain's bribes in them, or the tea |

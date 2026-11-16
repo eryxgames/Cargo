@@ -14,20 +14,14 @@
  },
  "characters": {
   "convoy_captain": {
-   "name": "Allsa Targa",
-   "short": "Targa",
    "kind": "human",
    "about": "captain of the Gamma-Alpha convoy; chews liquorice root; keeps score of every favour, both ways"
   },
   "young_hauler": {
-   "name": "Pell Okafor",
-   "short": "Pell",
    "kind": "human",
    "about": "nineteen, a fresh licence and no ship; asks too many questions and remembers the answers"
   },
   "inspector": {
-   "name": "Hanne Lauritz",
-   "short": "Lauritz",
    "kind": "human",
    "about": "customs inspector; reads manifests the way other people read novels, looking for the twist"
   }
