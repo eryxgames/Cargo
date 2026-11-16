@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import headless
 
 home = tempfile.mkdtemp(prefix="cargo-files-")
-os.environ["CARGO_HOME"] = home
+os.environ["CARGO_SAGA_HOME"] = home
 cargo = headless.load(sys.argv[1])
 io = headless.IO()
 headless.patch(cargo, io)
@@ -129,6 +129,30 @@ try:
     results.append(("save: patched method comes back", "ok" if ok else "FAIL: %r" % vars(loaded.story).get("tick")))
 except Exception as e:
     results.append(("save: patched method comes back", "FAIL: %s %s" % (type(e).__name__, e)))
+
+# 1.2.0 kept its files in ~/.cargo (or CARGO_HOME), Rust's folder: the new default folder takes
+# Cargo's own subfolders over once, and leaves everything else there alone
+try:
+    old_home, new_home = tempfile.mkdtemp(prefix="cargo-old-"), tempfile.mkdtemp(prefix="cargo-new-")
+    os.makedirs(os.path.join(old_home, "cargo1", "saves"))
+    os.makedirs(os.path.join(old_home, "captains"))
+    os.makedirs(os.path.join(old_home, "bin"))                       # Rust's, not ours
+    for name in ("cargo1/saves/autosave.json", "captains/Old_Hand.json"):
+        with open(os.path.join(old_home, name), "w") as f:
+            f.write("{}")
+    target = os.path.join(new_home, "saga")
+    saved = dict(os.environ)
+    os.environ["CARGO_HOME"] = old_home
+    cargo.adopt_old_files(target)
+    os.environ.clear(); os.environ.update(saved)
+    ok = (os.path.exists(os.path.join(target, "cargo1", "saves", "autosave.json"))
+          and os.path.exists(os.path.join(target, "captains", "Old_Hand.json"))
+          and not os.path.exists(os.path.join(target, "bin"))
+          and os.path.exists(os.path.join(old_home, "captains", "Old_Hand.json")))
+    results.append(("old ~/.cargo files copied over", "ok" if ok else "FAIL"))
+    shutil.rmtree(old_home, ignore_errors=True); shutil.rmtree(new_home, ignore_errors=True)
+except Exception as e:
+    results.append(("old ~/.cargo files copied over", "FAIL: %s %s" % (type(e).__name__, e)))
 
 shutil.rmtree(home, ignore_errors=True)
 bad = [r for r in results if not r[1].startswith("ok")]

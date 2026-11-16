@@ -9,7 +9,7 @@ A text-based space trading and exploration game where you navigate between plane
         ╔════════ C Δ R G Ω ════════╗
         ║     Space Trading Saga    ║
         ╚═══════════════════════════╝
-                Version 1.2.0
+                Version 1.2.1
 
 ```
 ## Development Notes
@@ -204,7 +204,7 @@ A few rules worth knowing:
 - Passenger reputation runs from 0 to 100.
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 
-A new game offers to start as any captain whose record is in `~/.cargo/captains/`:
+A new game offers to start as any captain whose record is in `~/.cargo-saga/captains/`:
 one who finished this game, or one carried back from a later part of the saga.
 
 ## Releasing
@@ -231,10 +231,12 @@ the story its sound cues (intro, portal, ending...). Without it the game is sile
 ## Saving
 The game saves itself after every turn (slot `autosave`) and asks whether to continue
 when you start it again. `save` writes a named slot, `load` lists them. Saves are plain
-JSON files in `~/.cargo/cargo1/saves/` (set `CARGO_HOME` to keep them somewhere else).
+JSON files in `~/.cargo-saga/cargo1/saves/` (set `CARGO_SAGA_HOME` to keep them somewhere
+else). Up to 1.2.0 they were in `~/.cargo`, the folder Rust's package manager also uses; 1.2.1
+copies them over the first time it starts.
 
 ## The captain's record
-`captain` → `export` writes your captain to `~/.cargo/captains/` and prints the same
+`captain` → `export` writes your captain to `~/.cargo-saga/captains/` and prints the same
 record as one line of text beginning with `CARGO:`. The file is picked up by the other
 parts of the trilogy on the same device; the line of text can be copied to another
 device or into the browser version. `captain` → `import` takes in a captain from another

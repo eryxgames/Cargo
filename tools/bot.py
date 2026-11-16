@@ -75,7 +75,7 @@ def write_trace(g, final=False):
     trace_file.write(json.dumps(snap, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 home = tempfile.mkdtemp(prefix="cargo-bot-")
-os.environ["CARGO_HOME"] = home
+os.environ["CARGO_SAGA_HOME"] = home
 size = os.terminal_size((80, 40))
 shutil.get_terminal_size = lambda fallback=(80, 24): size
 cargo = headless.load(path)

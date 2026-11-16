@@ -4,7 +4,7 @@
         --ending trade --flag heard_the_warning --turns 240 [--out FILE] [--folder]
 
 Prints the record's CARGO: code.  --out writes the .captain file there; --folder
-writes it into the shared records folder (~/.cargo/captains, or $CARGO_HOME), where
+writes it into the shared records folder (~/.cargo-saga/captains, or $CARGO_SAGA_HOME), where
 a new game offers to play as it and the 'captain' command can bring it in as a
 visitor.  The record is checked and cleaned exactly as the game cleans records
 that come from outside, so what you make here is what the game will see.

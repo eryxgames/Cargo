@@ -11,7 +11,7 @@ import unicodedata
 import zlib
 from math import floor
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 # Define your logo data ONCE, at the module level:
 logo_data = [
@@ -273,7 +273,7 @@ def say(text=""):
 # =============================================================================
 # Save games: the whole world as one JSON file.
 # Saves and captain records live in a folder shared by the Cargo trilogy:
-# ~/.cargo (or wherever CARGO_HOME points).
+# ~/.cargo-saga (or wherever CARGO_SAGA_HOME points).
 # =============================================================================
 
 GAME_ID = "cargo1"
@@ -293,8 +293,34 @@ class SwitchGame(Exception):
         self.game = game
 
 
+_ADOPTED = []
+
+
 def cargo_home():
-    return os.environ.get("CARGO_HOME") or os.path.join(os.path.expanduser("~"), ".cargo")
+    """The folder the trilogy shares: ~/.cargo-saga, or wherever CARGO_SAGA_HOME points.
+    Up to 1.2.0 it was ~/.cargo (or CARGO_HOME), which Rust's package manager also uses;
+    the first time the new default folder is used, Cargo's own files there are copied over."""
+    chosen = os.environ.get("CARGO_SAGA_HOME")
+    if chosen:
+        return chosen
+    home = os.path.join(os.path.expanduser("~"), ".cargo-saga")
+    if not _ADOPTED:
+        _ADOPTED.append(True)
+        adopt_old_files(home)
+    return home
+
+
+def adopt_old_files(home):
+    """Copy this game's saves and the captain records from the folder 1.2.0 used, once.
+    Only Cargo's own subfolders are touched; the old ones stay where they were."""
+    old = os.environ.get("CARGO_HOME") or os.path.join(os.path.expanduser("~"), ".cargo")
+    for part in (GAME_ID, "captains"):
+        source, target = os.path.join(old, part), os.path.join(home, part)
+        if os.path.isdir(source) and not os.path.exists(target):
+            try:
+                shutil.copytree(source, target)
+            except (OSError, shutil.Error):
+                pass
 
 
 def save_folder():

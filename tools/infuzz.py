@@ -22,7 +22,7 @@ size = os.terminal_size((cols, 40))
 shutil.get_terminal_size = lambda fallback=(80, 24): size
 os.get_terminal_size = lambda *a: size
 import tempfile
-os.environ["CARGO_HOME"] = tempfile.mkdtemp(prefix="cargo-fuzz-")
+os.environ["CARGO_SAGA_HOME"] = tempfile.mkdtemp(prefix="cargo-fuzz-")
 
 cargo = headless.load(path)
 rng = random.Random(seed)

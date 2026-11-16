@@ -9,7 +9,7 @@ from infuzz_pool import POOL
 
 path, seed, n1, n2 = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 home = tempfile.mkdtemp(prefix="cargo-rt-")
-os.environ["CARGO_HOME"] = home
+os.environ["CARGO_SAGA_HOME"] = home
 size = os.terminal_size((80, 40))
 shutil.get_terminal_size = lambda fallback=(80, 24): size
 cargo = headless.load(path)

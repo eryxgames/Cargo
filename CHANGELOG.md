@@ -3,6 +3,13 @@
 The release workflow takes each version's notes from this file (the section whose heading is
 the version number), so write them for players.
 
+## 1.2.1
+
+- Saves and captain records move to their own folder, `~/.cargo-saga` (or `CARGO_SAGA_HOME`).
+  They used to live in `~/.cargo`, which Rust's package manager also uses, and `CARGO_HOME`,
+  which Rust also reads. The first start copies Cargo's files over; the old ones stay put.
+- The README now says what the game has long needed: Python 3.8 or newer.
+
 ## 1.2.0
 
 Cargo now plays its whole story. It is the first part of a trilogy, set long before Eryxia is

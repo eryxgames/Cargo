@@ -12,7 +12,7 @@ command = sys.argv[1:] or [sys.executable, "cargo.py"]
 problems = []
 for encoding in ("utf-8", "cp1252"):
     home = tempfile.mkdtemp(prefix="cargo-smoke-")
-    env = dict(os.environ, CARGO_HOME=home, PYTHONIOENCODING=encoding)
+    env = dict(os.environ, CARGO_SAGA_HOME=home, PYTHONIOENCODING=encoding)
     try:
         run = subprocess.run(command, input="1\n2\nSmoke\n".encode(), env=env,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=180)
