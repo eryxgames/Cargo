@@ -10,10 +10,8 @@
  },
  "characters": {
   "serac": {
-   "name": "Serac",
-   "short": "Serac",
    "kind": "human",
-   "about": "a man from the inner systems who arranges things for Sol's defence contractors and the trading houses: dumping, recalls, fires; never in the room when they happen. Later he runs operations for the Mandate (TAM) and the Solar Union's inner-systems 'defence' wing. Doesn't seem to age"
+   "about": "the man from the inner systems (named in saga.json)"
   }
  },
  "flags": {

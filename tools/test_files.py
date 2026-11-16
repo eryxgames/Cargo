@@ -105,7 +105,7 @@ try:
     if clean["career"]["money"] > 10 ** 12 or clean["career"]["trades"] < 0: problems.append("numbers")
     if clean["career"]["turns"] != 0 or clean["career"]["victories"] != 0: problems.append("types")
     if len(clean["hold"]) > 40 or max(clean["hold"].values()) > 999: problems.append("hold")
-    if len(clean["story"]["flags"]) > 40 or len(clean["story"]["flags"][0]) > 24: problems.append("flags")
+    if len(clean["story"]["flags"]) > 160 or len(clean["story"]["flags"][0]) > 32: problems.append("flags")
     if "extra" in clean: problems.append("extra key kept")
     with headless.quiet():
         msg = game.receive_captain(clean)

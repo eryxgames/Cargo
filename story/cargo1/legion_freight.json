@@ -112,7 +112,7 @@
      },
      "effects": {
       "money": 8000,
-      "code": "stow 150 hovertank",
+      "code": "stow 150 hovertank as the legion's prototype hovertank",
       "set": [
        "hovertank_taken",
        "hovertank_aboard"
@@ -132,7 +132,7 @@
      },
      "effects": {
       "money": 8000,
-      "code": "stow 100 hovertank",
+      "code": "stow 100 hovertank as the legion's prototype hovertank, packed tight",
       "set": [
        "hovertank_taken",
        "hovertank_aboard"
@@ -402,7 +402,7 @@
      },
      "effects": {
       "money": 3000,
-      "code": "stow 40 exoparts",
+      "code": "stow 40 exoparts as exoskeleton knee parts for Scholz's Star",
       "set": [
        "exoparts_taken",
        "exoparts_aboard"

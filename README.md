@@ -189,7 +189,11 @@ A few rules worth knowing:
   Old choices come due too, for better or worse, and friends can be called into a fight.
 - Special cargo takes hold room until it is delivered: a legion's prototype hovertank
   (150 units, Alpha to Delta), exoskeleton parts for a garrison (40 units, on a deadline),
-  sealed crates for smugglers who would rather you did not ask. The Hold figure counts it.
+  sealed crates for smugglers who would rather you did not ask. You are told what is loaded
+  and unloaded, the Hold figure counts it, and the `journal` lists what is aboard.
+- On the trade road's last chapter the Hansa offers contracts that pay as trade profit (loader
+  agrobots for Gamma's underground farms, crystal for the quantum harp's towers) and two VIPs
+  want passage. The finished harp sharpens your price forecasts.
 - Some enemies only turn up after the story introduces them: Cargolyte stevedores after the
   Sixpack's first raid, Rootstock enforcers after you meet the family.
 - Passenger reputation runs from 0 to 100.
@@ -199,6 +203,8 @@ A new game offers to start as any captain whose record is in `~/.cargo/captains/
 one who finished this game, or one carried back from a later part of the saga.
 
 ## The story
+Cargo 1 is the first part of a trilogy. What it hands to Cargo 2 and 3 (promises, the flags a
+captain record carries, characters who go on) is listed in `story/CARGO1-HANDOFF.md`.
 The scenes, characters and places are written in `story/` (see `story/TRILOGY.md` for
 the outline and `storykit/` for the format) and built into `cargo.py` by
 `python tools/build_story.py`, so the game stays one file. Writers can play a story

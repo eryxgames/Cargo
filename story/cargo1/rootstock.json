@@ -10,10 +10,8 @@
  },
  "characters": {
   "meza_voce": {
-   "name": "Meza Voce",
-   "short": "Voce",
    "kind": "android",
-   "about": "head of the Rootstock; a Concord nursery android written off at ten years, as they all are, with her voice set to half for sleeping children. She never turned it up. People lean in"
+   "about": "head of the Rootstock (named in saga.json)"
   },
   "stope": {
    "name": "Stope",
@@ -121,7 +119,7 @@
       "hold_free": 60
      },
      "effects": {
-      "code": "stow 60 biomass",
+      "code": "stow 60 biomass as sixty sealed crates of biomass for Gamma",
       "set": [
        "met_rootstock",
        "biomass_aboard"
@@ -348,7 +346,7 @@
       "hold_free": 150
      },
      "effects": {
-      "code": "stow 150 biomass",
+      "code": "stow 150 biomass as the family's big run of biomass for Gamma",
       "set": [
        "big_run"
       ]
@@ -362,7 +360,7 @@
       "hold_free": 150
      },
      "effects": {
-      "code": "stow 150 biomass",
+      "code": "stow 150 biomass as the family's big run of biomass for Gamma",
       "set": [
        "big_run",
        "double_cross"

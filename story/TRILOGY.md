@@ -102,10 +102,10 @@ stranger at the station bar or past the portal, named only if the record is ther
 
 | Later power | In Cargo 1 | Seen as |
 | --- | --- | --- |
-| Hauler Hansa | the convoy office: carries ships between the stars, charges dues, sells bonds; no common money yet | the player's people; dues and bonds; the charter and the first Mark |
+| Hauler Hansa | the convoy office: carries ships between the stars, charges dues, sells bonds; no common money yet | the player's people; dues and bonds; the charter and the first Mark; contracts; the quantum harp |
 | Terran Mandate | security legions of OmniCorp, Stellar Dynamics and the Xylo Consortium; the first hovertank and the first exoskeleton garrison | legion contracts, the commission, the merger, the hovertank to Delta c, knees for Scholz's Star |
 | Inner systems (later the Solar Union's Mandate wing) | Serac, who arranges things for Sol's defence contractors and the trading houses | the squeeze, the recall, the fire, one favour, a commission |
-| Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests; androids written off at ten years | Yzode van Rostrom, Dharr Santor; the Rootstock |
+| Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests; underwriters; androids written off at ten years | Yzode van Rostrom, Dharr Santor; Sjoerd Hoving Wirth; the Rootstock |
 | Collective | CU-113, a Curator neurodroid at the player's guild (the game's Neurodroid Overseer); the Sowers on the farm drums | the first refusal, the first node, long before vectorspace |
 | Other machines | heavy agrobots (Krogg loading docks, Geod founding Delta's farms, Eela boring the Rockwardens' mine); the nanobot colony at Sigma VII; the Unsorted, robots who belong to nothing | jobs, passengers, enclave quests |
 | Solarians | a reading-house at Barnard's Star that logs sunspots | Deacon Amaro, who reads trade routes in them |
@@ -264,6 +264,15 @@ Gamma's miners, who pay company-store prices. A first run past a customs spot ch
 bigger one into a sting, a double cross if the captain wants it, enforcers if they leave.
 They also want the garrison's knees.
 
+The trade road's last chapter (`cargo1/contracts.json`) has two Hansa contracts that pay as
+trade profit: twenty loader agrobots from Krogg's yard to the farms Mina Perlite is building in
+Gamma's mined-out galleries (sign them to the mining company for more, or to the miners'
+cooperative), and holocrystal for two towers of Dr Vedral's quantum harp at Beta and Delta,
+after which the captain's forecasts are sharper. Two VIPs: Concertina, who sings as two hundred
+holograms of herself, to the gala at Epsilon; and Sjoerd Hoving Wirth, a Concord underwriter who
+insures the Hansa's convoys if he is flown through the honest flare lane, and whose signature
+can carry the vote. In bot games chapter 3a went from about 125 turns to about 70.
+
 Odds and ends (`cargo1/odds.json`) are half-serious nods to the genre in the game's own
 voice: a passenger whose ticket is bought next week, the licence exam's question seven
 (answer (c), "Press Enter to continue", is not discussed), a volunteer in a red jumpsuit,
@@ -290,6 +299,18 @@ nanobot colony, late in the discovery path. The ruins, the Stator Field, the
 Builder Site and the signal outposts need the player to travel there. The portal
 and its older captain need the tycoon's choice (offered every 10 turns to a rich
 trader: keep trading, retire, or pay for the portal), so they stay rare.
+
+## Cargo 1 is finished
+
+Cargo 1 (1.2.0) is complete: four endings and the tycoon's, each road with a crisis, a low
+point and a climax; 521 story nodes, all reachable and all played by `tools/scenes.py` with
+every choice. What it hands on is listed in `CARGO1-HANDOFF.md` (written by
+`tools/handoff.py`): eleven promises, 82 flags meant for later parts, and the characters whose
+timelines continue (Serac, Meza Voce and the Magister joined the saga file). A captain record
+keeps up to 160 flags, the carried ones first.
+
+Left for Dan: a playtest by a person, on a phone in Termux too; the wiki's Ysolde → Yzode.
+Optional: the sound kit (cues are already marked in the story).
 
 ## The places
 

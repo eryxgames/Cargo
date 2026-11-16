@@ -12,7 +12,8 @@ data = cargo.story_data()
 plays = cargo.StoryRuntime.PLAYS
 FLAGS = ("convoy_friend", "aela_member", "nano_trusted", "hardtack_told", "deadstick_wing", "owes_serac",
          "fluencer_exposed", "ship_bugrat", "hovertank_aboard", "exoparts_aboard", "biomass_aboard",
-         "met_rootstock", "rootstock_delivered", "big_run", "rootstock_family")
+         "met_rootstock", "rootstock_delivered", "big_run", "rootstock_family", "loaders_aboard",
+         "harp_aboard", "concertina_aboard", "wirth_aboard", "concertina_pleased")
 problems = played = 0
 for nid, node in sorted(data["nodes"].items()):
     if node.get("kind") not in plays or node.get("handled_by") or node.get("status") == "unused":
@@ -41,10 +42,22 @@ for nid, node in sorted(data["nodes"].items()):
 
 g, io = new_game(cargo)
 room = g.ship.hold_room("tech")
-with quiet():
-    cargo.story_hook(g, "stow 150 hovertank")
+with quiet() as buf:
+    cargo.story_hook(g, "stow 150 hovertank as the legion's prototype hovertank")
 if g.ship.hold_room("tech") != room - 150:
     problems += 1; print("FAIL stow does not take hold room")
+if "the legion's prototype hovertank" not in buf.getvalue():
+    problems += 1; print("FAIL loading does not name the special cargo")
+io.feed([""] * 3)
+with quiet() as buf:
+    g.story.journal()
+if "prototype hovertank (150 units" not in buf.getvalue():
+    problems += 1; print("FAIL the journal does not list special cargo")
+before = sum(g.ship.trade_profits.values()), g.ship.money
+with quiet():
+    cargo.story_hook(g, "profit 25000")
+if (sum(g.ship.trade_profits.values()) - before[0], g.ship.money - before[1]) != (25000, 25000):
+    problems += 1; print("FAIL contract profit is not paid as trade profit")
 with quiet():
     cargo.story_hook(g, "unstow hovertank")
 if g.ship.hold_room("tech") != room:

@@ -54,10 +54,10 @@
     "trade"
    ],
    "turns": [
-    188,
-    259,
-    169,
-    152
+    90,
+    147,
+    162,
+    114
    ]
   }
  },
@@ -403,9 +403,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.5,
-    "first": 152,
-    "last": 259
+    "median": 130.5,
+    "first": 90,
+    "last": 160
    }
   },
   "ending_trade.trade_ending": {
@@ -420,9 +420,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.5,
-    "first": 152,
-    "last": 259
+    "median": 130.5,
+    "first": 90,
+    "last": 162
    }
   },
   "ending_combat": {
@@ -1191,10 +1191,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 1.0,
-    "median": 160.5,
-    "first": 125,
-    "last": 226
+    "share": 0.25,
+    "median": 133,
+    "first": 133,
+    "last": 133
    }
   },
   "meet.vip_passenger": {
@@ -1733,9 +1733,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 72.5,
-    "first": 66,
-    "last": 85
+    "median": 67.0,
+    "first": 63,
+    "last": 84
    }
   },
   "trail.samples": {
@@ -2208,10 +2208,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 1.0,
-    "median": 160.5,
-    "first": 125,
-    "last": 226
+    "share": 0.25,
+    "median": 133,
+    "first": 133,
+    "last": 133
    }
   },
   "vendetta.convoys": {
@@ -2702,7 +2702,7 @@
     "share": 1.0,
     "median": 28.0,
     "first": 20,
-    "last": 37
+    "last": 33
    }
   },
   "neon.virtual": {
@@ -3166,10 +3166,10 @@
     "expected_wait": 3.3
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.5,
+    "share": 0.25,
+    "median": 21,
     "first": 21,
-    "last": 144,
+    "last": 21,
     "expected_wait": 3.3
    }
   },
@@ -3193,10 +3193,10 @@
     "last": 34
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.5,
+    "share": 0.25,
+    "median": 21,
     "first": 21,
-    "last": 144
+    "last": 21
    }
   },
   "sci.starshade": {
@@ -3574,10 +3574,10 @@
     "expected_wait": 3.3
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.0,
+    "share": 0.25,
+    "median": 48,
     "first": 48,
-    "last": 116,
+    "last": 48,
     "expected_wait": 3.3
    }
   },
@@ -3600,10 +3600,10 @@
     "expected_wait": 2.5
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.0,
+    "share": 0.25,
+    "median": 48,
     "first": 48,
-    "last": 116,
+    "last": 48,
     "expected_wait": 2.5
    }
   },
@@ -3626,10 +3626,10 @@
     "expected_wait": 3.3
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.0,
+    "share": 0.25,
+    "median": 48,
     "first": 48,
-    "last": 116,
+    "last": 48,
     "expected_wait": 3.3
    }
   },
@@ -3652,10 +3652,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 73.0,
+    "share": 0.75,
+    "median": 73,
     "first": 73,
-    "last": 73,
+    "last": 113,
     "expected_wait": 5.0
    }
   },
@@ -4242,10 +4242,10 @@
     "last": 56
    },
    "trade": {
-    "share": 0.5,
-    "median": 82.0,
+    "share": 0.25,
+    "median": 48,
     "first": 48,
-    "last": 116
+    "last": 48
    }
   },
   "after.pell_redeemed": {
@@ -4265,10 +4265,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 73.0,
+    "share": 0.75,
+    "median": 73,
     "first": 73,
-    "last": 73
+    "last": 113
    }
   },
   "after.paid_pell": {
@@ -4288,10 +4288,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 73.0,
+    "share": 0.75,
+    "median": 73,
     "first": 73,
-    "last": 73
+    "last": 113
    }
   },
   "after.lauritz_burned": {
@@ -4363,10 +4363,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 73.0,
+    "share": 0.75,
+    "median": 73,
     "first": 73,
-    "last": 73
+    "last": 113
    }
   },
   "after.pell_turned_away": {
@@ -4386,10 +4386,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 49.0,
+    "share": 0.75,
+    "median": 49,
     "first": 49,
-    "last": 49
+    "last": 89
    }
   },
   "after.lauritz_trust": {
@@ -4490,9 +4490,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "serac.meet": {
@@ -4538,9 +4538,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157,
+    "median": 115.0,
+    "first": 113,
+    "last": 117,
     "expected_wait": 3.3
    }
   },
@@ -4563,11 +4563,7 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 108.0,
-    "first": 80,
-    "last": 136,
-    "expected_wait": 5.0
+    "share": 0.0
    }
   },
   "serac.commission": {
@@ -4656,10 +4652,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 1.0,
-    "median": 89.0,
-    "first": 61,
-    "last": 133
+    "share": 0.5,
+    "median": 91.0,
+    "first": 89,
+    "last": 93
    }
   },
   "after.defied_serac": {
@@ -4674,9 +4670,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157
+    "median": 115.0,
+    "first": 113,
+    "last": 117
    }
   },
   "after.gave_serac_the_logs": {
@@ -4691,9 +4687,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157
+    "median": 115.0,
+    "first": 113,
+    "last": 117
    }
   },
   "after.paid_serac": {
@@ -4708,9 +4704,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157
+    "median": 115.0,
+    "first": 113,
+    "last": 117
    }
   },
   "after.sold_the_schedules": {
@@ -4725,9 +4721,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157
+    "median": 115.0,
+    "first": 113,
+    "last": 117
    }
   },
   "after.gave_serac_the_samples": {
@@ -4742,9 +4738,9 @@
    },
    "trade": {
     "share": 0.5,
-    "median": 121.0,
-    "first": 85,
-    "last": 157
+    "median": 115.0,
+    "first": 113,
+    "last": 117
    }
   },
   "legion.hardtack": {
@@ -5345,10 +5341,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.25,
+    "share": 0.75,
     "median": 40,
-    "first": 40,
-    "last": 40
+    "first": 36,
+    "last": 85
    }
   },
   "rumour.ullage": {
@@ -5752,7 +5748,7 @@
     "share": 1.0,
     "median": 28.0,
     "first": 16,
-    "last": 37
+    "last": 33
    }
   },
   "mil.hovertank.late": {
@@ -5804,7 +5800,7 @@
     "share": 1.0,
     "median": 28.0,
     "first": 16,
-    "last": 37
+    "last": 33
    }
   },
   "after.sold_the_hovertank": {
@@ -6047,9 +6043,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 145,
-    "first": 145,
-    "last": 145,
+    "median": 113,
+    "first": 113,
+    "last": 113,
     "expected_wait": 2.0
    }
   },
@@ -6143,9 +6139,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "rootstock.bigger": {
@@ -6160,9 +6156,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154,
+    "median": 114,
+    "first": 114,
+    "last": 114,
     "expected_wait": 2.9
    }
   },
@@ -6204,9 +6200,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "rootstock.sting.caught": {
@@ -6299,9 +6295,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154,
+    "median": 114,
+    "first": 114,
+    "last": 114,
     "expected_wait": 2.5
    }
   },
@@ -6325,9 +6321,9 @@
    },
    "trade": {
     "share": 0.75,
-    "median": 133,
+    "median": 101,
     "first": 53,
-    "last": 145,
+    "last": 113,
     "expected_wait": 2.5
    }
   },
@@ -6350,10 +6346,10 @@
     "expected_wait": 4.0
    },
    "trade": {
-    "share": 0.75,
-    "median": 78,
-    "first": 73,
-    "last": 150,
+    "share": 0.5,
+    "median": 57.5,
+    "first": 42,
+    "last": 73,
     "expected_wait": 4.0
    }
   },
@@ -6383,9 +6379,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.biomass_spoiled": {
@@ -6400,9 +6396,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.rootstock_family": {
@@ -6443,9 +6439,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.double_cross": {
@@ -6460,9 +6456,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.rootstock_caught": {
@@ -6477,9 +6473,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.out_of_the_family": {
@@ -6494,9 +6490,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.sold_the_exoparts": {
@@ -6517,9 +6513,9 @@
    },
    "trade": {
     "share": 0.75,
-    "median": 133,
+    "median": 101,
     "first": 53,
-    "last": 145
+    "last": 113
    }
   },
   "after.tipped_lauritz": {
@@ -6554,9 +6550,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 145,
-    "first": 145,
-    "last": 145
+    "median": 113,
+    "first": 113,
+    "last": 113
    }
   },
   "after.ran_the_sting": {
@@ -6571,9 +6567,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.refused_rootstock": {
@@ -6591,9 +6587,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 133,
-    "first": 133,
-    "last": 133
+    "median": 101,
+    "first": 101,
+    "last": 101
    }
   },
   "after.voce_bought_the_agri": {
@@ -6613,10 +6609,10 @@
     "last": 75
    },
    "trade": {
-    "share": 0.75,
-    "median": 78,
-    "first": 73,
-    "last": 150
+    "share": 0.5,
+    "median": 57.5,
+    "first": 42,
+    "last": 73
    }
   },
   "after.voce_remembers": {
@@ -6631,9 +6627,9 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 154,
-    "first": 154,
-    "last": 154
+    "median": 114,
+    "first": 114,
+    "last": 114
    }
   },
   "after.dumped_the_biomass": {
@@ -6651,9 +6647,505 @@
    },
    "trade": {
     "share": 0.25,
-    "median": 145,
-    "first": 145,
-    "last": 145
+    "median": 113,
+    "first": 113,
+    "last": 113
+   }
+  },
+  "contract.loaders": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 63.0,
+    "first": 32,
+    "last": 76,
+    "expected_wait": 2.5
+   }
+  },
+  "contract.loaders.restack": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 64.0,
+    "first": 32,
+    "last": 76,
+    "expected_wait": 2.5
+   }
+  },
+  "contract.loaders.delivered": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 69.5,
+    "first": 39,
+    "last": 83
+   }
+  },
+  "contract.loaders.harvest": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 69.5,
+    "first": 39,
+    "last": 95,
+    "expected_wait": 2.0
+   }
+  },
+  "contract.loaders.store": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 69.5,
+    "first": 39,
+    "last": 95,
+    "expected_wait": 2.0
+   }
+  },
+  "contract.harp": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 63.5,
+    "first": 31,
+    "last": 73,
+    "expected_wait": 2.5
+   }
+  },
+  "contract.harp.hum": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 63.5,
+    "first": 31,
+    "last": 73,
+    "expected_wait": 2.0
+   }
+  },
+  "contract.harp.cracked": {
+   "combat": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   }
+  },
+  "contract.harp.beta": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 67.5,
+    "first": 36,
+    "last": 84
+   }
+  },
+  "contract.harp.delta": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 72.0,
+    "first": 33,
+    "last": 91
+   }
+  },
+  "contract.harp.plays": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 73.0,
+    "first": 36,
+    "last": 91
+   }
+  },
+  "vip.concertina": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "vip.concertina.rehearsal": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.5,
+    "median": 88.5,
+    "first": 86,
+    "last": 91,
+    "expected_wait": 1.7
+   }
+  },
+  "vip.concertina.gala": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.5,
+    "median": 88.5,
+    "first": 86,
+    "last": 91
+   }
+  },
+  "vip.wirth": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
+  "vip.wirth.lanes": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.5,
+    "median": 68.5,
+    "first": 63,
+    "last": 74
+   }
+  },
+  "vip.wirth.gamma": {
+   "combat": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   }
+  },
+  "after.gamma_farms_coop": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 69.5,
+    "first": 39,
+    "last": 83
+   }
+  },
+  "after.gamma_farms_company": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 69.5,
+    "first": 39,
+    "last": 83
+   }
+  },
+  "after.loaders_restacked": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 64.0,
+    "first": 32,
+    "last": 76
+   }
+  },
+  "after.harp_relay": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 73.0,
+    "first": 36,
+    "last": 91
+   }
+  },
+  "after.harp_cracked": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 63.5,
+    "first": 31,
+    "last": 73
+   }
+  },
+  "after.carried_concertina": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.5,
+    "median": 88.5,
+    "first": 86,
+    "last": 91
+   }
+  },
+  "after.concertina_share": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.5,
+    "median": 88.5,
+    "first": 86,
+    "last": 91
+   }
+  },
+  "after.convoys_insured": {
+   "combat": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   }
+  },
+  "after.wirth_declined": {
+   "combat": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "discovery2": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 0.0,
+    "first": 0,
+    "last": 0
+   }
+  },
+  "after.insured_vote": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 1.0,
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "odds.ticket": {
@@ -6707,11 +7199,7 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.5,
-    "median": 124.0,
-    "first": 56,
-    "last": 192,
-    "expected_wait": 2.0
+    "share": 0.0
    }
   },
   "odds.exam": {
@@ -6921,9 +7409,9 @@
    },
    "trade": {
     "share": 0.75,
-    "median": 73,
-    "first": 48,
-    "last": 78,
+    "median": 48,
+    "first": 42,
+    "last": 73,
     "expected_wait": 16.7
    }
   },
@@ -7150,10 +7638,10 @@
     "share": 0.0
    },
    "trade": {
-    "share": 0.25,
-    "median": 69,
+    "share": 0.5,
+    "median": 72.5,
     "first": 69,
-    "last": 69
+    "last": 76
    }
   },
   "after.crossed_the_picket": {
@@ -7225,9 +7713,9 @@
    },
    "trade": {
     "share": 0.75,
-    "median": 73,
-    "first": 48,
-    "last": 78
+    "median": 48,
+    "first": 42,
+    "last": 73
    }
   },
   "after.took_the_red": {
@@ -7283,9 +7771,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85,
+    "median": 68.5,
+    "first": 63,
+    "last": 86,
     "expected_wait": 3.3
    }
   },
@@ -7301,9 +7789,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 92.5,
-    "first": 66,
-    "last": 110,
+    "median": 83.0,
+    "first": 63,
+    "last": 101,
     "expected_wait": 2.5
    }
   },
@@ -7319,9 +7807,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 133.0,
-    "first": 118,
-    "last": 140,
+    "median": 91.5,
+    "first": 69,
+    "last": 108,
     "expected_wait": 2.5
    }
   },
@@ -7337,9 +7825,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 160.5,
-    "first": 145,
-    "last": 242,
+    "median": 106.5,
+    "first": 85,
+    "last": 137,
     "expected_wait": 2.5
    }
   },
@@ -7355,9 +7843,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "drama.combat.left_behind": {
@@ -7523,9 +8011,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.won_the_vote": {
@@ -7540,9 +8028,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.bought_the_vote": {
@@ -7557,9 +8045,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.walked_out": {
@@ -7574,9 +8062,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.honest_mark": {
@@ -7591,9 +8079,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 92.5,
-    "first": 66,
-    "last": 110
+    "median": 83.0,
+    "first": 63,
+    "last": 101
    }
   },
   "after.short_mark": {
@@ -7608,9 +8096,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 92.5,
-    "first": 66,
-    "last": 110
+    "median": 83.0,
+    "first": 63,
+    "last": 101
    }
   },
   "after.public_weighing": {
@@ -7625,9 +8113,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 133.0,
-    "first": 118,
-    "last": 140
+    "median": 91.5,
+    "first": 69,
+    "last": 108
    }
   },
   "after.stood_behind_the_mark": {
@@ -7642,9 +8130,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 133.0,
-    "first": 118,
-    "last": 140
+    "median": 91.5,
+    "first": 69,
+    "last": 108
    }
   },
   "after.let_it_run": {
@@ -7659,9 +8147,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 133.0,
-    "first": 118,
-    "last": 140
+    "median": 91.5,
+    "first": 69,
+    "last": 108
    }
   },
   "after.fenn_talked": {
@@ -7676,9 +8164,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 133.0,
-    "first": 118,
-    "last": 140
+    "median": 91.5,
+    "first": 69,
+    "last": 108
    }
   },
   "after.refused_the_seat": {
@@ -7693,9 +8181,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 160.5,
-    "first": 145,
-    "last": 242
+    "median": 106.5,
+    "first": 85,
+    "last": 137
    }
   },
   "after.took_the_seat": {
@@ -7710,9 +8198,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 160.5,
-    "first": 145,
-    "last": 242
+    "median": 106.5,
+    "first": 85,
+    "last": 137
    }
   },
   "after.turned_on_the_houses": {
@@ -7727,9 +8215,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.neon_bought_debt": {
@@ -7744,9 +8232,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.collector_forged": {
@@ -7761,9 +8249,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.cleared_by_lauritz": {
@@ -7909,9 +8397,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.young_haulers_vote": {
@@ -7926,9 +8414,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 178.0,
-    "first": 150,
-    "last": 259
+    "median": 129.5,
+    "first": 89,
+    "last": 159
    }
   },
   "after.the_forty_came": {
@@ -8196,9 +8684,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.sold_bonds": {
@@ -8213,9 +8701,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.paperwork_lost": {
@@ -8230,9 +8718,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 74.0,
-    "first": 66,
-    "last": 85
+    "median": 68.5,
+    "first": 63,
+    "last": 86
    }
   },
   "after.told_the_truth": {
@@ -8627,9 +9115,9 @@
    },
    "trade": {
     "share": 1.0,
-    "median": 72.5,
-    "first": 66,
-    "last": 85
+    "median": 67.0,
+    "first": 63,
+    "last": 84
    }
   },
   "rumour.mraz_free": {
@@ -10543,7 +11031,7 @@
     "share": 1.0,
     "median": 28.0,
     "first": 20,
-    "last": 37
+    "last": 33
    }
   },
   "after.manifest_completed": {

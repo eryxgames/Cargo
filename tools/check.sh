@@ -23,6 +23,8 @@ grep FAIL /tmp/cargo-quests.txt; tail -1 /tmp/cargo-quests.txt
 echo "== every story scene with every choice"
 $PY $T/scenes.py cargo.py > /tmp/cargo-scenes.txt || fail=1
 grep -E "CRASH|unfilled|FAIL" /tmp/cargo-scenes.txt | head; tail -1 /tmp/cargo-scenes.txt
+echo "== the hand-off to later parts is current"
+$PY $T/handoff.py --check || fail=1
 echo "== damaged and hostile save / captain files"
 $PY $T/test_files.py cargo.py | tail -1 || fail=1
 

@@ -13,12 +13,6 @@
    "kind": "neon",
    "about": "sleeps through decades in a sarcophagus and buys land before it is worth anything"
   },
-  "heritarchist": {
-   "name": "Magister Notary Augias Pfennig",
-   "short": "the Magister",
-   "kind": "human",
-   "about": "heritarchist to the {neon_family} family: reads family lines across hibernation cycles; bills for it"
-  },
   "virtual_heir": {
    "name": "Karen Asquine-Kraal",
    "short": "Karen",
@@ -41,6 +35,10 @@
    "name": "Kraal",
    "kind": "family",
    "about": "the Neon family {neon_sleeper} sleeps for; written as 'the Kraal family' or 'a Kraal heir' in texts"
+  },
+  "heritarchist": {
+   "kind": "human",
+   "about": "Conte Ottavine's heritarchist; guards a sleeping fortune (named in saga.json)"
   }
  },
  "flags": {

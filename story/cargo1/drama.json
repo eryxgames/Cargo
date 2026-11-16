@@ -714,6 +714,20 @@
      }
     },
     {
+     "id": "wirth",
+     "say": "Lay {underwriter.short}'s signature on the table: the convoys are insured",
+     "requires": {
+      "flag": "convoys_insured"
+     },
+     "effects": {
+      "plot_points": 15,
+      "set": [
+       "won_the_vote",
+       "insured_vote"
+      ]
+     }
+    },
+    {
      "id": "buy",
      "say": "Buy the last vote (40,000 credits)",
      "requires": {

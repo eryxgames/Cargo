@@ -28,7 +28,7 @@ INCLUDES = ["cargo1/legacy.json", "cargo1/places.json", "cargo1/main.json", "car
             "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/crew.json", "cargo1/hansa.json",
             "cargo1/science.json", "cargo1/recurring.json", "cargo1/serac.json",
             "cargo1/people.json", "cargo1/cargolytes.json", "cargo1/legion_freight.json",
-            "cargo1/rootstock.json", "cargo1/odds.json", "cargo1/drama.json", "cargo1/rumours.json", "cargo1/gossip.json",
+            "cargo1/rootstock.json", "cargo1/contracts.json", "cargo1/odds.json", "cargo1/drama.json", "cargo1/rumours.json", "cargo1/gossip.json",
             "cargo1/epilogue.json"]
 
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]

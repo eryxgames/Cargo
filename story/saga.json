@@ -194,6 +194,59 @@
      "as": "awake for the restart, barely older"
     }
    ]
+  },
+  "heritarchist": {
+   "name": "Magister Notary Augias Pfennig",
+   "short": "the Magister",
+   "about": "heritarchist to the {neon_family} family: reads family lines across hibernation cycles; bills for it",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "Conte Ottavine's heritarchist; reads the captain's family line and bills her for it"
+    },
+    {
+     "game": "cargo2",
+     "as": "Astin Pfennig, his son or his clone, guards the waking fortune"
+    },
+    {
+     "game": "cargo3",
+     "as": "a Pfennig still at the sarcophagus, by then nobody is sure which"
+    }
+   ]
+  },
+  "serac": {
+   "name": "Serac",
+   "short": "Serac",
+   "about": "a man from the inner systems who arranges things for Sol's defence contractors and the trading houses: dumping, recalls, fires; never in the room when they happen. Doesn't seem to age",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "behind the squeeze, the recall and the fire; one favour, then a commission"
+    },
+    {
+     "game": "cargo2",
+     "as": "runs the Mandate's (TAM) operations and the Solar Union's inner-systems 'defence' wing"
+    },
+    {
+     "game": "cargo3",
+     "as": "unchanged; still asks after the captain"
+    }
+   ]
+  },
+  "meza_voce": {
+   "name": "Meza Voce",
+   "short": "Voce",
+   "about": "head of the Rootstock; a Concord nursery android written off at ten years, as they all are, with her voice set to half for sleeping children. She never turned it up. People lean in",
+   "timeline": [
+    {
+     "game": "cargo1",
+     "as": "runs food and biomass to Gamma's miners; remembers a double cross"
+    },
+    {
+     "game": "cargo2",
+     "as": "the family has grown; she asks customs officers whether a certain captain is still flying"
+    }
+   ]
   }
  },
  "promises": {

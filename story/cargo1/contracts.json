@@ -1,0 +1,1018 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The trade road's chapter three: two Hansa contracts that pay as trade (loader agrobots from Krogg's yard to Gamma's underground farms; holocrystal towers for the quantum harp at Beta and Delta, which sharpens the captain's forecasts) and two VIPs (Concertina to the gala at Epsilon; Sjoerd Hoving Wirth, who insures the convoys if he sees the honest lane, and whose signature can carry the vote).",
+ "arcs": {
+  "contracts": {
+   "title": "Hansa contracts",
+   "order": 2.996
+  },
+  "vips": {
+   "title": "VIPs of the trade road",
+   "order": 2.997
+  }
+ },
+ "characters": {
+  "farm_tech": {
+   "name": "Mina Perlite",
+   "short": "Perlite",
+   "kind": "human",
+   "about": "hydroponics tech at Gamma; turning mined-out galleries into farms, under rock thick enough to keep the flares off"
+  },
+  "harp_engineer": {
+   "name": "Dr Vedral",
+   "short": "Vedral",
+   "kind": "human",
+   "about": "physicist from the Quantum Center who designed the quantum harp: holocrystal towers tuned to each other like strings"
+  },
+  "holo_star": {
+   "name": "Concertina",
+   "kind": "human",
+   "about": "holo performer who sings as two hundred holograms of herself at once, all in harmony"
+  },
+  "underwriter": {
+   "name": "Sjoerd Hoving Wirth",
+   "short": "Wirth",
+   "kind": "human",
+   "about": "Concord underwriter; insures half the research houses' ships and, so far, none of the Hansa's convoys"
+  }
+ },
+ "flags": {
+  "loaders_taken": {
+   "about": "the captain took the loader agrobots for Gamma's farms"
+  },
+  "loaders_aboard": {
+   "about": "twenty loader agrobots for Gamma's farms are in the hold"
+  },
+  "loaders_restacked": {
+   "about": "the loader agrobots restacked the captain's hold"
+  },
+  "gamma_farms_company": {
+   "about": "the captain signed Gamma's underground farms over to the mining company",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "gamma_farms_coop": {
+   "about": "the captain signed Gamma's underground farms over to the miners' cooperative",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "harp_taken": {
+   "about": "the captain took {harp_engineer}'s holocrystal"
+  },
+  "harp_aboard": {
+   "about": "holocrystal for the quantum harp is in the hold"
+  },
+  "harp_cracked": {
+   "about": "a holocrystal for the harp cracked in the captain's hold"
+  },
+  "harp_beta": {
+   "about": "the harp's tower at Beta is up"
+  },
+  "harp_delta": {
+   "about": "the harp's tower at Delta is up"
+  },
+  "harp_relay": {
+   "about": "the quantum harp plays: the captain's forecasts are sharper",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "concertina_met": {
+   "about": "the captain met {holo_star}"
+  },
+  "concertina_aboard": {
+   "about": "{holo_star} is aboard, bound for the gala at Epsilon"
+  },
+  "concertina_rough": {
+   "about": "{holo_star} travelled in a plain cabin"
+  },
+  "concertina_pleased": {
+   "about": "{holo_star} enjoyed the voyage"
+  },
+  "carried_concertina": {
+   "about": "the captain flew {holo_star} to the gala at Epsilon",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "concertina_share": {
+   "about": "the captain took a share of {holo_star}'s gala"
+  },
+  "wirth_met": {
+   "about": "the captain met {underwriter}"
+  },
+  "wirth_aboard": {
+   "about": "{underwriter} is aboard, bound for Gamma"
+  },
+  "wirth_saw_it": {
+   "about": "the captain flew {underwriter} through the flare lane"
+  },
+  "wirth_pretty": {
+   "about": "the captain showed {underwriter} the pretty lane"
+  },
+  "convoys_insured": {
+   "about": "{underwriter} insured the Hansa's convoys after seeing the flare lane",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "wirth_declined": {
+   "about": "{underwriter} declined to insure the convoys"
+  },
+  "insured_vote": {
+   "about": "the underwriters' signature carried the vote at Epsilon"
+  }
+ },
+ "nodes": {
+  "contract.loaders": {
+   "kind": "quest",
+   "arc": "contracts",
+   "title": "Down to the farms",
+   "requires": {
+    "chapter": "ch3a",
+    "at": "Epsilon",
+    "not_flag": "loaders_taken"
+   },
+   "text": [
+    "Gamma's miners are turning the mined-out galleries into farms: rock overhead keeps the flares off, and the old ventilation does the rest. {farm_tech} has bought twenty KRO-series loader agrobots from {krog}'s yard to carry soil, racks and harvests through tunnels nobody dug for farming.",
+    "They need a ship. {krog} looks over your hold and says it will do, which from {krog} is a reference. The contract pays on delivery and counts as trade."
+   ],
+   "act": 3,
+   "chance": 0.4,
+   "who": [
+    "farm_tech",
+    "krog"
+   ],
+   "choices": [
+    {
+     "id": "carry",
+     "say": "Carry the loaders (+5,000 now, 45,000 at Gamma; 120 units of hold)",
+     "requires": {
+      "hold_free": 120
+     },
+     "effects": {
+      "money": 5000,
+      "code": "stow 120 loaders as twenty loader agrobots for Gamma's farms",
+      "set": [
+       "loaders_taken",
+       "loaders_aboard"
+      ]
+     }
+    },
+    {
+     "id": "shunt",
+     "say": "Let {loader} pack them (+5,000 now; 90 units)",
+     "requires": {
+      "has": {
+       "crew": [
+        "loader"
+       ]
+      },
+      "hold_free": 90
+     },
+     "effects": {
+      "money": 5000,
+      "code": "stow 90 loaders as twenty loader agrobots for Gamma's farms, packed by Shunt",
+      "set": [
+       "loaders_taken",
+       "loaders_aboard"
+      ]
+     }
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands; it needs 120 units of free hold)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 5
+   }
+  },
+  "contract.loaders.restack": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "A report on your stowage",
+   "requires": {
+    "flag": "loaders_aboard",
+    "since": {
+     "contract.loaders": 2
+    }
+   },
+   "text": "Twenty loaders with nothing to load. By the second day they have restacked your hold by weight, by colour and by destination, and filed a report on your stowage. It is signed on behalf of {krog}. It is not kind.",
+   "act": 3,
+   "chance": 0.4,
+   "effects": {
+    "plot_points": 2,
+    "set": [
+     "loaders_restacked"
+    ]
+   },
+   "who": [
+    "krog"
+   ]
+  },
+  "contract.loaders.delivered": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "Who signs",
+   "requires": {
+    "at": "Gamma",
+    "flag": "loaders_aboard"
+   },
+   "text": [
+    "The loaders walk down the ramp in single file and into the galleries, where {farm_tech} has racks waiting under grow-lights. {vent_boss} counts them in and starts working out how much air a farm breathes.",
+    "Then the paperwork. The contract says 'to Gamma'. It does not say to whom. The mining company's agent offers sixty thousand for the loaders and the farms they will run. The miners' cooperative can find thirty-five, and {farm_tech} is looking at you."
+   ],
+   "act": 3,
+   "who": [
+    "farm_tech",
+    "vent_boss"
+   ],
+   "choices": [
+    {
+     "id": "company",
+     "say": "Sign them over to the mining company (60,000 as trade profit)",
+     "effects": {
+      "code": [
+       "unstow loaders",
+       "profit 60000"
+      ],
+      "plot_points": 4,
+      "clear": [
+       "loaders_aboard"
+      ],
+      "set": [
+       "gamma_farms_company"
+      ]
+     }
+    },
+    {
+     "id": "coop",
+     "say": "Sign them over to the miners' cooperative (35,000 as trade profit)",
+     "effects": {
+      "code": [
+       "unstow loaders",
+       "profit 35000"
+      ],
+      "plot_points": 9,
+      "passenger_reputation": 4,
+      "clear": [
+       "loaders_aboard"
+      ],
+      "set": [
+       "gamma_farms_coop"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "saved_level_nine"
+     },
+     "text": [
+      "The loaders walk down the ramp in single file and into the galleries. The first farm is on level nine, which the miners now call by your ship's name, and {farm_tech} has racks waiting there under grow-lights.",
+      "Then the paperwork. The contract says 'to Gamma'. It does not say to whom. The mining company's agent offers sixty thousand for the loaders and the farms they will run. The miners' cooperative can find thirty-five, and {farm_tech} is looking at you."
+     ]
+    }
+   ]
+  },
+  "contract.loaders.harvest": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "The first harvest",
+   "requires": {
+    "flag": "gamma_farms_coop",
+    "since": {
+     "contract.loaders.delivered": 12
+    }
+   },
+   "text": "The first harvest from under Gamma comes up the shafts: pale lettuce, fat mushrooms, beans that have never seen a star. The cooperative sells it at Beta's price, which is the first time anyone at Gamma has done that, and sends you a share.",
+   "act": 3,
+   "chance": 0.5,
+   "effects": {
+    "code": "profit 12000",
+    "plot_points": 3
+   },
+   "who": [
+    "farm_tech"
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "rootstock_family"
+     },
+     "text": "The first harvest from under Gamma comes up the shafts and sells at Beta's price. The cooperative sends you a share. {meza_voce.short} sends a note too, at what must be half voice even on paper: the family does not compete with farmers. It is the nearest thing to thanks she writes."
+    }
+   ]
+  },
+  "contract.loaders.store": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "Company prices",
+   "requires": {
+    "flag": "gamma_farms_company",
+    "since": {
+     "contract.loaders.delivered": 12
+    },
+    "at": "Gamma"
+   },
+   "text": "The company store sells the first underground harvest at company prices. {vent_boss} buys one lettuce, holds it up in the canteen like evidence, and puts it on your table without a word.",
+   "act": 3,
+   "chance": 0.5,
+   "effects": {
+    "passenger_reputation": -2
+   },
+   "who": [
+    "vent_boss"
+   ]
+  },
+  "contract.harp": {
+   "kind": "quest",
+   "arc": "contracts",
+   "title": "The quantum harp",
+   "requires": {
+    "chapter": "ch3a",
+    "at": "Alpha",
+    "not_flag": "harp_taken"
+   },
+   "text": [
+    "{harp_engineer} has designed a relay network the Hansa calls the quantum harp: towers of holocrystal, each tuned to the next like a string, carrying prices between the stars faster than any convoy. Nobody is quite sure what is vibrating. {harp_engineer.short} says that is a separate grant.",
+    "Two towers' worth of crystal, eighty units, to Beta and to Delta. 25,000 a tower, counted as trade, and the harp's first prices to your ship before anyone else's."
+   ],
+   "act": 3,
+   "chance": 0.4,
+   "who": [
+    "harp_engineer"
+   ],
+   "choices": [
+    {
+     "id": "carry",
+     "say": "Carry the crystal (80 units of hold)",
+     "requires": {
+      "hold_free": 80
+     },
+     "effects": {
+      "code": "stow 80 holocrystal as holocrystal for two harp towers, Beta and Delta",
+      "set": [
+       "harp_taken",
+       "harp_aboard"
+      ]
+     }
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands; it needs 80 units of free hold)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 5
+   }
+  },
+  "contract.harp.hum": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "It hums",
+   "requires": {
+    "flag": "harp_aboard",
+    "since": {
+     "contract.harp": 1
+    }
+   },
+   "text": "The holocrystal hums in the jump, a low note that gets into the bulkheads and the teeth. {harp_engineer.short}'s instructions say it must not be allowed to resonate. They do not say how.",
+   "act": 3,
+   "chance": 0.5,
+   "who": [
+    "harp_engineer"
+   ],
+   "choices": [
+    {
+     "id": "lane",
+     "say": "Let {navigator.short} find a quiet lane",
+     "requires": {
+      "has": {
+       "crew": [
+        "navigator"
+       ]
+      }
+     },
+     "effects": {
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "pad",
+     "say": "Let {mechanic.short} pad the crates",
+     "requires": {
+      "has": {
+       "crew": [
+        "mechanic"
+       ]
+      }
+     },
+     "effects": {
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "hum",
+     "say": "Let it hum",
+     "effects": {
+      "set": [
+       "harp_cracked"
+      ]
+     },
+     "next": [
+      "contract.harp.cracked"
+     ]
+    }
+   ]
+  },
+  "contract.harp.cracked": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "A perfect line",
+   "requires": {},
+   "text": "By morning one crystal has cracked along a perfect line, and the galley kettle can no longer boil without singing a fifth.",
+   "act": 3
+  },
+  "contract.harp.beta": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "A tower at Beta",
+   "requires": {
+    "at": "Beta",
+    "flag": "harp_aboard",
+    "not_flag": "harp_beta"
+   },
+   "text": "The crystal goes up as a tower on the ridge above the Beta dock, three storeys of something that is not quite glass. {harp_engineer.short}'s technicians tune it with a fork the size of a man and listen for the other end.",
+   "act": 3,
+   "who": [
+    "harp_engineer"
+   ],
+   "choices": [
+    {
+     "id": "raise",
+     "say": "Raise the tower (25,000 as trade profit)",
+     "requires": {
+      "not_flag": "harp_delta"
+     },
+     "effects": {
+      "code": [
+       "stow 40 holocrystal as holocrystal for the last harp tower",
+       "profit 25000"
+      ],
+      "plot_points": 3,
+      "set": [
+       "harp_beta"
+      ]
+     }
+    },
+    {
+     "id": "last",
+     "say": "Raise the last tower (25,000 as trade profit)",
+     "requires": {
+      "flag": "harp_delta"
+     },
+     "effects": {
+      "code": [
+       "unstow holocrystal",
+       "profit 25000"
+      ],
+      "plot_points": 3,
+      "clear": [
+       "harp_aboard"
+      ],
+      "set": [
+       "harp_beta"
+      ]
+     }
+    }
+   ]
+  },
+  "contract.harp.delta": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "A tower at Delta",
+   "requires": {
+    "at": "Delta",
+    "flag": "harp_aboard",
+    "not_flag": "harp_delta"
+   },
+   "text": "The crystal goes up as a tower on the ridge above the Delta dock, three storeys of something that is not quite glass. {harp_engineer.short}'s technicians tune it with a fork the size of a man and listen for the other end.",
+   "act": 3,
+   "who": [
+    "harp_engineer"
+   ],
+   "choices": [
+    {
+     "id": "raise",
+     "say": "Raise the tower (25,000 as trade profit)",
+     "requires": {
+      "not_flag": "harp_beta"
+     },
+     "effects": {
+      "code": [
+       "stow 40 holocrystal as holocrystal for the last harp tower",
+       "profit 25000"
+      ],
+      "plot_points": 3,
+      "set": [
+       "harp_delta"
+      ]
+     }
+    },
+    {
+     "id": "last",
+     "say": "Raise the last tower (25,000 as trade profit)",
+     "requires": {
+      "flag": "harp_beta"
+     },
+     "effects": {
+      "code": [
+       "unstow holocrystal",
+       "profit 25000"
+      ],
+      "plot_points": 3,
+      "clear": [
+       "harp_aboard"
+      ],
+      "set": [
+       "harp_delta"
+      ]
+     }
+    }
+   ]
+  },
+  "contract.harp.plays": {
+   "kind": "event",
+   "arc": "contracts",
+   "title": "First note",
+   "requires": {
+    "flag": [
+     "harp_beta",
+     "harp_delta"
+    ]
+   },
+   "text": "The harp plays its first price at dawn, Alpha time: tech at Delta, three ticks up. Every dock in the near systems hears it at once. {port_broker} goes very quiet, and then asks, through its union, what the harp is paid. Your forecasts are sharper from now on: the harp carries the news.",
+   "act": 3,
+   "effects": {
+    "plot_points": 6,
+    "set": [
+     "harp_relay"
+    ]
+   },
+   "who": [
+    "harp_engineer",
+    "port_broker"
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "harp_cracked"
+     },
+     "text": "The harp plays its first price at dawn, Alpha time, a semitone flat. {harp_engineer.short} says it adds character. Every dock in the near systems hears it at once, and {port_broker} asks, through its union, what the harp is paid. Your forecasts are sharper from now on: the harp carries the news."
+    }
+   ]
+  },
+  "vip.concertina": {
+   "kind": "encounter",
+   "arc": "vips",
+   "title": "Two hundred of her",
+   "requires": {
+    "chapter": "ch3a",
+    "at": "Alpha",
+    "venue": "port",
+    "not_flag": "concertina_met"
+   },
+   "text": [
+    "{holo_star} sings in light: her concerts are two hundred holograms of herself, all in harmony, and she is booked for the gala at Epsilon where the Hansa's traders meet. Her own liner has been impounded over a contract dispute nobody will explain.",
+    "She wants your best cabin, and silence between four and six every afternoon."
+   ],
+   "act": 3,
+   "chance": 0.4,
+   "who": [
+    "holo_star"
+   ],
+   "choices": [
+    {
+     "id": "suite",
+     "say": "Give her your best cabin (+12,000 now, 20,000 at Epsilon)",
+     "requires": {
+      "best_cabin": 4
+     },
+     "effects": {
+      "money": 12000,
+      "set": [
+       "concertina_met",
+       "concertina_aboard"
+      ]
+     }
+    },
+    {
+     "id": "plain",
+     "say": "Offer the cabin you have (+6,000 now)",
+     "requires": {
+      "best_cabin": {
+       "max": 3
+      }
+     },
+     "effects": {
+      "money": 6000,
+      "set": [
+       "concertina_met",
+       "concertina_aboard",
+       "concertina_rough"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Decline",
+     "effects": {
+      "set": [
+       "concertina_met"
+      ]
+     }
+    }
+   ]
+  },
+  "vip.concertina.rehearsal": {
+   "kind": "event",
+   "arc": "vips",
+   "title": "Four to six",
+   "requires": {
+    "flag": "concertina_aboard",
+    "since": {
+     "vip.concertina": 1
+    }
+   },
+   "text": "At four o'clock two hundred of {holo_star} fill your corridors, rehearsing. Your crew learns to walk through her. At five the ship's systems start harmonising, and at six everything stops at once, mid-note, as agreed.",
+   "act": 3,
+   "chance": 0.6,
+   "who": [
+    "holo_star"
+   ],
+   "choices": [
+    {
+     "id": "steward",
+     "say": "Let {steward} keep the corridors clear for her",
+     "requires": {
+      "has": {
+       "crew": [
+        "steward"
+       ]
+      }
+     },
+     "effects": {
+      "passenger_reputation": 3,
+      "set": [
+       "concertina_pleased"
+      ]
+     }
+    },
+    {
+     "id": "private",
+     "say": "Ask for one song for the crew",
+     "effects": {
+      "plot_points": 2,
+      "set": [
+       "concertina_pleased"
+      ]
+     }
+    },
+    {
+     "id": "quiet",
+     "say": "Ask her to rehearse more quietly"
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "harp_aboard"
+     },
+     "text": "At four o'clock two hundred of {holo_star} fill your corridors, rehearsing, and the holocrystal in the hold starts singing along. She stops, listens, and rewrites her second act around it before six."
+    }
+   ]
+  },
+  "vip.concertina.gala": {
+   "kind": "event",
+   "arc": "vips",
+   "title": "The gala",
+   "requires": {
+    "at": "Epsilon",
+    "flag": "concertina_aboard"
+   },
+   "text": "At the gala {holo_star} fills the ore exchange's great hall with two hundred of herself, and the traders who came to argue about the Mark stop arguing for an hour. Afterwards her agent finds you with an envelope.",
+   "act": 3,
+   "who": [
+    "holo_star"
+   ],
+   "choices": [
+    {
+     "id": "fee",
+     "say": "Take the fee (20,000)",
+     "requires": {
+      "not_flag": "concertina_rough"
+     },
+     "effects": {
+      "money": 20000,
+      "passenger_reputation": 6,
+      "plot_points": 4,
+      "clear": [
+       "concertina_aboard"
+      ],
+      "set": [
+       "carried_concertina"
+      ]
+     }
+    },
+    {
+     "id": "fee_plain",
+     "say": "Take the fee (12,000)",
+     "requires": {
+      "flag": "concertina_rough"
+     },
+     "effects": {
+      "money": 12000,
+      "passenger_reputation": 3,
+      "plot_points": 3,
+      "clear": [
+       "concertina_aboard"
+      ],
+      "set": [
+       "carried_concertina"
+      ]
+     }
+    },
+    {
+     "id": "share",
+     "say": "Ask for a share of the gala's takings instead (counts as trade)",
+     "requires": {
+      "flag": "concertina_pleased"
+     },
+     "effects": {
+      "code": "profit 30000",
+      "passenger_reputation": 4,
+      "plot_points": 4,
+      "clear": [
+       "concertina_aboard"
+      ],
+      "set": [
+       "carried_concertina",
+       "concertina_share"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "concertina_pleased"
+     },
+     "text": "At the gala {holo_star} fills the ore exchange's great hall with two hundred of herself and, in the encore, sings your ship's name. The traders who came to argue about the Mark stop arguing for an hour. Afterwards her agent finds you with an envelope."
+    }
+   ]
+  },
+  "vip.wirth": {
+   "kind": "encounter",
+   "arc": "vips",
+   "title": "An underwriter in the cheap seats",
+   "requires": {
+    "chapter": "ch3a",
+    "at": "Epsilon",
+    "venue": "port",
+    "not_flag": "wirth_met"
+   },
+   "text": [
+    "{underwriter} insures half the Concord's research ships and none of the Hansa's convoys. The Mark will need insured convoys to be worth anything, so he has come to look at the lanes himself: to Gamma, through the flare lanes, as a passenger.",
+    "He asks for your cheapest cabin, because that is where the risk is, and pays like a man who has never needed to ask the price."
+   ],
+   "act": 3,
+   "chance": 0.4,
+   "who": [
+    "underwriter"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take him (+15,000 now)",
+     "effects": {
+      "money": 15000,
+      "set": [
+       "wirth_met",
+       "wirth_aboard"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Decline",
+     "effects": {
+      "set": [
+       "wirth_met"
+      ]
+     }
+    }
+   ]
+  },
+  "vip.wirth.lanes": {
+   "kind": "event",
+   "arc": "vips",
+   "title": "Which way",
+   "requires": {
+    "at": "Gamma",
+    "flag": "wirth_aboard"
+   },
+   "text": "Ross 154 flares as you come in. The honest lane runs through the edge of it, the way every hauler goes. There is a longer one, round the back, where the view is lovely and the flares never reach. {underwriter.short} has a notebook open and is not looking at you.",
+   "act": 3,
+   "who": [
+    "underwriter"
+   ],
+   "choices": [
+    {
+     "id": "honest",
+     "say": "Fly the flare lane, as haulers do",
+     "effects": {
+      "code": "damage 5",
+      "plot_points": 3,
+      "set": [
+       "wirth_saw_it"
+      ]
+     },
+     "next": [
+      "vip.wirth.gamma"
+     ]
+    },
+    {
+     "id": "pretty",
+     "say": "Take the long way round",
+     "effects": {
+      "set": [
+       "wirth_pretty"
+      ]
+     },
+     "next": [
+      "vip.wirth.gamma"
+     ]
+    }
+   ]
+  },
+  "vip.wirth.gamma": {
+   "kind": "event",
+   "arc": "vips",
+   "title": "The signature",
+   "requires": {},
+   "text": "At Gamma {underwriter} closes his notebook.",
+   "act": 3,
+   "who": [
+    "underwriter"
+   ],
+   "choices": [
+    {
+     "id": "signed",
+     "say": "Take the fee (20,000; convoy dues 15% lower for thirty turns)",
+     "requires": {
+      "flag": "wirth_saw_it"
+     },
+     "effects": {
+      "money": 20000,
+      "code": "dues hike 0.85",
+      "plot_points": 8,
+      "passenger_reputation": 4,
+      "clear": [
+       "wirth_aboard"
+      ],
+      "set": [
+       "convoys_insured"
+      ]
+     }
+    },
+    {
+     "id": "tip",
+     "say": "Take the tip (10,000)",
+     "requires": {
+      "flag": "wirth_pretty"
+     },
+     "effects": {
+      "money": 10000,
+      "plot_points": 2,
+      "clear": [
+       "wirth_aboard"
+      ],
+      "set": [
+       "wirth_declined"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "wirth_saw_it"
+     },
+     "text": "At Gamma {underwriter} closes his notebook. 'Now I know what I'd be insuring,' he says, and signs: the Hansa's convoys, insured by the Concord's underwriters, at a premium he calls insulting and the Hansa will call a miracle. Convoy dues fall while the paperwork settles."
+    },
+    {
+     "requires": {
+      "flag": "wirth_pretty"
+     },
+     "text": "At Gamma {underwriter} closes his notebook. 'Lovely lanes,' he says. 'I wouldn't insure them.' He tips well, as people do when they have been shown the view instead of the road."
+    }
+   ]
+  },
+  "after.gamma_farms_coop": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: gamma farms coop",
+   "requires": {
+    "flag": "gamma_farms_coop"
+   },
+   "text": "The farms under Gamma were run by the miners' cooperative for sixty years. The loaders you carried are on the cooperative's crest, twenty little figures in a row, carrying a lettuce."
+  },
+  "after.gamma_farms_company": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: gamma farms company",
+   "requires": {
+    "flag": "gamma_farms_company"
+   },
+   "text": "The company's farms under Gamma made a great deal of money and no friends. The loaders you carried were sold on twice, and ended their days hauling ore again."
+  },
+  "after.loaders_restacked": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: loaders restacked",
+   "requires": {
+    "flag": "loaders_restacked"
+   },
+   "text": "Your hold was stacked by weight, colour and destination for the rest of the ship's life. Nobody dared change it."
+  },
+  "after.harp_relay": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: harp relay",
+   "requires": {
+    "flag": "harp_relay"
+   },
+   "text": "The quantum harp grew to forty strings across the near systems. Its first two towers, at Beta and Delta, are still the ones the tuning forks are set by."
+  },
+  "after.harp_cracked": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: harp cracked",
+   "requires": {
+    "flag": "harp_cracked"
+   },
+   "text": "The harp's tower with the cracked crystal plays a semitone flat to this day. Musicians at Delta tune to it on purpose."
+  },
+  "after.carried_concertina": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: carried concertina",
+   "requires": {
+    "flag": "carried_concertina"
+   },
+   "text": "{holo_star} recorded an album in your hold's acoustics and named it after your ship. It sold mostly to haulers, who play it during jumps."
+  },
+  "after.concertina_share": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: concertina share",
+   "requires": {
+    "flag": "concertina_share"
+   },
+   "text": "Your share of {holo_star}'s gala paid better than any cargo that year, which you never told the Hansa."
+  },
+  "after.convoys_insured": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: convoys insured",
+   "requires": {
+    "flag": "convoys_insured"
+   },
+   "text": "With the Concord's underwriters behind the convoys, the Mark became something banks would hold. {underwriter} kept your flight in his notebook as 'the honest lane'."
+  },
+  "after.wirth_declined": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: wirth declined",
+   "requires": {
+    "flag": "wirth_declined"
+   },
+   "text": "{underwriter} insured the Hansa's convoys ten years later, after someone else flew him through the flares. He sent you a postcard of the view."
+  },
+  "after.insured_vote": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: insured vote",
+   "requires": {
+    "flag": "insured_vote"
+   },
+   "text": "The underwriters' signature on the table at Epsilon was the first time the Concord bet money on the Hansa. It was not the last."
+  }
+ }
+}
