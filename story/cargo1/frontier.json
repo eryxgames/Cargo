@@ -20,14 +20,14 @@
    "short": "Brandt"
   },
   "tarnished_gear": {
-   "name": "Order of the Tarnished Gear",
+   "name": "Order of the Lost Gear",
    "kind": "human",
    "about": "cargo cult that collects broken technology; sells the working kind cheap, out of distaste"
   }
  },
  "flags": {
   "worshipped": {
-   "about": "the Tarnished Gear adopted the captain's ship as a minor relic",
+   "about": "the {tarnished_gear} adopted the captain's ship as a minor relic",
    "carries_to": [
     "cargo2"
    ]
@@ -341,7 +341,7 @@
      "done": "beat.DeepSpaceOutpost.alien_contact"
     },
     "chance": 0.2,
-    "text": "A collector of the Order of the Tarnished Gear buys broken technology: your burnt-out fuel pump, a cracked visor, the coffee machine that only makes hot water. Working things go on the Order's unholy shelf at low prices. On it today: a working fuel pump for your model, out of stock everywhere else.",
+    "text": "A collector of the {tarnished_gear} buys broken technology: your burnt-out fuel pump, a cracked visor, the coffee machine that only makes hot water. Working things go on the Order's unholy shelf at low prices. On it today: a working fuel pump for your model, out of stock everywhere else.",
     "notes": [
      "was: an unused chain with no trigger (stage data: duration, offers)"
     ],

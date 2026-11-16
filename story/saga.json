@@ -92,9 +92,9 @@
    ]
   },
   "ysolde": {
-   "name": "Ysolde van Rostrom",
-   "short": "Ysolde",
-   "about": "Founder of House Rostrom (wiki: CONZE Ysolde van Rostrom, Year of Foundation).",
+   "name": "Yzode van Rostrom",
+   "short": "Yzode",
+   "about": "Founder of House Rostrom (wiki: CONZE Ysolde van Rostrom, Year of Foundation; renamed Yzode 2026-11-16, the wiki to follow).",
    "timeline": [
     {
      "game": "cargo1",
@@ -122,8 +122,8 @@
    ]
   },
   "ancient_scholar": {
-   "name": "Matylda Korinek",
-   "short": "Korinek",
+   "name": "Tylde Kren",
+   "short": "Kren",
    "about": "Archaeophysicist; first to say the builders' metal was a ring around our own Sun.",
    "timeline": [
     {
@@ -162,8 +162,8 @@
    ]
   },
   "aela": {
-   "name": "Aela",
-   "short": "Aela",
+   "name": "Eela",
+   "short": "Eela",
    "about": "AEL-series boring agrobot; perhaps the first machine shareholder in the Hansa.",
    "timeline": [
     {
@@ -177,8 +177,8 @@
    ]
   },
   "neon_sleeper": {
-   "name": "Lady Ottavine Kessary-Vel",
-   "short": "Lady Ottavine",
+   "name": "Conte Ottavine Kraal",
+   "short": "Conte Ottavine",
    "about": "A Neon who sleeps through decades and buys land before it is worth anything. Hibernation carries her across the saga.",
    "timeline": [
     {
@@ -238,7 +238,7 @@
    "pay_by": "cargo2"
   },
   "the_sleeper": {
-   "about": "Lady Ottavine wakes thirty years later and asks for the captain who carried her.",
+   "about": "Conte Ottavine wakes thirty years later and asks for the captain who carried her.",
    "pay_by": "cargo2"
   }
  }

@@ -26,7 +26,9 @@ STORY_PATH = os.path.join(ROOT, "story", "cargo1.story.json")
 INCLUDES = ["cargo1/legacy.json", "cargo1/places.json", "cargo1/main.json", "cargo1/captain.json", "cargo1/synthetics.json",
             "cargo1/pirates.json", "cargo1/passengers.json", "cargo1/houses.json", "cargo1/frontier.json",
             "cargo1/enclaves.json", "cargo1/neons.json", "cargo1/crew.json", "cargo1/hansa.json",
-            "cargo1/science.json", "cargo1/recurring.json", "cargo1/drama.json", "cargo1/rumours.json", "cargo1/gossip.json",
+            "cargo1/science.json", "cargo1/recurring.json", "cargo1/serac.json",
+            "cargo1/people.json", "cargo1/cargolytes.json", "cargo1/legion_freight.json",
+            "cargo1/rootstock.json", "cargo1/odds.json", "cargo1/drama.json", "cargo1/rumours.json", "cargo1/gossip.json",
             "cargo1/epilogue.json"]
 
 PLACE_TYPES = ["Planet", "AsteroidBase", "DeepSpaceOutpost", "ResearchColony"]
@@ -54,6 +56,7 @@ STATS = {
     "hansa_bonds": "Hansa bonds held (each lowers the convoy dues)",
     "dues_arrears": "convoy dues owed and not yet paid",
     "hull_class": "the ship's hull: 0 the old hauler, 1 Ironback, 2 Farstrider",
+    "hold_free": "free room in the hold for dry goods, after special cargo",
 }
 for _g in ("tech", "agri", "salt", "fuel"):
     STATS["cargo." + _g] = "%s in the hold (an effect adds or takes it)" % _g

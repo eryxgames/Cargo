@@ -539,7 +539,7 @@ class Bot:
                     return str(keys.index(key) + 1)
             if best_chance >= (0.4 if fighter else 0.6):
                 return str(keys.index(best_key) + 1)
-            for key in ("slip", "warp", "scan", "holy", "feed", "talk", "pay", "run"):
+            for key in ("slip", "warp", "scan", "holy", "feed", "tithe", "talk", "pay", "run"):
                 if key in keys and not (key == "pay" and g.ship.money < 5000):
                     return str(keys.index(key) + 1)
             return str(keys.index(best_key) + 1)

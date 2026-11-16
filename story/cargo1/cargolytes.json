@@ -1,0 +1,232 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The Cargolytes, a sect of cargo cultists, arrive in Cargo 1: their council, the Sixpack, raids convoys for containers; Sarga Farga leads the boarders; Ullage preaches at the outposts. After the first raid their stevedores can stop a ship (cargo.py ENEMIES 'cargolytes'). The full sect, and the Cult of the Broken Machine as its branch, belong to Cargo 2.",
+ "arcs": {
+  "cargolytes": {
+   "title": "The Cargolytes",
+   "order": 2.98
+  }
+ },
+ "characters": {
+  "sixpack": {
+   "name": "the Sixpack",
+   "kind": "group",
+   "about": "the Cargolytes' leading council of six; raids containers off convoys in person, singing"
+  },
+  "sarga_farga": {
+   "name": "Sarga Farga",
+   "short": "Farga",
+   "kind": "human",
+   "about": "Cargolyte captain; leads the boarders; greets every victim 'in apparent good order and condition'"
+  },
+  "ullage": {
+   "name": "Ullage",
+   "kind": "human",
+   "about": "hollow-eyed Cargolyte preacher at the outposts"
+  }
+ },
+ "flags": {
+  "met_cargolytes": {
+   "about": "the captain has met the Cargolytes",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "defended_the_convoy": {
+   "about": "the captain fought {sixpack} for a convoy's containers"
+  },
+  "tithe_paid": {
+   "about": "the captain paid {sixpack} a container as tithe"
+  },
+  "ran_from_the_sixpack": {
+   "about": "the captain cut loose and ran from {sixpack}"
+  },
+  "targa_remembers_the_raid": {
+   "about": "{convoy_captain} remembers who ran from the raid"
+  }
+ },
+ "nodes": {
+  "rumour.ullage": {
+   "kind": "rumour",
+   "arc": "cargolytes",
+   "title": "Rumour: the Sender",
+   "requires": {
+    "at_type": "DeepSpaceOutpost",
+    "act_min": 2
+   },
+   "text": "At the outpost a hollow-eyed preacher called {ullage} tells anyone who will listen that every crate has a sender, and every sender has a Sender. He takes donations in cargo, and counts them twice.",
+   "who": [
+    "ullage"
+   ],
+   "repeat": true
+  },
+  "gossip.lading": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "title": "Gossip: lading",
+   "requires": {
+    "act_min": 2
+   },
+   "text": "Cargolytes greet each other with 'in apparent good order and condition'. The customs officers at Gamma have started saying it back, to see what happens.",
+   "repeat": true
+  },
+  "cargolytes.raid": {
+   "kind": "event",
+   "arc": "cargolytes",
+   "title": "In apparent good order",
+   "requires": {
+    "act_min": 2,
+    "turn_min": 25,
+    "at_type": [
+     "Planet",
+     "AsteroidBase"
+    ]
+   },
+   "text": [
+    "Six ships with containers welded to their bows come out of the dark and start cutting containers off the convoy you are travelling with. They sing while they cut. The Cargolytes' council, {sixpack}, takes the cargo in person.",
+    "{sarga_farga} leads the boarders. 'In apparent good order and condition,' she says, and cuts."
+   ],
+   "act": 2,
+   "chance": 0.12,
+   "who": [
+    "sixpack",
+    "sarga_farga"
+   ],
+   "choices": [
+    {
+     "id": "defend",
+     "say": "Defend the convoy",
+     "effects": {
+      "code": "fight cargolytes",
+      "plot_points": 5,
+      "set": [
+       "defended_the_convoy",
+       "met_cargolytes",
+       "convoy_helped"
+      ]
+     }
+    },
+    {
+     "id": "tithe",
+     "say": "Offer them a tithe: one container, counted in TEU",
+     "effects": {
+      "cargo.agri": -30,
+      "plot_points": 2,
+      "set": [
+       "tithe_paid",
+       "met_cargolytes"
+      ]
+     },
+     "next": [
+      "cargolytes.receipt"
+     ]
+    },
+    {
+     "id": "run",
+     "say": "Cut your own containers loose and run",
+     "effects": {
+      "cargo.tech": -40,
+      "cargo.agri": -40,
+      "set": [
+       "ran_from_the_sixpack",
+       "met_cargolytes"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "sold_the_schedules"
+     },
+     "text": [
+      "Six ships with containers welded to their bows come out of the dark and start cutting containers off the convoy. They go straight for the valuable ones, as if they had the schedule. They have the schedule. You sold it.",
+      "{sarga_farga} leads the boarders. 'In apparent good order and condition,' she says, and cuts."
+     ]
+    },
+    {
+     "requires": {
+      "any": [
+       {
+        "flag": "convoy_friend"
+       },
+       {
+        "flag": "convoy_helped"
+       }
+      ]
+     },
+     "text": [
+      "Six ships with containers welded to their bows come out of the dark and start cutting containers off {convoy_captain.short}'s convoy. They sing while they cut. The Cargolytes' council, {sixpack}, takes the cargo in person.",
+      "{sarga_farga} leads the boarders. 'In apparent good order and condition,' she says, and cuts. {convoy_captain.short} is on the channel, very calm, asking who is going to help."
+     ]
+    }
+   ]
+  },
+  "cargolytes.receipt": {
+   "kind": "event",
+   "arc": "cargolytes",
+   "title": "A receipt",
+   "requires": {
+    "flag": "tithe_paid"
+   },
+   "text": "A Cargolyte called Sister Tare weighs your container, subtracts the weight of the container, and gives you a receipt. It says 'clean lading'. Among Cargolytes, that is a blessing. Among customs officers, it is evidence.",
+   "act": 2,
+   "who": [
+    "sarga_farga"
+   ]
+  },
+  "cargolytes.targa": {
+   "kind": "event",
+   "arc": "cargolytes",
+   "title": "Who helped",
+   "requires": {
+    "flag": [
+     "ran_from_the_sixpack",
+     "convoy_friend"
+    ],
+    "since": {
+     "cargolytes.raid": 5
+    }
+   },
+   "text": "{convoy_captain.short} lost nine containers to {sixpack}. She doesn't mention it. She mentions everything else: the weather, the dues, her liquorice root. That is how you know.",
+   "act": 3,
+   "chance": 0.4,
+   "effects": {
+    "set": [
+     "targa_remembers_the_raid"
+    ]
+   },
+   "who": [
+    "convoy_captain"
+   ]
+  },
+  "after.defended_the_convoy": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: defended the convoy",
+   "requires": {
+    "flag": "defended_the_convoy"
+   },
+   "text": "{sixpack} put your ship's registry in the Lading as 'not to be received'. Among Cargolytes it is the closest thing to a compliment."
+  },
+  "after.tithe_paid": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: tithe paid",
+   "requires": {
+    "flag": "tithe_paid"
+   },
+   "text": "Your receipt from Sister Tare, 'clean lading', hangs in your galley. Twice it got you waved through a Cargolyte blockade. Once it got you arrested."
+  },
+  "after.targa_remembers_the_raid": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: targa remembers the raid",
+   "requires": {
+    "flag": "targa_remembers_the_raid"
+   },
+   "text": "{convoy_captain.short} never mentioned the nine containers again. She did leave you off one list, once, and you knew which one."
+  }
+ }
+}

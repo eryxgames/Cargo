@@ -1,0 +1,592 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Odds and ends: half-serious nods to the space and military genre, in the game's own voice: a passenger whose ticket is bought next week, the licence exam's question seven, a volunteer in a red jumpsuit, the ship's bugrat, a signal from beyond the heliopause that is a soup advert, a habitat that surveys you during an impact, and a salvage auction. They also fill places that had no scenes (Omega XIV, Theta III, the X listening post).",
+ "arcs": {
+  "odds": {
+   "title": "Odds and ends",
+   "order": 8.4
+  }
+ },
+ "characters": {},
+ "flags": {
+  "ticket_next_week": {
+   "about": "the captain carried a passenger whose ticket was bought next week"
+  },
+  "took_the_red": {
+   "about": "the captain took the guard in the red jumpsuit on a job"
+  },
+  "ship_bugrat": {
+   "about": "the ship has a bugrat, and it is crew"
+  },
+  "sold_the_soup": {
+   "about": "the captain sold the listening post's soup signal to the soup company"
+  },
+  "kept_the_rounding": {
+   "about": "the captain kept the auditor's extra crate"
+  },
+  "crossed_the_picket": {
+   "about": "the captain traded through the broker robots' strike"
+  },
+  "brought_tally_a_battery": {
+   "about": "the captain brought {port_broker} a battery during the strike"
+  }
+ },
+ "nodes": {
+  "odds.ticket": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Bought it next week",
+   "requires": {
+    "venue": "port",
+    "passengers_transported": 2
+   },
+   "text": "A passenger is sitting in your best cabin with no ticket and a very calm face. She says she bought it next week. She seems sure of the date.",
+   "act": 1,
+   "chance": 0.12,
+   "choices": [
+    {
+     "id": "steward",
+     "say": "Let {steward} check her hat",
+     "requires": {
+      "has": {
+       "crew": [
+        "steward"
+       ]
+      }
+     },
+     "effects": {
+      "passenger_reputation": 3
+     },
+     "next": [
+      "odds.ticket.hat"
+     ]
+    },
+    {
+     "id": "ride",
+     "say": "Let her ride",
+     "effects": {
+      "plot_points": 2,
+      "set": [
+       "ticket_next_week"
+      ]
+     }
+    },
+    {
+     "id": "door",
+     "say": "Charge her the fare at the door",
+     "effects": {
+      "money": 300
+     }
+    },
+    {
+     "id": "off",
+     "say": "Put her off at the next dock",
+     "effects": {
+      "passenger_reputation": -2
+     }
+    }
+   ],
+   "repeat": {
+    "cooldown": 40
+   }
+  },
+  "odds.ticket.hat": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "In the hat",
+   "requires": {},
+   "text": "{steward} lifts her hat, removes a ticket, and replaces the hat, all with one hand. 'It is always in the hat,' he says. The ticket is dated next week.",
+   "act": 1,
+   "who": [
+    "steward"
+   ]
+  },
+  "odds.ticket.arrives": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Paid in full",
+   "requires": {
+    "flag": "ticket_next_week",
+    "since": {
+     "odds.ticket": 20
+    }
+   },
+   "text": "A ticket arrives in the post: one cabin on your ship, dated twenty turns ago, paid in full with interest, from an account the bank says will be opened next spring. The bank would like to know how. So would you.",
+   "act": 2,
+   "chance": 0.5,
+   "effects": {
+    "money": 2500,
+    "plot_points": 2
+   }
+  },
+  "odds.exam": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Question seven",
+   "requires": {
+    "at_type": "Planet",
+    "turn_min": 4,
+    "trades_completed": 2
+   },
+   "text": "The Hansa renews hauler licences with a written exam, in a room with a clock that ticks loudly on purpose. Question seven: 'Your cargo begins to talk. You should:'",
+   "act": 1,
+   "chance": 0.2,
+   "choices": [
+    {
+     "id": "form",
+     "say": "(a) File form C-7",
+     "effects": {
+      "plot_points": 1
+     },
+     "next": [
+      "odds.exam.form"
+     ]
+    },
+    {
+     "id": "listen",
+     "say": "(b) Listen",
+     "effects": {
+      "plot_points": 1
+     },
+     "next": [
+      "odds.exam.listen"
+     ]
+    },
+    {
+     "id": "enter",
+     "say": "(c) Press Enter to continue",
+     "effects": {
+      "plot_points": 2
+     },
+     "next": [
+      "odds.exam.enter"
+     ]
+    }
+   ]
+  },
+  "odds.exam.form": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Correct",
+   "requires": {},
+   "text": "Correct. Everything is form C-7. You pass, and are given a copy of form C-7 to keep, in case.",
+   "act": 1
+  },
+  "odds.exam.listen": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Also correct",
+   "requires": {},
+   "text": "Also correct. The examiner writes 'promising' next to your answer and underlines it twice. You pass.",
+   "act": 1
+  },
+  "odds.exam.enter": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "We don't talk about that",
+   "requires": {},
+   "text": "The examiner looks at you for a long time. 'We don't talk about that,' she says, very quietly, and passes you. On your way out you notice that everyone in the building pauses, now and then, as if waiting for something.",
+   "act": 1
+  },
+  "odds.volunteer": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "The red jumpsuit",
+   "requires": {
+    "at_type": [
+     "DeepSpaceOutpost",
+     "AsteroidBase"
+    ],
+    "act_min": 2
+   },
+   "text": "A young security guard in a bright red jumpsuit volunteers for anything dangerous you might be doing. The older crews at the bar move their chairs away from him, without quite saying why.",
+   "act": 2,
+   "chance": 0.12,
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take him on your next job",
+     "effects": {
+      "plot_points": 2,
+      "set": [
+       "took_the_red"
+      ]
+     },
+     "next": [
+      "odds.volunteer.lucky"
+     ]
+    },
+    {
+     "id": "desk",
+     "say": "Tell him to find a desk job",
+     "next": [
+      "odds.volunteer.desk"
+     ]
+    }
+   ]
+  },
+  "odds.volunteer.lucky": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Lucky",
+   "requires": {
+    "flag": "took_the_red"
+   },
+   "text": "Against the expectations of everyone at the bar, he comes back from the job without a scratch. He has been promoted to 'lucky', which is not a rank. The bar has opened a pool on him.",
+   "act": 2
+  },
+  "odds.volunteer.desk": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "A desk",
+   "requires": {},
+   "text": "He takes the advice, gets a desk at the convoy office, and is very happy. The bar is quietly disappointed. Somebody loses a bet.",
+   "act": 2
+  },
+  "odds.bugrat": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "The ship's bugrat",
+   "requires": {
+    "turn_min": 6,
+    "cargo.agri": 1
+   },
+   "text": "There is a bugrat in the hold: six legs, whiskers, an insect sheen and an expression of ownership. It has eaten one crate of agri and is looking at the second with respect.",
+   "act": 1,
+   "chance": 0.06,
+   "choices": [
+    {
+     "id": "shunt",
+     "say": "Let {loader} catch it",
+     "requires": {
+      "has": {
+       "crew": [
+        "loader"
+       ]
+      }
+     },
+     "effects": {
+      "set": [
+       "ship_bugrat"
+      ]
+     },
+     "next": [
+      "odds.bugrat.shunt"
+     ]
+    },
+    {
+     "id": "adopt",
+     "say": "Adopt it as the ship's bugrat",
+     "effects": {
+      "cargo.agri": -5,
+      "plot_points": 1,
+      "set": [
+       "ship_bugrat"
+      ]
+     }
+    },
+    {
+     "id": "space",
+     "say": "Space it, regretfully"
+    }
+   ]
+  },
+  "odds.bugrat.shunt": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Named",
+   "requires": {},
+   "text": "{loader} catches the bugrat with two of its four arms, files it under 'crew', and names it Ballast. Nobody argues with the filing.",
+   "act": 1,
+   "who": [
+    "loader"
+   ]
+  },
+  "odds.signal": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "The signal",
+   "requires": {
+    "at": "Alien Signal Research Outpost X",
+    "act_min": 2
+   },
+   "text": [
+    "The listening post has found a signal: repeating, structured, from beyond the edge of the system. The team has not slept for a week. They play it for you before they explain it.",
+    "It is a forty-year-old Hansa advert for tinned soup, bounced back off a brown dwarf. They are not ready to talk about it."
+   ],
+   "act": 2,
+   "chance": 0.4,
+   "choices": [
+    {
+     "id": "round",
+     "say": "Buy the team a round",
+     "effects": {
+      "plot_points": 2,
+      "passenger_reputation": 2
+     }
+    },
+    {
+     "id": "sell",
+     "say": "Sell the story to the soup company",
+     "effects": {
+      "money": 3000,
+      "set": [
+       "sold_the_soup"
+      ]
+     }
+    }
+   ]
+  },
+  "odds.survey": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "How likely are you to recommend this impact",
+   "requires": {
+    "at": "Omega XIV"
+   },
+   "text": "An impact alarm sounds across the habitat: the debris disk is throwing rocks again. Everyone files into the shelters, where the habitat's management system runs a customer satisfaction survey. Question one: 'How likely are you to recommend this impact to a friend?'",
+   "act": 1,
+   "chance": 0.3,
+   "choices": [
+    {
+     "id": "ten",
+     "say": "Ten out of ten",
+     "effects": {
+      "plot_points": 1
+     },
+     "next": [
+      "odds.survey.ten"
+     ]
+    },
+    {
+     "id": "one",
+     "say": "One out of ten",
+     "effects": {
+      "plot_points": 1
+     },
+     "next": [
+      "odds.survey.one"
+     ]
+    },
+    {
+     "id": "fix",
+     "say": "Fix the terminal so it stops asking",
+     "requires": {
+      "any": [
+       {
+        "has": {
+         "crew": [
+          "mechanic"
+         ]
+        }
+       },
+       {
+        "has": {
+         "items": [
+          "scanner"
+         ]
+        }
+       }
+      ]
+     },
+     "effects": {
+      "plot_points": 3,
+      "passenger_reputation": 3
+     },
+     "next": [
+      "odds.survey.fixed"
+     ]
+    }
+   ]
+  },
+  "odds.survey.ten": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Thank you",
+   "requires": {},
+   "text": "The management system thanks you for your feedback and schedules another impact.",
+   "act": 1
+  },
+  "odds.survey.one": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Logged",
+   "requires": {},
+   "text": "Your complaint is logged. The next rock is noticeably smaller. Coincidence, says the system.",
+   "act": 1
+  },
+  "odds.survey.fixed": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Silence",
+   "requires": {},
+   "text": "The terminal stops asking. The shelter goes very quiet, and then several hundred people applaud, quietly, so as not to set it off again.",
+   "act": 1
+  },
+  "odds.auction": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Lot twelve",
+   "requires": {
+    "at": "Theta III",
+    "act_min": 2
+   },
+   "text": "The salvage auction at Theta III sells whatever Fomalhaut's collisions throw up. Lot twelve is described as 'a box, sealed, rattles'. Bidding is brisk and nobody knows why.",
+   "act": 2,
+   "chance": 0.3,
+   "choices": [
+    {
+     "id": "bid",
+     "say": "Bid 3,000",
+     "requires": {
+      "money": 3000
+     },
+     "effects": {
+      "money": -3000,
+      "research_points": 40,
+      "plot_points": 2
+     },
+     "next": [
+      "odds.auction.box"
+     ]
+    },
+    {
+     "id": "gear",
+     "say": "Let the {tarnished_gear} outbid you"
+    }
+   ]
+  },
+  "odds.auction.box": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Rattles",
+   "requires": {},
+   "text": "Inside the box: a navigation computer from the twenty-third century that gives every distance in furlongs and every warning in verse. The research colonies pay for the furlongs. Nobody pays for the verse.",
+   "act": 2
+  },
+  "odds.audit": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Rounding",
+   "requires": {
+    "chapter": "ch3a",
+    "venue": "port"
+   },
+   "text": "The Hansa sends an auditor to count your crates. He counts them twice, frowns, and counts them a third time. You have one more than you own. 'Rounding,' he says, and writes it down.",
+   "act": 3,
+   "chance": 0.25,
+   "choices": [
+    {
+     "id": "keep",
+     "say": "Keep the extra crate",
+     "effects": {
+      "cargo.tech": 10,
+      "set": [
+       "kept_the_rounding"
+      ]
+     }
+    },
+    {
+     "id": "report",
+     "say": "Report the error",
+     "effects": {
+      "passenger_reputation": 2,
+      "plot_points": 3
+     }
+    }
+   ]
+  },
+  "odds.strike": {
+   "kind": "event",
+   "arc": "odds",
+   "title": "Picket line",
+   "requires": {
+    "chapter": "ch3a",
+    "at_type": "Planet"
+   },
+   "text": "{port_broker} and every other broker robot in the port stop work for a turn. They want to be paid in commission instead of electricity. The dock does its sums by hand, and everyone remembers why they bought the robots.",
+   "act": 3,
+   "chance": 0.2,
+   "who": [
+    "port_broker"
+   ],
+   "choices": [
+    {
+     "id": "cross",
+     "say": "Trade by hand while the prices are wrong (+2,000)",
+     "effects": {
+      "money": 2000,
+      "set": [
+       "crossed_the_picket"
+      ]
+     }
+    },
+    {
+     "id": "battery",
+     "say": "Bring {port_broker.short} a battery",
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "brought_tally_a_battery"
+      ]
+     }
+    }
+   ]
+  },
+  "after.kept_the_rounding": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: kept the rounding",
+   "requires": {
+    "flag": "kept_the_rounding"
+   },
+   "text": "The Hansa's audit of your ship is still open. It has been open for forty years. It is now the oldest open file in the league, and has its own clerk."
+  },
+  "after.crossed_the_picket": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: crossed the picket",
+   "requires": {
+    "flag": "crossed_the_picket"
+   },
+   "text": "{port_broker} never quoted you an honest price again. It was never dishonest either. It was precise in a way you learned to dread."
+  },
+  "after.brought_tally_a_battery": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: brought tally a battery",
+   "requires": {
+    "flag": "brought_tally_a_battery"
+   },
+   "text": "The broker robots won their strike. {port_broker} kept your battery, uncharged, on a shelf behind the counter, next to its first commission."
+  },
+  "after.sold_the_soup": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: sold the soup",
+   "requires": {
+    "flag": "sold_the_soup"
+   },
+   "text": "The soup company ran the signal as an advert: 'Heard across the stars.' The listening post's team has never forgiven you, and has never bought the soup."
+  },
+  "after.ship_bugrat": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: ship bugrat",
+   "requires": {
+    "flag": "ship_bugrat"
+   },
+   "text": "The ship's bugrat outlived two refits and a reactor fire. It is buried under a dockyard at Alpha, with a plaque the dockyard did not approve."
+  },
+  "after.took_the_red": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: took the red",
+   "requires": {
+    "flag": "took_the_red"
+   },
+   "text": "The guard in the red jumpsuit survived nine years of dangerous jobs and retired to a farm drum. The bar at the outpost still keeps the pool open, out of respect."
+  }
+ }
+}

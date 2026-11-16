@@ -74,11 +74,11 @@
   "paid_in_full": {
    "about": "the captain paid the margin call in full"
   },
-  "varga_paid": {
+  "convoy_paid": {
    "about": "{convoy_captain} called in her favours to cover the margin call"
   },
   "neon_bought_debt": {
-   "about": "the Kessary-Vel family bought the captain's debt"
+   "about": "the {neon_family} family bought the captain's debt"
   },
   "collector_forged": {
    "about": "{inspector} proved the collector's papers forged"
@@ -89,7 +89,7 @@
   "cleared_by_lauritz": {
    "about": "{inspector} testified for the captain at the inquiry"
   },
-  "varga_testified": {
+  "convoy_testified": {
    "about": "{convoy_captain}'s convoy logged the recall order"
   },
   "node_testified": {
@@ -107,7 +107,7 @@
   "copy_in_rock": {
    "about": "the nanobot colony kept a copy of the logs"
   },
-  "varga_votes": {
+  "convoy_votes": {
    "about": "{convoy_captain}'s captains carried the vote"
   },
   "young_haulers_vote": {
@@ -116,7 +116,7 @@
   "the_forty_came": {
    "about": "the forty haulers from the jump point came to Alpha"
   },
-  "varga_at_alpha": {
+  "convoy_at_alpha": {
    "about": "{convoy_captain}'s convoy fought at Alpha"
   },
   "mraz_at_alpha": {
@@ -125,7 +125,7 @@
   "tadeo_came_back": {
    "about": "{gunner} came back from the brig for the battle at Alpha"
   },
-  "varga_towed": {
+  "convoy_towed": {
    "about": "{convoy_captain}'s tug towed the captain out of the plane"
   },
   "pell_tanker": {
@@ -211,6 +211,12 @@
   },
   "bought_the_burn": {
    "about": "the captain bought the fuel for the long burn at any price"
+  },
+  "named_serac": {
+   "about": "the captain named {serac} at the inquiry"
+  },
+  "deadstick_redeemed": {
+   "about": "{deadstick} flew on the captain's wing at Alpha"
   }
  },
  "nodes": {
@@ -224,7 +230,8 @@
    },
    "text": [
     "The three corporations' trading houses have decided the independent haulers are a rounding error. This month they correct it: tech dumped below cost at every dock you use, until the small haulers sell their routes or their ships.",
-    "The Hansa convoy office panics and raises its dues by half, 'until the market settles'. Your loan officer calls to ask how you are. He has never asked before."
+    "The Hansa convoy office panics and raises its dues by half, 'until the market settles'. Your loan officer calls to ask how you are. He has never asked before.",
+    "Nobody at the trading houses will say whose idea it was. The dock clerks say a name quietly, the way you mention bad weather: {serac.short}."
    ],
    "chance": 0.25,
    "effects": {
@@ -273,7 +280,10 @@
      }
     }
    ],
-   "sound": "refusal"
+   "sound": "refusal",
+   "who": [
+    "serac"
+   ]
   },
   "drama.trade.margin_call": {
    "kind": "event",
@@ -293,7 +303,8 @@
    },
    "text": [
     "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.",
-    "You are a week away from being a captain without a ship, and everybody at the bar knows it. The barman gives you the good glass. That is how you know it is bad."
+    "You are a week away from being a captain without a ship, and everybody at the bar knows it. The barman gives you the good glass. That is how you know it is bad.",
+    "The collector's letters are signed by a law firm. The law firm's letters are signed by {serac.short}."
    ],
    "chance": 0.3,
    "variants": [
@@ -303,7 +314,8 @@
      },
      "text": [
       "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. You know him: you hauled for him during the squeeze. He is very polite. He remembers your rates. He calls the loan in, all of it, by the end of the week.",
-      "Until it is settled the convoy office will not give you a berth. The barman gives you the good glass. That is how you know it is bad."
+      "Until it is settled the convoy office will not give you a berth. The barman gives you the good glass. That is how you know it is bad.",
+      "The collector's letters are signed by a law firm. The law firm's letters are signed by {serac.short}."
      ]
     },
     {
@@ -312,7 +324,8 @@
      },
      "text": [
       "The bank at Alpha sells your ship's loan to a collector who works for the trading houses. He calls it in, all of it, by the end of the week. Until it is settled the convoy office will not give you a berth.",
-      "The convoy captains you stood with in the squeeze have heard. Nobody says anything yet. The barman gives you the good glass."
+      "The convoy captains you stood with in the squeeze have heard. Nobody says anything yet. The barman gives you the good glass.",
+      "The collector's letters are signed by a law firm. The law firm's letters are signed by {serac.short}."
      ]
     }
    ],
@@ -368,16 +381,16 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "Ask {convoy_captain.short} to call in her favours",
      "requires": {
-      "flag": "varga_friend"
+      "flag": "convoy_friend"
      },
      "effects": {
       "code": "lose money 0.1 min 5000",
       "plot_points": 8,
       "set": [
-       "varga_paid"
+       "convoy_paid"
       ]
      }
     },
@@ -423,6 +436,9 @@
       ]
      }
     }
+   ],
+   "who": [
+    "serac"
    ]
   },
   "drama.trade.mint": {
@@ -564,7 +580,8 @@
    },
    "text": [
     "The trading houses ask you to dinner at Alpha: real tablecloth, real wine, and a contract. A seat on their board, and a share of every convoy, if the vote at Epsilon fails by one.",
-    "The wine is very good. That is the point of it."
+    "The wine is very good. That is the point of it.",
+    "The host is on no board and in no company register. He gives his name as {serac} and says he speaks for friends in the inner systems who like things orderly."
    ],
    "chance": 0.4,
    "choices": [
@@ -588,6 +605,9 @@
       ]
      }
     }
+   ],
+   "who": [
+    "serac"
    ]
   },
   "drama.trade.vote": {
@@ -610,7 +630,8 @@
    },
    "text": [
     "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
-    "The count comes out one vote short, either way. Everybody looks at the captain with the most routes. Again."
+    "The count comes out one vote short, either way. Everybody looks at the captain with the most routes. Again.",
+    "{serac} watches from the gallery and takes no notes."
    ],
    "variants": [
     {
@@ -619,7 +640,8 @@
      },
      "text": [
       "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
-      "You have a seat at the trading houses' table now, and everybody in the hold knows it. The count comes out one vote short. The missing vote is yours."
+      "You have a seat at the trading houses' table now, and everybody in the hold knows it. The count comes out one vote short. The missing vote is yours.",
+      "{serac} watches from the gallery and takes no notes."
      ]
     },
     {
@@ -628,7 +650,8 @@
      },
      "text": [
       "The convoy captains meet at Epsilon to vote the Mark into law. The trading houses send lawyers, the legions send observers, and somebody cuts the power to the hold. Forty captains vote by torchlight.",
-      "You never signed the charter. The count comes out one vote short, either way, and it turns out that makes you the only captain both sides will listen to."
+      "You never signed the charter. The count comes out one vote short, either way, and it turns out that makes you the only captain both sides will listen to.",
+      "{serac} watches from the gallery and takes no notes."
      ]
     }
    ],
@@ -663,16 +686,16 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "{convoy_captain.short} brings her forty captains to the hold",
      "requires": {
-      "flag": "varga_friend"
+      "flag": "convoy_friend"
      },
      "effects": {
       "plot_points": 15,
       "set": [
        "won_the_vote",
-       "varga_votes"
+       "convoy_votes"
       ]
      }
     },
@@ -714,7 +737,10 @@
      }
     }
    ],
-   "sound": "charter"
+   "sound": "charter",
+   "who": [
+    "serac"
+   ]
   },
   "drama.combat.left_behind": {
    "kind": "event",
@@ -726,7 +752,8 @@
    },
    "text": [
     "Escort job: forty civilian haulers from Gamma to Alpha under a legion flag. At the jump point your two wingmen get a recall order, turn round and leave. Ten minutes later a pirate mothership comes out of the dark, exactly where the recall order said nobody would be.",
-    "Somebody sold this convoy. The haulers are calling you by name on an open channel. Most of them do not know your name; they are reading it off your hull."
+    "Somebody sold this convoy. The haulers are calling you by name on an open channel. Most of them do not know your name; they are reading it off your hull.",
+    "Later you read the recall order. It is signed by a liaison officer nobody in the legion has met: {serac.short}."
    ],
    "chance": 0.25,
    "choices": [
@@ -781,6 +808,9 @@
       ]
      }
     }
+   ],
+   "who": [
+    "serac"
    ]
   },
   "drama.combat.tribunal": {
@@ -829,6 +859,20 @@
    ],
    "choices": [
     {
+     "id": "serac",
+     "say": "Repeat the name {hardtack.short} gave you",
+     "requires": {
+      "flag": "hardtack_told"
+     },
+     "effects": {
+      "combat_rating": 2,
+      "plot_points": 6,
+      "set": [
+       "named_serac"
+      ]
+     }
+    },
+    {
      "id": "truth",
      "say": "Hand over your logs and tell it straight",
      "effects": {
@@ -874,16 +918,16 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "{convoy_captain.short}'s convoy logged the recall order",
      "requires": {
-      "flag": "varga_friend"
+      "flag": "convoy_friend"
      },
      "effects": {
       "combat_rating": 2,
       "plot_points": 8,
       "set": [
-       "varga_testified"
+       "convoy_testified"
       ]
      }
     },
@@ -958,6 +1002,21 @@
    },
    "choices": [
     {
+     "id": "deadstick",
+     "say": "{deadstick} flies on your wing this time",
+     "requires": {
+      "flag": "deadstick_wing"
+     },
+     "effects": {
+      "code": "fight dreadnought edge 2",
+      "plot_points": 15,
+      "set": [
+       "led_the_defence",
+       "deadstick_redeemed"
+      ]
+     }
+    },
+    {
      "id": "fight",
      "say": "Take the fight to them",
      "effects": {
@@ -991,17 +1050,17 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "{convoy_captain.short}'s convoy arms up and comes in",
      "requires": {
-      "flag": "varga_friend"
+      "flag": "convoy_friend"
      },
      "effects": {
       "code": "fight dreadnought edge 3",
       "plot_points": 15,
       "set": [
        "led_the_defence",
-       "varga_at_alpha"
+       "convoy_at_alpha"
       ]
      }
     },
@@ -1071,11 +1130,13 @@
    },
    "text": [
     "A fire in the sample store of the Stellar Institute at TRAPPIST-1. Nobody hurt. Every sample of the grey alloy is gone, with the notes, and the fire door was propped open with a chair from somebody else's lab.",
-    "{ancient_scholar.short} sits on the steps with a smoke-black notebook. 'Somebody does not want this to be true,' she says. 'Or wants it to be true only for them.'"
+    "{ancient_scholar.short} sits on the steps with a smoke-black notebook. 'Somebody does not want this to be true,' she says. 'Or wants it to be true only for them.'",
+    "The chair comes from a security liaison's office that rents a room at the Institute and has never been seen to use it. The name on the door is {serac.short}."
    ],
    "chance": 0.25,
    "who": [
-    "ancient_scholar"
+    "ancient_scholar",
+    "serac"
    ],
    "choices": [
     {
@@ -1101,7 +1162,7 @@
     },
     {
      "id": "chair",
-     "say": "Find out whose chair it was (200 research points)",
+     "say": "Find out what {serac.short}'s office does (200 research points)",
      "requires": {
       "research_points": 200
      },
@@ -1132,20 +1193,30 @@
     "plot_points": 230
    },
    "text": [
-    "The Academy's review board rules on the grey alloy: a natural formation, not shown to be made, further survey 'not a priority'. {ancient_scholar.short}'s grant is cancelled the same afternoon.",
+    "The Academy's review board, chaired by {hammerschultz}, rules on the grey alloy: a natural formation, not shown to be made, further survey 'not a priority'. {ancient_scholar.short}'s grant is cancelled the same afternoon.",
     "At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."
    ],
    "chance": 0.3,
    "who": [
-    "ancient_scholar"
+    "ancient_scholar",
+    "hammerschultz"
    ],
    "variants": [
+    {
+     "requires": {
+      "flag": "core_shown"
+     },
+     "text": [
+      "The Academy's review board, chaired by {hammerschultz}, rules on the grey alloy: a natural formation, not shown to be made. The vote is four to three. {hammerschultz.short} votes against his own ruling and does not say why. {ancient_scholar.short}'s grant is cancelled the same afternoon.",
+      "At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."
+     ]
+    },
     {
      "requires": {
       "flag": "rostrom_backed"
      },
      "text": [
-      "The Academy's review board rules on the grey alloy: a natural formation, not shown to be made. {ancient_scholar.short}'s grant is cancelled the same afternoon, and House Rostrom's lawyers file your findings under the House's name. They send flowers.",
+      "The Academy's review board, chaired by {hammerschultz}, rules on the grey alloy: a natural formation, not shown to be made. {ancient_scholar.short}'s grant is cancelled the same afternoon, and House Rostrom's lawyers file your findings under the House's name. They send flowers.",
       "At customs your research logs are seized as unlicensed survey data. The officer is sorry. He has a form for being sorry."
      ]
     }
@@ -1191,10 +1262,10 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "{convoy_captain.short} carries a copy out in a barge of salt",
      "requires": {
-      "flag": "varga_friend"
+      "flag": "convoy_friend"
      },
      "effects": {
       "code": "lose research 0.1",
@@ -1335,17 +1406,17 @@
      }
     },
     {
-     "id": "varga",
+     "id": "convoy",
      "say": "{convoy_captain.short}'s tug tows you out of the plane (20 fuel)",
      "requires": {
-      "flag": "varga_friend",
+      "flag": "convoy_friend",
       "cargo.fuel": 20
      },
      "effects": {
       "cargo.fuel": -20,
       "plot_points": 15,
       "set": [
-       "varga_towed"
+       "convoy_towed"
       ]
      }
     },
@@ -1528,7 +1599,7 @@
    "requires": {
     "flag": "neon_bought_debt"
    },
-   "text": "The Kessary-Vel family owns your old loan now. They have never called it in, and {heritarchist.short} sends a statement every year to say so.",
+   "text": "The {neon_family} family owns your old loan now. They have never called it in, and {heritarchist.short} sends a statement every year to say so.",
    "title": "After: neon bought debt"
   },
   "after.collector_forged": {
@@ -1549,14 +1620,14 @@
    "text": "{inspector.short}'s testimony took four minutes and cleared you completely. She billed the legion for the four minutes.",
    "title": "After: cleared by lauritz"
   },
-  "after.varga_testified": {
+  "after.convoy_testified": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_testified"
+    "flag": "convoy_testified"
    },
    "text": "{convoy_captain.short}'s convoy log is in the inquiry record, with the recall order timed to the second and a note in the margin: 'told you so'.",
-   "title": "After: varga testified"
+   "title": "After: convoy testified"
   },
   "after.node_testified": {
    "kind": "epilogue",
@@ -1603,14 +1674,14 @@
    "text": "The colony at Sigma VII keeps your logs in a gallery wall, written in rock. Visitors are allowed to read them if they knock first.",
    "title": "After: copy in rock"
   },
-  "after.varga_votes": {
+  "after.convoy_votes": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_votes"
+    "flag": "convoy_votes"
    },
    "text": "{convoy_captain.short}'s forty captains carried the vote at Epsilon, and she chewed liquorice root through every speech.",
-   "title": "After: varga votes"
+   "title": "After: convoy votes"
   },
   "after.young_haulers_vote": {
    "kind": "epilogue",
@@ -1630,14 +1701,14 @@
    "text": "The forty haulers from the jump point came to Alpha with every gun they owned. Half the guns were older than their captains. It was enough.",
    "title": "After: the forty came"
   },
-  "after.varga_at_alpha": {
+  "after.convoy_at_alpha": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_at_alpha"
+    "flag": "convoy_at_alpha"
    },
    "text": "{convoy_captain.short}'s convoy fought at Alpha in close order, the way it flies. The legion asked her to teach it. She charged.",
-   "title": "After: varga at alpha"
+   "title": "After: convoy at alpha"
   },
   "after.tadeo_came_back": {
    "kind": "epilogue",
@@ -1648,14 +1719,14 @@
    "text": "{gunner.short} walked out of a legion brig into your gun seat in the middle of a battle. He has never explained how. The brig has never asked.",
    "title": "After: tadeo came back"
   },
-  "after.varga_towed": {
+  "after.convoy_towed": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_towed"
+    "flag": "convoy_towed"
    },
    "text": "{convoy_captain.short}'s tug towed you out of the plane of the planets and turned back at the last depot. She kept the tow line as a souvenir.",
-   "title": "After: varga towed"
+   "title": "After: convoy towed"
   },
   "after.pell_tanker": {
    "kind": "epilogue",
@@ -1732,7 +1803,7 @@
    "requires": {
     "flag": "found_the_chair"
    },
-   "text": "The chair that propped the fire door belonged to a security liaison from a firm that later became part of the Mandate. Nobody was charged. The chair sits in a cupboard you have the key to.",
+   "text": "{serac.short}'s office at the Institute belonged to a security firm that later became part of the Mandate. Nobody was charged. The chair sits in a cupboard you have the key to, with a list of everything the office ever rented.",
    "title": "After: found the chair"
   },
   "after.published_everything": {
@@ -1875,6 +1946,33 @@
     ]
    },
    "text": "The dreadnought beat you at Alpha and left with its holds full, but it left. The new legion flew its first flag full of the holes it made that day, and never replaced it."
+  },
+  "after.named_serac": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: named serac",
+   "requires": {
+    "flag": "named_serac"
+   },
+   "text": "You named {serac.short} at the inquiry. By morning the name had gone from the record, from the transcript and, as far as anyone could tell, from the stenographer. {hardtack.short} remembered. He was retired within the month, with full honours and no explanation."
+  },
+  "after.deadstick_redeemed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: deadstick redeemed",
+   "requires": {
+    "flag": "deadstick_redeemed"
+   },
+   "text": "{deadstick} flew on your wing at Alpha and never followed an order he had not read again. The legion made him an instructor. His first lesson is about recall orders."
+  },
+  "after.serac_at_alpha": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: serac at alpha",
+   "requires": {
+    "done": "drama.combat.roll_call"
+   },
+   "text": "The dreadnought's orders turned up in its wreck: paid to arrive during the ceremony, by an office with {serac.short}'s name on the door, so that the new Mandate would ask the inner systems for protection. It asked."
   }
  }
 }

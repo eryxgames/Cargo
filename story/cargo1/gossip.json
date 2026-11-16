@@ -358,6 +358,68 @@
    "requires": {
     "at_type": "Planet"
    }
+  },
+  "gossip.saves": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: saves",
+   "text": "A drunk hauler swears the whole station saves itself every few turns. 'That's why nobody here dies properly,' he says, and orders another."
+  },
+  "gossip.same_talk": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: same talk",
+   "text": "A man at the bar says he keeps hearing the same handful of conversations. He has heard this one twice."
+  },
+  "gossip.window": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: window",
+   "text": "Convoy pilots never look out of the window during a jump. Nobody remembers why. Nobody has looked."
+  },
+  "gossip.space_big": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: space big",
+   "text": "Somebody at the next table is explaining that space is very big. Everyone else at the table is a hauler, and stopped listening years ago."
+  },
+  "gossip.make_a_man": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: make a man",
+   "text": "A recruiting sergeant promises the legion will make a man of you. A neurodroid at the next table asks what it would make of him. The sergeant is still thinking."
+  },
+  "gossip.dave": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: dave",
+   "text": "Somebody's ship computer has started calling everyone on board Dave. Nobody on the crew is called Dave. They are thinking of hiring one, to be safe."
+  },
+  "gossip.undo": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: undo",
+   "text": "A trainee asks why every ship has a self-destruct switch and no undo. The instructor says it is a design philosophy."
+  },
+  "gossip.ration": {
+   "kind": "rumour",
+   "arc": "gossip",
+   "repeat": true,
+   "title": "Gossip: ration",
+   "text": "The legion mess has a sign: 'Today's ration: the same as yesterday's. Tomorrow's: see today.'",
+   "requires": {
+    "at_type": [
+     "DeepSpaceOutpost",
+     "AsteroidBase"
+    ]
+   }
   }
  }
 }

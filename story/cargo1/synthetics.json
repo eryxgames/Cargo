@@ -440,10 +440,10 @@
    "about": "blesses machines; the blessing includes a firmware patch and a subscription"
   },
   "krog": {
-   "name": "Krog",
+   "name": "Krogg",
    "kind": "agrobot",
    "about": "KRO-series heavy loader at the Epsilon docks; three metres of hydraulics with opinions about stowage",
-   "short": "Krog"
+   "short": "Krogg"
   },
   "geod": {
    "name": "Geod",

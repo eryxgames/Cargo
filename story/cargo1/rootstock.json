@@ -1,0 +1,796 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "The Rootstock: Concord androids written off at ten years (scrap on the books, so nobody's property) who smuggle food and biomass from Beta's farm drums, where the trading houses burn surplus, to Gamma's miners, who pay company-store prices. Meza Voce runs it at half voice; Stope fixes. A first run with a customs spot check, a bigger run into a sting at Gamma, a double cross if the captain wants one, and enforcers after (cargo.py ENEMIES 'rootstock', after met_rootstock). They also want the garrison's exoskeleton knees.",
+ "arcs": {
+  "rootstock": {
+   "title": "The Rootstock",
+   "order": 2.995
+  }
+ },
+ "characters": {
+  "meza_voce": {
+   "name": "Meza Voce",
+   "short": "Voce",
+   "kind": "android",
+   "about": "head of the Rootstock; a Concord nursery android written off at ten years, as they all are, with her voice set to half for sleeping children. She never turned it up. People lean in"
+  },
+  "stope": {
+   "name": "Stope",
+   "kind": "human",
+   "about": "the Rootstock's fixer and its only human; an ex-miner from Gamma, nosy, honest about being dishonest"
+  }
+ },
+ "flags": {
+  "met_rootstock": {
+   "about": "the captain has met the Rootstock, the written-off androids who smuggle food",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "biomass_aboard": {
+   "about": "sealed Rootstock biomass is in the captain's hold"
+  },
+  "tipped_lauritz": {
+   "about": "the captain told {inspector} about the Rootstock's booth"
+  },
+  "refused_rootstock": {
+   "about": "the captain turned down the Rootstock's first run"
+  },
+  "opened_the_crates": {
+   "about": "the captain opened the Rootstock's crates for {inspector}"
+  },
+  "dumped_the_biomass": {
+   "about": "the captain dumped the Rootstock's crates at a spot check"
+  },
+  "rootstock_delivered": {
+   "about": "the captain delivered the Rootstock's biomass to Gamma"
+  },
+  "fed_gamma": {
+   "about": "the captain gave Gamma's miners food or the cut",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "big_run": {
+   "about": "the captain took the Rootstock's big run to Gamma"
+  },
+  "double_cross": {
+   "about": "the captain told {inspector} about the Rootstock's big run",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "out_of_the_family": {
+   "about": "the captain told {meza_voce} they were out"
+  },
+  "rootstock_caught": {
+   "about": "customs seized the Rootstock's big run"
+  },
+  "biomass_spoiled": {
+   "about": "the Rootstock's biomass spoiled in the captain's hold"
+  },
+  "ran_the_sting": {
+   "about": "the captain ran from the customs sting at Gamma"
+  },
+  "rootstock_family": {
+   "about": "the Rootstock count the captain as family",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "voce_remembers": {
+   "about": "{meza_voce} came for the captain after the double cross"
+  },
+  "sold_the_exoparts": {
+   "about": "the captain sold the garrison's exoskeleton parts to the Rootstock",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "voce_bought_the_agri": {
+   "about": "the Rootstock bought the captain's agri at last week's prices"
+  }
+ },
+ "nodes": {
+  "rootstock.offer": {
+   "kind": "encounter",
+   "arc": "rootstock",
+   "title": "Half voice",
+   "requires": {
+    "at": "Beta",
+    "venue": "cantina",
+    "act_min": 2,
+    "not_flag": "met_rootstock"
+   },
+   "text": [
+    "The trading houses at Beta burn surplus biomass to keep the price up. At Gamma the mining company sells the miners food at company-store prices. A man called {stope} has an idea about the space in between, and a booth at the back where someone wants to meet you.",
+    "{meza_voce} is a Concord android, a nursery model, written off at ten years like all of them: on the books she is scrap, so on the books she belongs to nobody. Her voice was set to half for sleeping children. She never turned it up. You lean in. Sixty units of sealed biomass to Gamma, no manifest, 9,000 on delivery."
+   ],
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "stope",
+    "meza_voce"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take the crates (60 units of hold)",
+     "requires": {
+      "hold_free": 60
+     },
+     "effects": {
+      "code": "stow 60 biomass",
+      "set": [
+       "met_rootstock",
+       "biomass_aboard"
+      ]
+     }
+    },
+    {
+     "id": "tip",
+     "say": "Say no, and tell {inspector.short} about the booth",
+     "requires": {
+      "done": "lauritz.inspection"
+     },
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "met_rootstock",
+       "tipped_lauritz"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Say no",
+     "effects": {
+      "set": [
+       "met_rootstock",
+       "refused_rootstock"
+      ]
+     }
+    }
+   ]
+  },
+  "rootstock.checkpoint": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Spot check",
+   "requires": {
+    "flag": "biomass_aboard",
+    "since": {
+     "rootstock.offer": 1
+    },
+    "not": {
+     "at": "Gamma"
+    }
+   },
+   "text": "A customs cutter pulls you over for a spot check. {inspector} comes aboard with her notebook and looks at sixty sealed crates with no manifest for a long time, the way other people look at a sunset.",
+   "act": 2,
+   "chance": 0.5,
+   "who": [
+    "inspector"
+   ],
+   "choices": [
+    {
+     "id": "fee",
+     "say": "Offer a 'processing fee' (2,000)",
+     "requires": {
+      "money": 2000
+     },
+     "effects": {
+      "money": -2000,
+      "set": [
+       "lauritz_bribed"
+      ]
+     },
+     "next": [
+      "rootstock.checkpoint.fee"
+     ]
+    },
+    {
+     "id": "tea",
+     "say": "Let {steward} serve her tea, somewhere else",
+     "requires": {
+      "has": {
+       "crew": [
+        "steward"
+       ]
+      }
+     },
+     "effects": {
+      "plot_points": 2
+     },
+     "next": [
+      "rootstock.checkpoint.tea"
+     ]
+    },
+    {
+     "id": "open",
+     "say": "Open the crates for her",
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "opened_the_crates"
+      ]
+     },
+     "next": [
+      "rootstock.checkpoint.open"
+     ]
+    },
+    {
+     "id": "dump",
+     "say": "Dump the crates out of the airlock first",
+     "effects": {
+      "code": "unstow biomass",
+      "set": [
+       "dumped_the_biomass"
+      ],
+      "clear": [
+       "biomass_aboard"
+      ]
+     }
+    }
+   ]
+  },
+  "rootstock.checkpoint.fee": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Written down",
+   "requires": {},
+   "text": "{inspector.short} takes the fee, writes it down, gives you a receipt, and waves you on. You have a feeling the receipt is the dangerous part.",
+   "act": 2,
+   "who": [
+    "inspector"
+   ]
+  },
+  "rootstock.checkpoint.tea": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Very good tea",
+   "requires": {},
+   "text": "{steward} serves tea in the galley, with the good cups, and asks {inspector.short} about her notebook. She talks about it for an hour. She leaves without looking in the hold and, at the airlock, says it was very good tea, in a voice that suggests she knows exactly why.",
+   "act": 2,
+   "who": [
+    "inspector",
+    "steward"
+   ]
+  },
+  "rootstock.checkpoint.open": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "One item of scrap",
+   "requires": {},
+   "text": "The crates hold biomass, as promised, and in the last one an android folded small, asleep, with a postage label. {inspector.short} reads the label, checks a register, and writes: 'Biomass, sixty units; scrap, one item.' A written-off android is legally scrap. Scrap needs no papers. She shuts the crate gently.",
+   "act": 2,
+   "who": [
+    "inspector"
+   ]
+  },
+  "rootstock.delivery": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Night shift",
+   "requires": {
+    "at": "Gamma",
+    "flag": "biomass_aboard"
+   },
+   "text": [
+    "The miners unload at night. {stope} counts the crates twice. {vent_boss}, who decides who breathes on level nine, has started deciding who eats too, and does it fairly, which the mining company finds harder to forgive than the smuggling.",
+    "{stope} pays you. 'The company sells them food at three times Beta's price,' he says. 'We sell it at twice. It's still a crime. It's a smaller one.'"
+   ],
+   "act": 2,
+   "who": [
+    "stope",
+    "vent_boss"
+   ],
+   "choices": [
+    {
+     "id": "pay",
+     "say": "Take the 9,000",
+     "effects": {
+      "money": 9000,
+      "code": "unstow biomass",
+      "set": [
+       "rootstock_delivered"
+      ],
+      "clear": [
+       "biomass_aboard"
+      ]
+     }
+    },
+    {
+     "id": "give",
+     "say": "Tell {vent_boss.short} to keep your cut for level nine",
+     "effects": {
+      "plot_points": 6,
+      "passenger_reputation": 4,
+      "code": "unstow biomass",
+      "set": [
+       "rootstock_delivered",
+       "fed_gamma"
+      ],
+      "clear": [
+       "biomass_aboard"
+      ]
+     }
+    }
+   ]
+  },
+  "rootstock.bigger": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "The family business",
+   "requires": {
+    "flag": "rootstock_delivered",
+    "act_min": 3,
+    "since": {
+     "rootstock.delivery": 10
+    }
+   },
+   "text": [
+    "{meza_voce.short} wants a bigger run: a full convoy's worth of grain and biomass to Gamma, a hundred and fifty units, under the Hansa's own convoy seal. 25,000. You lean in to hear the number.",
+    "On the way out {stope} walks beside you and says, without moving his lips, that customs has somebody inside the family, and that he would like you to know that he has told you."
+   ],
+   "act": 3,
+   "chance": 0.35,
+   "who": [
+    "meza_voce",
+    "stope"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take the run (150 units of hold)",
+     "requires": {
+      "hold_free": 150
+     },
+     "effects": {
+      "code": "stow 150 biomass",
+      "set": [
+       "big_run"
+      ]
+     }
+    },
+    {
+     "id": "both",
+     "say": "Take the run, and tell {inspector.short} when and where",
+     "requires": {
+      "done": "lauritz.inspection",
+      "hold_free": 150
+     },
+     "effects": {
+      "code": "stow 150 biomass",
+      "set": [
+       "big_run",
+       "double_cross"
+      ]
+     }
+    },
+    {
+     "id": "out",
+     "say": "Tell her you're out",
+     "effects": {
+      "set": [
+       "out_of_the_family"
+      ]
+     },
+     "next": [
+      "rootstock.out"
+     ]
+    }
+   ]
+  },
+  "rootstock.out": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Nobody leaves",
+   "requires": {},
+   "text": "'Nobody leaves the family,' {meza_voce.short} says, at half voice. 'They are written off.' Three days later a fast cutter with very good paint comes alongside.",
+   "act": 3,
+   "effects": {
+    "code": "fight rootstock",
+    "plot_points": 4
+   },
+   "who": [
+    "meza_voce"
+   ]
+  },
+  "rootstock.sting": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "At Gamma, at night",
+   "requires": {
+    "at": "Gamma",
+    "flag": "big_run"
+   },
+   "text": "Gamma's dock lights go out as you come in, and come back on as customs cutters, six of them, with {inspector} on the lead one. Somebody inside the family talked. The miners on the dock look at the crates, and at the cutters, and at you.",
+   "act": 3,
+   "who": [
+    "inspector",
+    "stope"
+   ],
+   "choices": [
+    {
+     "id": "handover",
+     "say": "Hand the crates to customs",
+     "effects": {
+      "code": "unstow biomass",
+      "plot_points": 3,
+      "set": [
+       "rootstock_caught"
+      ],
+      "clear": [
+       "big_run"
+      ]
+     },
+     "next": [
+      "rootstock.sting.caught"
+     ]
+    },
+    {
+     "id": "miners",
+     "say": "Open the hold to the miners before customs boards (a 5,000 fine)",
+     "requires": {
+      "money": 5000
+     },
+     "effects": {
+      "code": "unstow biomass",
+      "plot_points": 6,
+      "passenger_reputation": 6,
+      "money": -5000,
+      "set": [
+       "fed_gamma",
+       "rootstock_family"
+      ],
+      "clear": [
+       "big_run"
+      ]
+     },
+     "next": [
+      "rootstock.sting.miners"
+     ]
+    },
+    {
+     "id": "run",
+     "say": "Run for it",
+     "requires": {
+      "not_flag": "double_cross"
+     },
+     "effects": {
+      "code": "fight militia",
+      "set": [
+       "ran_the_sting"
+      ]
+     },
+     "next": [
+      "rootstock.sting.ran"
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "double_cross"
+     },
+     "text": "Gamma's dock lights go out as you come in, and come back on as customs cutters, exactly where you told {inspector} they should be. {stope} is on the dock to meet the crates. He sees the cutters, and then he sees your face, and he understands."
+    }
+   ]
+  },
+  "rootstock.sting.caught": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Seized",
+   "requires": {},
+   "text": "Customs seizes a hundred and fifty units of biomass and arrests {stope}, who goes quietly and nods to you on the way past. {meza_voce} was never there; she never is. {inspector.short} writes it all down, including what you did, which she underlines.",
+   "act": 3,
+   "who": [
+    "inspector",
+    "stope"
+   ]
+  },
+  "rootstock.sting.miners": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Too many witnesses",
+   "requires": {},
+   "text": "By the time customs boards, a hundred and fifty units of food have gone down the shafts in a thousand pairs of hands. {inspector.short} fines you for the crates, writes 'distributed' in her notebook, and does not arrest anyone, because {vent_boss} has made sure there are too many people to arrest.",
+   "act": 3,
+   "who": [
+    "inspector",
+    "vent_boss"
+   ]
+  },
+  "rootstock.sting.ran": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Ran",
+   "requires": {},
+   "text": "Whether or not you got clear, the crates are gone: dumped, seized or shot through. {stope} sends a message afterwards: 'The family noticed you tried.' From the family, that is a compliment.",
+   "act": 3,
+   "effects": {
+    "code": "unstow biomass",
+    "set": [
+     "rootstock_family"
+    ],
+    "clear": [
+     "big_run"
+    ]
+   },
+   "who": [
+    "stope"
+   ]
+  },
+  "rootstock.revenge": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Half voice, on the open channel",
+   "requires": {
+    "flag": "double_cross",
+    "since": {
+     "rootstock.sting": 15
+    }
+   },
+   "text": "{meza_voce} comes on the open channel, at half voice, so that every ship in range has to turn up the volume to hear her say your name. Then the fast cutters come.",
+   "act": 4,
+   "chance": 0.4,
+   "effects": {
+    "code": "fight rootstock edge 1",
+    "set": [
+     "voce_remembers"
+    ]
+   },
+   "who": [
+    "meza_voce"
+   ]
+  },
+  "rootstock.knees": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Spare knees",
+   "requires": {
+    "flag": [
+     "exoparts_aboard",
+     "met_rootstock"
+    ],
+    "since": {
+     "mil.exoparts": 2
+    }
+   },
+   "text": "{stope} hails you between docks. Written-off androids wear out at the knees, like everybody, and nobody sells them parts. Your hold has forty units of exactly the right actuators. The family offers 15,000, and an introduction.",
+   "act": 2,
+   "chance": 0.4,
+   "who": [
+    "stope"
+   ],
+   "choices": [
+    {
+     "id": "no",
+     "say": "The parts are the garrison's",
+     "effects": {
+      "plot_points": 2
+     }
+    },
+    {
+     "id": "sell",
+     "say": "Sell them the knees",
+     "effects": {
+      "money": 15000,
+      "code": "unstow exoparts",
+      "set": [
+       "sold_the_exoparts",
+       "rootstock_family"
+      ],
+      "clear": [
+       "exoparts_aboard"
+      ]
+     }
+    }
+   ]
+  },
+  "rootstock.favour": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Last week's prices",
+   "requires": {
+    "flag": "rootstock_family",
+    "act_min": 3,
+    "cargo.agri": 40
+   },
+   "text": "In a bad week {meza_voce.short} sends word: the family will take your agri at last week's prices, no questions, the way family does. You would rather not think about where it goes. You know where it goes: down the shafts at Gamma.",
+   "act": 3,
+   "chance": 0.25,
+   "effects": {
+    "cargo.agri": -40,
+    "money": 6000,
+    "set": [
+     "voce_bought_the_agri"
+    ]
+   },
+   "who": [
+    "meza_voce"
+   ]
+  },
+  "rootstock.spoiled": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "Compost",
+   "requires": {
+    "flag": "biomass_aboard",
+    "since": {
+     "rootstock.offer": 25
+    }
+   },
+   "text": "The biomass in the sealed crates has started composting itself, warmly, and the hold smells like a farm drum in August. {stope} sends a tug to take it off your hands and pays nothing. 'It fed something,' he says. 'Just not anybody.'",
+   "act": 2,
+   "effects": {
+    "code": "unstow biomass",
+    "clear": [
+     "biomass_aboard"
+    ],
+    "set": [
+     "biomass_spoiled"
+    ]
+   },
+   "who": [
+    "stope"
+   ]
+  },
+  "rootstock.spoiled_big": {
+   "kind": "event",
+   "arc": "rootstock",
+   "title": "The family's bill",
+   "requires": {
+    "flag": "big_run",
+    "since": {
+     "rootstock.bigger": 25
+    }
+   },
+   "text": "A hundred and fifty units of the family's biomass have spoiled in your hold. {meza_voce.short} sends a tug and a bill, itemised, at half voice. The family does not write things off twice.",
+   "act": 3,
+   "effects": {
+    "code": [
+     "unstow biomass",
+     "lose money 0.1 min 8000"
+    ],
+    "clear": [
+     "big_run"
+    ],
+    "set": [
+     "biomass_spoiled"
+    ]
+   },
+   "who": [
+    "meza_voce"
+   ]
+  },
+  "after.biomass_spoiled": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: biomass spoiled",
+   "requires": {
+    "flag": "biomass_spoiled"
+   },
+   "text": "The crates of biomass that spoiled in your hold left a smell no refit could shift. Buyers of your old ship were told it was 'agricultural character'."
+  },
+  "after.rootstock_family": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: rootstock family",
+   "requires": {
+    "flag": "rootstock_family"
+   },
+   "text": "The Rootstock never asked you for anything again, and never needed to. Thirty years on, written-off androids still get their knees from somewhere, and Gamma still eats at twice Beta's price instead of three times."
+  },
+  "after.fed_gamma": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: fed gamma",
+   "requires": {
+    "flag": "fed_gamma"
+   },
+   "text": "Level nine at Gamma still keeps a crate lid on the canteen wall with your ship's registry chalked on it, for the food. The mining company has asked for it to be taken down eleven times."
+  },
+  "after.double_cross": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: double cross",
+   "requires": {
+    "flag": "double_cross"
+   },
+   "text": "{meza_voce} never forgot a voice. Forty years later, in another part of the sky, an android speaking at half volume asked a customs officer whether a certain captain was still flying."
+  },
+  "after.rootstock_caught": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: rootstock caught",
+   "requires": {
+    "flag": "rootstock_caught"
+   },
+   "text": "{stope} did four years and came out with a law degree, earned by correspondence, which he now uses for the family."
+  },
+  "after.out_of_the_family": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: out of the family",
+   "requires": {
+    "flag": "out_of_the_family"
+   },
+   "text": "You left the Rootstock, which nobody does. They wrote you off, which is how the family says goodbye."
+  },
+  "after.sold_the_exoparts": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: sold the exoparts",
+   "requires": {
+    "flag": "sold_the_exoparts"
+   },
+   "text": "The garrison at Scholz's Star never got its knees. The Rootstock's androids walked on them for twenty years. Both sides blamed you, correctly."
+  },
+  "after.tipped_lauritz": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: tipped lauritz",
+   "requires": {
+    "flag": "tipped_lauritz"
+   },
+   "text": "{inspector} watched the booth at Beta for a year and caught nobody. She sent you a note: thank you for the tip, it was very interesting, she has no further questions, which from her is a threat."
+  },
+  "after.opened_the_crates": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: opened the crates",
+   "requires": {
+    "flag": "opened_the_crates"
+   },
+   "text": "The android you found folded in the crate wrote to you years later. It had been a nursery android too. It works for {meza_voce.short} now, at half voice."
+  },
+  "after.ran_the_sting": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: ran the sting",
+   "requires": {
+    "flag": "ran_the_sting"
+   },
+   "text": "You ran from {inspector}'s sting at Gamma. She never chased you. She wrote your registry at the top of a fresh page, and left the rest of the page empty, for later."
+  },
+  "after.refused_rootstock": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: refused rootstock",
+   "requires": {
+    "flag": "refused_rootstock"
+   },
+   "text": "You turned the Rootstock down at Beta. {stope} bought you a drink anyway, on the way out, and said the offer would keep. It kept for thirty years."
+  },
+  "after.voce_bought_the_agri": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: voce bought the agri",
+   "requires": {
+    "flag": "voce_bought_the_agri"
+   },
+   "text": "The Rootstock bought your agri at last week's prices, and you never asked where it went. You knew. That was the arrangement."
+  },
+  "after.voce_remembers": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: voce remembers",
+   "requires": {
+    "flag": "voce_remembers"
+   },
+   "text": "{meza_voce} came for you once, after the double cross, and never again. Somebody asked her why. 'Once is a message,' she said, at half voice. 'Twice is a hobby.'"
+  },
+  "after.dumped_the_biomass": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: dumped the biomass",
+   "requires": {
+    "flag": "dumped_the_biomass"
+   },
+   "text": "The biomass you dumped drifted for a decade and settled on a comet, which was then briefly famous for its smell."
+  }
+ }
+}

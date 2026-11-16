@@ -113,7 +113,7 @@
    "system": "TRAPPIST-1",
    "ly": 40,
    "facts": "Seven rocky planets, several in the habitable zone.",
-   "colony": "The far research station. Formative. Korinek works here."
+   "colony": "The far research station. Formative. The archaeophysicist (ancient_scholar) works here."
   },
   "Ancient Ruins Alpha": {
    "kind": "location",
@@ -209,7 +209,7 @@
    "type": "Builder Site",
    "system": "Scholz's Star's wake",
    "colony": "The segment the star pulled away 70,000 years ago, still turning; the beacon on its rim.",
-   "unlock": "revealed when the captain takes Korinek to the segment (ancient_mysteries.1)",
+   "unlock": "revealed when the captain takes the archaeophysicist to the segment (ancient_mysteries.1)",
    "made": {
     "tech": 18,
     "agri": 1,

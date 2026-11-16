@@ -187,6 +187,11 @@ A few rules worth knowing:
 - People come back: a convoy captain, a young hauler and a customs inspector meet you early,
   again later, and turn up at the crisis or the climax depending on how you treated them.
   Old choices come due too, for better or worse, and friends can be called into a fight.
+- Special cargo takes hold room until it is delivered: a legion's prototype hovertank
+  (150 units, Alpha to Delta), exoskeleton parts for a garrison (40 units, on a deadline),
+  sealed crates for smugglers who would rather you did not ask. The Hold figure counts it.
+- Some enemies only turn up after the story introduces them: Cargolyte stevedores after the
+  Sixpack's first raid, Rootstock enforcers after you meet the family.
 - Passenger reputation runs from 0 to 100.
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 

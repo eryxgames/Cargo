@@ -1,7 +1,7 @@
 {
  "format": "storykit",
  "version": 1,
- "about": "Passengers and envoys. The 'galactic alliance' becomes the five colonies' customs talks, the never-happening 'system rebellion' becomes the Gamma miners' strike (it waited on a stat the game never raises), the alien scholar becomes Matylda Korinek, a human archaeophysicist, and the VIP and merchant visits get places they can actually happen.",
+ "about": "Passengers and envoys. The 'galactic alliance' becomes the five colonies' customs talks, the never-happening 'system rebellion' becomes the Gamma miners' strike (it waited on a stat the game never raises), the alien scholar becomes a human archaeophysicist (ancient_scholar), and the VIP and merchant visits get places they can actually happen.",
  "characters": {
   "deacon": {
    "name": "Deacon Amaro",
@@ -110,10 +110,10 @@
     "short": "Halloran"
    },
    "rebel_commander": {
-    "name": "Teodor Brann",
+    "name": "Teodor Strada",
     "generated": false,
     "about": "spokesman of the Gamma free miners",
-    "short": "Brann"
+    "short": "Strada"
    },
    "ancient_scholar": {
     "kind": "human",

@@ -14,8 +14,8 @@
  },
  "characters": {
   "convoy_captain": {
-   "name": "Ilse Varga",
-   "short": "Varga",
+   "name": "Allsa Targa",
+   "short": "Targa",
    "kind": "human",
    "about": "captain of the Gamma-Alpha convoy; chews liquorice root; keeps score of every favour, both ways"
   },
@@ -33,16 +33,16 @@
   }
  },
  "flags": {
-  "varga_helped": {
+  "convoy_helped": {
    "about": "the captain towed {convoy_captain}'s barges",
    "carries_to": [
     "cargo2"
    ]
   },
-  "varga_refused": {
+  "convoy_refused": {
    "about": "the captain left {convoy_captain}'s barges at the dock"
   },
-  "varga_friend": {
+  "convoy_friend": {
    "about": "{convoy_captain} answers when the captain calls",
    "carries_to": [
     "cargo2"
@@ -110,7 +110,7 @@
   }
  },
  "nodes": {
-  "varga.tug": {
+  "convoy.tug": {
    "kind": "event",
    "arc": "recurring",
    "title": "Two barges and no tug",
@@ -133,7 +133,7 @@
       "money": -1500,
       "plot_points": 3,
       "set": [
-       "varga_helped"
+       "convoy_helped"
       ]
      }
     },
@@ -142,20 +142,20 @@
      "say": "Not your convoy, not your problem",
      "effects": {
       "set": [
-       "varga_refused"
+       "convoy_refused"
       ]
      }
     }
    ]
   },
-  "varga.berth": {
+  "convoy.berth": {
    "kind": "event",
    "arc": "recurring",
    "title": "{convoy_captain.short} keeps score",
    "requires": {
-    "flag": "varga_helped",
+    "flag": "convoy_helped",
     "since": {
-     "varga.tug": 15
+     "convoy.tug": 15
     },
     "at_type": [
      "Planet",
@@ -176,7 +176,7 @@
       "code": "dues hike 0.7",
       "plot_points": 3,
       "set": [
-       "varga_friend"
+       "convoy_friend"
       ]
      }
     },
@@ -186,21 +186,21 @@
      "effects": {
       "plot_points": 6,
       "set": [
-       "varga_friend"
+       "convoy_friend"
       ]
      }
     }
    ]
   },
-  "varga.passing": {
+  "convoy.passing": {
    "kind": "event",
    "arc": "recurring",
    "title": "The convoy passes",
    "requires": {
-    "flag": "varga_refused",
-    "not_flag": "varga_helped",
+    "flag": "convoy_refused",
+    "not_flag": "convoy_helped",
     "since": {
-     "varga.tug": 15
+     "convoy.tug": 15
     }
    },
    "text": "{convoy_captain.short}'s convoy passes you on the lane: forty ships in good order. She doesn't hail. On the open channel somebody says your ship's name, and somebody else laughs.",
@@ -219,7 +219,7 @@
      "effects": {
       "money": -2000,
       "set": [
-       "varga_helped"
+       "convoy_helped"
       ]
      }
     },
@@ -229,12 +229,12 @@
     }
    ]
   },
-  "varga.escort": {
+  "convoy.escort": {
    "kind": "event",
    "arc": "recurring",
    "title": "Close order",
    "requires": {
-    "flag": "varga_friend",
+    "flag": "convoy_friend",
     "act_min": 3
    },
    "text": "Pirates have been tailing you for two jumps. Then forty haulers come up the lane in close order, {convoy_captain.short}'s tug at the front and every gun they own pointed outwards. The pirates remember an appointment somewhere else.",
@@ -923,24 +923,24 @@
     "plot_points": 2
    }
   },
-  "after.varga_friend": {
+  "after.convoy_friend": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_friend"
+    "flag": "convoy_friend"
    },
    "text": "{convoy_captain} retired with the convoy's best record and no unpaid favours. Her score sheet, framed in the convoy office, has your ship's name on the right-hand side.",
-   "title": "After: varga friend"
+   "title": "After: convoy friend"
   },
-  "after.varga_refused": {
+  "after.convoy_refused": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_refused",
-    "not_flag": "varga_helped"
+    "flag": "convoy_refused",
+    "not_flag": "convoy_helped"
    },
    "text": "{convoy_captain} never forgot the barges. When she retired she left you a single liquorice root in her will, which everybody at the convoy office understood.",
-   "title": "After: varga refused"
+   "title": "After: convoy refused"
   },
   "after.pell_friend": {
    "kind": "epilogue",
@@ -1046,14 +1046,14 @@
    "text": "{pirate_captain.short} flew into Alpha against the dreadnought under her own flag. The merged legion gave her a medal and a warrant on the same afternoon.",
    "title": "After: mraz at alpha"
   },
-  "after.varga_paid": {
+  "after.convoy_paid": {
    "kind": "epilogue",
    "arc": "epilogue",
    "requires": {
-    "flag": "varga_paid"
+    "flag": "convoy_paid"
    },
    "text": "{convoy_captain.short} paid your margin call out of favours, not money. You spent the next ten years paying them back, one tow at a time.",
-   "title": "After: varga paid"
+   "title": "After: convoy paid"
   }
  }
 }

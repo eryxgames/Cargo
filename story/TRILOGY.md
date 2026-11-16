@@ -1,6 +1,6 @@
 # The Cargo trilogy: outline
 
-Working document, 2026-11-14. Machine-readable parts (characters who span the
+Working document, 2026-11-14, updated 2026-11-16. Machine-readable parts (characters who span the
 saga, promises, timelines) live in `saga.json`. Cargo 1's scenes live in
 `cargo1/*.json`, show on the story map (`map.html`) with the old text kept for
 comparison, and are built into `cargo.py`, which plays them (1.2).
@@ -103,14 +103,16 @@ stranger at the station bar or past the portal, named only if the record is ther
 | Later power | In Cargo 1 | Seen as |
 | --- | --- | --- |
 | Hauler Hansa | the convoy office: carries ships between the stars, charges dues, sells bonds; no common money yet | the player's people; dues and bonds; the charter and the first Mark |
-| Terran Mandate | security legions of OmniCorp, Stellar Dynamics and the Xylo Consortium | legion contracts, the commission, the merger |
-| Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests | Ysolde van Rostrom, Dharr Santor |
+| Terran Mandate | security legions of OmniCorp, Stellar Dynamics and the Xylo Consortium; the first hovertank and the first exoskeleton garrison | legion contracts, the commission, the merger, the hovertank to Delta c, knees for Scholz's Star |
+| Inner systems (later the Solar Union's Mandate wing) | Serac, who arranges things for Sol's defence contractors and the trading houses | the squeeze, the recall, the fire, one favour, a commission |
+| Stellar Concord | research houses: House Rostrom, the Bekkenheim drive tests; androids written off at ten years | Yzode van Rostrom, Dharr Santor; the Rootstock |
 | Collective | CU-113, a Curator neurodroid at the player's guild (the game's Neurodroid Overseer); the Sowers on the farm drums | the first refusal, the first node, long before vectorspace |
-| Other machines | heavy agrobots (Krog loading docks, Geod founding Delta's farms, Aela boring the Rockwardens' mine); the nanobot colony at Sigma VII; the Unsorted, robots who belong to nothing | jobs, passengers, enclave quests |
+| Other machines | heavy agrobots (Krogg loading docks, Geod founding Delta's farms, Eela boring the Rockwardens' mine); the nanobot colony at Sigma VII; the Unsorted, robots who belong to nothing | jobs, passengers, enclave quests |
 | Solarians | a reading-house at Barnard's Star that logs sunspots | Deacon Amaro, who reads trade routes in them |
-| Cargo cults | the Cult of the Broken Machine (worships a broken-down hauler at an outpost), the Order of the Tarnished Gear (collects broken technology), the Star-Shaped Scar Tribe (Zeta Reticuli) | first contact, pilgrims, the holy manifest, the unholy shelf, the brass band |
+| Cargo cults | the Cult of the Broken Machine (worships a broken-down hauler at an outpost), the Order of the Lost Gear (collects broken technology), the Star-Shaped Scar Tribe (Zeta Reticuli); the Cargolytes, whose council, the Sixpack, raids convoys for containers | first contact, pilgrims, the holy manifest, the unholy shelf, the brass band; a raid, a tithe counted in TEU |
 | Hatters | the Grey Hats, an outpost crew | record cleaning, for a fee |
-| Neonobility | Neons who sleep through decades and buy land before it is worth anything (Lady Ottavine and her heritarchist); Virtuals, young Neons in holographic bodies (Ren Asquine-Vel); fluencers, real or fake heirs who stream everything (Brisa Vell) | sleeping cargo, freight rates for the weightless, a stream from your hold |
+| Smugglers | the Rootstock: written-off Concord androids moving food and biomass from Beta's drums to Gamma's miners | sealed crates, a spot check, a sting, a family |
+| Neonobility | Neons who sleep through decades and buy land before it is worth anything (Conte Ottavine Kraal and her heritarchist, Magister Notary Augias Pfennig); Virtuals, young Neons in holographic bodies (Karen Asquine-Kraal); fluencers, real or fake heirs who stream everything (Brisa, and Lorisa, her twin and manager) | sleeping cargo, freight rates for the weightless, a stream from your hold |
 | Technoshamans | the farm drums | blessings with firmware patches, on subscription |
 
 ## Characters who outlive their game
@@ -120,13 +122,17 @@ stranger at the station bar or past the portal, named only if the record is ther
 | The captain | the player | the player, or an old NPC | the player, or a name on a memorial |
 | The other captain (clone) | partner, rival or runaway | the other hauler with your name | |
 | CU-113, Neurodroid Overseer | first neurodroid to refuse an order; six legs and a sensor mast | a node of the Binary Dawn; remembers what you chose | unchanged, several times over |
-| Aela (agrobot) | bores the Rockwardens' first gallery; asks if it is in the cooperative | | still digging for Stonewright, if given a share |
+| Eela (agrobot) | bores the Rockwardens' first gallery; asks if it is in the cooperative | | still digging for Stonewright, if given a share |
 | Hedda Mraz | the pirate vendetta | founder of the Void Angels, if spared | |
 | Anselm Rockwarden | the cooperative; takes Stonewright sublight | | a name on the keel; Maret Rockwarden (wiki) commands |
-| Ysolde van Rostrom | junior researcher, then founder of House Rostrom | head of the house | |
+| Yzode van Rostrom | junior researcher, then founder of House Rostrom | head of the house | |
 | Dharr Santor | flies the fourth drive test, gone eleven minutes, back with three weeks of beard | the drive carries his name | |
-| Matylda Korinek | archaeophysicist; the samples and the segment | old, still right | her notes, or her upload |
-| Lady Ottavine Kessary-Vel | sleeping cargo to Delta; buys land next to Geod's Row | wakes thirty years on, asks for you | awake for the restart, barely older |
+| Tylde Kren | archaeophysicist; the samples and the segment | old, still right | her notes, or her upload |
+| Conte Ottavine Kraal | sleeping cargo to Delta; buys land next to Geod's Row | wakes thirty years on, asks for you | awake for the restart, barely older |
+| Magister Notary Augias Pfennig | her heritarchist; reads your family line and bills her for it | Astin Pfennig, his son or his clone | |
+| Serac | arranges the squeeze, the recall and the fire; offers one favour, then a commission | runs the Mandate's (TAM) operations and the Solar Union's inner-systems "defence" wing | has not aged |
+| Meza Voce | head of the Rootstock, at half voice | remembers a double cross | |
+| Dr Anna-Lise Samples | grew the clone; looks for life in brown dwarf clouds | | |
 
 ## Promises
 
@@ -144,7 +150,7 @@ Tracked in `saga.json`; the validator lists any a written part fails to pay.
 | the_stonewright | Anselm's long run | Cargo 3 |
 | the_hollow_rock | the nanobot colony's galleries | Cargo 2 |
 | the_lyra_rumour | the Maud Kettle's story and the chirps from Lyra | Cargo 2 |
-| the_sleeper | Lady Ottavine goes back to sleep at Delta | Cargo 2 |
+| the_sleeper | Conte Ottavine goes back to sleep at Delta | Cargo 2 |
 
 ## Cargo 1: what changed
 
@@ -206,13 +212,13 @@ at Epsilon Eridani, an interstellar comet, and a microlensing parallax
 (`cargo1/science.json`). The people who want them flown keep them from getting too
 solemn.
 
-People who come back (`cargo1/recurring.json`): Ilse Varga, captain of the
+People who come back (`cargo1/recurring.json`): Allsa Targa, captain of the
 Gamma-Alpha convoy, who keeps score of favours; Pell Okafor, nineteen and without a
 ship, who becomes a friend, a debtor or a raider; and Hanne Lauritz, the customs inspector
 who writes everything down, bribes included. Each meets the captain early and again in
 the middle, can be called into fights, and turns up at the low point and the climax
 depending on how they were treated. Old debts come due on their own: the harvest at
-Geod's Row, the Kessary-Vel dividend, the clone's half of the profits, Mraz's old crew,
+Geod's Row, the Kraal dividend, the clone's half of the profits, Mraz's old crew,
 the neurodroid that was sold. The low points and climaxes offer paybacks for many earlier
 choices: the forty haulers from the jump point at Alpha, Mraz under her own flag, Tadeo
 out of the brig, the colony at Sigma VII keeping a copy of the logs in rock.
@@ -229,19 +235,57 @@ mechanic, Tadeo the gunner, Iolanthe the Solarian navigator and Fenn the broker
 (`cargo1/crew.json`). Forty-odd lines of dock gossip fill the cantina between
 story rumours (`cargo1/gossip.json`).
 
+Serac (`cargo1/serac.json`) is behind the three crises: his name is in the dock clerks'
+mouths during the squeeze, on the recall order at the jump point and on the door of the
+office that chaired the fire. He offers one favour in a cantina and collects it before the
+end; on the combat road he offers a commission in the inner systems' new defence wing.
+
+People from the names pool (`cargo1/people.json`): Sergeant Hardtack, who tells you who
+signed the recall (so you can name him at the inquiry); Deadstick, the pilot who followed
+it and asks to fly on your wing at Alpha; Svea Firn's ice core at Sigma VII, with a grey
+layer seventy thousand years down that Dr Hammerschultz, chair of the review board, can be
+shown; Marit Winze and Vo Brattice at Gamma, when level nine collapses; Dr Anna-Lise
+Samples, who grew the clone and drops a balloon into WISE 0855 looking for floaters,
+sinkers and hunters (Sagan and Salpeter, 1976); and Lorisa, Brisa's twin and manager.
+
+The Cargolytes (`cargo1/cargolytes.json`) arrive early: the Sixpack raids a convoy for its
+containers, Sarga Farga leads the boarders, Ullage preaches at the outposts. Defend, pay a
+tithe or cut loose; after the first raid their stevedores can stop a ship between docks.
+
+Legion freight (`cargo1/legion_freight.json`) begins the Mandate's machines: a prototype
+hovertank from Alpha to Delta c's dust plains (150 units of hold, its crew aboard, Serac
+offering more for a different address), and exoskeleton knee actuators for the garrison at
+Scholz's Star within fifteen turns. The epilogues follow both designs to Project ERYX.
+
+The Rootstock (`cargo1/rootstock.json`): Concord androids are written off at ten years,
+scrap on the books and so nobody's property. Meza Voce, a nursery model who never turned
+her voice up, runs food and biomass from Beta, where the trading houses burn surplus, to
+Gamma's miners, who pay company-store prices. A first run past a customs spot check, a
+bigger one into a sting, a double cross if the captain wants it, enforcers if they leave.
+They also want the garrison's knees.
+
+Odds and ends (`cargo1/odds.json`) are half-serious nods to the genre in the game's own
+voice: a passenger whose ticket is bought next week, the licence exam's question seven
+(answer (c), "Press Enter to continue", is not discussed), a volunteer in a red jumpsuit,
+the ship's bugrat (which also finds leaks), a signal from beyond the edge of the system
+that is a soup advert, an impact shelter that runs a satisfaction survey, a salvage
+auction, a crate the auditor rounds up, a broker-robot strike, a training tutorial nobody
+can skip and a medal ceremony at which, for once, nothing attacks. They also fill the places
+that had no scenes (Omega XIV, Theta III, the listening post in the outer system).
+
 Rewritten: every chapter and ending text, the passenger and synthetics chains,
 and the ancient scholar (now human). New: the Hansa charter, the samples, the
 legion commission, the older captain, the clone, CU-113, the Sowers'
-technoshaman, Krog, Geod, Aela, the nanobot colony, the Unsorted, the holy
+technoshaman, Krogg, Geod, Eela, the nanobot colony, the Unsorted, the holy
 manifest, the deacon, the pilgrims, the Grey Hats, the Lyra rumour, the ruins,
 the Stator Field, the Builder Site and the Star-Shaped Scar Tribe.
 
-What players of each style see (from 16 recorded bot games): traders get Krog,
+What players of each style see (from 16 recorded bot games): traders get Krogg,
 Geod, the charter, the customs talks, the strike, the deacon, the Lyra story and
 sometimes the old hauler. Explorers add the
 samples, the clone, the Rostrom line and the old hauler; fighters add the
 legions, Mraz, CU-113 and the Unsorted. Players who build guilds and farms meet
-the Sowers and the first node; those who build mining platforms meet Aela and the
+the Sowers and the first node; those who build mining platforms meet Eela and the
 nanobot colony, late in the discovery path. The ruins, the Stator Field, the
 Builder Site and the signal outposts need the player to travel there. The portal
 and its older captain need the tycoon's choice (offered every 10 turns to a rich

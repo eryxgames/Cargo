@@ -14,22 +14,33 @@
    "about": "sleeps through decades in a sarcophagus and buys land before it is worth anything"
   },
   "heritarchist": {
-   "name": "Magister Sethric Aelwynn-Halen",
+   "name": "Magister Notary Augias Pfennig",
    "short": "the Magister",
    "kind": "human",
-   "about": "heritarchist to the Kessary-Vel family: reads family lines across hibernation cycles; bills for it"
+   "about": "heritarchist to the {neon_family} family: reads family lines across hibernation cycles; bills for it"
   },
   "virtual_heir": {
-   "name": "Ren Asquine-Vel",
-   "short": "Ren",
+   "name": "Karen Asquine-Kraal",
+   "short": "Karen",
    "kind": "virtual",
    "about": "young Neon who gave up biology: a holographic body, a 300-kilo projector, opinions about freight rates"
   },
   "fluencer": {
-   "name": "Brisa Vell",
+   "name": "Brisa",
    "short": "Brisa",
    "kind": "fluencer",
    "about": "streams everything; claims a Neon family that may not claim her"
+  },
+  "fluencer_manager": {
+   "name": "Lorisa",
+   "short": "Lorisa",
+   "kind": "human",
+   "about": "{fluencer}'s twin and manager: negotiates the rates while her sister films; never on camera"
+  },
+  "neon_family": {
+   "name": "Kraal",
+   "kind": "family",
+   "about": "the Neon family {neon_sleeper} sleeps for; written as 'the Kraal family' or 'a Kraal heir' in texts"
   }
  },
  "flags": {
@@ -60,7 +71,7 @@
    ]
   },
   "fluencer_exposed": {
-   "about": "the captain told {fluencer} that the Kessary-Vel family has never heard of her",
+   "about": "the captain told {fluencer} that the {neon_family} family has never heard of her",
    "carries_to": [
     "cargo2"
    ]
@@ -177,13 +188,13 @@
     "act_min": 2
    },
    "chance": 0.06,
-   "text": "{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir and that your ship is giving authentic hauler. Her feed has nine million followers. Your coffee machine has never been filmed before and is not handling it well.",
+   "text": "{fluencer} boards with three cameras and no ticket. She says she is a {neon_family} heir and that your ship is giving authentic hauler. Her feed has nine million followers. Your coffee machine has never been filmed before and is not handling it well.",
    "variants": [
     {
      "requires": {
       "flag": "neon_sleeper_carried"
      },
-     "text": "{fluencer} boards with three cameras and no ticket. She says she is a Kessary-Vel heir. You have carried the Kessary-Vel family, asleep, and {heritarchist.short} read you every name on the family line over dinner, twice. Hers was not one of them."
+     "text": "{fluencer} boards with three cameras and no ticket. She says she is a {neon_family} heir. You have carried the {neon_family} family, asleep, and {heritarchist.short} read you every name on the family line over dinner, twice. Hers was not one of them."
     }
    ],
    "choices": [

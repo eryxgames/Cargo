@@ -1,0 +1,416 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Serac: the man from the inner systems behind the squeeze, the recall at the jump point and the Institute fire. He offers one favour in a cantina and collects it before the end. In later parts he runs the Mandate's (TAM) operations and the Solar Union's inner-systems 'defence' wing.",
+ "arcs": {
+  "serac": {
+   "title": "Serac",
+   "order": 0.6
+  }
+ },
+ "characters": {
+  "serac": {
+   "name": "Serac",
+   "short": "Serac",
+   "kind": "human",
+   "about": "a man from the inner systems who arranges things for Sol's defence contractors and the trading houses: dumping, recalls, fires; never in the room when they happen. Later he runs operations for the Mandate (TAM) and the Solar Union's inner-systems 'defence' wing. Doesn't seem to age"
+  }
+ },
+ "flags": {
+  "owes_serac": {
+   "about": "the captain owes {serac} a small favour",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "refused_serac": {
+   "about": "the captain refused {serac}'s favour"
+  },
+  "asked_serac": {
+   "about": "the captain asked {serac} who his friends were"
+  },
+  "sold_the_schedules": {
+   "about": "the captain sold {serac} the convoy schedules"
+  },
+  "gave_serac_the_logs": {
+   "about": "the captain gave {serac} the jump-point logs"
+  },
+  "gave_serac_the_samples": {
+   "about": "the captain gave {serac} the alloy samples"
+  },
+  "paid_serac": {
+   "about": "the captain paid {serac}'s favour"
+  },
+  "defied_serac": {
+   "about": "the captain refused to pay {serac}'s favour",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "took_the_commission": {
+   "about": "the captain took {serac}'s commission in the Mandate's inner-systems wing",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "refused_the_commission": {
+   "about": "the captain refused {serac}'s commission"
+  },
+  "serac_noticed": {
+   "about": "the captain sent {serac} the inquiry transcript"
+  }
+ },
+ "nodes": {
+  "serac.meet": {
+   "kind": "encounter",
+   "arc": "serac",
+   "title": "A drink he isn't drinking",
+   "requires": {
+    "venue": "cantina",
+    "act_min": 2,
+    "turn_min": 20
+   },
+   "text": [
+    "A man at the end of the bar has a drink he isn't drinking and a grey coat nobody saw him take off. {serac}. He knows your ship's name, your loan, and what you paid for your last load.",
+    "'I arrange things,' he says. 'For friends in the inner systems, mostly. I'd like to arrange something for you. A problem of yours goes away. One day I ask a small favour back.'"
+   ],
+   "act": 2,
+   "chance": 0.15,
+   "who": [
+    "serac"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take the favour (your next loan payments are settled: +12,000)",
+     "effects": {
+      "money": 12000,
+      "set": [
+       "owes_serac"
+      ]
+     }
+    },
+    {
+     "id": "ask",
+     "say": "Ask who his friends are, then say no",
+     "effects": {
+      "plot_points": 4,
+      "set": [
+       "refused_serac",
+       "asked_serac"
+      ]
+     },
+     "next": [
+      "serac.friends"
+     ]
+    },
+    {
+     "id": "no",
+     "say": "Say no, and leave the drink",
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "refused_serac"
+      ]
+     }
+    }
+   ]
+  },
+  "serac.friends": {
+   "kind": "event",
+   "arc": "serac",
+   "title": "Everybody, eventually",
+   "requires": {
+    "flag": "asked_serac"
+   },
+   "text": "'Everybody,' {serac.short} says. 'Eventually.' He leaves money for the drink he didn't drink, and the barman will not touch it.",
+   "act": 2,
+   "who": [
+    "serac"
+   ]
+  },
+  "serac.collects": {
+   "kind": "event",
+   "arc": "serac",
+   "title": "A small favour",
+   "requires": {
+    "flag": "owes_serac",
+    "act_min": 3,
+    "since": {
+     "serac.meet": 25
+    }
+   },
+   "text": "{serac.short}'s small favour arrives in a plain envelope, delivered by a man who waits for the answer. It is not small. He wants something the friends in the inner systems can use, and he wants it this week.",
+   "act": 3,
+   "chance": 0.3,
+   "who": [
+    "serac"
+   ],
+   "choices": [
+    {
+     "id": "schedules",
+     "say": "Hand over the convoy schedules",
+     "requires": {
+      "chapter": "ch3a"
+     },
+     "effects": {
+      "money": 20000,
+      "passenger_reputation": -5,
+      "set": [
+       "sold_the_schedules"
+      ]
+     }
+    },
+    {
+     "id": "logs",
+     "say": "Hand over the jump-point logs",
+     "requires": {
+      "chapter": "ch3b"
+     },
+     "effects": {
+      "set": [
+       "gave_serac_the_logs"
+      ]
+     }
+    },
+    {
+     "id": "samples",
+     "say": "Hand over the samples",
+     "requires": {
+      "chapter": "ch3c"
+     },
+     "effects": {
+      "code": "lose research 0.3",
+      "set": [
+       "gave_serac_the_samples"
+      ]
+     }
+    },
+    {
+     "id": "pay",
+     "say": "Give him what he asks",
+     "requires": {
+      "not": {
+       "chapter": [
+        "ch3a",
+        "ch3b",
+        "ch3c"
+       ]
+      }
+     },
+     "effects": {
+      "code": "lose money 0.15 min 5000",
+      "set": [
+       "paid_serac"
+      ]
+     }
+    },
+    {
+     "id": "convoy",
+     "say": "Let {convoy_captain.short} put his messenger on the next convoy to the inner systems",
+     "requires": {
+      "flag": "convoy_friend"
+     },
+     "effects": {
+      "plot_points": 6,
+      "set": [
+       "defied_serac"
+      ]
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "Refuse",
+     "effects": {
+      "code": "fight deserters",
+      "plot_points": 8,
+      "set": [
+       "defied_serac"
+      ]
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "chapter": "ch3a"
+     },
+     "text": "{serac.short}'s small favour arrives in a plain envelope, delivered by a man who waits for the answer. It is not small: the Hansa's convoy schedules, every route, every month, for a year."
+    },
+    {
+     "requires": {
+      "chapter": "ch3b"
+     },
+     "text": "{serac.short}'s small favour arrives in a plain envelope, delivered by a man who waits for the answer. It is not small: your logs from the jump point, the originals, and no copies."
+    },
+    {
+     "requires": {
+      "chapter": "ch3c"
+     },
+     "text": "{serac.short}'s small favour arrives in a plain envelope, delivered by a man who waits for the answer. It is not small: every sample of the grey alloy you have, and your silence about where it came from."
+    }
+   ]
+  },
+  "serac.petty": {
+   "kind": "event",
+   "arc": "serac",
+   "title": "Lost bookings",
+   "requires": {
+    "flag": "refused_serac",
+    "act_min": 3,
+    "since": {
+     "serac.meet": 20
+    }
+   },
+   "text": "A dock office loses your berth booking twice in one week, and a customs form you filed in triplicate turns up in none of the three places. The clerk apologises and says a name, quietly.",
+   "act": 3,
+   "chance": 0.2,
+   "effects": {
+    "money": -2000
+   },
+   "who": [
+    "serac"
+   ]
+  },
+  "serac.commission": {
+   "kind": "event",
+   "arc": "serac",
+   "title": "A commission",
+   "requires": {
+    "chapter": "ending_combat",
+    "since": {
+     "drama.combat.roll_call": 6
+    }
+   },
+   "text": [
+    "A letter with an inner-systems seal offers you a commission: colonel, in the Solar Union's new Mandate wing for the 'defence' of the inner systems. Good pay, a better ship, no questions asked in either direction.",
+    "It is signed {serac}. He has added, by hand: 'You were very good at Alpha. I paid for Alpha, so I would know.'"
+   ],
+   "act": 4,
+   "chance": 0.35,
+   "who": [
+    "serac"
+   ],
+   "choices": [
+    {
+     "id": "accept",
+     "say": "Accept the commission (+30,000)",
+     "effects": {
+      "money": 30000,
+      "set": [
+       "took_the_commission"
+      ]
+     }
+    },
+    {
+     "id": "transcript",
+     "say": "Send it back with the inquiry transcript",
+     "requires": {
+      "flag": "named_serac"
+     },
+     "effects": {
+      "plot_points": 8,
+      "set": [
+       "refused_the_commission",
+       "serac_noticed"
+      ]
+     }
+    },
+    {
+     "id": "refuse",
+     "say": "Refuse",
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "refused_the_commission"
+      ]
+     }
+    }
+   ]
+  },
+  "after.took_the_commission": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: took the commission",
+   "requires": {
+    "flag": "took_the_commission"
+   },
+   "text": "Colonel of the Mandate's inner-systems wing. The uniform fitted perfectly; it had been made before you said yes."
+  },
+  "after.refused_the_commission": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: refused the commission",
+   "requires": {
+    "flag": "refused_the_commission"
+   },
+   "text": "You refused {serac.short}'s commission. The man who took it instead was promoted three times in a year and was never seen in daylight."
+  },
+  "after.serac_noticed": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: serac noticed",
+   "requires": {
+    "flag": "serac_noticed"
+   },
+   "text": "{serac.short} kept the transcript you sent back. It was found, decades later, framed in his office: the only thing on the walls."
+  },
+  "after.serac": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: serac",
+   "requires": {
+    "done": "serac.meet"
+   },
+   "text": "Forty years on, the Mandate's inner-systems wing has an office with no name on the door. People who meet the man in it say he has not aged, and that he asks after you."
+  },
+  "after.defied_serac": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: defied serac",
+   "requires": {
+    "flag": "defied_serac"
+   },
+   "text": "{serac.short} sent you a card every year after you refused him: no message, no signature, a different dock's postmark each time. You never found out how he knew where you would be."
+  },
+  "after.gave_serac_the_logs": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: gave serac the logs",
+   "requires": {
+    "flag": "gave_serac_the_logs"
+   },
+   "text": "Your logs from the jump point were never entered in any record. The legion's history of the convoy is two lines long and mentions nobody."
+  },
+  "after.paid_serac": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: paid serac",
+   "requires": {
+    "flag": "paid_serac"
+   },
+   "text": "You paid {serac.short}'s favour and never learned what it bought. Some nights you work it out, and then you stop."
+  },
+  "after.sold_the_schedules": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: sold the schedules",
+   "requires": {
+    "flag": "sold_the_schedules"
+   },
+   "text": "The convoy schedules you sold turned up in Cargolyte hands within the year. Nobody traced them to you. You traced them to you."
+  },
+  "after.gave_serac_the_samples": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: gave serac the samples",
+   "requires": {
+    "flag": "gave_serac_the_samples"
+   },
+   "text": "The samples you gave {serac.short} were never seen again. Thirty years later a defence contractor in the inner systems patented an alloy nobody could explain."
+  }
+ }
+}

@@ -1,0 +1,576 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "Legion freight: special cargo for the security legions that become the Terran Mandate, the beginning of the hovertanks and exoskeletons of the Mandate's heavy infantry. A prototype hovertank from Alpha to Delta c's dust plains (150 units of hold), and exoskeleton knee actuators for the garrison at Scholz's Star within fifteen turns (40 units). Serac wants the tank; the Rootstock want the knees.",
+ "arcs": {
+  "legion_freight": {
+   "title": "Legion freight",
+   "order": 2.99
+  }
+ },
+ "characters": {
+  "tank_commander": {
+   "name": "Hulldown",
+   "kind": "human",
+   "about": "hovertank commander for Stellar Dynamics' legion; named for the way she parks: only the turret showing"
+  },
+  "tank_driver": {
+   "name": "Plough-In",
+   "kind": "human",
+   "about": "hovertank driver; dug the skirt in and flipped a prototype once, and the name stuck"
+  },
+  "skirt_fitter": {
+   "name": "Fingers",
+   "kind": "human",
+   "about": "skirt mechanic; replaces the rubber segments of a hovertank's skirt, which are called fingers, and so is he"
+  },
+  "quartermaster_dsog": {
+   "name": "Quartermaster Bushing",
+   "short": "Bushing",
+   "kind": "human",
+   "about": "quartermaster of the legion garrison at Scholz's Star; an old exoskeleton operator, soft-spoken, takes the blows"
+  },
+  "exo_operator": {
+   "name": "Strut",
+   "kind": "human",
+   "about": "exoskeleton operator at Scholz's Star; the show-off"
+  }
+ },
+ "flags": {
+  "hovertank_taken": {
+   "about": "the captain took the legion's hovertank aboard"
+  },
+  "hovertank_aboard": {
+   "about": "the legion's hovertank is in the captain's hold"
+  },
+  "oksana_tuned_the_tank": {
+   "about": "{mechanic} fixed the hovertank's lift fans"
+  },
+  "sold_the_hovertank": {
+   "about": "the captain sold the legion's hovertank to {serac}'s depot",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "delivered_the_hovertank": {
+   "about": "the captain delivered the legion's hovertank to Delta c",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  },
+  "exoparts_taken": {
+   "about": "the captain took the garrison's exoskeleton parts"
+  },
+  "exoparts_aboard": {
+   "about": "the garrison's exoskeleton parts are in the captain's hold"
+  },
+  "exoparts_late": {
+   "about": "the exoskeleton parts reached Scholz's Star late"
+  },
+  "delivered_the_exoparts": {
+   "about": "the captain delivered the exoskeleton parts to Scholz's Star"
+  },
+  "fitted_the_exos": {
+   "about": "{mechanic} fitted the garrison's exoskeletons"
+  },
+  "asked_the_garrison": {
+   "about": "the captain asked what the garrison at Scholz's Star guards",
+   "carries_to": [
+    "cargo2",
+    "cargo3"
+   ]
+  }
+ },
+ "nodes": {
+  "mil.hovertank": {
+   "kind": "quest",
+   "arc": "legion_freight",
+   "title": "A tank with no wheels",
+   "requires": {
+    "at": "Alpha",
+    "act_min": 2,
+    "not_flag": "hovertank_taken"
+   },
+   "text": [
+    "Stellar Dynamics' legion has built a hovertank: forty tonnes on a cushion of air, a skirt of rubber fingers, a gun it is not allowed to talk about. It is wanted on Delta c, where the dust plains are the only open ground in the near systems with air thick enough to hover on.",
+    "It does not fit in a warship. It fits, the yard says, in yours, if you take out a bulkhead. Its commander, {tank_commander}, and its driver, {tank_driver}, ride along. The pay is good and half of it is up front."
+   ],
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "tank_commander",
+    "tank_driver"
+   ],
+   "choices": [
+    {
+     "id": "carry",
+     "say": "Carry it (+8,000 now, 12,000 at Delta; takes 150 units of hold)",
+     "requires": {
+      "hold_free": 150
+     },
+     "effects": {
+      "money": 8000,
+      "code": "stow 150 hovertank",
+      "set": [
+       "hovertank_taken",
+       "hovertank_aboard"
+      ]
+     }
+    },
+    {
+     "id": "shunt",
+     "say": "Let {loader} stow it tighter (+8,000 now; takes 100 units)",
+     "requires": {
+      "has": {
+       "crew": [
+        "loader"
+       ]
+      },
+      "hold_free": 100
+     },
+     "effects": {
+      "money": 8000,
+      "code": "stow 100 hovertank",
+      "set": [
+       "hovertank_taken",
+       "hovertank_aboard"
+      ]
+     }
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands; it needs 150 units of free hold)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 6
+   }
+  },
+  "mil.hovertank.fans": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Warming the skirt",
+   "requires": {
+    "flag": "hovertank_aboard",
+    "since": {
+     "mil.hovertank": 2
+    }
+   },
+   "text": "{tank_driver} wants to warm the skirt before the drop: run the lift fans for a minute, in your hold. {tank_commander} says no. {tank_driver} says it is in the manual. It is in the manual. The manual was written by {tank_driver}.",
+   "act": 2,
+   "chance": 0.4,
+   "who": [
+    "tank_driver",
+    "tank_commander"
+   ],
+   "choices": [
+    {
+     "id": "let",
+     "say": "Let her run the fans",
+     "effects": {
+      "cargo.agri": -10,
+      "plot_points": 2
+     },
+     "next": [
+      "mil.hovertank.fans.ran"
+     ]
+    },
+    {
+     "id": "oksana",
+     "say": "Let {mechanic.short} check the fans first",
+     "requires": {
+      "has": {
+       "crew": [
+        "mechanic"
+       ]
+      }
+     },
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "oksana_tuned_the_tank"
+      ]
+     },
+     "next": [
+      "mil.hovertank.fans.tuned"
+     ]
+    },
+    {
+     "id": "no",
+     "say": "No"
+    }
+   ]
+  },
+  "mil.hovertank.fans.ran": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Rearranged",
+   "requires": {},
+   "text": "Forty tonnes rise a hand's breadth and every loose crate in the hold rearranges itself by weight. Ten crates of agri go through the air vent. {tank_driver} calls it a successful test.",
+   "act": 2,
+   "who": [
+    "tank_driver"
+   ]
+  },
+  "mil.hovertank.fans.tuned": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Tuned",
+   "requires": {},
+   "text": "{mechanic.short} finds two fans wired backwards. {tank_driver} goes quiet for a long time and then asks, very politely, whether {mechanic.short} has ever thought about the legion.",
+   "act": 2,
+   "who": [
+    "tank_driver"
+   ]
+  },
+  "mil.hovertank.buyer": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "A better address",
+   "requires": {
+    "flag": "hovertank_aboard",
+    "since": {
+     "mil.hovertank": 3
+    }
+   },
+   "text": "A message with no sender offers you forty thousand to deliver the hovertank somewhere else: an inner-systems depot, no questions, the legion to be told it fell off the ship. The message is signed with one word: {serac.short}.",
+   "act": 2,
+   "chance": 0.35,
+   "who": [
+    "serac"
+   ],
+   "choices": [
+    {
+     "id": "deliver",
+     "say": "Delete it and fly on",
+     "effects": {
+      "plot_points": 3
+     }
+    },
+    {
+     "id": "sell",
+     "say": "Take the forty thousand",
+     "effects": {
+      "money": 40000,
+      "code": "unstow hovertank",
+      "set": [
+       "sold_the_hovertank"
+      ],
+      "clear": [
+       "hovertank_aboard"
+      ]
+     },
+     "next": [
+      "mil.hovertank.sold"
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "convoy_friend"
+     },
+     "text": "A message with no sender offers you forty thousand to deliver the hovertank somewhere else: an inner-systems depot, no questions. It is signed with one word: {serac.short}. Ten minutes later {convoy_captain.short} sends one word too: 'Don't.'"
+    }
+   ]
+  },
+  "mil.hovertank.sold": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Fell off the ship",
+   "requires": {},
+   "text": "The depot's cranes take the tank before you have finished docking. {tank_commander} and {tank_driver} are not invited to the inner systems; they get a ticket home. {tank_commander} doesn't say anything. She writes your ship's name on the inside of her cap.",
+   "act": 2,
+   "who": [
+    "tank_commander"
+   ]
+  },
+  "mil.hovertank.delivered": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "The dust plains",
+   "requires": {
+    "at": "Delta",
+    "flag": "hovertank_aboard"
+   },
+   "text": [
+    "On Delta c's dust plains the hovertank lifts, slides, digs the front of its skirt into a dune and stands on its nose. {tank_driver} has earned her name again. {skirt_fitter}, who replaces the skirt's rubber fingers and has been called Fingers for so long he has forgotten his name, starts replacing them.",
+    "On the second try it flies: forty tonnes, a metre off the ground, faster than anything on wheels. The design will outlive everyone who touched it."
+   ],
+   "act": 2,
+   "effects": {
+    "money": 12000,
+    "plot_points": 8,
+    "combat_rating": 1,
+    "code": "unstow hovertank",
+    "set": [
+     "delivered_the_hovertank"
+    ],
+    "clear": [
+     "hovertank_aboard"
+    ]
+   },
+   "who": [
+    "tank_commander",
+    "tank_driver",
+    "skirt_fitter"
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "oksana_tuned_the_tank"
+     },
+     "text": [
+      "On Delta c's dust plains the hovertank lifts on the first try, with both fans the right way round, and flies: forty tonnes, a metre off the ground, faster than anything on wheels.",
+      "{skirt_fitter}, who has been called Fingers for so long he has forgotten his name, has nothing to replace and does not know what to do with himself. The design will outlive everyone who touched it."
+     ]
+    }
+   ]
+  },
+  "mil.hovertank.late": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Where is our tank",
+   "requires": {
+    "flag": "hovertank_aboard",
+    "since": {
+     "mil.hovertank": 30
+    }
+   },
+   "text": "The legion writes to ask where its tank is. {tank_commander} writes back that it is in a cargo hold, being looked after, and adds a postscript nobody at headquarters understands: 'turret down'. They dock your pay for the delay.",
+   "act": 2,
+   "effects": {
+    "money": -3000
+   },
+   "who": [
+    "tank_commander"
+   ]
+  },
+  "after.delivered_the_hovertank": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: delivered the hovertank",
+   "requires": {
+    "flag": "delivered_the_hovertank"
+   },
+   "text": "The hovertank you carried to Delta was the first of a long line. Two centuries later its great-grandchildren were crated for Project ERYX's first missions, for a world nobody had reached yet. The loading manual still had your ship in a footnote."
+  },
+  "after.sold_the_hovertank": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: sold the hovertank",
+   "requires": {
+    "flag": "sold_the_hovertank"
+   },
+   "text": "The hovertank you sold never turned up in any inner-systems inventory. Forty years later a hovertank of the same design led the Mandate's first parade. Its serial number had been filed off, and then, carefully, put back."
+  },
+  "after.oksana_tuned_the_tank": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: oksana tuned the tank",
+   "requires": {
+    "flag": "oksana_tuned_the_tank"
+   },
+   "text": "{mechanic.short}'s fix for the lift fans went into the legion's manual as an amendment, signed by {tank_driver}, who credited 'a fitter who swears'."
+  },
+  "mil.exoparts": {
+   "kind": "quest",
+   "arc": "legion_freight",
+   "title": "Knees for the garrison",
+   "requires": {
+    "at": "Epsilon",
+    "act_min": 2,
+    "not_flag": "exoparts_taken"
+   },
+   "text": [
+    "The legion keeps a garrison at the quiet outpost at Scholz's Star, and nobody will say what it guards. Its twelve exoskeletons have stood still for a month for want of knee actuators. {quartermaster_dsog}'s order is on the ore exchange's board, three months old, stamped 'urgent' four times in four different colours.",
+    "Forty units of actuators, bearings and hydraulic seals, to be at the outpost within fifteen turns. After that the garrison walks, and the pay walks with it."
+   ],
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "quartermaster_dsog"
+   ],
+   "choices": [
+    {
+     "id": "take",
+     "say": "Take the parts (+3,000 now, 9,000 on time; takes 40 units of hold)",
+     "requires": {
+      "hold_free": 40
+     },
+     "effects": {
+      "money": 3000,
+      "code": "stow 40 exoparts",
+      "set": [
+       "exoparts_taken",
+       "exoparts_aboard"
+      ]
+     }
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 6
+   }
+  },
+  "mil.exoparts.late": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "On foot",
+   "requires": {
+    "flag": "exoparts_aboard",
+    "since": {
+     "mil.exoparts": 15
+    }
+   },
+   "text": "A message from {quartermaster_dsog.short} at Scholz's Star: the garrison has gone out on patrol on foot, in the suits, unpowered, pulling them. He would still like the knees. He does not say when.",
+   "act": 2,
+   "effects": {
+    "set": [
+     "exoparts_late"
+    ]
+   },
+   "who": [
+    "quartermaster_dsog"
+   ]
+  },
+  "mil.exoparts.delivered": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "Walking again",
+   "requires": {
+    "at": "DSO-Gamma",
+    "flag": "exoparts_aboard"
+   },
+   "text": [
+    "The garrison unloads the crates before your engines are cold. By evening twelve exoskeletons are walking the outpost's corridors with the confidence of people who have been pulling them for a month. {exo_operator}, the show-off, does a little dance in his. Nobody stops him.",
+    "{quartermaster_dsog} signs for the parts, slowly, and pays."
+   ],
+   "act": 2,
+   "who": [
+    "quartermaster_dsog",
+    "exo_operator"
+   ],
+   "choices": [
+    {
+     "id": "fee",
+     "say": "Collect the fee (9,000)",
+     "requires": {
+      "not_flag": "exoparts_late"
+     },
+     "effects": {
+      "money": 9000,
+      "plot_points": 5,
+      "code": "unstow exoparts",
+      "set": [
+       "delivered_the_exoparts"
+      ],
+      "clear": [
+       "exoparts_aboard"
+      ]
+     }
+    },
+    {
+     "id": "late",
+     "say": "Collect what's left of the fee (3,000)",
+     "requires": {
+      "flag": "exoparts_late"
+     },
+     "effects": {
+      "money": 3000,
+      "plot_points": 2,
+      "code": "unstow exoparts",
+      "set": [
+       "delivered_the_exoparts"
+      ],
+      "clear": [
+       "exoparts_aboard"
+      ]
+     }
+    },
+    {
+     "id": "fit",
+     "say": "Let {mechanic.short} fit them properly (the fee, and the legion remembers)",
+     "requires": {
+      "has": {
+       "crew": [
+        "mechanic"
+       ]
+      },
+      "not_flag": "exoparts_late"
+     },
+     "effects": {
+      "money": 9000,
+      "plot_points": 7,
+      "combat_rating": 1,
+      "code": "unstow exoparts",
+      "set": [
+       "delivered_the_exoparts",
+       "fitted_the_exos"
+      ],
+      "clear": [
+       "exoparts_aboard"
+      ]
+     }
+    }
+   ]
+  },
+  "mil.exoparts.guard": {
+   "kind": "event",
+   "arc": "legion_freight",
+   "title": "What the garrison guards",
+   "requires": {
+    "done": "mil.exoparts.delivered",
+    "since": {
+     "mil.exoparts.delivered": 1
+    },
+    "at": "DSO-Gamma"
+   },
+   "text": "Over a drink you ask {quartermaster_dsog.short} what the garrison guards. He looks out of the window at the dark where Scholz's Star's brown companion is. 'Ice,' he says. 'Something in the ice that the star dragged past us, seventy thousand years ago. Orders from the inner systems.' He starts to say who signed them, and doesn't.",
+   "act": 2,
+   "chance": 0.5,
+   "effects": {
+    "plot_points": 3,
+    "research_points": 20,
+    "set": [
+     "asked_the_garrison"
+    ]
+   },
+   "who": [
+    "quartermaster_dsog"
+   ]
+  },
+  "after.delivered_the_exoparts": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: delivered the exoparts",
+   "requires": {
+    "flag": "delivered_the_exoparts"
+   },
+   "text": "The knee actuators you delivered to Scholz's Star were the pattern for every exoskeleton the Mandate built for a century: the same bearing, the same seal, the same complaint about both."
+  },
+  "after.fitted_the_exos": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: fitted the exos",
+   "requires": {
+    "flag": "fitted_the_exos"
+   },
+   "text": "The garrison at Scholz's Star painted a spanner on every exoskeleton {mechanic.short} fitted. Two centuries later the Mandate's heavy infantry still paint one on, and none of them knows why."
+  },
+  "after.asked_the_garrison": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: asked the garrison",
+   "requires": {
+    "flag": "asked_the_garrison"
+   },
+   "text": "The garrison at Scholz's Star was withdrawn the year after you asked what it guarded, and the outpost's records of it were withdrawn the year after that."
+  }
+ }
+}

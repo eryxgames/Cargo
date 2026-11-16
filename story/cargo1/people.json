@@ -1,0 +1,878 @@
+{
+ "format": "storykit",
+ "version": 1,
+ "about": "People from the names pool given a part in Cargo 1: the legion's sergeant and its legendary pilot, an ice-core driller at Sigma VII, the shaft sinker and ventilation boss at Gamma, the chair of the review board, and the doctor who grew the clone and looks for life in brown dwarf clouds. Brisa's twin and manager is here too.",
+ "arcs": {
+  "pool": {
+   "title": "People of the frontier",
+   "order": 2.97
+  }
+ },
+ "characters": {
+  "hardtack": {
+   "name": "Sergeant Hardtack",
+   "short": "Hardtack",
+   "kind": "human",
+   "about": "legion sergeant for thirty years, named after the biscuit nobody can bite through; has opinions about all thirty"
+  },
+  "deadstick": {
+   "name": "Deadstick",
+   "kind": "human",
+   "about": "the legion's legendary pilot: forty kills, two landings with the engine dead, and the recall at the jump point, which he followed"
+  },
+  "ice_driller": {
+   "name": "Svea Firn",
+   "short": "Firn",
+   "kind": "human",
+   "about": "ice-core driller at Sigma VII; reads the moons' ice like a diary and talks to it while she drills"
+  },
+  "shaft_sinker": {
+   "name": "Marit Winze",
+   "short": "Winze",
+   "kind": "human",
+   "about": "shaft sinker at Gamma; always digs deeper than the plan says"
+  },
+  "vent_boss": {
+   "name": "Vo Brattice",
+   "short": "Brattice",
+   "kind": "human",
+   "about": "ventilation boss at Gamma; decides who breathes, and counts"
+  },
+  "hammerschultz": {
+   "name": "Dr Hammerschultz",
+   "short": "Hammerschultz",
+   "kind": "human",
+   "about": "chairs the Academy's review board; measures everything twice and believes nothing once"
+  },
+  "samples": {
+   "name": "Dr Anna-Lise Samples",
+   "short": "Dr Samples",
+   "kind": "human",
+   "about": "runs the insurer's clone lab at Nova Labs, and an unpaid lab next door in theoretical xenobiology: what could live where nothing should"
+  }
+ },
+ "flags": {
+  "hardtack_told": {
+   "about": "{hardtack} told the captain who signed the recall"
+  },
+  "taught_recruits": {
+   "about": "the captain taught {hardtack}'s recruits in a real ship"
+  },
+  "gave_deadstick_the_medal": {
+   "about": "the captain pinned the medal on {deadstick}"
+  },
+  "pawned_the_medal": {
+   "about": "the captain pawned the legion's medal"
+  },
+  "deadstick_wing": {
+   "about": "{deadstick} asked to fly on the captain's wing"
+  },
+  "deadstick_refused": {
+   "about": "the captain sent {deadstick} away"
+  },
+  "flew_icecore": {
+   "about": "the captain held station for {ice_driller}'s ice core"
+  },
+  "saved_level_nine": {
+   "about": "the captain helped get twelve miners out of level nine at Gamma",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "eela_dug": {
+   "about": "{aela} dug the miners out of level nine"
+  },
+  "left_level_nine": {
+   "about": "the captain left level nine to Gamma's own crews"
+  },
+  "core_shown": {
+   "about": "the captain showed {hammerschultz} the ice core"
+  },
+  "showed_the_board": {
+   "about": "the captain showed the review board everything"
+  },
+  "refused_the_board": {
+   "about": "the captain refused the review board without a lawyer"
+  },
+  "asked_samples": {
+   "about": "the captain asked {samples} what the clone remembers"
+  },
+  "rescanned": {
+   "about": "{samples} scanned the captain a second time, for science",
+   "carries_to": [
+    "cargo2"
+   ]
+  },
+  "flew_floaters": {
+   "about": "the captain dropped {samples}'s balloon into WISE 0855"
+  },
+  "brisa_hull": {
+   "about": "the captain's hull carries {fluencer}'s name"
+  },
+  "settled_lorisa": {
+   "about": "the captain settled with {fluencer_manager}'s lawyer"
+  }
+ },
+ "nodes": {
+  "legion.hardtack": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Section twelve",
+   "requires": {
+    "chapter": "ch3b",
+    "since": {
+     "drama.combat.left_behind": 3
+    }
+   },
+   "text": [
+    "{hardtack} buys you a drink you did not ask for. 'Field manual, section twelve,' he says. 'What to do when the enemy has also read the field manual. The page is blank. Always has been.'",
+    "Then, quieter: 'That recall at the jump point. Signed by a liaison nobody's met. Name of {serac.short}. You didn't hear it from a sergeant.'"
+   ],
+   "act": 3,
+   "chance": 0.3,
+   "effects": {
+    "plot_points": 3,
+    "set": [
+     "hardtack_told"
+    ]
+   },
+   "who": [
+    "hardtack"
+   ]
+  },
+  "legion.deadstick": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Every order for twenty years",
+   "requires": {
+    "chapter": "ch3b",
+    "done": "drama.combat.tribunal",
+    "since": {
+     "drama.combat.tribunal": 3
+    }
+   },
+   "text": "{deadstick} finds you at the dock with his helmet under his arm. He flew away from the jump point on the recall order, like he has followed every order for twenty years. 'I'd like to stop,' he says. 'I'd like to fly with somebody who reads them first.'",
+   "act": 4,
+   "chance": 0.35,
+   "who": [
+    "deadstick"
+   ],
+   "choices": [
+    {
+     "id": "wing",
+     "say": "Take him on your wing",
+     "effects": {
+      "plot_points": 4,
+      "set": [
+       "deadstick_wing"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Tell him to find someone who trusts him",
+     "effects": {
+      "set": [
+       "deadstick_refused"
+      ]
+     }
+    }
+   ]
+  },
+  "legion.recruits": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "The tutorial",
+   "requires": {
+    "chapter": "ending_combat"
+   },
+   "text": "{hardtack} has forty recruits and a training simulator that opens with a tutorial nobody can skip: how to look around, how to walk, how to press the button marked 'fire'. The recruits have been in it for three days. 'Doctrine,' he says. 'The tutorial is how we lose the first battle of every war.'",
+   "act": 4,
+   "chance": 0.3,
+   "who": [
+    "hardtack"
+   ],
+   "choices": [
+    {
+     "id": "teach",
+     "say": "Teach them yourself, in a real ship",
+     "effects": {
+      "combat_rating": 1,
+      "plot_points": 4,
+      "set": [
+       "taught_recruits"
+      ]
+     }
+    },
+    {
+     "id": "skip",
+     "say": "Look for the skip button",
+     "effects": {
+      "plot_points": 1
+     },
+     "next": [
+      "legion.recruits.skip"
+     ]
+    },
+    {
+     "id": "leave",
+     "say": "Leave them to it"
+    }
+   ]
+  },
+  "legion.recruits.skip": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "No skip button",
+   "requires": {},
+   "text": "There is no skip button. There is a form for requesting one: C-7. {hardtack.short} has filed it every year for thirty years.",
+   "act": 4,
+   "who": [
+    "hardtack"
+   ]
+  },
+  "legion.medal": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "A medal",
+   "requires": {
+    "chapter": "ending_combat",
+    "since": {
+     "drama.combat.roll_call": 10
+    }
+   },
+   "text": "The legion gives you a medal at Alpha, at a ceremony scheduled, by tradition, for exactly the moment something attacks. Nothing attacks. The band plays the whole anthem for the first time anyone can remember, and nobody knows the second verse.",
+   "act": 4,
+   "chance": 0.3,
+   "choices": [
+    {
+     "id": "wear",
+     "say": "Wear it",
+     "effects": {
+      "passenger_reputation": 3
+     }
+    },
+    {
+     "id": "deadstick",
+     "say": "Pin it on {deadstick}",
+     "requires": {
+      "flag": "deadstick_redeemed"
+     },
+     "effects": {
+      "plot_points": 5,
+      "set": [
+       "gave_deadstick_the_medal"
+      ]
+     }
+    },
+    {
+     "id": "pawn",
+     "say": "Pawn it (+1,500)",
+     "effects": {
+      "money": 1500,
+      "set": [
+       "pawned_the_medal"
+      ]
+     }
+    }
+   ]
+  },
+  "after.taught_recruits": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: taught recruits",
+   "requires": {
+    "flag": "taught_recruits"
+   },
+   "text": "Your forty recruits never finished the tutorial. Thirty-eight of them were still flying twenty years later, and they all fly the way you do, which the legion considers a mixed blessing."
+  },
+  "after.gave_deadstick_the_medal": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: gave deadstick the medal",
+   "requires": {
+    "flag": "gave_deadstick_the_medal"
+   },
+   "text": "{deadstick} wore your medal on every flight and never said whose it was. Everyone knew."
+  },
+  "after.pawned_the_medal": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: pawned the medal",
+   "requires": {
+    "flag": "pawned_the_medal"
+   },
+   "text": "Your medal sat in a pawnshop window at Alpha for eleven years. {hardtack.short} bought it back in the end, and kept it in a drawer, and never told you."
+  },
+  "after.deadstick_refused": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: deadstick refused",
+   "requires": {
+    "flag": "deadstick_refused"
+   },
+   "text": "{deadstick} found someone who trusted him: the Mandate's inner-systems wing, in an office with no name on the door."
+  },
+  "sci.icecore": {
+   "kind": "quest",
+   "arc": "science",
+   "title": "A diary in the ice",
+   "requires": {
+    "at": "Sigma VII",
+    "act_min": 2,
+    "not_flag": "flew_icecore"
+   },
+   "text": [
+    "The moons of Epsilon Indi's cold giant are ice all the way down, laid in layers like a diary: every impact, every flare, every star that passed close. {ice_driller} drills it for a living and talks to it while she works.",
+    "She wants a core from the one moon nobody has drilled, and a ship to hold station over the site for a day while the drill goes down four kilometres."
+   ],
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "ice_driller"
+   ],
+   "choices": [
+    {
+     "id": "colony",
+     "say": "Ask the colony at Sigma VII to drill it with her (5 fuel)",
+     "requires": {
+      "flag": "nano_trusted",
+      "cargo.fuel": 5
+     },
+     "effects": {
+      "cargo.fuel": -5,
+      "research_points": 120,
+      "money": 4000,
+      "plot_points": 6,
+      "set": [
+       "flew_icecore"
+      ]
+     },
+     "next": [
+      "sci.icecore.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (25 fuel)",
+     "requires": {
+      "cargo.fuel": 25
+     },
+     "effects": {
+      "cargo.fuel": -25,
+      "research_points": 120,
+      "money": 4000,
+      "plot_points": 6,
+      "set": [
+       "flew_icecore"
+      ]
+     },
+     "next": [
+      "sci.icecore.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (7,500 credits)",
+     "requires": {
+      "money": 7500
+     },
+     "effects": {
+      "money": -5500,
+      "research_points": 120,
+      "plot_points": 4,
+      "set": [
+       "flew_icecore"
+      ]
+     },
+     "next": [
+      "sci.icecore.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 6
+   }
+  },
+  "sci.icecore.result": {
+   "kind": "event",
+   "arc": "science",
+   "title": "A diary in the ice: result",
+   "requires": {
+    "flag": "flew_icecore"
+   },
+   "text": "The core comes up in forty sections, four kilometres of history. Seventy thousand years down there is a layer of grey dust that should not be there. {ice_driller.short} labels it 'interesting', which from her is a shout, and sends a sample to {ancient_scholar.short}.",
+   "act": 2,
+   "who": [
+    "ice_driller"
+   ]
+  },
+  "gamma.collapse": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Level nine",
+   "requires": {
+    "at": "Gamma",
+    "act_min": 2
+   },
+   "text": [
+    "A gallery collapses on level nine. {shaft_sinker} had dug past the plan again, as she always does, and twelve miners are behind the fall with her.",
+    "{vent_boss} runs the air down there. He has a day of it, he says, maybe less, and he is counting out loud."
+   ],
+   "act": 2,
+   "chance": 0.25,
+   "who": [
+    "shaft_sinker",
+    "vent_boss"
+   ],
+   "choices": [
+    {
+     "id": "hose",
+     "say": "Pump air down through your docking hose (it strains the hull)",
+     "effects": {
+      "code": "damage 10",
+      "plot_points": 6,
+      "passenger_reputation": 6,
+      "set": [
+       "saved_level_nine"
+      ]
+     }
+    },
+    {
+     "id": "eela",
+     "say": "Let {aela} dig them out",
+     "requires": {
+      "flag": "aela_member"
+     },
+     "effects": {
+      "plot_points": 8,
+      "set": [
+       "saved_level_nine",
+       "eela_dug"
+      ]
+     }
+    },
+    {
+     "id": "gear",
+     "say": "Fly in rescue gear from Epsilon (3,000)",
+     "requires": {
+      "money": 3000
+     },
+     "effects": {
+      "money": -3000,
+      "plot_points": 5,
+      "set": [
+       "saved_level_nine"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "It is not your mine",
+     "effects": {
+      "passenger_reputation": -5,
+      "set": [
+       "left_level_nine"
+      ]
+     }
+    }
+   ]
+  },
+  "gamma.helmet": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "A helmet with your name on it",
+   "requires": {
+    "flag": "saved_level_nine",
+    "since": {
+     "gamma.collapse": 20
+    }
+   },
+   "text": "The miners from level nine send a crate of salt and a helmet with your ship's name painted on it. {shaft_sinker.short} has added a note: she is digging deeper than the plan again, and would like you to know.",
+   "act": 3,
+   "chance": 0.3,
+   "effects": {
+    "cargo.salt": 60,
+    "plot_points": 3
+   },
+   "who": [
+    "shaft_sinker"
+   ]
+  },
+  "gamma.counted": {
+   "kind": "event",
+   "arc": "debts",
+   "title": "Counted",
+   "requires": {
+    "flag": "left_level_nine",
+    "since": {
+     "gamma.collapse": 15
+    },
+    "at": "Gamma"
+   },
+   "text": "{vent_boss} meets your ship at the Gamma dock. He got them out, all twelve, with two minutes of air left. He doesn't say anything. He counts your crates, out loud, very slowly, and the dock follows his count.",
+   "act": 3,
+   "chance": 0.4,
+   "effects": {
+    "money": -2500,
+    "passenger_reputation": -3
+   },
+   "who": [
+    "vent_boss"
+   ]
+  },
+  "after.saved_level_nine": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: saved level nine",
+   "requires": {
+    "flag": "saved_level_nine"
+   },
+   "text": "Level nine at Gamma is called your ship's name now on the mine plans. {shaft_sinker.short} dug four levels below it before she retired, always past the plan."
+  },
+  "after.eela_dug": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: eela dug",
+   "requires": {
+    "flag": "eela_dug"
+   },
+   "text": "{aela} dug twelve miners out of level nine in a night and asked, afterwards, whether rescuing counts as cooperative work. It does now; it is in the rules."
+  },
+  "review.hammerschultz": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Twice, and once",
+   "requires": {
+    "chapter": "ch3c",
+    "since": {
+     "drama.discovery.fire": 4
+    }
+   },
+   "text": "{hammerschultz} of the Academy's review board comes aboard to examine what is left of the alloy. He measures everything twice and believes nothing once, and he takes his own chair.",
+   "act": 3,
+   "chance": 0.3,
+   "who": [
+    "hammerschultz"
+   ],
+   "choices": [
+    {
+     "id": "core",
+     "say": "Show him the ice core from Sigma VII",
+     "requires": {
+      "done": "sci.icecore.result"
+     },
+     "effects": {
+      "plot_points": 6,
+      "set": [
+       "core_shown"
+      ]
+     }
+    },
+    {
+     "id": "all",
+     "say": "Show him everything",
+     "effects": {
+      "plot_points": 3,
+      "set": [
+       "showed_the_board"
+      ]
+     }
+    },
+    {
+     "id": "lawyer",
+     "say": "Show him nothing without a lawyer",
+     "effects": {
+      "set": [
+       "refused_the_board"
+      ]
+     }
+    }
+   ]
+  },
+  "after.showed_the_board": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: showed the board",
+   "requires": {
+    "flag": "showed_the_board"
+   },
+   "text": "You showed the review board everything. Its archive kept it all, carefully, unread, which is what archives are for."
+  },
+  "after.refused_the_board": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: refused the board",
+   "requires": {
+    "flag": "refused_the_board"
+   },
+   "text": "You made the review board go through a lawyer. The lawyer's bill was framed in the Institute's common room as a warning to students."
+  },
+  "after.core_shown": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: core shown",
+   "requires": {
+    "flag": "core_shown"
+   },
+   "text": "{hammerschultz} voted against his own ruling and never explained it. In his papers, found after his death, there is a photograph of a grey layer in an ice core, labelled 'twice'."
+  },
+  "samples.lab": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Mostly proud",
+   "requires": {
+    "at": "Nova Labs",
+    "done": "clone.scan",
+    "act_min": 2
+   },
+   "text": [
+    "{samples} runs the insurer's clone lab at Nova Labs, and next door an unpaid lab in theoretical xenobiology: what could live in places where nothing should.",
+    "She grew {clone} from your customs scan. She is apologetic about it, in the way of someone who is mostly proud."
+   ],
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "samples"
+   ],
+   "choices": [
+    {
+     "id": "ask",
+     "say": "Ask whether {clone.short} remembers being you",
+     "effects": {
+      "plot_points": 4,
+      "set": [
+       "asked_samples"
+      ]
+     },
+     "next": [
+      "samples.answer"
+     ]
+    },
+    {
+     "id": "scan",
+     "say": "Let her scan you again, for science (she pays 2,000)",
+     "effects": {
+      "money": 2000,
+      "set": [
+       "rescanned"
+      ]
+     }
+    },
+    {
+     "id": "leave",
+     "say": "Leave"
+    }
+   ]
+  },
+  "samples.answer": {
+   "kind": "event",
+   "arc": "pool",
+   "title": "Up to the scan",
+   "requires": {
+    "flag": "asked_samples"
+   },
+   "text": "'Everything up to the scan,' {samples.short} says. 'After that, only what it chose.' She thinks about it. 'Which is the same as you, really. I should write that down.' She does.",
+   "act": 2,
+   "who": [
+    "samples"
+   ]
+  },
+  "sci.floaters": {
+   "kind": "quest",
+   "arc": "science",
+   "title": "Floaters, sinkers, hunters",
+   "requires": {
+    "at": "DSO-Beta",
+    "done": "samples.lab",
+    "not_flag": "flew_floaters"
+   },
+   "text": [
+    "In 1976 two astronomers imagined animals living in Jupiter's clouds: floaters drifting like balloons, sinkers falling slowly, hunters eating both. {samples} thinks a brown dwarf's air is a better place to look: at the right depth in WISE 0855 it is about room temperature.",
+    "She has built a balloon. It needs dropping into the warm layer and fishing out a day later, before it sinks somewhere nothing could come back from."
+   ],
+   "act": 2,
+   "chance": 0.35,
+   "who": [
+    "samples"
+   ],
+   "choices": [
+    {
+     "id": "probe",
+     "say": "Lower it on the deep-space probe's line (15 fuel)",
+     "requires": {
+      "has": {
+       "items": [
+        "probe"
+       ]
+      },
+      "cargo.fuel": 15
+     },
+     "effects": {
+      "cargo.fuel": -15,
+      "research_points": 140,
+      "money": 3000,
+      "plot_points": 6,
+      "set": [
+       "flew_floaters"
+      ]
+     },
+     "next": [
+      "sci.floaters.result"
+     ]
+    },
+    {
+     "id": "fuel",
+     "say": "Fly it on your own fuel (30 fuel)",
+     "requires": {
+      "cargo.fuel": 30
+     },
+     "effects": {
+      "cargo.fuel": -30,
+      "research_points": 140,
+      "money": 3000,
+      "plot_points": 6,
+      "set": [
+       "flew_floaters"
+      ]
+     },
+     "next": [
+      "sci.floaters.result"
+     ]
+    },
+    {
+     "id": "depot",
+     "say": "Buy the burn from the depot (9,000 credits)",
+     "requires": {
+      "money": 9000
+     },
+     "effects": {
+      "money": -7500,
+      "research_points": 140,
+      "plot_points": 4,
+      "set": [
+       "flew_floaters"
+      ]
+     },
+     "next": [
+      "sci.floaters.result"
+     ]
+    },
+    {
+     "id": "later",
+     "say": "Not now (the offer stands)"
+    }
+   ],
+   "repeat": {
+    "cooldown": 6
+   }
+  },
+  "sci.floaters.result": {
+   "kind": "event",
+   "arc": "science",
+   "title": "Floaters, sinkers, hunters: result",
+   "requires": {
+    "flag": "flew_floaters"
+   },
+   "text": "The balloon comes back with no floaters, no sinkers and no hunters, and a smell nobody can name. {samples.short} paints 'nothing alive, as far as a balloon can tell' on her lab door. The next morning she has crossed out 'nothing'.",
+   "act": 2,
+   "who": [
+    "samples"
+   ]
+  },
+  "after.rescanned": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: rescanned",
+   "requires": {
+    "flag": "rescanned"
+   },
+   "text": "{samples} kept your second scan in her own freezer, labelled 'for science', with a note that nobody may grow it without asking you first. Somebody asked."
+  },
+  "neon.lorisa": {
+   "kind": "event",
+   "arc": "neons",
+   "title": "The other twin",
+   "requires": {
+    "done": "neon.fluencer",
+    "since": {
+     "neon.fluencer": 10
+    },
+    "venue": "port"
+   },
+   "text": "{fluencer_manager} is {fluencer.short}'s twin and her manager: the same face, no cameras. She handles the money while her sister handles the light, and she has brought a contract.",
+   "act": 2,
+   "chance": 0.3,
+   "who": [
+    "fluencer_manager"
+   ],
+   "choices": [
+    {
+     "id": "hull",
+     "say": "Sign: her sister's name on your hull, a metre high (+10,000)",
+     "requires": {
+      "not_flag": "fluencer_exposed"
+     },
+     "effects": {
+      "money": 10000,
+      "passenger_reputation": -2,
+      "set": [
+       "brisa_hull"
+      ]
+     }
+    },
+    {
+     "id": "settle",
+     "say": "Settle with the lawyer (4,000)",
+     "requires": {
+      "flag": "fluencer_exposed",
+      "money": 4000
+     },
+     "effects": {
+      "money": -4000,
+      "set": [
+       "settled_lorisa"
+      ]
+     }
+    },
+    {
+     "id": "no",
+     "say": "Decline politely",
+     "effects": {
+      "plot_points": 2
+     }
+    }
+   ],
+   "variants": [
+    {
+     "requires": {
+      "flag": "fluencer_exposed"
+     },
+     "text": "{fluencer_manager} is {fluencer.short}'s twin and her manager: the same face, no cameras. She handles the money while her sister handles the light. She has brought a lawyer."
+    }
+   ]
+  },
+  "after.settled_lorisa": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: settled lorisa",
+   "requires": {
+    "flag": "settled_lorisa"
+   },
+   "text": "{fluencer_manager} framed your settlement cheque and hung it in her office between two lawsuits she won."
+  },
+  "after.brisa_hull": {
+   "kind": "epilogue",
+   "arc": "epilogue",
+   "title": "After: brisa hull",
+   "requires": {
+    "flag": "brisa_hull"
+   },
+   "text": "Your hull carried {fluencer.short}'s name, a metre high, for six years. People still recognise the ship by the shadow where the letters were."
+  }
+ }
+}
