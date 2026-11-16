@@ -40,6 +40,17 @@ BOX_STYLES = {
 }
 
 
+def safe_output():
+    """Characters this terminal cannot show print as '?' instead of stopping the game
+    (old Windows code pages, output sent to a file or a pipe)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            if "utf" not in (getattr(stream, "encoding", None) or "utf").lower():
+                stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
 def plain_terminal():
     """True when the terminal cannot be trusted with box-drawing characters."""
     if os.environ.get("CARGO_ASCII"):
@@ -499,6 +510,8 @@ def decode_world(data, fresh):
             by_number[node.get("i")] = obj
             before = dict(vars(obj))
             for key, value in node.get("s", {}).items():
+                if isinstance(value, dict) and value.get("~") == "f" and not _is_code(before.get(key)):
+                    continue        # a function set on this object when it was saved: keep the class's own
                 obj.__dict__[str(key)] = dec(value, before.get(key))
             return obj
         raise SaveError("save file contains something unknown")
@@ -12339,6 +12352,7 @@ def new_game():
 
 
 def main():
+    safe_output()
     game = start_game()
     while game is not None:
         try:

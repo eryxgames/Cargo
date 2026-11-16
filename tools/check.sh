@@ -20,6 +20,8 @@ tail -1 /tmp/cargo-commands.txt
 echo "== every kind of quest can be finished"
 $PY $T/quests.py cargo.py > /tmp/cargo-quests.txt || fail=1
 grep FAIL /tmp/cargo-quests.txt; tail -1 /tmp/cargo-quests.txt
+echo "== the game starts and exits as a program (UTF-8 and cp1252 output)"
+$PY $T/smoke.py $PY cargo.py || fail=1
 echo "== every story scene with every choice"
 $PY $T/scenes.py cargo.py > /tmp/cargo-scenes.txt || fail=1
 grep -E "CRASH|unfilled|FAIL" /tmp/cargo-scenes.txt | head; tail -1 /tmp/cargo-scenes.txt

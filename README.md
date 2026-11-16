@@ -99,6 +99,11 @@ CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
   - Character Quests    
 
 ## Installation
+**Download:** [itch.io](https://eryxgames.itch.io/cargo) or the
+[releases page](https://github.com/eryxgames/Cargo/releases): `cargo.exe` for Windows
+(no Python needed), or `cargo.py` for any system with Python 3.7+.
+
+**From the repository:**
 ```bash
 # Clone the repository
 git clone https://github.com/eryxgames/cargo.git
@@ -201,6 +206,14 @@ A few rules worth knowing:
 
 A new game offers to start as any captain whose record is in `~/.cargo/captains/`:
 one who finished this game, or one carried back from a later part of the saga.
+
+## Releasing
+Raise `VERSION` in `cargo.py`, add a `## x.y.z` section to `CHANGELOG.md`, then push a tag:
+`git tag -a vx.y.z -m "Cargo x.y.z" && git push origin vx.y.z`. The release workflow
+(`.github/workflows/release.yml`) runs the checks, builds `cargo.exe`, makes the GitHub release
+with those notes and pushes both builds to itch.io (channels `windows` and `linux-mac`). It needs
+the repository secret `BUTLER_API_KEY` (itch.io → Settings → API keys, the key whose source is
+wharf); without it the itch.io step is skipped.
 
 ## The story
 Cargo 1 is the first part of a trilogy. What it hands to Cargo 2 and 3 (promises, the flags a

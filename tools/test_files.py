@@ -118,6 +118,18 @@ with headless.quiet():
     own = game.receive_captain(cargo.captain_from_code(code))
 results.append(("captain: own record is not a visitor", "ok" if "own record" in own else "FAIL"))
 
+# a save made while something had replaced one of the story's methods (a test tool silencing
+# the scenes, say) must load with the method back, not with nothing in its place
+try:
+    game.story.tick = lambda: None
+    with headless.quiet():
+        patched_path = game.save_game("patched")
+        loaded = cargo.load_game("patched")
+    ok = callable(loaded.story.tick) and "tick" not in vars(loaded.story)
+    results.append(("save: patched method comes back", "ok" if ok else "FAIL: %r" % vars(loaded.story).get("tick")))
+except Exception as e:
+    results.append(("save: patched method comes back", "FAIL: %s %s" % (type(e).__name__, e)))
+
 shutil.rmtree(home, ignore_errors=True)
 bad = [r for r in results if not r[1].startswith("ok")]
 for name, res in results:

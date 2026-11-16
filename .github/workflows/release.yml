@@ -1,0 +1,98 @@
+# Release: push a tag like v1.2.0 and this workflow
+#   1. runs the quick checks,
+#   2. builds cargo.exe for Windows (PyInstaller, one file, no Python needed),
+#   3. makes a GitHub release with the notes for that version from CHANGELOG.md,
+#   4. pushes both builds to itch.io with butler (if the BUTLER_API_KEY secret is set).
+#
+# The tag must match VERSION in cargo.py, and CHANGELOG.md needs a "## 1.2.0" section.
+# itch.io channels: "windows" (cargo.exe) and "linux-mac" (cargo.py, needs Python 3.7+;
+# also runs on Windows and in Termux).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  ITCH_PROJECT: eryxgames/cargo
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Tag matches the game's version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          game=$(python3 -c "import re; print(re.search(r'^VERSION = \"(.+)\"', open('cargo.py').read(), re.M).group(1))")
+          echo "tag $tag, cargo.py $game"
+          test "$tag" = "$game"
+          grep -q "^## $tag\$" CHANGELOG.md || { echo "CHANGELOG.md has no '## $tag' section"; exit 1; }
+      - name: Quick checks
+        run: bash tools/check.sh quick
+
+  windows:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Build cargo.exe
+        run: |
+          python -m pip install --upgrade pyinstaller
+          pyinstaller --onefile --console --name cargo --icon favicon.ico cargo.py
+      - name: Smoke test (start, new game, autosave, clean exit; UTF-8 and cp1252 output)
+        run: python tools/smoke.py dist/cargo.exe
+      - name: Pack
+        shell: bash
+        run: |
+          mkdir -p build/windows
+          cp dist/cargo.exe README.md CHANGELOG.md build/windows/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: build/windows
+
+  release:
+    needs: [check, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: build/windows
+      - name: Pack the Python version
+        run: |
+          mkdir -p build/python
+          cp cargo.py README.md CHANGELOG.md build/python/
+          version="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          (cd build/windows && zip -qr "../../cargo-$version-windows.zip" .)
+          (cd build/python && zip -qr "../../cargo-$version-python.zip" .)
+          awk -v v="## $version" '$0==v {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "cargo-$VERSION-windows.zip" "cargo-$VERSION-python.zip" \
+            --title "Cargo $VERSION" --notes-file notes.md
+      - name: Push to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then echo "No BUTLER_API_KEY secret: skipping itch.io"; exit 0; fi
+          curl -fsSL --retry 5 -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          ./butler/butler -V
+          ./butler/butler push build/windows "$ITCH_PROJECT:windows" --userversion "$VERSION"
+          ./butler/butler push build/python "$ITCH_PROJECT:linux-mac" --userversion "$VERSION"
