@@ -5,7 +5,7 @@
 #   4. pushes both builds to itch.io with butler (if the BUTLER_API_KEY secret is set).
 #
 # The tag must match VERSION in cargo.py, and CHANGELOG.md needs a "## 1.2.0" section.
-# itch.io channels: "windows" (cargo.exe) and "linux-mac" (cargo.py, needs Python 3.7+;
+# itch.io channels: "windows" (cargo.exe) and "linux-mac" (cargo.py, needs Python 3.8+;
 # also runs on Windows and in Termux).
 name: Release
 

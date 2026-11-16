@@ -101,7 +101,7 @@ CARGO is a continuously evolving universe. Expect changes, embrace the chaos!
 ## Installation
 **Download:** [itch.io](https://eryxgames.itch.io/cargo) or the
 [releases page](https://github.com/eryxgames/Cargo/releases): `cargo.exe` for Windows
-(no Python needed), or `cargo.py` for any system with Python 3.7+.
+(no Python needed), or `cargo.py` for any system with Python 3.8+.
 
 **From the repository:**
 ```bash
@@ -125,7 +125,7 @@ is cut off. Set `CARGO_ASCII=1` if your terminal cannot draw the box characters.
 base64  hashlib  json  math  os  random  re  shutil  sys  time  unicodedata  zlib
 ```
 - The game currently uses only built-in Python modules.
-- Requires Python 3.7+ for proper f-strings and dictionary ordering
+- Requires Python 3.8 or newer.
 
 ## Controls
 Type a command, or its short form, and press Enter. `help` (or `h`) shows every command
