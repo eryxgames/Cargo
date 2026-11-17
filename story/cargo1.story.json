@@ -262,7 +262,10 @@
   },
   "stellar_portal": {
    "about": "the captain paid for the secret quest",
-   "set_by_game": []
+   "set_by_game": [],
+   "carries_to": [
+    "cargo2"
+   ]
   }
  },
  "places": {

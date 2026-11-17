@@ -43,7 +43,10 @@
    "about": "the captain cut loose and ran from {sixpack}"
   },
   "targa_remembers_the_raid": {
-   "about": "{convoy_captain} remembers who ran from the raid"
+   "about": "{convoy_captain} remembers who ran from the raid",
+   "carries_to": [
+    "cargo2"
+   ]
   }
  },
  "nodes": {

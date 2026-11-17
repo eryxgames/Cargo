@@ -360,7 +360,8 @@ def import_story(cargo, game):
     for f, how in rules.items():
         flags.setdefault(f, {"about": ""})["set_by_game"] = how
     flags["tech_breakthrough"]["notes"] = ["set by the game but missing from StoryManager.story_states"]
-    flags["stellar_portal"] = {"about": "the captain paid for the secret quest", "set_by_game": []}
+    flags["stellar_portal"] = {"about": "the captain paid for the secret quest", "set_by_game": [],
+                               "carries_to": ["cargo2"]}       # Cargo 2's tycoon opening reads it
 
     places = {t: {"kind": "location type", "hidden": t != "Planet"} for t in PLACE_TYPES}
     places["Space"] = {"kind": "between locations"}

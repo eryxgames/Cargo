@@ -34,7 +34,10 @@
    ]
   },
   "convoy_refused": {
-   "about": "the captain left {convoy_captain}'s barges at the dock"
+   "about": "the captain left {convoy_captain}'s barges at the dock",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "convoy_friend": {
    "about": "{convoy_captain} answers when the captain calls",
@@ -43,7 +46,10 @@
    ]
   },
   "pell_taught": {
-   "about": "the captain took {young_hauler} along for a run"
+   "about": "the captain took {young_hauler} along for a run",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "pell_turned_away": {
    "about": "the captain turned {young_hauler} away",
@@ -52,10 +58,16 @@
    ]
   },
   "pell_lent": {
-   "about": "the captain lent {young_hauler} ten thousand"
+   "about": "the captain lent {young_hauler} ten thousand",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "pell_advised": {
-   "about": "the captain gave {young_hauler} advice instead of money"
+   "about": "the captain gave {young_hauler} advice instead of money",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "pell_friend": {
    "about": "{young_hauler} flies beside the captain when asked",
@@ -64,13 +76,22 @@
    ]
   },
   "pell_redeemed": {
-   "about": "the captain took {young_hauler} back from the raiders"
+   "about": "the captain took {young_hauler} back from the raiders",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "fought_pell": {
-   "about": "the captain fought {young_hauler} on the lane"
+   "about": "the captain fought {young_hauler} on the lane",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "paid_pell": {
-   "about": "the captain paid {young_hauler} to go away"
+   "about": "the captain paid {young_hauler} to go away",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "lauritz_trust": {
    "about": "{inspector} trusts the captain's manifests",
@@ -79,16 +100,25 @@
    ]
   },
   "lauritz_bribed": {
-   "about": "the captain paid {inspector} a 'processing fee', and she wrote it down"
+   "about": "the captain paid {inspector} a 'processing fee', and she wrote it down",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "lauritz_suspicious": {
    "about": "{inspector} watched the Grey Hats tidy the captain's manifest"
   },
   "lauritz_courier": {
-   "about": "the captain carried {inspector}'s case sealed"
+   "about": "the captain carried {inspector}'s case sealed",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "lauritz_burned": {
-   "about": "the captain opened {inspector}'s case"
+   "about": "the captain opened {inspector}'s case",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "knows_the_quartermaster": {
    "about": "the captain knows which quartermaster sold the convoys",
@@ -97,7 +127,10 @@
    ]
   },
   "fined_for_the_fee": {
-   "about": "the audit fined the captain for {inspector}'s page nine"
+   "about": "the audit fined the captain for {inspector}'s page nine",
+   "carries_to": [
+    "cargo2"
+   ]
   },
   "mraz_protection": {
    "about": "{pirate_captain}'s people leave the captain's ship alone"

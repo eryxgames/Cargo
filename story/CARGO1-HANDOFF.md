@@ -2,7 +2,7 @@
 
 Written by `tools/handoff.py` from the built story; do not edit by hand.
 
-Cargo 1 has 521 story nodes, 75 characters and 247 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 82 of them are meant for later parts.
+Cargo 1 has 521 story nodes, 75 characters and 247 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 95 of them are meant for later parts.
 
 ## Promises
 
@@ -29,6 +29,7 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | Flag | For | Means |
 | --- | --- | --- |
 | `met_cargolytes` | cargo2 | the captain has met the Cargolytes |
+| `targa_remembers_the_raid` | cargo2 | Allsa Targa remembers who ran from the raid |
 
 ### contracts
 
@@ -107,6 +108,7 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | `hansa_founder` | cargo2, cargo3 | the captain minted the first Hansa Mark and signed the charter first |
 | `hansa_member` | cargo2 | the captain signed the Hansa charter, not first |
 | `hansa_outside` | cargo2 | the captain stayed out of the Hansa |
+| `stellar_portal` | cargo2 | the captain paid for the secret quest |
 
 ### neons
 
@@ -146,9 +148,20 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | --- | --- | --- |
 | `convoy_friend` | cargo2 | Allsa Targa answers when the captain calls |
 | `convoy_helped` | cargo2 | the captain towed Allsa Targa's barges |
+| `convoy_refused` | cargo2 | the captain left Allsa Targa's barges at the dock |
+| `fined_for_the_fee` | cargo2 | the audit fined the captain for Hanne Lauritz's page nine |
+| `fought_pell` | cargo2 | the captain fought Pell Okafor on the lane |
 | `knows_the_quartermaster` | cargo2 | the captain knows which quartermaster sold the convoys |
+| `lauritz_bribed` | cargo2 | the captain paid Hanne Lauritz a 'processing fee', and she wrote it down |
+| `lauritz_burned` | cargo2 | the captain opened Hanne Lauritz's case |
+| `lauritz_courier` | cargo2 | the captain carried Hanne Lauritz's case sealed |
 | `lauritz_trust` | cargo2 | Hanne Lauritz trusts the captain's manifests |
+| `paid_pell` | cargo2 | the captain paid Pell Okafor to go away |
+| `pell_advised` | cargo2 | the captain gave Pell Okafor advice instead of money |
 | `pell_friend` | cargo2 | Pell Okafor flies beside the captain when asked |
+| `pell_lent` | cargo2 | the captain lent Pell Okafor ten thousand |
+| `pell_redeemed` | cargo2 | the captain took Pell Okafor back from the raiders |
+| `pell_taught` | cargo2 | the captain took Pell Okafor along for a run |
 | `pell_turned_away` | cargo2 | the captain turned Pell Okafor away |
 
 ### rootstock
