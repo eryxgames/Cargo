@@ -129,7 +129,9 @@ promises it owes and characters it should use are reported as pending, not as
 warnings. A character's `timeline` says in which parts they appear
 and as what; the validator checks that the story files agree. Every promise a node
 makes must be declared here and paid (`pays`) in the same or a later part; a promise
-due in a part not written yet is reported as pending.
+due in a part not written yet is reported as pending. A flag whose `carries_to` names a
+later part should be read there through `player_origin` (the record that came in); the
+validator reports one that is not (pending while that part is open).
 
 ## Traces (for replay)
 

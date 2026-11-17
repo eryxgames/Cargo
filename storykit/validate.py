@@ -433,6 +433,26 @@ def check_saga(saga, report):
         else:
             report.warn("promise-unpaid", "saga:promise %s" % p, "made but never paid")
 
+    # carried flags: a flag a part marks for a later part should be read there, through
+    # player_origin (the captain record that came in); pending while the later part is open
+    for gid, story in stories.items():
+        for f, info in story.get("flags", {}).items():
+            for target in info.get("carries_to") or []:
+                if target not in stories or target == gid:
+                    continue
+                read = set()
+                for nid, node in stories[target]["nodes"].items():
+                    for cond in kit.node_conditions(node):
+                        def visit(key, want, path, read=read):
+                            if key == "player_origin" and isinstance(want, dict) and want.get("flag"):
+                                read.add(want["flag"])
+                        kit.walk_condition(cond, visit)
+                if f not in read:
+                    if open_parts.get(target):
+                        report.note("carried-pending", "%s:flag %s" % (gid, f), "for %s, not read there yet" % target)
+                    else:
+                        report.warn("carried-unread", "%s:flag %s" % (gid, f), "carried to %s, which never reads it" % target)
+
     # crossings: visiting captains must come from a part of the saga
     for gid, story in stories.items():
         for nid, node in story["nodes"].items():
