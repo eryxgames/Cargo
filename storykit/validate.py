@@ -72,6 +72,8 @@ def check_story(story, report, saga=None):
                 report.error("character", where(nid), "unknown character %r" % who)
         if node.get("where") and node["where"] not in places:
             report.error("place", where(nid), "unknown place %r" % node["where"])
+        if node.get("kind") == "sight" and not node.get("where") and "here" not in json.dumps(node.get("requires") or {}):
+            report.warn("sight", where(nid), "a sight with neither a place (where) nor a person (here) is never seen")
 
         for cond in kit.node_conditions(node):
             def visit(key, want, path, nid=nid):
@@ -92,6 +94,12 @@ def check_story(story, report, saga=None):
                         for f in kit.as_list(want):
                             if f not in flags:
                                 report.error("flag", where(nid), "undeclared flag %r" % f)
+                    if key == "here":
+                        for who in kit.as_list(want):
+                            if who not in characters:
+                                report.error("character", where(nid), "here: unknown character %r" % who)
+                            elif not (characters[who] or {}).get("route"):
+                                report.error("route", where(nid), "here: %s has no route" % who)
                     return
                 if key not in stats:
                     report.error("stat", where(nid), "unknown condition or stat %r" % key)
@@ -115,6 +123,20 @@ def check_story(story, report, saga=None):
                     continue
                 if key not in stats and key not in effects_vocab:
                     report.error("effect", where(nid), "unknown effect or stat %r" % key)
+
+    # ---- routes: where characters go by themselves --------------------------------------------
+    for cid, info in characters.items():
+        route = (info or {}).get("route")
+        if route is None:
+            continue
+        if not isinstance(route, dict) or not route.get("places"):
+            report.error("route", "character %s" % cid, "a route needs a list of places")
+            continue
+        for p in route["places"]:
+            if p not in places:
+                report.error("place", "character %s" % cid, "route names unknown place %r" % p)
+        if not isinstance(route.get("stay", 1), int) or route.get("stay", 1) < 1:
+            report.error("route", "character %s" % cid, "stay must be a whole number of turns, at least 1")
 
     # ---- names and placeholders ------------------------------------------------
     # A character is named in one place (its story file or the saga file); texts

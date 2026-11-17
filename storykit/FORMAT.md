@@ -45,7 +45,7 @@ everything against those declarations.
 
 | Field | Meaning |
 | --- | --- |
-| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat`; `intro` (the first scene of a new game: the first whose `requires` holds), `epilogue` (a line shown after any ending when its `requires` holds), `rumour` (a line overheard in a cantina) |
+| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat`; `intro` (the first scene of a new game: the first whose `requires` holds), `epilogue` (a line shown after any ending when its `requires` holds), `rumour` (a line overheard in a cantina); `sight` (something the player can look at: in a place, named by `where`, or a person, by a `here` condition; played only when the player picks it), `thought` (a line the captain thinks, shown when asked, while its `requires` hold) |
 | `arc` | lane on the map |
 | `title`, `text` | text is a string or a list of lines; `{placeholders}` are filled when shown (see Names) |
 | `variants` | `[{"requires": {...}, "text": "..."}]` or `[{"when": "alternate", "text": "..."}]`: other text for other circumstances |
@@ -83,6 +83,7 @@ An object is "all of these". Keys:
 | `venue` | the player is visiting this place inside a location (`port`, `cantina`), declared as a place of kind `venue` |
 | `chapter` | the player is in this chapter now (its id, or one of a list); a finished chapter still counts until the next one starts |
 | `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x", "same_name": true}`: a captain record from that part has been imported; `same_name` true when it carries the current captain's name, false when another |
+| `here` | a character (or one of a list) is where the player is: their `route` puts them there on this turn |
 | `all`, `any`, `not` | combine conditions |
 | `code` | opaque game code; the tools report it and cannot judge it |
 
@@ -108,7 +109,10 @@ game's declared stats instead.
 A character is named in one place: its story file, or the saga file if it lives in
 more than one part (a story file says `"saga": "saga.json"` to take names from it,
 and may not repeat them). Characters have `name` and may have `short`, `full` and
-`title`. Texts say `{pirate_captain}` or `{pirate_captain.short}`, so renaming a
+`title`, and a `route` if they travel on their own: `{"places": ["Alpha", "Beta"], "stay": 2,
+"start": 0}` (turns at each place, and turns already gone when the game begins; the place on a
+turn is `places[((turn + start) // stay) % len(places)]`, so a save needs nothing new). Texts
+say `{pirate_captain}` or `{pirate_captain.short}`, so renaming a
 character renames it everywhere. The validator warns when a text writes out a name
 that has a `short`, and, in a story that lists its `placeholders` (the game values
 it can fill, like `money` or `visitor.name`), reports any other placeholder.

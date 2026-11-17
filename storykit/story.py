@@ -28,6 +28,7 @@ CORE_CONDITIONS = {
     "player_origin",                # the record of the captain the player is playing as
     "venue",                        # a place inside a location the player is visiting (port, cantina)
     "chapter",                      # the chapter the player is in now (its id, or a list of ids)
+    "here",                         # a character (or one of a list) whose route has them where the player is
     "code",                         # opaque: game code the tools cannot read
 }
 
@@ -35,7 +36,7 @@ CORE_CONDITIONS = {
 CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "reveal", "code"}
 
 NODE_KINDS = {"chapter", "milestone", "ending", "quest", "event", "encounter", "stage", "unlock", "beat",
-              "intro", "epilogue", "rumour"}
+              "intro", "epilogue", "rumour", "sight", "thought"}
 
 
 class StoryError(Exception):
@@ -394,3 +395,13 @@ def act_of(story, node_id, _seen=None):
 def text_of(node):
     text = node.get("text", "")
     return " ".join(text) if isinstance(text, list) else str(text)
+
+
+def route_place(route, turn):
+    """Where a character's route puts them on this turn: {"places": [...], "stay": turns at each,
+    "start": turns already gone when the game begins}. None without a route."""
+    places = (route or {}).get("places") or []
+    if not places:
+        return None
+    stay = max(1, int(route.get("stay", 1)))
+    return places[((turn + int(route.get("start", 0))) // stay) % len(places)]
