@@ -67,6 +67,12 @@
    "carries_to": [
     "cargo2"
    ]
+  },
+  "vertex_array_kren": {
+   "about": "the captain measured the grey alloy samples before the fire and gave {ancient_scholar.short} the cartridge (an errand from 2533)",
+   "carries_to": [
+    "cargo3"
+   ]
   }
  },
  "nodes": {
@@ -185,13 +191,47 @@
     "player_origin": {
      "game": "cargo3"
     },
-    "errand": {
-     "thirteenth_line": "open"
-    }
+    "any": [
+     {
+      "errand": {
+       "thirteenth_line": "open"
+      }
+     },
+     {
+      "errand": {
+       "vertex_array": "open"
+      }
+     }
+    ]
    },
    "text": [
     "{origin.name} went into a needle in 2533 and came out a hundred and thirteen years early, with a promise to keep.",
     "On level nine at Gamma, a plaque will one day carry twelve names and a blank thirteenth line 'for the hauler who brought the air'. The miners are not trapped yet. Your rank has not been invented. Your hands still know how to fly."
+   ],
+   "variants": [
+    {
+     "requires": {
+      "errand": {
+       "thirteenth_line": "open",
+       "vertex_array": "open"
+      }
+     },
+     "text": [
+      "{origin.name} went into a needle in 2533 and came out a hundred and thirteen years early, with two promises to keep.",
+      "A blank thirteenth line on a plaque at Gamma, 'for the hauler who brought the air'. A gap in {ancient_scholar}'s notes where the shape of the grey alloy should be, before a fire takes the samples. Neither has happened yet. Your rank has not been invented. Your hands still know how to fly."
+     ]
+    },
+    {
+     "requires": {
+      "errand": {
+       "vertex_array": "open"
+      }
+     },
+     "text": [
+      "{origin.name} went into a needle in 2533 and came out a hundred and thirteen years early, with a promise to keep.",
+      "One day {ancient_scholar} will have three shards of grey alloy on a bench at the Stellar Institute, and a fire will take them. In 2533 her notes have a gap where their shape should be. Measure them first. Your rank has not been invented. Your hands still know how to fly."
+     ]
+    }
    ]
   },
   "intro.from_cargo3": {
@@ -217,6 +257,36 @@
     }
    },
    "sound": "displaced"
+  },
+  "trail.vertex": {
+   "kind": "event",
+   "arc": "main",
+   "act": 3,
+   "title": "Before the fire",
+   "who": [
+    "ancient_scholar"
+   ],
+   "requires": {
+    "at": "Stellar Institute",
+    "flag": "carried_the_samples",
+    "not_done": "drama.discovery.fire",
+    "errand": {
+     "vertex_array": "open"
+    }
+   },
+   "text": [
+    "{ancient_scholar.short} has the three samples on a bench at the Stellar Institute: comet ice from Scholz's Star, collision dust from Fomalhaut, Gamma's tailings. You know what she does not. Soon the store will burn, and every sample with it.",
+    "You borrow the Institute's scanner for a night and measure the three shards into one shape, the shape the segment had before anyone cut it: its raw coordinates, a Vertex Array, on a data cartridge. 'Why would I need a copy?' she asks. You do not answer.",
+    "She tapes the cartridge into her notebook anyway and asks you to write the label. You write: 'The shape, measured before the fire. For T.K.'"
+   ],
+   "effects": {
+    "set": [
+     "vertex_array_kren"
+    ],
+    "errand_done": "vertex_array",
+    "plot_points": 5,
+    "research_points": 100
+   }
   },
   "self.outpost": {
    "kind": "encounter",
@@ -497,6 +567,26 @@
      ],
      "code": "{\"victory\": {\"money\": 5000, \"items\": [\"quantum_core\"]}, \"defeat\": {\"damage\": 30}}"
     }
+   },
+   "drama.discovery.fire": {
+    "variants": [
+     {
+      "requires": {
+       "errand": {
+        "vertex_array": "open"
+       }
+      },
+      "text": [
+       "A fire in the sample store of the Stellar Institute at TRAPPIST-1. Nobody hurt. Every sample of the grey alloy is gone, with the notes, and the fire door was propped open with a chair from somebody else's lab.",
+       "{ancient_scholar.short} sits on the steps with a smoke-black notebook. 'Somebody does not want this to be true,' she says. 'Or wants it to be true only for them.'",
+       "The chair comes from a security liaison's office that rents a room at the Institute and has never been seen to use it. The name on the door is {serac.short}.",
+       "You came back a hundred and thirteen years to measure the samples, and the fire was faster. The errand stays in your record; another line of time may be luckier."
+      ]
+     }
+    ],
+    "notes": [
+     "amended: a captain on the errand from 2533 learns it came too late (the errand stays open)"
+    ]
    }
   }
  }

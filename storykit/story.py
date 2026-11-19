@@ -61,6 +61,12 @@ AMENDABLE = ("nodes", "characters", "flags", "places", "arcs")
 NAME_FIELDS = ("name", "short", "full", "title")      # how a character is called in text
 
 
+def is_anonymous(info):
+    """A role rather than a person: the guard at the fence, the medic on the berths, a squad of
+    soldiers ("anonymous": true, or "group": true for many). Its name is what it does."""
+    return bool((info or {}).get("anonymous") or (info or {}).get("group"))
+
+
 def load(path):
     """Load a story file and every file it includes, merged into one dict."""
     data = _read_json(path)

@@ -354,6 +354,13 @@
    "needs": "2.3.0",
    "title": "the word that opens the Kraal vault",
    "about": "In 2533 {neon_sleeper} has slept too long in stasis and lost the word she chose for the family vault in 2460; the chambers take the newest memories first. In Cargo 2, newly awake at Delta, she chooses it and tells the captain. Back in 2533, the word opens the vault."
+  },
+  "vertex_array": {
+   "from": "cargo3",
+   "to": "cargo1",
+   "needs": "1.3.0",
+   "title": "the shape of the grey alloy, measured before the fire",
+   "about": "In 2533 {ancient_scholar}'s notes have a gap where the shape of the missing segment should be: measured from the samples, lost in the Institute fire. In Cargo 1 the captain measures the three samples at the Stellar Institute before the fire and gives her the cartridge, labelled in the captain's hand. Back in 2533 the cartridge is in her notes: the Vertex Array, which the restart will need."
   }
  },
  "features": {

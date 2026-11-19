@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One captain through the whole saga, with the three games' real code: a Cargo 3 captain takes
-both errands to the past, does the plaque in Cargo 1 and the vault word in Cargo 2, and comes
-back to a new Cargo 3 that remembers. The record goes from game to game through the shared
+three errands to the past, does the plaque and the samples in Cargo 1 and the vault word in
+Cargo 2, and comes back to a new Cargo 3 that remembers. The record goes from game to game through the shared
 captain folder, as it does for a player. A second trip goes through the published Cargo 1.2.1
 (from the git tag) and is joined back up.
 
@@ -74,7 +74,7 @@ def run(repo, load, body, home):
 def main(cargo2, cargo3):
     home = tempfile.mkdtemp(prefix="cargo-saga-trip-")
 
-    # ---- 2533: a fresh captain, both errands ----------------------------------------------------
+    # ---- 2533: a fresh captain, three errands --------------------------------------------------
     a = run(cargo3, "game/world.py", r'''
 io.queue[:] = ["1", "2", "Tester"] + [""] * 10
 with quiet():
@@ -84,6 +84,7 @@ play(game, "hall.first")
 play(game, "sight.gamma.plaque", "1", "Gamma")
 game.story_manager.story_states["first_friend"] = True
 play(game, "sight.delta.conte", "1", "Delta")
+play(game, "sight.epsilon.notes", "1", "Epsilon")
 game.turn = 30
 path, _ = game.export_captain()
 done({"path": path, "id": game.captain_id, "line": game.captain_start["line"],
@@ -91,7 +92,8 @@ done({"path": path, "id": game.captain_id, "line": game.captain_start["line"],
 ''', home)
     if not a:
         return
-    expect(a["errands"] == {"thirteenth_line": "open", "vault_word": "open"}, "2533: both errands open: %s" % a["errands"])
+    expect(a["errands"] == {"thirteenth_line": "open", "vault_word": "open", "vertex_array": "open"},
+           "2533: three errands open: %s" % a["errands"])
 
     # ---- 2420, Cargo 1: the plaque --------------------------------------------------------------------
     b = run(CARGO1, "cargo.py", r'''
@@ -102,16 +104,24 @@ game.story.done["gamma.collapse"] = 0
 game.turn = 5
 at(game, "Gamma")
 plaque = play(game, "gamma.plaque", "1")
+game.story_manager.story_states["carried_the_samples"] = True
+game.current_location = next(l for l in game.locations + game.hidden_locations["ResearchColony"]
+                             if l.name == "Stellar Institute")
+vertex = play(game, "trail.vertex")
 game.turn = 120
 path, _ = game.export_captain()
-done({"path": path, "id": game.captain_id, "intro": intro, "plaque": plaque, "line": game.captain_start["line"],
+done({"path": path, "id": game.captain_id, "intro": intro, "plaque": plaque, "vertex": vertex, "text": text,
+      "line": game.captain_start["line"],
       "parent": game.captain_start["parent"], "errands": {e["id"]: e["state"] for e in game.errands}})
 ''' % a["path"], home)
     if not b:
         return
     expect(b["id"] == a["id"] and b["parent"] == a["line"], "2420: the same captain, on a line from 2533's")
-    expect(b["intro"] == ["intro.errand"] and "Tester" in b["plaque"], "2420: the errand's opening, and the name cut")
-    expect(b["errands"] == {"thirteenth_line": "done", "vault_word": "open"}, "2420: the plaque done, the vault still open")
+    expect(b["intro"] == ["intro.errand"] and "two promises to keep" in b["text"] and "Tester" in b["plaque"],
+           "2420: one opening for two errands, and the name cut")
+    expect("For T.K." in b["vertex"], "2420: the samples measured before the fire")
+    expect(b["errands"] == {"thirteenth_line": "done", "vault_word": "open", "vertex_array": "done"},
+           "2420: the plaque and the samples done, the vault still open")
 
     # ---- 2460, Cargo 2: the vault word (the record now comes from Cargo 1) ---------------------------------
     c = run(cargo2, "game/world.py", r'''
@@ -131,7 +141,7 @@ done({"path": path, "id": game.captain_id, "thought": thought, "vault": vault, "
         return
     expect(c["id"] == a["id"] and c["parent"] == b["line"], "2460: the same captain, on a line from 2420's")
     expect(c["thought"] and "Tuesday" in c["vault"], "2460: reminded of the errand, and the word chosen")
-    expect(c["errands"] == {"thirteenth_line": "done", "vault_word": "done"}, "2460: both errands done")
+    expect(c["errands"] == {"thirteenth_line": "done", "vault_word": "done", "vertex_array": "done"}, "2460: every errand done")
 
     # ---- 2533 again: the echoes ----------------------------------------------------------------------------
     d = run(cargo3, "game/world.py", r'''
@@ -142,7 +152,8 @@ play(game, "hall.first")
 plaque = play(game, "sight.gamma.plaque", "1", "Gamma")
 game.story_manager.story_states["first_friend"] = True
 conte = play(game, "sight.delta.conte", "1", "Delta")
-done({"id": game.captain_id, "parent": game.captain_start["parent"], "own_time": game.captain_start["own_time"],
+notes = play(game, "sight.epsilon.notes", "1", "Epsilon")
+done({"id": game.captain_id, "notes": notes, "array": game.person.items.get("vertex_array"), "parent": game.captain_start["parent"], "own_time": game.captain_start["own_time"],
       "eras": sorted(game.captain_start["ledger"]), "plaque": plaque, "conte": conte,
       "item": game.person.items.get("procrustes_analyzer"), "log": [e["game"] for e in rec["log"]]})
 ''' % (c["path"], c["path"]), home)
@@ -154,6 +165,7 @@ done({"id": game.captain_id, "parent": game.captain_start["parent"], "own_time":
         expect("It is a Tuesday" in d["conte"] and "The vault opens" in d["conte"] and d["item"] == 1,
                "the vault opens to the word, and the Procrustes Analyzer is the captain's")
         expect(d["log"] == ["cargo3", "cargo1", "cargo2"], "the log runs through every part: %s" % d["log"])
+        expect("For T.K." in d["notes"] and d["array"] == 1, "Kren's notes hold the cartridge, and the captain takes it")
 
     # ---- through the published Cargo 1.2.1, and joined back up -------------------------------------------------
     old_home = tempfile.mkdtemp(prefix="cargo-saga-trip-121-")
@@ -193,8 +205,8 @@ note = " ".join(out.getvalue().replace("│", " ").split())
 done({"id": rec["id"], "errands": {x["id"]: x["state"] for x in rec["errands"]}, "note": note})
 ''' % e["path"], old_home)
             if f:
-                expect(f["id"] == a["id"] and f["errands"] == {"thirteenth_line": "open", "vault_word": "open"},
-                       "joined back up: the first id, and both errands still open")
+                expect(f["id"] == a["id"] and f["errands"] == {"thirteenth_line": "open", "vault_word": "open", "vertex_array": "open"},
+                       "joined back up: the first id, and every errand still open")
                 expect("Cargo 1 1.2.1" in f["note"] and "1.3.0" in f["note"], "the join says which version lost what")
     print("saga trip: %d games played, %s" % (played[0], "ok" if not problems else "%d problems" % len(problems)))
 

@@ -12,9 +12,13 @@ them back here.
   log, and the record now carries the captain's history: what they left in each part, their own
   time (the turns they have lived, whatever the year), and the line of the timeline each game
   is. A save is never rewritten by what happens in another part.
-- **Errands from the future.** Cargo 3 can send a captain back to 2420 with a task. The first
-  one: level nine's plaque at Gamma has a blank thirteenth line "for the hauler who brought the
-  air", and the captain can fill it, or leave it blank, and see the result in 2533.
+- **Errands from the future.** Cargo 3 can send a captain back to 2420 with a task:
+  - level nine's plaque at Gamma has a blank thirteenth line "for the hauler who brought the
+    air", and the captain can fill it, or leave it blank, and see the result in 2533;
+  - Kren's notes in 2533 have a gap where the shape of the grey alloy should be. Get to the
+    Stellar Institute with the samples before the fire, measure them, and give her the
+    cartridge; in 2533 it is in her notes, labelled in your hand. If the fire is faster, it
+    says so, and the errand waits for another try.
 - **Records from newer games are kept whole.** What a newer game writes into a captain's record
   and this one does not know, it keeps and writes out again.
 - **Older versions are named, not broken.** A record that went through Cargo 1.2.1 lost its
@@ -22,6 +26,9 @@ them back here.
   and says so. An errand meant for a newer version is named when you start and when you export,
   and stays in the record until you update.
 - The captain menu shows your own time, your line and your errands.
+- The story kit knows roles: characters named by what they do (a perimeter guard, a medic, a
+  squad of soldiers), so names stay for the people who matter. The validator prints each part's
+  cast.
 
 ## 1.2.1
 

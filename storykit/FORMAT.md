@@ -120,6 +120,17 @@ character renames it everywhere. The validator warns when a text writes out a na
 that has a `short`, and, in a story that lists its `placeholders` (the game values
 it can fill, like `money` or `visitor.name`), reports any other placeholder.
 
+**Roles.** A name is for someone who matters. The guard at the fence, the medic on the berths
+and a squad of soldiers are roles: `{"name": "Perimeter Guard", "anonymous": true}`, or
+`"group": true` for many (`"Squad of Soldiers"`). A role is named by what it does, so it has no
+`short`, `full` or `title` (the validator warns), and texts write the article themselves: "the
+{perimeter_guard}". Roles fill the world so that names keep their weight; a role's lines can
+point at the named cast. A role that earns a name (the engineer who tells you what the crew
+calls her) becomes a new, named character with `"was": "battle_engineer"`, and the scenes after
+that moment use the new one. The validator checks that `was` is a role, and prints each part's
+cast: named characters, roles, and named characters used in one scene only (each a candidate
+for a role).
+
 ## Saga file
 
 ```json

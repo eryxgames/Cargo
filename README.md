@@ -256,7 +256,8 @@ From 1.3 the record carries the captain's history through every part of the saga
 - the ledger: what this captain left in each part. A later part reads it with
   `{"past": {"era": "cargo1", "flag": "..."}}`;
 - errands: a later part can send the captain back with a task (`{"errand": {"id": "open"}}`).
-  Cargo 3 sends one here: a name for the thirteenth line on level nine's plaque at Gamma;
+  Cargo 3 sends two here: a name for the thirteenth line on level nine's plaque at Gamma, and
+  the shape of the grey alloy, measured at the Stellar Institute before the fire;
 - keys written by newer games are kept and written out again, so a record that passes through
   this version loses nothing.
 

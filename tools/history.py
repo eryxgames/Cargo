@@ -108,6 +108,50 @@ expect([e["game"] for e in record["log"]][-1] == "cargo1" and len(record["log"])
 game, io, text = start_as(from_cargo3(errand_state="done"))
 expect("intro.from_cargo3" in game.story.done, "a Cargo 3 captain with no errand open: the plain intro")
 
+# ---- the Vertex Array: measured before the fire ---------------------------------------------------
+VERTEX = {"id": "vertex_array", "from": "cargo3", "to": "cargo1", "state": "open", "needs": "1.3.0",
+          "title": "the shape of the grey alloy", "line": "L-00000003"}
+
+
+def institute(game):
+    """The Stellar Institute, a research colony the captain may not have found yet."""
+    return next(l for l in game.locations + game.hidden_locations["ResearchColony"] if l.name == "Stellar Institute")
+
+
+def with_vertex(plaque_state):
+    record = from_cargo3(errand_state=plaque_state)
+    record["errands"] = record["errands"] + [dict(VERTEX)]
+    return cargo.clean_captain(sealed(record))
+
+
+game, io, text = start_as(with_vertex("done"))
+expect("intro.errand" in game.story.done and "Measure them first" in text and "plaque" not in text,
+       "the Vertex Array alone: its own opening")
+game, io, text = start_as(with_vertex("open"))
+expect("two promises to keep" in text, "both errands to 2420: one opening for both")
+vertex = cargo.story_data()["nodes"]["trail.vertex"]
+game.current_location = institute(game)
+expect(not game.story.check(game.story.requires_of(vertex), game.story.snapshot()), "nothing to measure before the samples come")
+game.story_manager.story_states["carried_the_samples"] = True
+expect(game.story.check(game.story.requires_of(vertex), game.story.snapshot()), "the samples on her bench, before the fire")
+with headless.quiet() as out:
+    game.story.play("trail.vertex")
+expect(game.story_manager.story_states.get("vertex_array_kren") and history.errand_state(game.errands, "vertex_array") == "done"
+       and history.errand_state(game.errands, "thirteenth_line") == "open", "measured: that errand done, the plaque still open")
+expect("For T.K." in out.getvalue(), "and the label is in the captain's hand")
+expect("vertex_array_kren" in game.captain_record()["ledger"]["cargo1"]["flags"], "the cartridge lands in 2420's ledger")
+# the fire first: too late on this line
+game, io, text = start_as(with_vertex("done"))
+game.story.done["drama.discovery.fire"] = 1
+game.current_location = institute(game)
+game.story_manager.story_states["carried_the_samples"] = True
+expect(not game.story.check(game.story.requires_of(vertex), game.story.snapshot()), "after the fire there is nothing to measure")
+lines = " ".join(game.story.text_of("drama.discovery.fire"))
+expect("the fire was faster" in lines and history.errand_state(game.errands, "vertex_array") == "open",
+       "the fire tells a captain on the errand it came too late, and the errand stays open")
+game, io, text = start_as(from_cargo3(errand_state="done"))
+expect("the fire was faster" not in " ".join(game.story.text_of("drama.discovery.fire")), "and says nothing to anyone else")
+
 # ---- a version too old for an errand ---------------------------------------------------------------
 old = from_cargo3(needs="1.4.0")
 notes = history.import_notes(old, "cargo1", cargo.VERSION, cargo.story_data()["features"])

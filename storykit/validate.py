@@ -22,6 +22,7 @@ import story as kit  # noqa: E402
 class Report:
     def __init__(self):
         self.items = []
+        self.cast = {}          # part -> its characters: named, anonymous, named for one scene only
 
     def add(self, level, code, where, message):
         self.items.append({"level": level, "code": code, "where": where, "message": message})
@@ -287,6 +288,36 @@ def check_story(story, report, saga=None):
     for cid in story["characters"]:
         if cid not in used_chars:
             report.note("character-unused", "%s:character %s" % (gid, cid), "declared, appears in no node")
+
+    # ---- the cast: names and roles -------------------------------------------------
+    # A name is for someone who matters. The guard at the fence, the medic on the berths and a
+    # squad of soldiers are roles ("anonymous": true; "group": true for many), named by what
+    # they do. A role that earns a name becomes a new, named character that says what it "was".
+    scenes = {}
+    for nid, node in nodes.items():
+        for who in kit.characters_of(node):
+            scenes.setdefault(who, set()).add(nid)
+    for cid, info in story["characters"].items():
+        info = info or {}
+        if kit.is_anonymous(info):
+            extra = [field for field in kit.NAME_FIELDS[1:] if info.get(field)]
+            if extra:
+                report.warn("anonymous-named", "%s:character %s" % (gid, cid),
+                            "a role has no personal name: drop %s, or name it and drop anonymous" % ", ".join(extra))
+        was = info.get("was")
+        if was:
+            if was not in characters:
+                report.error("was", "%s:character %s" % (gid, cid), "was %s, who is no character" % was)
+            elif not kit.is_anonymous(characters[was]):
+                report.warn("was", "%s:character %s" % (gid, cid), "was %s, who is not a role (anonymous)" % was)
+            elif kit.is_anonymous(info):
+                report.warn("was", "%s:character %s" % (gid, cid), "a role that earns a name needs one")
+    own = {cid: info or {} for cid, info in story["characters"].items() if not (info or {}).get("generated")}
+    report.cast[gid] = {
+        "named": sorted(c for c, info in own.items() if not kit.is_anonymous(info)),
+        "anonymous": sorted(c for c, info in own.items() if kit.is_anonymous(info)),
+        "one_scene": sorted(c for c, info in own.items() if not kit.is_anonymous(info) and len(scenes.get(c, ())) == 1),
+    }
     return reach
 
 
@@ -584,6 +615,12 @@ def main(argv):
                 counts[v] = counts.get(v, 0) + 1
             print("%s: %d nodes - can happen %d, depends on code %d, never %d" % (
                 g, len(r), counts.get("yes", 0), counts.get("opaque", 0), counts.get("no", 0)))
+        for g, cast in report.cast.items():
+            one = cast["one_scene"]
+            print("%s cast: %d named, %d roles%s" % (
+                g, len(cast["named"]), len(cast["anonymous"]),
+                "; named for one scene only: %d (%s%s)" % (len(one), ", ".join(one[:6]), ", ..." if len(one) > 6 else "")
+                if one else ""))
         print("%d errors, %d warnings, %d notes" % (report.count("error"), report.count("warning"), report.count("note")))
     if baseline is not None:
         new = [i for i in report.items if i["level"] in ("error", "warning") and finding_key(i) not in baseline]

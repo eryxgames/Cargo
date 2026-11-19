@@ -2,7 +2,7 @@
 
 Written by `tools/handoff.py` from the built story; do not edit by hand.
 
-Cargo 1 has 525 story nodes, 75 characters and 249 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 97 of them are meant for later parts.
+Cargo 1 has 526 story nodes, 75 characters and 250 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 98 of them are meant for later parts.
 
 ## Promises
 
@@ -116,6 +116,7 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | `hansa_member` | cargo2 | the captain signed the Hansa charter, not first |
 | `hansa_outside` | cargo2 | the captain stayed out of the Hansa |
 | `stellar_portal` | cargo2 | the captain paid for the secret quest |
+| `vertex_array_kren` | cargo3 | the captain measured the grey alloy samples before the fire and gave Kren the cartridge (an errand from 2533) |
 
 ### neons
 
