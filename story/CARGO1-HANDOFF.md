@@ -2,7 +2,7 @@
 
 Written by `tools/handoff.py` from the built story; do not edit by hand.
 
-Cargo 1 has 521 story nodes, 75 characters and 247 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 95 of them are meant for later parts.
+Cargo 1 has 525 story nodes, 75 characters and 249 flags. A captain record carries every flag that is set (up to 160, the carried ones first); 97 of them are meant for later parts.
 
 ## Promises
 
@@ -69,6 +69,13 @@ Cargo 2 reads the ones marked cargo2, Cargo 3 the ones marked cargo3.
 | `heard_the_lyra_story` | cargo2 | the captain heard how the Maud Kettle went down in Lyra |
 | `logged_the_lyra_signal` | cargo2 | the captain copied the Lyra signal log at the research outpost |
 | `worshipped` | cargo2 | the Order of the Lost Gear adopted the captain's ship as a minor relic |
+
+### game
+
+| Flag | For | Means |
+| --- | --- | --- |
+| `thirteenth_blank` | cargo3 | the captain let level nine's thirteenth line stay blank |
+| `thirteenth_name` | cargo3 | the captain gave Vo Brattice a name for the thirteenth line on level nine's plaque |
 
 ### houses
 

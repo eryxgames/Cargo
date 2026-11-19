@@ -176,6 +176,24 @@
    },
    "sound": "displaced"
   },
+  "intro.errand": {
+   "kind": "intro",
+   "arc": "saga",
+   "act": 1,
+   "title": "An errand, early",
+   "requires": {
+    "player_origin": {
+     "game": "cargo3"
+    },
+    "errand": {
+     "thirteenth_line": "open"
+    }
+   },
+   "text": [
+    "{origin.name} went into a needle in 2533 and came out a hundred and thirteen years early, with a promise to keep.",
+    "On level nine at Gamma, a plaque will one day carry twelve names and a blank thirteenth line 'for the hauler who brought the air'. The miners are not trapped yet. Your rank has not been invented. Your hands still know how to fly."
+   ]
+  },
   "intro.from_cargo3": {
    "kind": "intro",
    "arc": "saga",

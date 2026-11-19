@@ -94,6 +94,16 @@ def check_story(story, report, saga=None):
                         for f in kit.as_list(want):
                             if f not in flags:
                                 report.error("flag", where(nid), "undeclared flag %r" % f)
+                    if key == "past":
+                        if not isinstance(want, dict) or (want.get("era") and want["era"] not in kit.captain_record.ERAS):
+                            report.error("past", where(nid), "past: an era must be one of %s" % ", ".join(kit.captain_record.ERAS))
+                    if key == "errand":
+                        for eid, state in ({want: "open"} if isinstance(want, str) else dict(want or {})).items():
+                            if eid not in story["errands"]:
+                                report.error("errand", where(nid), "unknown errand %r (errands are defined in the saga file)" % eid)
+                            for st in kit.as_list(state):
+                                if st not in ("none", "open", "done"):
+                                    report.error("errand", where(nid), "errand %s: unknown state %r" % (eid, st))
                     if key == "here":
                         for who in kit.as_list(want):
                             if who not in characters:
@@ -120,9 +130,38 @@ def check_story(story, report, saga=None):
                         for name in kit.as_list(value):
                             if name not in places:
                                 report.error("place", where(nid), "reveals unknown place %r" % name)
+                    if key in ("errand", "errand_done"):
+                        for eid in kit.as_list(value):
+                            info = story["errands"].get(eid)
+                            if info is None:
+                                report.error("errand", where(nid), "unknown errand %r (errands are defined in the saga file)" % eid)
+                            elif key == "errand" and info.get("from") and info["from"] != gid:
+                                report.warn("errand", where(nid), "errand %s is given in %s, not here" % (eid, info["from"]))
+                            elif key == "errand_done" and info.get("to") and info["to"] != gid:
+                                report.warn("errand", where(nid), "errand %s is done in %s, not here" % (eid, info["to"]))
                     continue
                 if key not in stats and key not in effects_vocab:
                     report.error("effect", where(nid), "unknown effect or stat %r" % key)
+
+    # ---- errands between the eras, and fixed points -------------------------------------------
+    given, finished = set(), set()
+    for nid, node in nodes.items():
+        g, d = kit.errands_of(node)
+        given |= g
+        finished |= d
+    for eid, info in story["errands"].items():
+        if info.get("to") == gid and eid not in finished:
+            report.warn("errand-unfinished", "%s:errand %s" % (gid, eid), "sent here from %s, but nothing here finishes it"
+                        % info.get("from", "?"))
+        if info.get("from") == gid and eid not in given:
+            report.note("errand-ungiven", "%s:errand %s" % (gid, eid), "given here, but no node gives it yet")
+    never = {}
+    for point in story.get("fixed_points") or []:
+        for f in kit.as_list((point or {}).get("never_set")):
+            never[f] = (point or {}).get("about", "")
+    for nid, node in nodes.items():
+        for f in kit.flags_set(node) & set(never):
+            report.error("fixed-point", where(nid), "sets %r, against a fixed point: %s" % (f, never[f]))
 
     # ---- routes: where characters go by themselves --------------------------------------------
     for cid, info in characters.items():
@@ -465,9 +504,11 @@ def check_saga(saga, report):
                 read = set()
                 for nid, node in stories[target]["nodes"].items():
                     for cond in kit.node_conditions(node):
-                        def visit(key, want, path, read=read):
+                        def visit(key, want, path, read=read, gid=gid):
                             if key == "player_origin" and isinstance(want, dict) and want.get("flag"):
                                 read.add(want["flag"])
+                            if key == "past" and isinstance(want, dict) and want.get("era") in (None, gid):
+                                read.update(kit.as_list(want.get("flag")) + kit.as_list(want.get("not_flag")))
                         kit.walk_condition(cond, visit)
                 if f not in read:
                     if open_parts.get(target):

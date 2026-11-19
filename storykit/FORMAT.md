@@ -84,6 +84,8 @@ An object is "all of these". Keys:
 | `chapter` | the player is in this chapter now (its id, or one of a list); a finished chapter still counts until the next one starts |
 | `visiting_captain` | `{"game": "cargo2", "ending": "trade", "flag": "x", "same_name": true}`: a captain record from that part has been imported; `same_name` true when it carries the current captain's name, false when another |
 | `here` | a character (or one of a list) is where the player is: their `route` puts them there on this turn |
+| `past` | `{"era": "cargo1", "flag": "x", "not_flag": "y", "ending": "trade"}`: what the captain left in another part, on this line (the record's ledger, below); without `era`, in any part |
+| `errand` | `{"thirteenth_line": "open"}`: an errand (defined in the saga file) is in this state: `none` (never given), `open` or `done`, or one of a list |
 | `all`, `any`, `not` | combine conditions |
 | `code` | opaque game code; the tools report it and cannot judge it |
 
@@ -92,7 +94,8 @@ An object is "all of these". Keys:
 Any declared stat adds the value (`"money": -1500`). `set` and `clear` take flags,
 `give` adds members to sets (`{"items": ["navcomp"]}`), `start` starts nodes,
 `spawn` brings in a character, `reveal` puts places on the map (a place may say
-how to build it under `made`), `code` names game code.
+how to build it under `made`), `code` names game code. `errand` gives the captain an
+errand for another part (its id, or a list); `errand_done` marks it done here.
 
 ## How a game plays the nodes
 
@@ -135,7 +138,34 @@ and as what; the validator checks that the story files agree. Every promise a no
 makes must be declared here and paid (`pays`) in the same or a later part; a promise
 due in a part not written yet is reported as pending. A flag whose `carries_to` names a
 later part should be read there through `player_origin` (the record that came in); the
-validator reports one that is not (pending while that part is open).
+validator reports one that is not (pending while that part is open); a `past` condition
+for that part counts as reading it.
+
+The saga file also holds what crosses between the parts with the captain:
+
+```json
+  "errands": {"thirteenth_line": {"from": "cargo3", "to": "cargo1", "needs": "1.3.0",
+                                  "title": "a name for level nine's thirteenth line", "about": "..."}},
+  "features": {"ledger": {"cargo1": "1.3.0", "cargo2": "2.3.0", "cargo3": "3.0.0"}},
+  "aliases": {"old_flag": "new_flag"},
+  "fixed_points": [{"about": "who restarted the Gyrotron is never shown", "never_set": ["restarted_by_captain"]}]
+```
+
+An errand is given in its `from` part and done in its `to` part, by a version at least
+`needs`; the validator checks both ends. `features` says which version of each part keeps a
+captain's history (the ledger). `aliases` are renamed flags: games read either name and write
+both. No story may set a flag a fixed point names.
+
+## The captain's record and its history
+
+A captain record (`"format": "cargo-captain"`, `"version": 1`) is written by each part.
+`record.py` keeps its history, in keys a game that does not know them drops (so the format
+stays 1): the captain's `id` and `log` from part to part; the `line` this game is and the
+`parent` it branched from (every game started from a record is a new line, so a save is never
+rewritten by what happens later); `own_time`, the turns the captain has lived in every part;
+the `ledger`, for each part, what this captain left there (flags, ending, version, line); and
+the `errands`. Keys from newer games are kept as they came. A record that went through a game
+that drops the history can be joined with the captain's newer record in the shared folder.
 
 ## Traces (for replay)
 

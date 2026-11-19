@@ -28,7 +28,12 @@ grep -E "CRASH|unfilled|FAIL" /tmp/cargo-scenes.txt | head; tail -1 /tmp/cargo-s
 echo "== the hand-off to later parts is current"
 $PY $T/handoff.py --check || fail=1
 echo "== damaged and hostile save / captain files"
-$PY $T/test_files.py cargo.py | tail -1 || fail=1
+$PY $T/test_files.py cargo.py > /tmp/cargo-files.txt || fail=1; tail -1 /tmp/cargo-files.txt
+
+echo "== the captain's history across the parts: ledger, lines, errands, joins, versions"
+$PY $T/history.py cargo.py || fail=1
+echo "   one captain through all three games and the published 1.2.1 (with ../Cargo-2 and ../Cargo-3)"
+$PY $T/saga_trip.py || fail=1
 
 echo "== save / load round trips"
 for s in $SEEDS; do $PY $T/roundtrip.py cargo.py $s 1200 800 | $PY -c "

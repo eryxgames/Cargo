@@ -96,7 +96,8 @@ nasty["hold"] = {("item%d" % i): 10 ** 9 for i in range(500)}
 nasty["story"] = {"flags": ["f" * 900] * 900, "completed": "notalist", "ending": {"a": 1}}
 nasty["origin"] = {"game": "cargo2", "version": "9" * 99}
 nasty["id"] = "C2-0BADF00D"
-nasty["extra"] = {"anything": [1, 2, 3]}
+nasty["extra"] = {"anything": [1, 2, 3]}        # a key from a newer game: kept as it came (1.3)
+nasty["bloat"] = "x" * 20000                      # but not one this big
 nasty["check"] = cargo._captain_check(nasty)
 try:
     clean = cargo.clean_captain(nasty)
@@ -106,7 +107,8 @@ try:
     if clean["career"]["turns"] != 0 or clean["career"]["victories"] != 0: problems.append("types")
     if len(clean["hold"]) > 40 or max(clean["hold"].values()) > 999: problems.append("hold")
     if len(clean["story"]["flags"]) > 160 or len(clean["story"]["flags"][0]) > 32: problems.append("flags")
-    if "extra" in clean: problems.append("extra key kept")
+    if clean.get("extra") != {"anything": [1, 2, 3]}: problems.append("a newer game's key not kept")
+    if "bloat" in clean: problems.append("an oversized key kept")
     with headless.quiet():
         msg = game.receive_captain(clean)
     results.append(("captain: hostile content cleaned", "ok" if not problems else "FAIL: " + ",".join(problems)))

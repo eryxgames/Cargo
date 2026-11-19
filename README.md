@@ -9,7 +9,7 @@ A text-based space trading and exploration game where you navigate between plane
         ╔════════ C Δ R G Ω ════════╗
         ║     Space Trading Saga    ║
         ╚═══════════════════════════╝
-                Version 1.2.1
+                Version 1.3.0
 
 ```
 ## Development Notes
@@ -205,7 +205,9 @@ A few rules worth knowing:
 - Every 10 turns a rich trader is asked whether to keep trading, retire, or pay for the portal.
 
 A new game offers to start as any captain whose record is in `~/.cargo-saga/captains/`:
-one who finished this game, or one carried back from a later part of the saga.
+one who finished this game, or one carried back from a later part of the saga. From 1.3 the
+captain stays the same captain from part to part, and a later part can send them back here on
+an errand (see The captain's record).
 
 ## Releasing
 Raise `VERSION` in `cargo.py`, add a `## x.y.z` section to `CHANGELOG.md`, then push a tag:
@@ -243,6 +245,26 @@ device or into the browser version. `captain` → `import` takes in a captain fr
 part (or another playthrough). Reaching an ending writes the record automatically.
 Quests and milestones can ask for a visiting captain with the requirement
 `{"visiting_captain": {"game": "cargo2"}}` (optionally `"ending"` or `"flag"`).
+
+From 1.3 the record carries the captain's history through every part of the saga
+(`storykit/record.py`, shared by the three games and written into `cargo.py`):
+
+- the same id and log from part to part, and the captain's own time: the turns they have lived
+  in every part, whatever year the dock clocks say;
+- lines: every game begun from a record is a new line. A save belongs to its line, so nothing
+  done later in another part ever rewrites it;
+- the ledger: what this captain left in each part. A later part reads it with
+  `{"past": {"era": "cargo1", "flag": "..."}}`;
+- errands: a later part can send the captain back with a task (`{"errand": {"id": "open"}}`).
+  Cargo 3 sends one here: a name for the thirteenth line on level nine's plaque at Gamma;
+- keys written by newer games are kept and written out again, so a record that passes through
+  this version loses nothing.
+
+Cargo 1.2.1 and older drop this history (they still read and write the record, without an
+error). When a record comes back from one of them, the newer game offers to join it with the
+captain's newer record in the shared folder, and says what was lost.
+`tools/saga_trip.py ../Cargo-2 ../Cargo-3` plays one captain through all three games and the
+published 1.2.1, with each game's own code (the checks run it when both checkouts are there).
 
 ## Development Screenshots
 

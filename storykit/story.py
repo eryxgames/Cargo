@@ -10,6 +10,11 @@ requirements and effects the game understands.  See FORMAT.md.
 import json
 import os
 
+try:                                    # the captain record's history (storykit/record.py)
+    from . import record as captain_record
+except ImportError:
+    import record as captain_record
+
 FORMAT = "storykit"
 SAGA_FORMAT = "storykit-saga"
 VERSION = 1
@@ -29,11 +34,15 @@ CORE_CONDITIONS = {
     "venue",                        # a place inside a location the player is visiting (port, cantina)
     "chapter",                      # the chapter the player is in now (its id, or a list of ids)
     "here",                         # a character (or one of a list) whose route has them where the player is
+    "past",                         # what the captain left in another part (era): {"era", "flag", "not_flag", "ending"}
+    "errand",                       # errands (saga file) in a state: {"id": "none" | "open" | "done" | [...]}
     "code",                         # opaque: game code the tools cannot read
 }
 
 # Effect keys every game understands (anything else must be a declared stat or effect)
-CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "reveal", "code"}
+CORE_EFFECTS = {"set", "clear", "start", "spawn", "give", "reveal", "code",
+                "errand",                   # give the captain an errand for another era (its id, or a list)
+                "errand_done"}              # the errand is done here
 
 NODE_KINDS = {"chapter", "milestone", "ending", "quest", "event", "encounter", "stage", "unlock", "beat",
               "intro", "epilogue", "rumour", "sight", "thought"}
@@ -100,6 +109,13 @@ def load(path):
                                          % (cid, field, path))
                     here[field] = info[field]
             here["saga"] = True
+        # errands between the eras, renamed flags and what each version of a part understands
+        for section in ("errands", "aliases", "features", "fixed_points"):
+            data[section] = saga.get(section, {})
+    data.setdefault("errands", {})
+    data.setdefault("aliases", {})
+    data.setdefault("features", {})
+    data.setdefault("fixed_points", [])
     data["path"] = path
     return data
 
@@ -138,11 +154,13 @@ class State:
     done    set of node ids that are complete
     act     current act (chapter number); turn; place; place_type
     visitors  captain records that crossed over from other games
+    past      the ledger the captain came with: {era: {"flags", "ending", ...}} (record.py)
+    errands   {errand id: "open" | "done"}
     """
 
     def __init__(self, stats=None, sets=None, flags=None, done=None, act=1, turn=0,
                  place=None, place_type=None, visitors=None, player=None, venue=None, origin=None,
-                 chapter=None, done_at=None):
+                 chapter=None, done_at=None, past=None, errands=None):
         self.stats = dict(stats or {})
         self.sets = {k: set(v) for k, v in (sets or {}).items()}
         self.flags = set(flags or ())
@@ -157,13 +175,15 @@ class State:
         self.origin = origin
         self.chapter = chapter
         self.done_at = dict(done_at or {})
+        self.past = dict(past or {})
+        self.errands = dict(errands or {})
 
     @classmethod
     def from_snapshot(cls, snap):
         return cls(snap.get("stats"), snap.get("sets"), snap.get("flags"), snap.get("done"),
                    snap.get("act", 1), snap.get("turn", 0), snap.get("place"), snap.get("place_type"),
                    snap.get("visitors"), snap.get("player"), snap.get("venue"), snap.get("origin"),
-                   snap.get("chapter"), snap.get("done_at"))
+                   snap.get("chapter"), snap.get("done_at"), snap.get("past"), snap.get("errands"))
 
 
 def _threshold(value, wanted):
@@ -229,6 +249,10 @@ def check(cond, state, unknown="fail"):
             ok = state.venue in as_list(want)
         elif key == "chapter":
             ok = state.chapter in as_list(want)
+        elif key == "past":
+            ok = captain_record.past_holds(state.past, want)
+        elif key == "errand":
+            ok = captain_record.errands_hold(state.errands, want)
         elif key == "code":
             if unknown == "raise":
                 raise StoryError("opaque condition: %s" % want)
@@ -306,6 +330,12 @@ def apply(effects, state):
         elif key == "give":
             for name, items in value.items():
                 state.sets.setdefault(name, set()).update(as_list(items))
+        elif key == "errand":
+            for eid in as_list(value):
+                state.errands.setdefault(eid, "open")
+        elif key == "errand_done":
+            for eid in as_list(value):
+                state.errands[eid] = "done"
         elif key in ("start", "spawn", "code"):
             pass
         elif isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -364,6 +394,27 @@ def flags_read(node):
                 found.update(as_list(want))
         walk_condition(cond, visit)
     return found
+
+
+def past_flags_read(node):
+    """Flags of other eras a node reads through {"past": ...}: {(era or None, flag)}."""
+    found = set()
+    for cond in node_conditions(node):
+        def visit(key, want, path):
+            if key == "past" and isinstance(want, dict):
+                for f in as_list(want.get("flag")) + as_list(want.get("not_flag")):
+                    found.add((want.get("era"), f))
+        walk_condition(cond, visit)
+    return found
+
+
+def errands_of(node):
+    """The errands a node gives ("errand") and finishes ("errand_done")."""
+    given, done = set(), set()
+    for effects in node_effects(node):
+        given.update(as_list((effects or {}).get("errand")))
+        done.update(as_list((effects or {}).get("errand_done")))
+    return given, done
 
 
 def flags_set(node):

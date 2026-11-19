@@ -111,6 +111,18 @@
   },
   "settled_lorisa": {
    "about": "the captain settled with {fluencer_manager}'s lawyer"
+  },
+  "thirteenth_name": {
+   "about": "the captain gave {vent_boss} a name for the thirteenth line on level nine's plaque",
+   "carries_to": [
+    "cargo3"
+   ]
+  },
+  "thirteenth_blank": {
+   "about": "the captain let level nine's thirteenth line stay blank",
+   "carries_to": [
+    "cargo3"
+   ]
   }
  },
  "nodes": {
@@ -524,6 +536,79 @@
    "who": [
     "vent_boss"
    ]
+  },
+  "gamma.plaque": {
+   "kind": "event",
+   "arc": "pool",
+   "act": 2,
+   "who": [
+    "vent_boss"
+   ],
+   "title": "The thirteenth line",
+   "requires": {
+    "at": "Gamma",
+    "flag": "saved_level_nine",
+    "since": {
+     "gamma.collapse": 3
+    },
+    "errand": {
+     "thirteenth_line": "open"
+    }
+   },
+   "text": [
+    "{vent_boss} is cutting a plaque for level nine with a borrowed laser: twelve names, the miners who came out, and under them a thirteenth line.",
+    "'For the hauler who brought the air,' he says. 'Nobody wrote the name down. You never gave it.' He waits, laser in hand, the way a man waits who decides who breathes."
+   ],
+   "choices": [
+    {
+     "id": "name",
+     "say": "Give him your name",
+     "effects": {
+      "set": "thirteenth_name",
+      "errand_done": "thirteenth_line",
+      "plot_points": 3
+     },
+     "next": [
+      "gamma.plaque.named"
+     ]
+    },
+    {
+     "id": "blank",
+     "say": "Let the line stay blank",
+     "effects": {
+      "set": "thirteenth_blank",
+      "errand_done": "thirteenth_line",
+      "plot_points": 1
+     },
+     "next": [
+      "gamma.plaque.blank"
+     ]
+    }
+   ]
+  },
+  "gamma.plaque.named": {
+   "kind": "event",
+   "arc": "pool",
+   "act": 2,
+   "who": [
+    "vent_boss"
+   ],
+   "requires": {
+    "flag": "thirteenth_name"
+   },
+   "text": "He cuts {player_name} into the thirteenth line, slowly, and blows the dust off. 'There,' he says. 'Now nobody can say it was luck.'"
+  },
+  "gamma.plaque.blank": {
+   "kind": "event",
+   "arc": "pool",
+   "act": 2,
+   "who": [
+    "vent_boss"
+   ],
+   "requires": {
+    "flag": "thirteenth_blank"
+   },
+   "text": "'Blank, then,' {vent_boss.short} says, and puts the laser away. 'Blank is honest. Whoever reads it can wonder.'"
   },
   "after.saved_level_nine": {
    "kind": "epilogue",

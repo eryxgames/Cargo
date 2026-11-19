@@ -8,21 +8,21 @@
    "game": "cargo1",
    "title": "CARGO: Space Trading Saga",
    "file": "cargo1.story.json",
-   "status": "1.2: plays its story from story/ (built into cargo.py)",
+   "status": "1.3: plays its story from story/ (built into cargo.py); keeps a captain's history across the parts and takes errands from later ones",
    "era": "about 2420: the Hansa, the first legion, the first node"
   },
   {
    "game": "cargo2",
    "title": "Cargo 2",
    "file": "cargo2.story.json",
-   "status": "2.0.0-dev: rebuilt on Cargo 1.2's core in the Cargo-2 repository, story in its story/cargo2/ (this folder's cargo2.story.json is the 2025 version's story, imported)",
+   "status": "2.3 in the Cargo-2 repository, story in its story/cargo2/ (this folder's cargo2.story.json is the 2025 version's story, imported); keeps a captain's history and takes errands from Cargo 3",
    "open": true,
    "era": "about 40 years later: the Mandate, the Concord's houses and gates, the Binary Dawn"
   },
   {
    "game": "cargo3",
    "title": "Cargo 3",
-   "status": "planned",
+   "status": "3.0.0-dev in the Cargo-3 repository: on foot as an able hand, act 1; gives errands to Cargo 1 and 2",
    "open": true,
    "era": "from about 2533, spanning several centuries of external time (relativistic legs): Project ERYX and the Gyrotron restart, up to the missions' departure"
   }
@@ -339,5 +339,43 @@
    "about": "Conte Ottavine wakes thirty years later and asks for the captain who carried her.",
    "pay_by": "cargo2"
   }
- }
+ },
+ "errands": {
+  "thirteenth_line": {
+   "from": "cargo3",
+   "to": "cargo1",
+   "needs": "1.3.0",
+   "title": "a name for the thirteenth line on level nine's plaque",
+   "about": "In 2533 the plaque on level nine at Gamma has twelve names and a blank line 'for the hauler who brought the air'. In Cargo 1, after the captain helps get the miners out, {vent_boss} cuts the plaque and asks for the name. Back in 2533, the line has it, or stays blank."
+  },
+  "vault_word": {
+   "from": "cargo3",
+   "to": "cargo2",
+   "needs": "2.3.0",
+   "title": "the word that opens the Kraal vault",
+   "about": "In 2533 {neon_sleeper} has slept too long in stasis and lost the word she chose for the family vault in 2460; the chambers take the newest memories first. In Cargo 2, newly awake at Delta, she chooses it and tells the captain. Back in 2533, the word opens the vault."
+  }
+ },
+ "features": {
+  "ledger": {
+   "cargo1": "1.3.0",
+   "cargo2": "2.3.0",
+   "cargo3": "3.0.0"
+  }
+ },
+ "aliases": {},
+ "fixed_points": [
+  {
+   "about": "the older captain's warning at the portal happens: 'make sure it starts from home'"
+  },
+  {
+   "about": "Scholz's Star took the segment from the ring 70,000 years ago"
+  },
+  {
+   "about": "who restarted the Gyrotron is never shown; hints only",
+   "never_set": [
+    "restarted_the_gyrotron"
+   ]
+  }
+ ]
 }
