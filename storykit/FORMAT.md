@@ -45,7 +45,7 @@ everything against those declarations.
 
 | Field | Meaning |
 | --- | --- |
-| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat`; `intro` (the first scene of a new game: the first whose `requires` holds), `epilogue` (a line shown after any ending when its `requires` holds), `rumour` (a line overheard in a cantina); `sight` (something the player can look at: in a place, named by `where`, or a person, by a `here` condition; played only when the player picks it), `thought` (a line the captain thinks, shown when asked, while its `requires` hold) |
+| `kind` | `chapter`, `milestone`, `ending`, `quest`, `event`, `encounter`, `stage` (of a chain), `unlock`, `beat`; `intro` (the first scene of a new game: the first whose `requires` holds), `epilogue` (a line shown after any ending when its `requires` holds), `rumour` (a line overheard in a cantina); `sight` (something the player can look at: in a place, named by `where`; a person, by a `here` condition; or wherever an `at` or `at_type` condition holds, such as a Hansa auditor at any dock where an audit is on; played only when the player picks it), `thought` (a line the captain thinks, shown when asked, while its `requires` hold) |
 | `arc` | lane on the map |
 | `title`, `text` | text is a string or a list of lines; `{placeholders}` are filled when shown (see Names) |
 | `variants` | `[{"requires": {...}, "text": "..."}]` or `[{"when": "alternate", "text": "..."}]`: other text for other circumstances |

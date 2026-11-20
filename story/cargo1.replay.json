@@ -1863,6 +1863,20 @@
     "share": 0.0
    }
   },
+  "trail.vertex": {
+   "combat": {
+    "share": 0.0
+   },
+   "discovery": {
+    "share": 0.0
+   },
+   "discovery2": {
+    "share": 0.0
+   },
+   "trade": {
+    "share": 0.0
+   }
+  },
   "self.outpost": {
    "combat": {
     "share": 1.0,

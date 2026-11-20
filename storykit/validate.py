@@ -73,8 +73,9 @@ def check_story(story, report, saga=None):
                 report.error("character", where(nid), "unknown character %r" % who)
         if node.get("where") and node["where"] not in places:
             report.error("place", where(nid), "unknown place %r" % node["where"])
-        if node.get("kind") == "sight" and not node.get("where") and "here" not in json.dumps(node.get("requires") or {}):
-            report.warn("sight", where(nid), "a sight with neither a place (where) nor a person (here) is never seen")
+        placed = re.search(r'"(here|at|at_type)":', json.dumps(node.get("requires") or {}))
+        if node.get("kind") == "sight" and not node.get("where") and not placed:
+            report.warn("sight", where(nid), "a sight with no place (where, at, at_type) and no person (here) is never seen")
 
         for cond in kit.node_conditions(node):
             def visit(key, want, path, nid=nid):
