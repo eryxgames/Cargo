@@ -29,7 +29,7 @@ def sealed(record):
     return record
 
 
-def from_cargo3(errand_state="open", needs="1.3.0", extra=None):
+def from_cargo3(errand_state="open", needs="1.3.1", extra=None):
     """A record as Cargo 3 writes it: history, an errand for 2420, keys Cargo 1 does not know."""
     record = make(cargo, "cargo3", "Vega Orl", rank="Able Hand", flags=["the_pod"], turns=40, version="3.0.0")
     record.update({"id": "C1-0000BEEF", "line": "L-00000003", "parent": "L-00000002", "own_time": 300,
@@ -109,7 +109,7 @@ game, io, text = start_as(from_cargo3(errand_state="done"))
 expect("intro.from_cargo3" in game.story.done, "a Cargo 3 captain with no errand open: the plain intro")
 
 # ---- the Vertex Array: measured before the fire ---------------------------------------------------
-VERTEX = {"id": "vertex_array", "from": "cargo3", "to": "cargo1", "state": "open", "needs": "1.3.0",
+VERTEX = {"id": "vertex_array", "from": "cargo3", "to": "cargo1", "state": "open", "needs": "1.3.1",
           "title": "the shape of the grey alloy", "line": "L-00000003"}
 
 

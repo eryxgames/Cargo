@@ -3,32 +3,32 @@
 The release workflow takes each version's notes from this file (the section whose heading is
 the version number), so write them for players.
 
-## 1.3.0
+## 1.3.1
 
-Your captain now stays the same captain across the whole trilogy, and the later parts can send
-them back here.
+Your captain now stays the same captain across the whole trilogy, and Cargo 3 can send them back
+here, to 2420, with something to do. (1.3.0 was never released; its changes are all here.)
 
 - **One captain, every part.** A game started as a recorded captain keeps the captain's id and
-  log, and the record now carries the captain's history: what they left in each part, their own
-  time (the turns they have lived, whatever the year), and the line of the timeline each game
-  is. A save is never rewritten by what happens in another part.
-- **Errands from the future.** Cargo 3 can send a captain back to 2420 with a task:
+  log. The record now carries the captain's history: what they left in each part, their own
+  time (the turns they have lived, whatever the year), and which line of the timeline each game
+  is. Nothing done in another part ever rewrites a save.
+- **Errands from 2533.** Cargo 3 can send a captain back to 2420 with a task:
   - level nine's plaque at Gamma has a blank thirteenth line "for the hauler who brought the
-    air", and the captain can fill it, or leave it blank, and see the result in 2533;
-  - Kren's notes in 2533 have a gap where the shape of the grey alloy should be. Get to the
-    Stellar Institute with the samples before the fire, measure them, and give her the
-    cartridge; in 2533 it is in her notes, labelled in your hand. If the fire is faster, it
-    says so, and the errand waits for another try.
-- **Records from newer games are kept whole.** What a newer game writes into a captain's record
-  and this one does not know, it keeps and writes out again.
+    air". Get the miners out, and when the plaque is cut, give the line a name or leave it
+    blank. Cargo 3 remembers which;
+  - Tylde Kren's notes in 2533 have a gap where the shape of the grey alloy should be. Bring
+    her samples to the Stellar Institute before the fire, measure them, and give her the
+    cartridge. If the fire is faster, the game says so, and the errand waits for another try.
+- **Records from newer games are kept whole.** Whatever a newer game writes into a captain's
+  record, this one keeps and writes out again.
 - **Older versions are named, not broken.** A record that went through Cargo 1.2.1 lost its
-  history there; starting with it offers to join it back up with the captain's newer record,
-  and says so. An errand meant for a newer version is named when you start and when you export,
-  and stays in the record until you update.
+  history there; starting with it offers to join it back up with the captain's newer record.
+  An errand meant for a newer version is named when you start and when you export, and stays in
+  the record until you update.
 - The captain menu shows your own time, your line and your errands.
-- The story kit knows roles: characters named by what they do (a perimeter guard, a medic, a
-  squad of soldiers), so names stay for the people who matter. The validator prints each part's
-  cast.
+- For story writers: the story kit knows roles (characters named by what they do, so names stay
+  for the people who matter), sights placed by an `at` or `at_type` condition, and prints each
+  part's cast.
 
 ## 1.2.1
 

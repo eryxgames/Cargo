@@ -344,7 +344,7 @@
   "thirteenth_line": {
    "from": "cargo3",
    "to": "cargo1",
-   "needs": "1.3.0",
+   "needs": "1.3.1",
    "title": "a name for the thirteenth line on level nine's plaque",
    "about": "In 2533 the plaque on level nine at Gamma has twelve names and a blank line 'for the hauler who brought the air'. In Cargo 1, after the captain helps get the miners out, {vent_boss} cuts the plaque and asks for the name. Back in 2533, the line has it, or stays blank."
   },
@@ -358,7 +358,7 @@
   "vertex_array": {
    "from": "cargo3",
    "to": "cargo1",
-   "needs": "1.3.0",
+   "needs": "1.3.1",
    "title": "the shape of the grey alloy, measured before the fire",
    "about": "In 2533 {ancient_scholar}'s notes have a gap where the shape of the missing segment should be: measured from the samples, lost in the Institute fire. In Cargo 1 the captain measures the three samples at the Stellar Institute before the fire and gives her the cartridge, labelled in the captain's hand. Back in 2533 the cartridge is in her notes: the Vertex Array, which the restart will need."
   }

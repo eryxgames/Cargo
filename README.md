@@ -9,7 +9,7 @@ A text-based space trading and exploration game where you navigate between plane
         ╔════════ C Δ R G Ω ════════╗
         ║     Space Trading Saga    ║
         ╚═══════════════════════════╝
-                Version 1.3.0
+                Version 1.3.1
 
 ```
 ## Development Notes
